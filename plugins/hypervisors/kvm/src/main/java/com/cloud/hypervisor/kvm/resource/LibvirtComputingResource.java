@@ -4808,6 +4808,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             long io_wr = 0;
             long bytes_rd = 0;
             long bytes_wr = 0;
+            Map<String, Long> rbdDuMap = new HashMap<String, Long>();
+            String rbdLsCommand = String.format("timeout 3 rbd ls --format json 2>/dev/null");
+            String rbdLsResult = Script.runSimpleBashScript(rbdLsCommand);
             for (final DiskDef disk : disks) {
                 if (disk.getDeviceType() == DeviceType.CDROM || disk.getDeviceType() == DeviceType.FLOPPY) {
                     continue;
@@ -4817,6 +4820,29 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 io_wr += blockStats.wr_req;
                 bytes_rd += blockStats.rd_bytes;
                 bytes_wr += blockStats.wr_bytes;
+                if (rbdLsResult != null && rbdLsResult != ""){
+                    // JSON 배열 파싱
+                    JSONArray rbdLsJsonArray = new JSONArray(rbdLsResult);
+                    String diskUuid = convertDiskPathToUuid(disk.getDiskPath());
+                    String rbdUuid = "";
+                    long usedPhysicalSize = 0;
+                    for (int i = 0; i < rbdLsJsonArray.length(); i++) {
+                        String rbdImageName = rbdLsJsonArray.getString(i);
+                        if (rbdImageName.contains(diskUuid)) {
+                            String rbdDuCommand = String.format("timeout 1 rbd du --format json --merge-snapshots --image " + rbdImageName + " 2>/dev/null");
+                            String rbdDuResult = Script.runSimpleBashScript(rbdDuCommand);
+                            if (rbdDuResult != null && rbdDuResult != "" && rbdDuResult.contains("images")){
+                                JsonArray rbdDuJsonArray = (JsonArray) new JsonParser().parse(rbdDuResult).getAsJsonObject().get("images");
+                                rbdUuid = rbdDuJsonArray.get(0).getAsJsonObject().get("name").getAsString();
+                                usedPhysicalSize = Long.parseLong(rbdDuJsonArray.get(0).getAsJsonObject().get("used_size").getAsString());
+                            }
+                        }
+                    }
+                    if (rbdUuid != "" && usedPhysicalSize != 0) {
+                        rbdDuMap.put(rbdUuid, usedPhysicalSize);
+                    }
+                }
+                stats.setRbdDuMap(rbdDuMap);
             }
 
             if (oldStats != null) {
@@ -4839,7 +4865,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
             Map<String, String> nicAddrMap = new HashMap<String, String>();
             Map<String, Long> fsUsageMap = new HashMap<String, Long>();
-            Map<String, Long> rbdDuMap = new HashMap<String, Long>();
             String qemuAgentVersion = "Not Installed";
             stats.setQemuAgentVersion(qemuAgentVersion);
 
@@ -4885,9 +4910,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     stats.setNicAddrMap(nicAddrMap);
                 }
 
-                String rbdLsCommand = String.format("timeout 3 rbd ls --format json 2>/dev/null");
-                String rbdLsResult = Script.runSimpleBashScript(rbdLsCommand);
-
                 result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_GET_FSINFO, null), 2, 0);
                 if (result != null && !(result.startsWith("error"))) {
                     // logger.debug(dm.getName() + " >>  " + result);
@@ -4926,33 +4948,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         }
                     }
                     stats.setFsUsageMap(fsUsageMap);
-
-                    if (fsUsageMap != null && rbdLsResult != null && rbdLsResult != ""){
-                        logger.debug("rbdLsResult >>  " + rbdLsResult);
-                        logger.debug("fsUsageMap size : " + fsUsageMap.size());
-                        // JSON 배열 파싱
-                        JSONArray rbdLsJsonArray = new JSONArray(rbdLsResult);
-                        for (String key : fsUsageMap.keySet()) {
-                            String rbdUuid = "";
-                            long usedPhysicalSize = 0;
-                            for (int i = 0; i < rbdLsJsonArray.length(); i++) {
-                                String rbdImageName = rbdLsJsonArray.getString(i);
-                                if (rbdImageName.contains(key)) {
-                                    String rbdDuCommand = String.format("timeout 1 rbd du --format json --merge-snapshots --image " + rbdImageName + " 2>/dev/null");
-                                    String rbdDuResult = Script.runSimpleBashScript(rbdDuCommand);
-                                    if (rbdDuResult != null && rbdDuResult != "" && rbdDuResult.contains("images")){
-                                        JsonArray rbdDuJsonArray = (JsonArray) new JsonParser().parse(rbdDuResult).getAsJsonObject().get("images");
-                                        rbdUuid = rbdDuJsonArray.get(0).getAsJsonObject().get("name").getAsString();
-                                        usedPhysicalSize = Long.parseLong(rbdDuJsonArray.get(0).getAsJsonObject().get("used_size").getAsString());
-                                    }
-                                }
-                            }
-                            if (rbdUuid != "" && usedPhysicalSize != 0) {
-                                rbdDuMap.put(rbdUuid, usedPhysicalSize);
-                            }
-                        }
-                    }
-                    stats.setRbdDuMap(fsUsageMap);
                 }
             }
             /* save to Hashmap */
@@ -5981,5 +5976,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             throw new RuntimeException(e);
         }
+    }
+    public static String convertDiskPathToUuid(String diskPath) {
+        String uuidRegex = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$";
+        Pattern uuidPattern = Pattern.compile(uuidRegex);
+        String uuid = "";
+        if (diskPath != null && !diskPath.isEmpty()) {
+            String[] parts = diskPath.split("/");
+            String diskName = parts[parts.length - 1];
+
+            if (diskName.contains("vg_") && diskName.contains("-ablestack_kvdo")) {
+                uuid = diskName.substring(3, diskName.indexOf("-ablestack_kvdo")).replaceFirst("(^.{8})(.{4})(.{4})(.{4})(.{12}$)", "$1-$2-$3-$4-$5");
+            }
+
+            if(uuidPattern.matcher(diskName).matches()){
+                uuid = diskName;
+            }
+        }
+        return uuid;
     }
 }
