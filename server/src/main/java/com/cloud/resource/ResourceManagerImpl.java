@@ -3299,22 +3299,6 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     @Override
     public HostStats getHostStatistics(final long hostId) {
         final Answer answer = _agentMgr.easySend(hostId, new GetHostStatsCommand(_hostDao.findById(hostId).getGuid(), _hostDao.findById(hostId).getName(), hostId));
-        String[] kvdoStats = ((GetHostStatsAnswer)answer).getHostStats().getKvdoStats();
-        for(int i=0 ; i < kvdoStats.length ; i++){
-            //volume id and saving data % extraction
-            String[] kvdoInfo = kvdoStats[i].split(" ");
-            String volume_uuid = kvdoInfo[0].replace("vg_", "").replace("-vpool0-vpool", "");
-            if (volume_uuid.length() == 32) {
-                String uuid = volume_uuid.substring(0, 8) + "-" +
-                volume_uuid.substring(8, 12) + "-" +
-                volume_uuid.substring(12, 16) + "-" +
-                volume_uuid.substring(16, 20) + "-" +
-                volume_uuid.substring(20, 32);
-                VolumeVO volume = volumeDao.findByUuid(uuid);
-                volume.setSavingStats(kvdoInfo[1]);
-                volumeDao.update(volume.getId(), volume);
-            }
-        }
 
         if (answer != null && answer instanceof UnsupportedAnswer) {
             return null;

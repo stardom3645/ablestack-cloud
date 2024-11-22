@@ -2435,18 +2435,21 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 continue;
             }
 
-            logger.debug("vr.getUsedPhysicalSize() >> " + vr.getUsedPhysicalSize() + " : vr.getVirtualsize() >> " + vr.getVirtualsize());
-            logger.debug("a >> " + (vr.getUsedPhysicalSize() != null) + " : b >> " + (vr.getVirtualsize() != null));
-            if (vr.getUsedPhysicalSize() != null && vr.getVirtualsize() != null) {
+            if (vr.getUsedPhysicalSize() != null) {
                 DecimalFormat df = new DecimalFormat("0.0%");
                 vr.setPhysicalsize(vr.getUsedPhysicalSize());
+                vr.setVirtualsize(vr.getSize());
                 long vsz = vr.getVirtualsize();
                 long psz = vr.getUsedPhysicalSize();
                 double util = (double)psz/vsz;
                 vr.setUtilization(df.format(util));
-                logger.debug("vr.getPhysicalsize() >> " + vr.getPhysicalsize());
-                logger.debug("vsz >> " + vsz);
-                logger.debug("util >> " + util);
+                if (vr.getUsedBytes() != null) {
+                    double savingRate = 0;
+                    if (vr.getUsedBytes()-psz > 0) {
+                        savingRate = (double) (vr.getUsedBytes()-psz)/vsz*100;
+                    }
+                    vr.setSavingsRate(df.format(savingRate));
+                }
             }
 
             Map<String, String> caps = driver.getCapabilities();

@@ -182,9 +182,6 @@ public class VolumeVO implements Volume {
     @Column(name = "encrypt_format")
     private String encryptFormat;
 
-    @Column(name = "saving_stats")
-    private String savingStats;
-
     @Column(name = "compress")
     private boolean compress;
 
@@ -294,7 +291,6 @@ public class VolumeVO implements Volume {
         uuid = UUID.randomUUID().toString();
         deployAsIs = that.isDeployAsIs();
         externalUuid = that.getExternalUuid();
-        savingStats = that.getSavingStats();
         compress = that.getCompress();
         dedup = that.getDedup();
         usedBytes = that.getUsedBytes();
@@ -697,10 +693,6 @@ public class VolumeVO implements Volume {
     public String getEncryptFormat() { return encryptFormat; }
 
     public void setEncryptFormat(String encryptFormat) { this.encryptFormat = encryptFormat; }
-
-    public String getSavingStats() { return savingStats; }
-
-    public void setSavingStats(String savingStats) { this.savingStats = savingStats; }
 
     public boolean getCompress() { return compress; }
 

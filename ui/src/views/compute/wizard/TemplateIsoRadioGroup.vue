@@ -45,7 +45,14 @@
                 :osId="item.ostypeid"
                 :os-name="item.osName" />
               &nbsp;
-              {{ item.displaytext  }} <span v-if="item.kvdoenable">[ Compress/Dedupe : {{ $t('label.enabled') }} ]</span>
+              {{ item.displaytext  }} <span v-if="item.kvdoenable">
+                <a-tooltip>
+                  <template #title>
+                    {{ $t('label.kvdoenable') }}
+                  </template>
+                  <clear-outlined/>
+                </a-tooltip>
+              </span>
               <span v-if="item?.projectid">
                 | <project-outlined /> {{ item.project }}
             </span>
