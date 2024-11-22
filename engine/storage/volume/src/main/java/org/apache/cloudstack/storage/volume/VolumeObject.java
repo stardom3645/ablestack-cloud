@@ -956,16 +956,6 @@ public class VolumeObject implements VolumeInfo {
     }
 
     @Override
-    public String getSavingStats() {
-        return volumeVO.getSavingStats();
-    }
-
-    @Override
-    public void setSavingStats(String savingStats) {
-        volumeVO.setSavingStats(savingStats);
-    }
-
-    @Override
     public boolean getCompress() {
         return volumeVO.getCompress();
     }

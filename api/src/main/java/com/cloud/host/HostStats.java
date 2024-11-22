@@ -37,6 +37,4 @@ public interface HostStats {
 
     public double getLoadAverage();
     // public double getXapiMemoryUsageKBs();
-
-    public String[] getKvdoStats();
 }

@@ -301,10 +301,6 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "the format of the disk encryption if applicable", since = "4.19.1")
     private String encryptionFormat;
 
-    @SerializedName(ApiConstants.SAVING_STATS)
-    @Param(description = "Space saved by compression deduplication", since = "4.20")
-    private String savingStats;
-
     @SerializedName(ApiConstants.KVDO_ENABLE)
     @Param(description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
     private Boolean kvdoEnable;
@@ -324,6 +320,11 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @SerializedName(ApiConstants.USED_PHYSICAL_SIZE)
     @Param(description = "Disk Physical actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
     private Long usedPhysicalSize;
+
+    @SerializedName(ApiConstants.SAVING_RATE)
+    @Param(description = "Disk Physical actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
+    private Long savingsRate;
+    
 
     public String getPath() {
         return path;
@@ -875,14 +876,6 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         this.encryptionFormat = encryptionFormat;
     }
 
-    public String getSavingStats() {
-        return savingStats;
-    }
-
-    public void setSavingStats(String savingStats) {
-        this.savingStats = savingStats;
-    }
-
     public boolean getKvdoEnable() {
         return kvdoEnable;
     }
@@ -922,4 +915,13 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     public void setUsedPhysicalSize(Long usedPhysicalSize) {
         this.usedPhysicalSize = usedPhysicalSize;
     }
+
+    public String getSavingsRate() {
+        return savingsRate;
+    }
+
+    public void setSavingsRate(String savingsRate) {
+        this.savingsRate = savingsRate;
+    }
+    
 }

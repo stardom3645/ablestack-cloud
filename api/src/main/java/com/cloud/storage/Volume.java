@@ -279,10 +279,6 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
 
     public void setEncryptFormat(String encryptFormat);
 
-    String getSavingStats();
-
-    void setSavingStats(String savingStats);
-
     boolean getCompress();
 
     void setCompress(boolean compress);

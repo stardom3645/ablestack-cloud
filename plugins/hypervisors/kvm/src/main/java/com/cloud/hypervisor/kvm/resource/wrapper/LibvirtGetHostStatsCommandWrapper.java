@@ -30,7 +30,6 @@ import com.cloud.utils.Pair;
 
 import org.apache.cloudstack.utils.linux.CPUStat;
 import org.apache.cloudstack.utils.linux.MemStat;
-import com.cloud.utils.script.Script;
 
 @ResourceWrapper(handles =  GetHostStatsCommand.class)
 public final class LibvirtGetHostStatsCommandWrapper extends CommandWrapper<GetHostStatsCommand, Answer, LibvirtComputingResource> {
@@ -45,8 +44,6 @@ public final class LibvirtGetHostStatsCommandWrapper extends CommandWrapper<GetH
         final Pair<Double, Double> nicStats = libvirtComputingResource.getNicStats(libvirtComputingResource.getPublicBridgeName());
 
         final HostStatsEntry hostStats = new HostStatsEntry(command.getHostId(), cpuUtil, nicStats.first() / 1024, nicStats.second() / 1024, "host", memStat.getTotal() / 1024, memStat.getAvailable() / 1024, 0, loadAvg);
-        String[] ret = Script.runSimpleBashScript("vdostats | awk 'NR > 1 {print $1, $6}' | tr '\n' '/'").split("/");
-        hostStats.setKvdoStats(ret);
         return new GetHostStatsAnswer(command, hostStats);
     }
 }

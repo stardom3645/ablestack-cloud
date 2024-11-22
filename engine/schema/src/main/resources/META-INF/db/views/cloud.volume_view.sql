@@ -40,7 +40,6 @@ SELECT
     `volumes`.`chain_info` AS `chain_info`,
     `volumes`.`external_uuid` AS `external_uuid`,
     `volumes`.`encrypt_format` AS `encrypt_format`,
-    `volumes`.`saving_stats` AS `saving_stats`,
     `volumes`.`compress` AS `compress`,
     `volumes`.`dedup` AS `dedup`,
     `volumes`.`used_bytes` AS `used_bytes`,
