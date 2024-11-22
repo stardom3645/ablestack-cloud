@@ -323,8 +323,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     @SerializedName(ApiConstants.SAVING_RATE)
     @Param(description = "Disk Physical actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
-    private Long savingsRate;
-    
+    private String savingsRate;
 
     public String getPath() {
         return path;
@@ -923,5 +922,4 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     public void setSavingsRate(String savingsRate) {
         this.savingsRate = savingsRate;
     }
-    
 }
