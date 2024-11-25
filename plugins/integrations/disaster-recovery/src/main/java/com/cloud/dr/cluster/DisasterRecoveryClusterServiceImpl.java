@@ -476,25 +476,27 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (!dr.getAsJsonObject().get("peer_sites").isJsonNull()) {
                                 drArray = (JsonArray) dr.getAsJsonObject().get("peer_sites");
                             }
-                            if (drArray.size() != 0 && drArray != null) {
-                                JsonElement peerState = null;
-                                for (JsonElement peer : drArray) {
-                                    if (peer.getAsJsonObject().get("state") != null) {
-                                        peerState = peer.getAsJsonObject().get("state");
+                            if (drArray != null) {
+                                if (drArray.size() != 0){
+                                    JsonElement peerState = null;
+                                    for (JsonElement peer : drArray) {
+                                        if (peer.getAsJsonObject().get("state") != null) {
+                                            peerState = peer.getAsJsonObject().get("state");
+                                        }
                                     }
-                                }
-                                if (peerState != null) {
-                                    if (peerState.getAsString().contains("replaying")) {
-                                        map.setMirroredVmVolumeStatus("SYNCING");
-                                    } else if (peerState.getAsString().contains("error")){
-                                        map.setMirroredVmVolumeStatus("ERROR");
-                                    } else if (peerState.getAsString().contains("unknown") || peerState.getAsString().contains("down")){
-                                        map.setMirroredVmVolumeStatus("UNKNOWN");
-                                    } else {
-                                        map.setMirroredVmVolumeStatus("READY");
+                                    if (peerState != null) {
+                                        if (peerState.getAsString().contains("replaying")) {
+                                            map.setMirroredVmVolumeStatus("SYNCING");
+                                        } else if (peerState.getAsString().contains("error")){
+                                            map.setMirroredVmVolumeStatus("ERROR");
+                                        } else if (peerState.getAsString().contains("unknown") || peerState.getAsString().contains("down")){
+                                            map.setMirroredVmVolumeStatus("UNKNOWN");
+                                        } else {
+                                            map.setMirroredVmVolumeStatus("READY");
+                                        }
+                                        disasterRecoveryClusterVmMapDao.update(map.getId(), map);
                                     }
-                                    disasterRecoveryClusterVmMapDao.update(map.getId(), map);
-                                }
+                                }  
                             }
                             break;
                         }
