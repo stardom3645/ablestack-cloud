@@ -77,6 +77,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
@@ -473,7 +474,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 response.setDrClusterVmVolStatus("READY");
                             }
                             JsonArray drArray = null;
-                            if (!dr.getAsJsonObject().get("peer_sites").equals(null)) {
+                            if (!dr.getAsJsonObject().get("peer_sites").isJsonNull()) {
                                 drArray = (JsonArray) dr.getAsJsonObject().get("peer_sites");
                             }
                             if (drArray.size() != 0) {
