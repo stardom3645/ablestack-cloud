@@ -2446,7 +2446,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 if (vr.getUsedBytes() != null) {
                     double savingRate = 0;
                     if (vr.getUsedBytes()-psz > 0) {
-                        savingRate = (double) (vr.getUsedBytes()-psz)/vsz*100;
+                        savingRate = (double) (vr.getUsedBytes()-psz)/vr.getUsedBytes()*100;
                     }
                     vr.setSavingsRate(df.format(savingRate));
                 }
