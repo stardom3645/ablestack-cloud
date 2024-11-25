@@ -473,8 +473,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 response.setDrClusterVmVolStatus("READY");
                             }
                             JsonArray drArray = null;
-                            LOGGER.info(dr.getAsJsonObject().get("peer_sites"));
-                            if (dr.getAsJsonObject().get("peer_sites") != null) {
+                            if (!dr.getAsJsonObject().get("peer_sites").equals("null")) {
                                 drArray = (JsonArray) dr.getAsJsonObject().get("peer_sites");
                             }
                             if (drArray.size() != 0) {
