@@ -188,8 +188,8 @@ public class VolumeVO implements Volume {
     @Column(name = "dedup")
     private boolean dedup;
 
-    @Column(name = "used_bytes")
-    private Long usedBytes;
+    @Column(name = "used_fs_bytes")
+    private Long usedFsBytes;
 
     @Column(name = "used_physical_size")
     private Long usedPhysicalSize;
@@ -293,7 +293,7 @@ public class VolumeVO implements Volume {
         externalUuid = that.getExternalUuid();
         compress = that.getCompress();
         dedup = that.getDedup();
-        usedBytes = that.getUsedBytes();
+        usedFsBytes = that.getUsedFsBytes();
         usedPhysicalSize = that.getUsedPhysicalSize();
     }
 
@@ -702,9 +702,9 @@ public class VolumeVO implements Volume {
 
     public void setDedup(boolean dedup) { this.dedup = dedup; }
 
-    public Long getUsedBytes() { return usedBytes; }
+    public Long getUsedFsBytes() { return usedFsBytes; }
 
-    public void setUsedBytes(Long usedBytes) { this.usedBytes = usedBytes; }
+    public void setUsedFsBytes(Long usedFsBytes) { this.usedFsBytes = usedFsBytes; }
 
     public Long getUsedPhysicalSize() { return usedPhysicalSize; }
 

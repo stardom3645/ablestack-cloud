@@ -4360,7 +4360,7 @@
 "label.action.update.compress.dedup": "\uc555\ucd95/\uc911\ubcf5\uc81c\uac70 \ud3b8\uc9d1",
 "label.compress": "\uc555\ucd95 \uc0ac\uc6a9 \uc0c1\ud0dc",
 "label.dedup": "\uc911\ubcf5\uc81c\uac70 \uc0ac\uc6a9 \uc0c1\ud0dc",
-"label.usedbytes": "\ub514\uc2a4\ud06c \uc0ac\uc6a9\ub7c9",
+"label.usedfsbytes": "\ub514\uc2a4\ud06c FS \uc0ac\uc6a9\ub7c9",
 "label.savingrate": "\uc808\uc57d \uc6a9\ub7c9(%)",
 "message.success.update.compress.dedup": "\uc555\ucd95/\uc911\ubcf5\uc81c\uac70\ub97c \uc5c5\ub370\uc774\ud2b8 \ud588\uc2b5\ub2c8\ub2e4.",
 "message.update.compress.dedup.failed": "\uc555\ucd95/\uc911\ubcf5\uc81c\uac70 \uc5c5\ub370\uc774\ud2b8\uc5d0 \uc2e4\ud328\ud558\uc600\uc2b5\ub2c8\ub2e4.",

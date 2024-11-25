@@ -976,13 +976,13 @@ public class VolumeObject implements VolumeInfo {
     }
 
     @Override
-    public Long getUsedBytes() {
-        return volumeVO.getUsedBytes();
+    public Long getUsedFsBytes() {
+        return volumeVO.getUsedFsBytes();
     }
 
     @Override
-    public void setUsedBytes(Long usedBytes) {
-        volumeVO.setUsedBytes(usedBytes);
+    public void setUsedFsBytes(Long usedFsBytes) {
+        volumeVO.setUsedFsBytes(usedFsBytes);
     }
 
     @Override

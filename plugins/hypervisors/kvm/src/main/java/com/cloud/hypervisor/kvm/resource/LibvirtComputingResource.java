@@ -4927,13 +4927,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                                 JsonObject diskObj = diskElement.getAsJsonObject();
 
                                 JsonElement serialElement = diskObj.get("serial");
-                                JsonElement usedBytesElement = jsonObj.get("used-bytes");
-                                if (serialElement == null || serialElement.isJsonNull() || usedBytesElement == null || usedBytesElement.isJsonNull()) {
+                                JsonElement usedFsBytesElement = jsonObj.get("used-bytes");
+                                if (serialElement == null || serialElement.isJsonNull() || usedFsBytesElement == null || usedFsBytesElement.isJsonNull()) {
                                     continue;
                                 }
 
                                 String serial = diskObj.get("serial").getAsString();
-                                long usedBytes = usedBytesElement.getAsLong();
+                                long usedFsBytes = usedFsBytesElement.getAsLong();
                                 if (serial.length() >= 20) {
                                     //serial to half path uuid
                                     String serial_val = serial.substring(serial.length() - 20);
@@ -4944,7 +4944,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                                     serial = serial_uuid;
                                     System.out.println(serial);
                                 }
-                                fsUsageMap.put(serial, fsUsageMap.getOrDefault(serial, 0L) + usedBytes);
+                                fsUsageMap.put(serial, fsUsageMap.getOrDefault(serial, 0L) + usedFsBytes);
                             }
                         }
                     }

@@ -120,7 +120,7 @@ public class ApiConstants {
     public static final String ENCRYPT_FORMAT = "encryptformat";
     public static final String COMPRESS = "compress";
     public static final String DEDUP = "dedup";
-    public static final String USED_BYTES = "usedbytes";
+    public static final String USED_FS_BYTES = "usedfsbytes";
     public static final String USED_PHYSICAL_SIZE = "usedphysicalsize";
     public static final String SAVING_RATE = "savingrate";
     public static final String ENCRYPT_ROOT = "encryptroot";

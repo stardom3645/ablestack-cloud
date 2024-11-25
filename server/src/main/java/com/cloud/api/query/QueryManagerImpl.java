@@ -2443,10 +2443,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 long psz = vr.getUsedPhysicalSize();
                 double util = (double)psz/vsz;
                 vr.setUtilization(df.format(util));
-                if (vr.getUsedBytes() != null) {
+                if (vr.getUsedFsBytes() != null) {
                     double savingRate = 0;
-                    if (vr.getUsedBytes()-psz > 0) {
-                        savingRate = (double) (vr.getUsedBytes()-psz)/vr.getUsedBytes()*100;
+                    if (vr.getUsedFsBytes()-psz > 0) {
+                        savingRate = (double) (vr.getUsedFsBytes()-psz)/vr.getUsedFsBytes();
                     }
                     vr.setSavingsRate(df.format(savingRate));
                 }

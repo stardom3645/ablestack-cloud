@@ -313,9 +313,9 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "Whether to On or Off it as a KVDO dedup volume", since = "4.20")
     private Boolean dedup;
 
-    @SerializedName(ApiConstants.USED_BYTES)
+    @SerializedName(ApiConstants.USED_FS_BYTES)
     @Param(description = "Disk file system actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
-    private Long usedBytes;
+    private Long usedFsBytes;
 
     @SerializedName(ApiConstants.USED_PHYSICAL_SIZE)
     @Param(description = "Disk Physical actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
@@ -899,12 +899,12 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         this.dedup = dedup;
     }
 
-    public Long getUsedBytes() {
-        return usedBytes;
+    public Long getUsedFsBytes() {
+        return usedFsBytes;
     }
 
-    public void setUsedBytes(Long usedBytes) {
-        this.usedBytes = usedBytes;
+    public void setUsedFsBytes(Long usedFsBytes) {
+        this.usedFsBytes = usedFsBytes;
     }
 
     public Long getUsedPhysicalSize() {

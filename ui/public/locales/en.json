@@ -4360,7 +4360,7 @@
 "label.action.update.compress.dedup": "Update Compress/Dedup",
 "label.compress": "Compress Usage Status",
 "label.dedup": "Dedup Usage Status",
-"label.usedbytes": "Disk Usage",
+"label.usedFsbytes": "Disk FS Usage",
 "label.savingrate": "Saving rate(%)",
 "message.success.update.compress.dedup": "Successfully updated compress/dedup",
 "message.update.compress.dedup.failed": "Failed to update compress/dedup",
