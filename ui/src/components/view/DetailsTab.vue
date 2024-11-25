@@ -99,9 +99,9 @@
               {{ parseFloat(dataResource.virtualsize / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GiB
             </div>
           </div>
-          <div v-else-if="['volume', 'snapshot', 'template', 'iso'].includes($route.meta.name) && item === 'usedbytes'">
+          <div v-else-if="['volume', 'snapshot', 'template', 'iso'].includes($route.meta.name) && item === 'usedfsbytes'">
             <div>
-              {{ parseFloat(dataResource.usedbytes / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GiB
+              {{ parseFloat(dataResource.usedfsbytes / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GiB
             </div>
           </div>
           <div v-else-if="['name', 'type'].includes(item)">

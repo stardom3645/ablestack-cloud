@@ -42,7 +42,7 @@ SELECT
     `volumes`.`encrypt_format` AS `encrypt_format`,
     `volumes`.`compress` AS `compress`,
     `volumes`.`dedup` AS `dedup`,
-    `volumes`.`used_bytes` AS `used_bytes`,
+    `volumes`.`used_fs_bytes` AS `used_fs_bytes`,
     `volumes`.`used_physical_size` AS `used_physical_size`,
     `account`.`id` AS `account_id`,
     `account`.`uuid` AS `account_uuid`,

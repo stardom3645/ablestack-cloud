@@ -1418,7 +1418,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                     for (String key : fsUsageMap.keySet()) {
                                         for (VolumeVO volVo : volumes){
                                             if (volVo.getPath().contains(key)) {
-                                                volVo.setUsedBytes(fsUsageMap.get(key));
+                                                volVo.setUsedFsBytes(fsUsageMap.get(key));
                                                 _volsDao.update(volVo.getId(), volVo);
                                                 // break;
                                             }

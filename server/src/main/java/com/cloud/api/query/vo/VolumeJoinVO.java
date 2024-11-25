@@ -289,8 +289,8 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "dedup")
     private boolean dedup;
 
-    @Column(name = "used_bytes")
-    private Long usedBytes;
+    @Column(name = "used_fs_bytes")
+    private Long usedFsBytes;
 
     @Column(name = "used_physical_size")
     private Long usedPhysicalSize;
@@ -646,8 +646,8 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
         return dedup;
     }
 
-    public Long getUsedBytes() {
-        return usedBytes;
+    public Long getUsedFsBytes() {
+        return usedFsBytes;
     }
 
     public Long getUsedPhysicalSize() {
