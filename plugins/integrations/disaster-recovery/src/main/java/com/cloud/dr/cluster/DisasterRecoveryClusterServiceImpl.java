@@ -496,7 +496,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         }
                                         disasterRecoveryClusterVmMapDao.update(map.getId(), map);
                                     }
-                                }  
+                                }
                             }
                             break;
                         }
