@@ -473,7 +473,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 response.setDrClusterVmVolStatus("READY");
                             }
                             JsonArray drArray = (JsonArray) dr.getAsJsonObject().get("peer_sites");
-                            if (drArray.size() != 0 && drArray != null) {
+                            if (drArray.size() != 0) {
                                 JsonElement peerState = null;
                                 for (JsonElement peer : drArray) {
                                     if (peer.getAsJsonObject().get("state") != null) {
@@ -1469,7 +1469,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
                             JsonElement peerDescription = null;
-                            if (drArray.size() != 0 && drArray != null) {
+                            if (drArray.size() != 0) {
                                 for (JsonElement dr : drArray) {
                                     peerDescription = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
                                 }
@@ -2162,7 +2162,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (mirrorImageStatus != null) {
                         JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                         JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                        if (statObject.has("description") && drArray.size() != 0 && drArray != null) {
+                        if (statObject.has("description") && drArray.size() != 0) {
                             JsonElement peerState = null;
                             JsonElement peerDescription = null;
                             for (JsonElement dr : drArray) {
@@ -2444,7 +2444,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
                             JsonElement peerDescription = null;
-                            if (drArray.size() != 0 && drArray != null) {
+                            if (drArray.size() != 0) {
                                 for (JsonElement dr : drArray) {
                                     peerDescription = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
                                 }
@@ -2648,7 +2648,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         if (mirrorImageStatus != null) {
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                            if (statObject.has("description") && drArray.size() != 0 && drArray != null) {
+                            if (statObject.has("description") && drArray.size() != 0) {
                                 JsonElement peerState = null;
                                 JsonElement peerDescription = null;
                                 for (JsonElement dr : drArray) {
@@ -2689,7 +2689,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (mirrorImageStatus != null) {
                                 JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                                 JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                                if (statObject.has("description") && drArray.size() != 0 && drArray != null) {
+                                if (statObject.has("description") && drArray.size() != 0) {
                                     JsonElement peerState = null;
                                     JsonElement peerDescription = null;
                                     for (JsonElement dr : drArray) {
