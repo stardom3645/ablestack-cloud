@@ -191,7 +191,7 @@
         </a-button>
       </div>
     </div>
-    <div :class="['footer']">
+    <div :class="['footer']" style="padding-bottom: 20px">
       <div class="line">
         <span v-html="$config.footer" />
       </div>
@@ -577,13 +577,14 @@ export default {
       background-repeat: no-repeat;
     }
     .footer {
-      padding: 0 16px;
-      margin: 48px 0 24px;
+      position: fixed;
+      padding: 0 26px;
+      margin: 200px 0 24px;
       text-align: center;
-      transition: all 0.3s ease;
+      transition: all 0.8s ease;
 
       &.expanded {
-        margin-bottom: 324px;
+        margin-bottom: 500px;
       }
 
       .line {

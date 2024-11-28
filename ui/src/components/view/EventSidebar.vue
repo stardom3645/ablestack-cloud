@@ -142,6 +142,7 @@ export default {
   created () {
     this.fetchEvents()
     this.refreshInterval = setInterval(this.fetchEvents, 5000)
+    // console.log('EventsListBar:', this.$store.getters.globalSettings.EventsListBar)
   },
   unmounted () {
     clearInterval(this.refreshInterval)
@@ -161,10 +162,13 @@ export default {
         listall: true
       }
       try {
+        const settingsResponse = await api('listConfigurations', { name: 'event.side.list' })
+        const eventListBarSetting = settingsResponse?.listconfigurationsresponse?.configuration[0]?.value || 5
+        this.eventListBarMinutes = parseInt(eventListBarSetting, 10) * 60 * 1000
         const response = await api('listEvents', params)
         if (response && response.listeventsresponse) {
           const events = response.listeventsresponse.event || []
-          const recentEvents = this.filterRecentEvents(events)
+          const recentEvents = this.filterRecentEvents(events, this.eventListBarMinutes)
           this.events = recentEvents
         } else {
           console.error('No events found in the response')
@@ -175,11 +179,11 @@ export default {
         this.loading = false
       }
     },
-    filterRecentEvents (events) {
-      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000)
+    filterRecentEvents (events, timeRange = 5 * 60 * 1000) {
+      const timeThreshold = Date.now() - timeRange
       return events.filter(event => {
         const eventTime = new Date(event.created).getTime()
-        return eventTime >= fiveMinutesAgo
+        return eventTime >= timeThreshold
       }).slice(0, 20)
     },
     formatDate (dateString) {
@@ -219,7 +223,7 @@ export default {
   top: -40px;
   right: 0px;
   z-index: 1000;
-  background: #ccc;
+  background: #aaa;
   border: none;
   color: #666;
 }

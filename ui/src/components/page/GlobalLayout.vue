@@ -89,7 +89,7 @@
         <a-button
           type="primary"
           @click="toggleSidebar"
-          style="width: 40px; height: 40px; padding: 0; background: #ccc; border: none; color: #666;">
+          style="width: 40px; height: 40px; padding: 0; background: #aaa; border: none; color: #fff;">
           <ScheduleOutlined />
         </a-button>
       </div>
