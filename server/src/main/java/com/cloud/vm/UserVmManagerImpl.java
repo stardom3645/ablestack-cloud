@@ -5919,8 +5919,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 ex.addProxyObject(vm.getUuid(), "vmId");
                 throw ex;
             }
-        } catch (Exception e) {
-                throw new CloudRuntimeException("Failed to destroy vm with specified vmId", e);
+            return _vmDao.findByIdIncludingRemoved(vmId);
+        } else {
+            CloudRuntimeException ex = new CloudRuntimeException("Failed to destroy vm with specified vmId");
+            ex.addProxyObject(vm.getUuid(), "vmId");
+            throw ex;
         }
 
     }
