@@ -244,6 +244,7 @@ public class ApiConstants {
     public static final String CUSTOMIMAGES = "customimages";
     public static final String ID = "id";
     public static final String IDS = "ids";
+    public static final String IMPORT_INSTANCE_HOST_ID = "importinstancehostid";
     public static final String INDEX = "index";
     public static final String INSTANCES_DISKS_STATS_RETENTION_ENABLED = "instancesdisksstatsretentionenabled";
     public static final String INSTANCES_DISKS_STATS_RETENTION_TIME = "instancesdisksstatsretentiontime";
