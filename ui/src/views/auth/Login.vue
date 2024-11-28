@@ -197,11 +197,6 @@
       </div>
       <div class="line" v-if="$store.getters.userInfo.roletype === 'Admin','User'">
         ABLESTACK {{ buildVersion }}
-        <a-divider type="vertical" />
-        <a href="https://github.com/ablecloud-team/ablestack-cloud/issues/new" target="_blank">
-          <github-outlined />
-          {{ $t('label.report.bug') }}
-        </a>
       </div>
     </div>
   </a-form>
