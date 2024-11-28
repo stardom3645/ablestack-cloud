@@ -332,7 +332,7 @@ public class VolumeObject implements VolumeInfo {
     @Override
     public boolean getShareable() {
         DiskOfferingVO diskOfferingVO = getDiskOfferingVO();
-        return diskOfferingVO.getShareable();
+        return diskOfferingVO == null ? false : diskOfferingVO.getShareable();
     }
 
     @Override
