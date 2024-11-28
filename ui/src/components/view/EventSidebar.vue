@@ -162,7 +162,7 @@ export default {
         listall: true
       }
       try {
-        const settingsResponse = await api('listConfigurations', { name: 'event.side.list' })
+        const settingsResponse = await api('listConfigurations', { name: 'event.recent.minutes' })
         const eventListBarSetting = settingsResponse?.listconfigurationsresponse?.configuration[0]?.value || 5
         this.eventListBarMinutes = parseInt(eventListBarSetting, 10) * 60 * 1000
         const response = await api('listEvents', params)
