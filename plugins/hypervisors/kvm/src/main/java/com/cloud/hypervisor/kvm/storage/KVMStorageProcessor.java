@@ -58,6 +58,7 @@ import org.apache.cloudstack.storage.command.CreateObjectCommand;
 import org.apache.cloudstack.storage.command.DeleteCommand;
 import org.apache.cloudstack.storage.command.DettachAnswer;
 import org.apache.cloudstack.storage.command.DettachCommand;
+import org.apache.cloudstack.storage.command.ForgetObjectCmd;
 import org.apache.cloudstack.storage.command.FlattenCmdAnswer;
 import org.apache.cloudstack.storage.command.FlattenCommand;
 import org.apache.cloudstack.storage.command.IntroduceObjectCmd;
