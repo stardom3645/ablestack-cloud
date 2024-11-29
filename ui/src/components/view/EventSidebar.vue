@@ -149,6 +149,7 @@ export default {
   },
   methods: {
     closeSidebar () {
+      clearInterval(this.refreshInterval)
       this.$emit('update:isVisible', false)
     },
     async fetchEvents () {
