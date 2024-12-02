@@ -2681,6 +2681,7 @@ public class DisasterRecoveryClusterUtil {
                         serviceOfferingsArray.put(serviceOfferingObject);
                     }
                     for (int i = 0; i < serviceOfferingsArray.length(); i++) {
+                        int j = 0;
                         JSONObject serviceOfferingJSONObject = serviceOfferingsArray.getJSONObject(i);
                         ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
                         for (String key : serviceOfferingJSONObject.keySet()) {
@@ -2697,9 +2698,14 @@ public class DisasterRecoveryClusterUtil {
                                 e.printStackTrace();
                             }
                         }
-                        LOGGER.info("serviceOfferingResponse:::::::::::::::");
-                        LOGGER.info(serviceOfferingResponse.getMemory());
-                        serviceOfferingsList.add(serviceOfferingResponse);
+                        try {
+                            j = serviceOfferingResponse.getMemory();
+                        } catch (NullPointerException e) {
+                            // System.err.println("Field not found: " + key);
+                        }
+                        if (j != 0) {
+                            serviceOfferingsList.add(serviceOfferingResponse);
+                        }
                     }
                 }
                 return serviceOfferingsList;
