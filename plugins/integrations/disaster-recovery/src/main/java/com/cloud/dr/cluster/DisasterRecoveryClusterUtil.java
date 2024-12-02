@@ -2697,6 +2697,8 @@ public class DisasterRecoveryClusterUtil {
                                 e.printStackTrace();
                             }
                         }
+                        LOGGER.info("serviceOfferingResponse:::::::::::::::");
+                        LOGGER.info(serviceOfferingResponse.getMemory());
                         serviceOfferingsList.add(serviceOfferingResponse);
                     }
                 }
