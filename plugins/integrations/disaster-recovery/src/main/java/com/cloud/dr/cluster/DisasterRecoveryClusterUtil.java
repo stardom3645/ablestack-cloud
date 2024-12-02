@@ -2684,13 +2684,9 @@ public class DisasterRecoveryClusterUtil {
                         JSONObject serviceOfferingJSONObject = serviceOfferingsArray.getJSONObject(i);
                         ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
                         for (String key : serviceOfferingJSONObject.keySet()) {
-                            LOGGER.info("key:::::::::::::::::::::::::");
-                            LOGGER.info(key);
                             try {
                                 Field field = ServiceOfferingResponse.class.getDeclaredField(key);
                                 field.setAccessible(true);
-                                LOGGER.info("field.getType():::::::::::::::::::::::::");
-                                LOGGER.info(field.getType());
                                 Object value = getValue(serviceOfferingJSONObject, key, field.getType());
                                 if (value != null) {
                                     field.set(serviceOfferingResponse, value);
@@ -2992,9 +2988,9 @@ public class DisasterRecoveryClusterUtil {
                 } catch (JSONException e) {
                     return String.valueOf(jsonObject.get(key));
                 }
-            } else if (fieldType == Boolean.class) {
+            } else if (fieldType == Integer.class) {
                 try {
-                    return jsonObject.getBoolean(key);
+                    return jsonObject.getInt(key);
                 } catch (JSONException e) {
                     return String.valueOf(jsonObject.get(key));
                 }
