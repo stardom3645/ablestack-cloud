@@ -2989,6 +2989,12 @@ public class DisasterRecoveryClusterUtil {
                 } catch (JSONException e) {
                     return String.valueOf(jsonObject.get(key));
                 }
+            } else if (fieldType == Boolean.class) {
+                try {
+                    return jsonObject.getBoolean(key);
+                } catch (JSONException e) {
+                    return Boolean.valueOf(jsonObject.get(key));
+                }
             } else {
                 return null;
             }
