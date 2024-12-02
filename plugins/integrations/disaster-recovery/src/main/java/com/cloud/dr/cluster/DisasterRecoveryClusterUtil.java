@@ -2993,7 +2993,7 @@ public class DisasterRecoveryClusterUtil {
                 try {
                     return jsonObject.getBoolean(key);
                 } catch (JSONException e) {
-                    return Boolean.valueOf(jsonObject.get(key));
+                    return String.valueOf(jsonObject.get(key));
                 }
             } else {
                 return null;
