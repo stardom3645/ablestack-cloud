@@ -493,7 +493,6 @@ public class ApiConstants {
     public static final String STORAGE_TAGS = "storagetags";
     public static final String SUCCESS = "success";
     public static final String SUITABLE_FOR_VM = "suitableforvirtualmachine";
-    public static final String SUPPORTS_STORAGE_SNAPSHOT = "supportsstoragesnapshot";
     public static final String TARGET_IQN = "targetiqn";
     public static final String TEMPLATE_FILTER = "templatefilter";
     public static final String TEMPLATE_ID = "templateid";

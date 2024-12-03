@@ -46,7 +46,7 @@ public class FirewallRulesCidrsDaoImpl extends GenericDaoBase<FirewallRulesCidrs
         sc.setParameters("firewallRuleId", firewallRuleId);
 
         List<FirewallRulesCidrsVO> results = search(sc, null);
-        List<String> cidrs = new ArrayList<String>(results.size());
+        List<String> cidrs = new ArrayList<>(results.size());
         for (FirewallRulesCidrsVO result : results) {
             cidrs.add(result.getCidr());
         }

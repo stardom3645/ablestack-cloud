@@ -60,7 +60,6 @@ import com.linbit.linstor.api.model.VolumeDefinition;
 
 import java.io.File;
 
-@StorageAdaptorInfo(storagePoolType=Storage.StoragePoolType.Linstor)
 public class LinstorStorageAdaptor implements StorageAdaptor {
     private static final Logger s_logger = Logger.getLogger(LinstorStorageAdaptor.class);
     private static final Map<String, KVMStoragePool> MapStorageUuidToStoragePool = new HashMap<>();

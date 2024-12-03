@@ -705,12 +705,13 @@ public class UnmanagedVMsManagerImplTest {
 
         ConvertInstanceAnswer convertInstanceAnswer = mock(ConvertInstanceAnswer.class);
         ImportConvertedInstanceAnswer convertImportedInstanceAnswer = mock(ImportConvertedInstanceAnswer.class);
+        when(convertInstanceAnswer.getConvertedInstance()).thenReturn(instance);
         when(convertInstanceAnswer.getResult()).thenReturn(vcenterParameter != VcenterParameter.CONVERT_FAILURE);
-        when(convertImportedInstanceAnswer.getConvertedInstance()).thenReturn(instance);
-        when(convertImportedInstanceAnswer.getResult()).thenReturn(vcenterParameter != VcenterParameter.CONVERT_FAILURE);
+        Mockito.lenient().when(convertImportedInstanceAnswer.getConvertedInstance()).thenReturn(instance);
+        Mockito.lenient().when(convertImportedInstanceAnswer.getResult()).thenReturn(vcenterParameter != VcenterParameter.CONVERT_FAILURE);
         if (VcenterParameter.AGENT_UNAVAILABLE != vcenterParameter) {
             when(agentManager.send(Mockito.eq(convertHostId), Mockito.any(ConvertInstanceCommand.class))).thenReturn(convertInstanceAnswer);
-            when(agentManager.send(Mockito.eq(convertHostId), Mockito.any(ImportConvertedInstanceCommand.class))).thenReturn(convertImportedInstanceAnswer);
+            Mockito.lenient().when(agentManager.send(Mockito.eq(convertHostId), Mockito.any(ImportConvertedInstanceCommand.class))).thenReturn(convertImportedInstanceAnswer);
         }
 
         try (MockedStatic<UsageEventUtils> ignored = Mockito.mockStatic(UsageEventUtils.class)) {

@@ -1648,7 +1648,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
 
             temporaryConvertLocation = selectInstanceConversionTemporaryLocation(
                     destinationCluster, convertHost, convertStoragePoolId);
-            DiskOffering diskOffering = diskOfferingDao.findById(serviceOffering.getDiskOfferingId());
+           DiskOffering diskOffering = diskOfferingDao.findById(serviceOffering.getDiskOfferingId());
             List<StoragePoolVO> convertStoragePools = primaryDataStoreDao.findPoolsByTags(zone.getId(), destinationCluster.getPodId(), destinationCluster.getId(), diskOffering.getTagsArray(), true, VolumeApiServiceImpl.storageTagRuleExecutionTimeout.value());
             long importStartTime = System.currentTimeMillis();
             Pair<UnmanagedInstanceTO, Boolean> sourceInstanceDetails = getSourceVmwareUnmanagedInstance(vcenter, datacenterName, username, password, clusterName, sourceHostName, sourceVMName);

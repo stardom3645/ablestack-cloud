@@ -498,38 +498,38 @@ public class FirewallManagerImpl extends ManagerBase implements FirewallService,
         String rulesAsString = String.format("[%s] and [%s]", rule, newRule);
 
         if (oneOfRulesIsFirewall) {
-            s_logger.debug(String.format("Only one of the rules (%s) is firewall; therefore, their port ranges will not conflict.",
+            logger.debug(String.format("Only one of the rules (%s) is firewall; therefore, their port ranges will not conflict.",
                     rulesAsString));
             return false;
         }
 
         if ((bothRulesFirewall || bothRulesPortForwarding) && !duplicatedCidrs) {
-            s_logger.debug(String.format("Both rules (%s) are firewall/port forwarding, but they do not have duplicated CIDRs; therefore, their port ranges will not conflict.",
+            logger.debug(String.format("Both rules (%s) are firewall/port forwarding, but they do not have duplicated CIDRs; therefore, their port ranges will not conflict.",
                     rulesAsString));
             return false;
         }
 
         if (rule.getSourcePortStart() <= newRule.getSourcePortStart() && rule.getSourcePortEnd() >= newRule.getSourcePortStart()) {
-            s_logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
+            logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
             return true;
         }
 
         if (rule.getSourcePortStart() <= newRule.getSourcePortEnd() && rule.getSourcePortEnd() >= newRule.getSourcePortEnd()) {
-            s_logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
+            logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
             return true;
         }
 
         if (newRule.getSourcePortStart() <= rule.getSourcePortStart() && newRule.getSourcePortEnd() >= rule.getSourcePortStart()) {
-            s_logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
+            logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
             return true;
         }
 
         if (newRule.getSourcePortStart() <= rule.getSourcePortEnd() && newRule.getSourcePortEnd() >= rule.getSourcePortEnd()) {
-            s_logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
+            logger.debug(String.format("Rules (%s) have conflicting port ranges.", rulesAsString));
             return true;
         }
 
-        s_logger.debug(String.format("Rules (%s) do not have conflicting port ranges.", rulesAsString));
+        logger.debug(String.format("Rules (%s) do not have conflicting port ranges.", rulesAsString));
         return false;
     }
 
