@@ -29,7 +29,16 @@ public class ConvertInstanceAnswer extends Answer {
         this.temporaryConvertUuid = temporaryConvertUuid;
     }
 
+    public ConvertInstanceAnswer(Command command, String temporaryConvertUuid) {
+        super(command, true, "");
+        this.temporaryConvertUuid = temporaryConvertUuid;
+    }
+
     public String getTemporaryConvertUuid() {
         return temporaryConvertUuid;
+    }
+
+    public UnmanagedInstanceTO getConvertedInstance() {
+        return convertedInstance;
     }
 }
