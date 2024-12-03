@@ -778,8 +778,18 @@
         </div>
       </div>
 
-      <div class="account-center-tags" v-if="showKeys">
+      <div class="account-center-tags" v-if="showKeys || resource.apikeyaccess">
         <a-divider/>
+      </div>
+      <div class="account-center-tags" v-if="resource.apikeyaccess && resource.account">
+        <div class="resource-detail-item">
+          <div class="resource-detail-item__label">{{ $t('label.apikeyaccess') }}</div>
+          <div class="resource-detail-item__details">
+            <status class="status" :text="resource.apikeyaccess" displayText/>
+          </div>
+        </div>
+      </div>
+      <div class="account-center-tags" v-if="showKeys">
         <div class="user-keys">
           <key-outlined />
           <strong>
@@ -1133,6 +1143,9 @@ export default {
       api('getUserKeys', { id: this.resource.id }).then(json => {
         this.showKeys = true
         this.newResource.secretkey = json.getuserkeysresponse.userkeys.secretkey
+        if (!this.isAdmin()) {
+          this.newResource.apikeyaccess = json.getuserkeysresponse.userkeys.apikeyaccess ? 'Enabled' : 'Disabled'
+        }
         this.$emit('change-resource', this.newResource)
       })
     },
@@ -1162,6 +1175,9 @@ export default {
       return ['Admin'].includes(this.$store.getters.userInfo.roletype) ||
         (this.resource.domainid === this.$store.getters.userInfo.domainid && this.resource.account === this.$store.getters.userInfo.account) ||
         (this.resource.project && this.resource.projectid === this.$store.getters.project.id)
+    },
+    isAdmin () {
+      return ['Admin'].includes(this.$store.getters.userInfo.roletype)
     },
     showInput () {
       this.inputVisible = true
