@@ -693,7 +693,7 @@ public class VolumeVO implements Volume {
     public void setDeleteProtection(boolean deleteProtection) {
         this.deleteProtection = deleteProtection;
     }
-    
+
     public long getLastId() {
         return lastId;
     }
