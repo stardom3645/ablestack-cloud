@@ -2691,11 +2691,11 @@ public class DisasterRecoveryClusterUtil {
                         for (String key : serviceOfferingJSONObject.keySet()) {
                             LOGGER.info("::::::::::::::::::::::::::key");
                             LOGGER.info(key);
-                            LOGGER.info("::::::::::::::::::::::::::field.getType()");
-                            LOGGER.info(field.getType());
                             try {
                                 Field field = ServiceOfferingResponse.class.getDeclaredField(key);
                                 field.setAccessible(true);
+                                LOGGER.info("::::::::::::::::::::::::::field.getType()");
+                                LOGGER.info(field.getType());
                                 Object value = getValue(serviceOfferingJSONObject, key, field.getType());
                                 if (value != null) {
                                     field.set(serviceOfferingResponse, value);
