@@ -1177,22 +1177,12 @@ public class AccountManagerImplTest extends AccountManagetImplTestBase {
     }
 
     @Test
-    public void testDeleteWebhooksForAccount() {
-        try (MockedStatic<ComponentContext> mockedComponentContext = Mockito.mockStatic(ComponentContext.class)) {
-            WebhookHelper webhookHelper = Mockito.mock(WebhookHelper.class);
-            Mockito.doNothing().when(webhookHelper).deleteWebhooksForAccount(Mockito.anyLong());
-            mockedComponentContext.when(() -> ComponentContext.getDelegateComponentOfType(WebhookHelper.class))
-                    .thenReturn(webhookHelper);
-            accountManagerImpl.deleteWebhooksForAccount(1L);
-        }
-    }
+    public void deleteAndCleanupUserTestRemovesUserFromProjects() {
+        long userId = userVoMock.getId();
+        Mockito.doNothing().when(_projectAccountDao).removeUserFromProjects(userId);
 
-    @Test
-    public void testDeleteWebhooksForAccountNoBean() {
-        try (MockedStatic<ComponentContext> mockedComponentContext = Mockito.mockStatic(ComponentContext.class)) {
-            mockedComponentContext.when(() -> ComponentContext.getDelegateComponentOfType(WebhookHelper.class))
-                    .thenThrow(NoSuchBeanDefinitionException.class);
-            accountManagerImpl.deleteWebhooksForAccount(1L);
-        }
+        accountManagerImpl.deleteAndCleanupUser(userVoMock);
+
+        Mockito.verify(_projectAccountDao).removeUserFromProjects(userId);
     }
 }
