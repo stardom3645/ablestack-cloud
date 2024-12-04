@@ -2689,6 +2689,10 @@ public class DisasterRecoveryClusterUtil {
                         JSONObject serviceOfferingJSONObject = serviceOfferingsArray.getJSONObject(i);
                         ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
                         for (String key : serviceOfferingJSONObject.keySet()) {
+                            LOGGER.info("::::::::::::::::::::::::::key");
+                            LOGGER.info(key);
+                            LOGGER.info("::::::::::::::::::::::::::field.getType()");
+                            LOGGER.info(field.getType());
                             try {
                                 Field field = ServiceOfferingResponse.class.getDeclaredField(key);
                                 field.setAccessible(true);
