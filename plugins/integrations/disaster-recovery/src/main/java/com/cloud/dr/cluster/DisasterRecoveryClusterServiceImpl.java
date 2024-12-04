@@ -932,52 +932,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         Map<String, String> sucParams = new HashMap<>();
                         String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
                         if (drList != null) {
-                            JSONObject jsonObject = new JSONObject(drList);
-                            if (jsonObject.has("disasterrecoverycluster")) {
-                                Object object = jsonObject.get("disasterrecoverycluster");
-                                JSONArray arr;
-                                if (object instanceof JSONArray) {
-                                    arr = (JSONArray) object;
-                                } else {
-                                    arr = new JSONArray();
-                                    arr.put(object);
-                                }
-                                for (int j = 0; j < arr.length(); j++) {
-                                    JSONObject jSONObject = arr.getJSONObject(j);
-                                    if (jSONObject.get("name").equals(drCluster.getName())) {
-                                        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-                                        if (!CollectionUtils.isEmpty(vmMap)) {
-                                            for (DisasterRecoveryClusterVmMap vm : vmMap) {
-                                                secCommand = "deleteDisasterRecoveryClusterVm";
-                                                secMethod = "GET";
-                                                Map<String, String> vmParams = new HashMap<>();
-                                                vmParams.put("drclustername", drCluster.getName());
-                                                vmParams.put("virtualmachineid", vm.getMirroredVmId());
-                                                DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, vmParams);
-                                                disasterRecoveryClusterVmMapDao.remove(vm.getId());
-                                            }
-                                        }
-                                        String primaryDrId = jSONObject.get("id").toString();
-                                        secCommand = "deleteDisasterRecoveryCluster";
-                                        sucParams = new HashMap<>();
-                                        sucParams.put("id", primaryDrId);
-                                        String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
-                                        if (response == null) {
-                                            throw new CloudRuntimeException("Failed to request DeleteDisasterRecoveryCluster Mold-API.");
-                                        } else {
-                                            JSONObject jObject = new JSONObject(response);
-                                            String jobId = jObject.get("jobid").toString();
-                                            int jobStatus = getAsyncJobResult(secUrl + "/client/api/", secApiKey, secSecretKey, jobId);
-                                            if (jobStatus == 2) {
-                                                throw new CloudRuntimeException("DeleteDisasterRecoveryCluster Mold-API async job resulted in failure.");
-                                            }
-                                            disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
-                                            disasterRecoveryClusterDao.remove(drCluster.getId());
-                                            return true;
-                                        }
-                                    }
-                                }
-                            } else {
+                            if (drList.equalsIgnoreCase("NoRouteToHostException")) {
                                 List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
                                 if (!CollectionUtils.isEmpty(vmMap)) {
                                     for (DisasterRecoveryClusterVmMap vm : vmMap) {
@@ -987,6 +942,63 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
                                 disasterRecoveryClusterDao.remove(drCluster.getId());
                                 return true;
+                            } else {
+                                JSONObject jsonObject = new JSONObject(drList);
+                                if (jsonObject.has("disasterrecoverycluster")) {
+                                    Object object = jsonObject.get("disasterrecoverycluster");
+                                    JSONArray arr;
+                                    if (object instanceof JSONArray) {
+                                        arr = (JSONArray) object;
+                                    } else {
+                                        arr = new JSONArray();
+                                        arr.put(object);
+                                    }
+                                    for (int j = 0; j < arr.length(); j++) {
+                                        JSONObject jSONObject = arr.getJSONObject(j);
+                                        if (jSONObject.get("name").equals(drCluster.getName())) {
+                                            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+                                            if (!CollectionUtils.isEmpty(vmMap)) {
+                                                for (DisasterRecoveryClusterVmMap vm : vmMap) {
+                                                    secCommand = "deleteDisasterRecoveryClusterVm";
+                                                    secMethod = "GET";
+                                                    Map<String, String> vmParams = new HashMap<>();
+                                                    vmParams.put("drclustername", drCluster.getName());
+                                                    vmParams.put("virtualmachineid", vm.getMirroredVmId());
+                                                    DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, vmParams);
+                                                    disasterRecoveryClusterVmMapDao.remove(vm.getId());
+                                                }
+                                            }
+                                            String primaryDrId = jSONObject.get("id").toString();
+                                            secCommand = "deleteDisasterRecoveryCluster";
+                                            sucParams = new HashMap<>();
+                                            sucParams.put("id", primaryDrId);
+                                            String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                            if (response == null) {
+                                                throw new CloudRuntimeException("Failed to request DeleteDisasterRecoveryCluster Mold-API.");
+                                            } else {
+                                                JSONObject jObject = new JSONObject(response);
+                                                String jobId = jObject.get("jobid").toString();
+                                                int jobStatus = getAsyncJobResult(secUrl + "/client/api/", secApiKey, secSecretKey, jobId);
+                                                if (jobStatus == 2) {
+                                                    throw new CloudRuntimeException("DeleteDisasterRecoveryCluster Mold-API async job resulted in failure.");
+                                                }
+                                                disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+                                                disasterRecoveryClusterDao.remove(drCluster.getId());
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+                                    if (!CollectionUtils.isEmpty(vmMap)) {
+                                        for (DisasterRecoveryClusterVmMap vm : vmMap) {
+                                            disasterRecoveryClusterVmMapDao.remove(vm.getId());
+                                        }
+                                    }
+                                    disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+                                    disasterRecoveryClusterDao.remove(drCluster.getId());
+                                    return true;
+                                }
                             }
                         }
                         break;

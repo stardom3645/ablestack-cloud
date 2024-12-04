@@ -1514,7 +1514,11 @@ public class DisasterRecoveryClusterUtil {
             return response.toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
-            return null;
+            if (e.toString().contains("NoRouteToHostException")) {
+                return "NoRouteToHostException";
+            } else {
+                return null;
+            }
         }
     }
 
