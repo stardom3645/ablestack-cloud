@@ -199,7 +199,7 @@ public class ProjectAccountDaoImpl extends GenericDaoBase<ProjectAccountVO, Long
 
         int removedCount = remove(sc);
         if (removedCount > 0) {
-            s_logger.debug(String.format("Removed user [%s] from %s project(s).", userId, removedCount));
+            logger.debug(String.format("Removed user [%s] from %s project(s).", userId, removedCount));
         }
     }
 

@@ -881,7 +881,7 @@ public class AccountManagerImplTest extends AccountManagetImplTestBase {
 
         Mockito.when(userVoMock.getSource()).thenReturn(User.Source.SAML2);
 
-        accountManagerImpl.validateUserPasswordAndUpdateIfNeeded(newPassword, userVoMock, currentPassword);
+        accountManagerImpl.validateUserPasswordAndUpdateIfNeeded(newPassword, userVoMock, currentPassword, false);
     }
 
     @Test(expected = InvalidParameterValueException.class)
@@ -891,7 +891,7 @@ public class AccountManagerImplTest extends AccountManagetImplTestBase {
 
         Mockito.when(userVoMock.getSource()).thenReturn(User.Source.SAML2DISABLED);
 
-        accountManagerImpl.validateUserPasswordAndUpdateIfNeeded(newPassword, userVoMock, currentPassword);
+        accountManagerImpl.validateUserPasswordAndUpdateIfNeeded(newPassword, userVoMock, currentPassword, false);
     }
 
     @Test(expected = InvalidParameterValueException.class)
@@ -901,7 +901,7 @@ public class AccountManagerImplTest extends AccountManagetImplTestBase {
 
         Mockito.when(userVoMock.getSource()).thenReturn(User.Source.LDAP);
 
-        accountManagerImpl.validateUserPasswordAndUpdateIfNeeded(newPassword, userVoMock, currentPassword);
+        accountManagerImpl.validateUserPasswordAndUpdateIfNeeded(newPassword, userVoMock, currentPassword, false);
     }
 
     private String configureUserMockAuthenticators(String newPassword) {
