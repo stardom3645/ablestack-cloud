@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
-// import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.HttpURLConnection;
@@ -51,7 +50,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
-// import org.json.JSONException;
 import org.json.XML;
 import org.json.JSONObject;
 
@@ -2692,15 +2690,9 @@ public class DisasterRecoveryClusterUtil {
                         if (serviceOfferingJSONObject.has("serviceofferingdetails")) {
                             String servDetails = serviceOfferingJSONObject.get("serviceofferingdetails").toString().substring(1);
                             String[] servArr = servDetails.substring(0, servDetails.length() -1).split(",");
-                            LOGGER.info("servArr:::::::::::::::::::::::::::::::::::");
-                            LOGGER.info(servArr);
                             Map<String, String> details = new HashMap<>();
                             for (String servs : servArr) {
                                 String[] serv = servs.trim().split("=");
-                                LOGGER.info("serv:::::::::::::::::::::::::::::::::::");
-                                LOGGER.info(serv);
-                                LOGGER.info(serv[0]);
-                                LOGGER.info(serv[1]);
                                 if (serv[0].equals(ApiConstants.MIN_MEMORY)) {
                                     details.put(ApiConstants.MIN_MEMORY, serv[1]);
                                 } else if (serv[0].equals(ApiConstants.MAX_MEMORY)) {
@@ -2711,7 +2703,6 @@ public class DisasterRecoveryClusterUtil {
                                     details.put(ApiConstants.MAX_CPU_NUMBER, serv[1]);
                                 }
                             }
-                            LOGGER.info(details.toString());
                             serviceOfferingResponse.setDetails(details);
                         }
                         serviceOfferingResponse.setId(serviceOfferingJSONObject.get("id").toString());
