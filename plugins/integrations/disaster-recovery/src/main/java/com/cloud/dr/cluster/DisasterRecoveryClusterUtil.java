@@ -25,7 +25,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
+// import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.HttpURLConnection;
@@ -49,10 +49,11 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
-import org.json.JSONException;
+// import org.json.JSONException;
 import org.json.XML;
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.cloud.utils.nio.TrustAllManager;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
@@ -2685,36 +2686,17 @@ public class DisasterRecoveryClusterUtil {
                         serviceOfferingsArray.put(serviceOfferingObject);
                     }
                     for (int i = 0; i < serviceOfferingsArray.length(); i++) {
-                        // int j = 0;
                         JSONObject serviceOfferingJSONObject = serviceOfferingsArray.getJSONObject(i);
                         ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
-                        for (String key : serviceOfferingJSONObject.keySet()) {
-                            LOGGER.info("::::::::::::::::::::::::::key");
-                            LOGGER.info(key);
-                            try {
-                                Field field = ServiceOfferingResponse.class.getDeclaredField(key);
-                                field.setAccessible(true);
-                                LOGGER.info("::::::::::::::::::::::::::field.getType()");
-                                LOGGER.info(field.getType());
-                                Object value = getValue(serviceOfferingJSONObject, key, field.getType());
-                                if (value != null) {
-                                    field.set(serviceOfferingResponse, value);
-                                }
-                            } catch (NoSuchFieldException e) {
-                                // System.err.println("Field not found: " + key);
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            }
+                        if (serviceOfferingJSONObject.has("serviceofferingdetails")) {
+                            ObjectMapper mapper = new ObjectMapper();
+                            Map<String, String> map = mapper.readValue(serviceOfferingJSONObject.get("serviceofferingdetails").toString(), Map.class);
+                            serviceOfferingResponse.setDetails(map);
                         }
+                        serviceOfferingResponse.setId(serviceOfferingJSONObject.get("id").toString());
+                        serviceOfferingResponse.setName(serviceOfferingJSONObject.get("name").toString());
+                        serviceOfferingResponse.setIscutomized(Boolean.parseBoolean(serviceOfferingJSONObject.get("iscustomized").toString()));
                         serviceOfferingsList.add(serviceOfferingResponse);
-                        // try {
-                        //     j = serviceOfferingResponse.getMemory();
-                        // } catch (NullPointerException e) {
-                        //     // System.err.println("Field not found: " + key);
-                        // }
-                        // if (j != 0) {
-                        //     serviceOfferingsList.add(serviceOfferingResponse);
-                        // }
                     }
                 }
                 return serviceOfferingsList;
@@ -2734,19 +2716,8 @@ public class DisasterRecoveryClusterUtil {
                     for (int i = 0; i < networksArray.length(); i++) {
                         JSONObject networkJSONObject = networksArray.getJSONObject(i);
                         NetworkResponse networkResponse = new NetworkResponse();
-                        for (String key : networkJSONObject.keySet()) {
-                            try {
-                                Field field = NetworkResponse.class.getDeclaredField(key);
-                                field.setAccessible(true);
-                                Object value = getValue(networkJSONObject, key, field.getType());
-                                if (value != null) {
-                                    field.set(networkResponse, value);
-                                }
-                            } catch (NoSuchFieldException e) {
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        networkResponse.setId(networkJSONObject.get("id").toString());
+                        networkResponse.setName(networkJSONObject.get("name").toString());
                         networkResponsesList.add(networkResponse);
                     }
                 }
@@ -2997,28 +2968,28 @@ public class DisasterRecoveryClusterUtil {
      * @param key
      * @param fieldType
      */
-    private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
-        try {
-            if (fieldType == String.class) {
-                try {
-                    return jsonObject.getString(key);
-                } catch (JSONException e) {
-                    return String.valueOf(jsonObject.get(key));
-                }
-            } else if (fieldType == Integer.class) {
-                try {
-                    return jsonObject.getInt(key);
-                } catch (JSONException e) {
-                    return String.valueOf(jsonObject.get(key));
-                }
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+    // private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
+    //     try {
+    //         if (fieldType == String.class) {
+    //             try {
+    //                 return jsonObject.getString(key);
+    //             } catch (JSONException e) {
+    //                 return String.valueOf(jsonObject.get(key));
+    //             }
+    //         } else if (fieldType == Integer.class) {
+    //             try {
+    //                 return jsonObject.getInt(key);
+    //             } catch (JSONException e) {
+    //                 return String.valueOf(jsonObject.get(key));
+    //             }
+    //         } else {
+    //             return null;
+    //         }
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //         return null;
+    //     }
+    // }
 
     /**
      * @param command
