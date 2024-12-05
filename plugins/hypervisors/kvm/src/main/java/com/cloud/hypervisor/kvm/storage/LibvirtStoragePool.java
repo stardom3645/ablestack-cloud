@@ -330,7 +330,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             }
         } else if (primaryStoragePool.getPool().getType() == StoragePoolType.SharedMountPoint) {
                 cmd = new Script(getHearthBeatPath(), HeartBeatUpdateTimeout, logger);
-                cmd.add("-m", primaryStoragePool.getPoolMountSourcePath());
+                cmd.add("-m", primaryStoragePool.getMountDestPath());
                 if (hostValidation) {
                     cmd.add("-h", hostPrivateIp);
                 }
