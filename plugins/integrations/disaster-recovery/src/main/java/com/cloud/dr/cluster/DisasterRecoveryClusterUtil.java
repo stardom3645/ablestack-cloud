@@ -2690,13 +2690,13 @@ public class DisasterRecoveryClusterUtil {
                         JSONObject serviceOfferingJSONObject = serviceOfferingsArray.getJSONObject(i);
                         ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
                         if (serviceOfferingJSONObject.has("serviceofferingdetails")) {
-                            String servDetails = serviceOfferingJSONObject.get("serviceofferingdetails").toString().trim().substring(1);
+                            String servDetails = serviceOfferingJSONObject.get("serviceofferingdetails").toString().substring(1);
                             String[] servArr = servDetails.substring(0, servDetails.length() -1).split(",");
                             LOGGER.info("servArr:::::::::::::::::::::::::::::::::::");
                             LOGGER.info(servArr);
                             Map<String, String> details = new HashMap<>();
                             for (String servs : servArr) {
-                                String[] serv = servs.split("=");
+                                String[] serv = servs.split("=").trim();
                                 LOGGER.info("serv:::::::::::::::::::::::::::::::::::");
                                 LOGGER.info(serv);
                                 LOGGER.info(serv[0]);
