@@ -32,6 +32,7 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.security.SecureRandom;
@@ -42,6 +43,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.utils.security.SSLUtils;
@@ -53,7 +55,6 @@ import org.json.JSONArray;
 import org.json.XML;
 import org.json.JSONObject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.cloud.utils.nio.TrustAllManager;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
@@ -2689,9 +2690,22 @@ public class DisasterRecoveryClusterUtil {
                         JSONObject serviceOfferingJSONObject = serviceOfferingsArray.getJSONObject(i);
                         ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
                         if (serviceOfferingJSONObject.has("serviceofferingdetails")) {
-                            ObjectMapper mapper = new ObjectMapper();
-                            Map<String, String> map = mapper.readValue(serviceOfferingJSONObject.get("serviceofferingdetails"), Map.class);
-                            serviceOfferingResponse.setDetails(map);
+                            String servDetails = serviceOfferingJSONObject.get("serviceofferingdetails").toString().trim().substring(1);
+                            String[] servArr = servDetails.substring(0, servDetails.length() -1).split(",");
+                            Map<String, String> details = new HashMap<>();
+                            for (String servs : servArr) {
+                                String[] serv = servs.split("=");
+                                if (serv[0].equals(ApiConstants.MIN_MEMORY)) {
+                                    details.put(ApiConstants.MIN_MEMORY, serv[1]);
+                                } else if (serv[0].equals(ApiConstants.MAX_MEMORY)) {
+                                    details.put(ApiConstants.MAX_MEMORY, serv[1]);
+                                } else if (serv[0].equals(ApiConstants.MIN_CPU_NUMBER)) {
+                                    details.put(ApiConstants.MIN_CPU_NUMBER, serv[1]);
+                                } else {
+                                    details.put(ApiConstants.MAX_CPU_NUMBER, serv[1]);
+                                }
+                            }
+                            serviceOfferingResponse.setDetails(details);
                         }
                         serviceOfferingResponse.setId(serviceOfferingJSONObject.get("id").toString());
                         serviceOfferingResponse.setName(serviceOfferingJSONObject.get("name").toString());
