@@ -2696,7 +2696,7 @@ public class DisasterRecoveryClusterUtil {
                             LOGGER.info(servArr);
                             Map<String, String> details = new HashMap<>();
                             for (String servs : servArr) {
-                                String[] serv = servs.split("=").trim();
+                                String[] serv = servs.trim().split("=");
                                 LOGGER.info("serv:::::::::::::::::::::::::::::::::::");
                                 LOGGER.info(serv);
                                 LOGGER.info(serv[0]);
