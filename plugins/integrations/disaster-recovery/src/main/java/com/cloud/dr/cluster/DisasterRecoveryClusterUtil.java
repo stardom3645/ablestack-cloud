@@ -2690,7 +2690,7 @@ public class DisasterRecoveryClusterUtil {
                         ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
                         if (serviceOfferingJSONObject.has("serviceofferingdetails")) {
                             ObjectMapper mapper = new ObjectMapper();
-                            Map<String, String> map = mapper.readValue(serviceOfferingJSONObject.get("serviceofferingdetails").toString(), Map.class);
+                            Map<String, String> map = mapper.readValue(serviceOfferingJSONObject.get("serviceofferingdetails"), Map.class);
                             serviceOfferingResponse.setDetails(map);
                         }
                         serviceOfferingResponse.setId(serviceOfferingJSONObject.get("id").toString());
