@@ -2692,13 +2692,15 @@ public class DisasterRecoveryClusterUtil {
                         if (serviceOfferingJSONObject.has("serviceofferingdetails")) {
                             String servDetails = serviceOfferingJSONObject.get("serviceofferingdetails").toString().trim().substring(1);
                             String[] servArr = servDetails.substring(0, servDetails.length() -1).split(",");
-                            LOGGER.info("servArr.toString():::::::::::::::::::::::::::::::::::");
-                            LOGGER.info(servArr.toString());
+                            LOGGER.info("servArr:::::::::::::::::::::::::::::::::::");
+                            LOGGER.info(servArr);
                             Map<String, String> details = new HashMap<>();
                             for (String servs : servArr) {
                                 String[] serv = servs.split("=");
-                                LOGGER.info("serv.toString():::::::::::::::::::::::::::::::::::");
-                                LOGGER.info(serv.toString());
+                                LOGGER.info("serv:::::::::::::::::::::::::::::::::::");
+                                LOGGER.info(serv);
+                                LOGGER.info(serv[0]);
+                                LOGGER.info(serv[1]);
                                 if (serv[0].equals(ApiConstants.MIN_MEMORY)) {
                                     details.put(ApiConstants.MIN_MEMORY, serv[1]);
                                 } else if (serv[0].equals(ApiConstants.MAX_MEMORY)) {
