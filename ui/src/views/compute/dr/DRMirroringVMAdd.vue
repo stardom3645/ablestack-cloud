@@ -433,9 +433,11 @@ export default {
           virtualmachineid: this.resource.id,
           drclustername: values.drCluster,
           serviceofferingname: values.secDrClusterOfferings,
-          networkname: values.secDrClusterNetworkList,
-          cpunumber: this.cpuNumberInputValue,
-          memory: this.memoryInputValue
+          networkname: values.secDrClusterNetworkList
+        }
+        if (this.isCustomized) {
+          params.cpunumber = this.cpuNumberInputValue
+          params.memory = this.memoryInputValue
         }
         api('createDisasterRecoveryClusterVm', params).then(response => {
           this.$pollJob({
