@@ -77,6 +77,17 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseAsyncCmd {
                 description = "the network name used by disaster recovery cluster")
     private String networkName;
 
+    @Parameter(name = ApiConstants.CPU_NUMBER,
+                type = CommandType.STRING,
+                required = false,
+                description = "the service offering cpu number used by disaster recovery cluster")
+    private String cpuNumber;
+
+    @Parameter(name = ApiConstants.MEMORY,
+                type = CommandType.STRING,
+                required = false,
+                description = "the service offering memory used by disaster recovery cluster")
+    private String memory;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -95,6 +106,14 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseAsyncCmd {
 
     public String getNetworkName() {
         return networkName;
+    }
+
+    public String getCpuNumber() {
+        return cpuNumber;
+    }
+
+    public String getMemory() {
+        return memory;
     }
 
     @Override

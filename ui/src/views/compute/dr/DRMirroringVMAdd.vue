@@ -50,7 +50,6 @@
           </a-select-option>
         </a-select>
       </a-form-item>
-
       <a-form-item
         ref="secDrClusterOfferings"
         name="secDrClusterOfferings"
@@ -58,6 +57,7 @@
         <a-select
           v-model:value="form.secDrClusterOfferings"
           :loading="loading"
+          @change="updateSelectedOfferingId"
           showSearch
           optionFilterProp="label"
           :filterOption="(input, option) => {
@@ -68,8 +68,41 @@
             {{ opt.name }}
           </a-select-option>
         </a-select>
+        <a-card v-if="this.isCustomized">
+          <a-col>
+            <a-row>
+              <a-col :md="colContraned" :lg="colContraned" v-if="this.isCustomized">
+                <a-form-item
+                  :label="$t('label.cpunumber')"
+                  :validate-status="errors.cpu.status"
+                  :help="errors.cpu.message">
+                  <a-select
+                    v-model:value="cpuNumberInputValue"
+                    show-search
+                    style="width: 100px"
+                    :options="cpuOptions"
+                    @change="($event) => updateComputeCpuNumber($event) "
+                  ></a-select>
+                </a-form-item>
+              </a-col>
+              <a-col :md="colContraned" :lg="colContraned" v-if="this.isCustomized">
+                <a-form-item
+                  :label="$t('label.memory.gb')"
+                  :validate-status="errors.memory.status"
+                  :help="errors.memory.message">
+                  <a-select
+                    v-model:value="memoryInputValue"
+                    show-search
+                    style="width: 100px"
+                    :options="memOptions"
+                    @change="($event) => updateComputeMemory($event)"
+                  ></a-select>
+                </a-form-item>
+              </a-col>
+            </a-row>
+          </a-col>
+        </a-card>
       </a-form-item>
-
       <a-form-item
         ref="secDrClusterNetworkList"
         name="secDrClusterNetworkList"
@@ -116,18 +149,76 @@ export default {
   data () {
     return {
       loading: false,
+      isCustomized: false,
       params: [],
       drCluster: [],
       drVm: [],
       selectedDrCluster: [],
-      selectedId: '',
       secDrClusterOfferings: [],
-      secDrClusterNetworkList: []
+      secDrClusterNetworkList: [],
+      cpuNumberInputValue: 0,
+      memoryInputValue: 0,
+      errors: {
+        cpu: {
+          status: '',
+          message: ''
+        },
+        memory: {
+          status: '',
+          message: ''
+        }
+      },
+      cpuOpt: [
+        { value: '1', label: '1' },
+        { value: '2', label: '2' },
+        { value: '4', label: '4' },
+        { value: '8', label: '8' },
+        { value: '16', label: '16' },
+        { value: '32', label: '32' },
+        { value: '64', label: '64' },
+        { value: '128', label: '128' },
+        { value: '256', label: '256' },
+        { value: '512', label: '512' },
+        { value: '1024', label: '1024' },
+        { value: '2048', label: '2048' },
+        { value: '4096', label: '4096' },
+        { value: '8192', label: '8192' }
+      ],
+      memOpt: [
+        { value: '512', label: '0.5' },
+        { value: '1024', label: '1' },
+        { value: '2048', label: '2' },
+        { value: '4096', label: '4' },
+        { value: '8192', label: '8' },
+        { value: '16384', label: '16' },
+        { value: '32768', label: '32' },
+        { value: '65536', label: '64' },
+        { value: '131072', label: '128' },
+        { value: '262144', label: '256' },
+        { value: '524288', label: '512' },
+        { value: '1048576', label: '1024' },
+        { value: '2097152', label: '2048' },
+        { value: '4194304', label: '4096' },
+        { value: '8388608', label: '8192' }
+      ]
     }
   },
   created () {
     this.initForm()
     this.fetchData()
+  },
+  mounted () {
+    if (this.isCustomized) {
+      this.fillValue()
+    }
+  },
+  computed: {
+    colContraned () {
+      if (this.maxCpu && !isNaN(this.maxCpu)) {
+        return 12
+      }
+      return 8
+    }
   },
   methods: {
     initForm () {
@@ -179,6 +270,14 @@ export default {
         if (this.form.drCluster != null) {
           this.secDrClusterOfferings = this.drCluster[0].serviceofferingdetails || []
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : null
+          if (this.secDrClusterOfferings[0].serviceofferingdetails) {
+            this.isCustomized = true
+            this.minCpu = this.secDrClusterOfferings[0].serviceofferingdetails.mincpunumber * 1
+            this.maxCpu = this.secDrClusterOfferings[0].serviceofferingdetails.maxcpunumber * 1
+            this.minMemory = this.secDrClusterOfferings[0].serviceofferingdetails.minmemory * 1
+            this.maxMemory = this.secDrClusterOfferings[0].serviceofferingdetails.maxmemory * 1
+            this.fillValue()
+          }
           this.secDrClusterNetworkList = this.drCluster[0].network || []
           this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].name : null
         } else {
@@ -194,12 +293,18 @@ export default {
       api('getDisasterRecoveryClusterList', { id: selectId, drclustertype: 'secondary' }).then(json => {
         const response = json.getdisasterrecoveryclusterlistresponse
         const clusters = response ? response.disasterrecoverycluster : null
-
         if (clusters && clusters.length > 0) {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
-
+          if (this.secDrClusterOfferings[0].serviceofferingdetails) {
+            this.isCustomized = true
+            this.minCpu = this.secDrClusterOfferings[0].serviceofferingdetails.mincpunumber * 1
+            this.maxCpu = this.secDrClusterOfferings[0].serviceofferingdetails.maxcpunumber * 1
+            this.minMemory = this.secDrClusterOfferings[0].serviceofferingdetails.minmemory * 1
+            this.maxMemory = this.secDrClusterOfferings[0].serviceofferingdetails.maxmemory * 1
+            this.fillValue()
+          }
           this.secDrClusterNetworkList = cluster.network || []
           this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].name : ''
 
@@ -216,10 +321,103 @@ export default {
         this.loading = false
       })
     },
+    fillValue () {
+      if (this.maxCpu && !isNaN(this.maxCpu)) {
+        this.cpuOptions = this.cpuOpt.filter(x => x.value >= this.minCpu && x.value <= this.maxCpu)
+        this.memOptions = this.memOpt.filter(x => x.value >= this.minMemory && x.value <= this.maxMemory)
+      } else {
+        this.cpuOptions = this.cpuOpt
+        this.memOptions = this.memOpt
+      }
+      this.cpuNumberInputValue = this.cpuOptions[0].value
+      this.memoryInputValue = this.memOptions[0].value
+
+      this.updateComputeCpuNumber(this.cpuNumberInputValue)
+      this.updateComputeMemory(this.memoryInputValue)
+    },
+    updateComputeCpuNumber (value) {
+      if (!value) this.cpuNumberInputValue = 0
+      if (!this.validateInput('cpu', value)) {
+        return
+      }
+      this.$emit('update-compute-cpunumber', 'cpunumber', value)
+    },
+    updateComputeMemory (value) {
+      if (!value) this.memoryInputValue = 0
+      if (!this.validateInput('memory', value)) {
+        return
+      }
+      this.$emit('update-compute-memory', 'memory', value)
+    },
+    validateInput (input, value) {
+      this.errors[input].status = ''
+      this.errors[input].message = ''
+
+      if (value === null || value === undefined || value.length === 0) {
+        this.errors[input].status = 'error'
+        this.errors[input].message = this.$t('message.error.required.input')
+        return false
+      }
+
+      let min
+      let max
+
+      switch (input) {
+        case 'cpu':
+          min = this.minCpu
+          max = this.maxCpu
+          break
+        case 'memory':
+          min = this.memOptions[0].value / 1024
+          max = this.memOptions[this.memOptions.length - 1].value / 1024
+          value = value / 1024
+          break
+      }
+      if (!this.checkValidRange(value, min, max)) {
+        this.errors[input].status = 'error'
+        this.errors[input].message = `${this.$t('message.please.enter.value')} (${min} ~ ${max})`
+        return false
+      }
+
+      return true
+    },
+    checkValidRange (value, min, max) {
+      if (value < min || value > max) {
+        return false
+      }
+
+      return true
+    },
     updateSelectedId (value) {
       this.resetSelection()
       this.selectedClusterId = value
       this.fetchSecDRClusterInfoList()
+    },
+    updateSelectedOfferingId (selectOff) {
+      this.loading = true
+      this.isCustomized = false
+      api('getDisasterRecoveryClusterList', { id: this.selectedClusterId, drclustertype: 'secondary' }).then(json => {
+        const response = json.getdisasterrecoveryclusterlistresponse
+        const clusters = response ? response.disasterrecoverycluster : null
+        if (clusters && clusters.length > 0) {
+          const cluster = clusters[0]
+          this.secDrClusterOfferings = cluster.serviceofferingdetails || []
+          for (const offering of this.secDrClusterOfferings) {
+            if (offering.name === selectOff && offering.serviceofferingdetails) {
+              this.isCustomized = true
+              this.minCpu = offering.serviceofferingdetails.mincpunumber * 1
+              this.maxCpu = offering.serviceofferingdetails.maxcpunumber * 1
+              this.minMemory = offering.serviceofferingdetails.minmemory * 1
+              this.maxMemory = offering.serviceofferingdetails.maxmemory * 1
+            }
+          }
+        }
+      }).catch(() => {
+        this.resetSelection() // 에러 발생 후 선택된 값 초기화
+        this.loading = false // 에러 처리 후 로딩 종료
+      }).finally(() => {
+        this.loading = false
+      })
     },
     resetSelection () {
       this.form.secDrClusterOfferings = null
@@ -235,7 +433,9 @@ export default {
           virtualmachineid: this.resource.id,
           drclustername: values.drCluster,
           serviceofferingname: values.secDrClusterOfferings,
-          networkname: values.secDrClusterNetworkList
+          networkname: values.secDrClusterNetworkList,
+          cpunumber: this.cpuNumberInputValue,
+          memory: this.memoryInputValue
         }
         api('createDisasterRecoveryClusterVm', params).then(response => {
           this.$pollJob({

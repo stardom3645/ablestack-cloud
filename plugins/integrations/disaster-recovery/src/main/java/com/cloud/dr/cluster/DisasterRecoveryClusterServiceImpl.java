@@ -1772,6 +1772,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 vmParams.put("dynamicscalingenabled", "false");
                 vmParams.put("iothreadsenabled", ioThread);
                 vmParams.put("iodriverpolicy", ioPolicy);
+                if (cmd.getCpuNumber() != null) {
+                    vmParams.put("details[0].cpuNumber", cmd.getCpuNumber());
+                }
+                if (cmd.getMemory() != null) {
+                    vmParams.put("details[0].memory", cmd.getMemory());
+                }
                 String deployVmResult = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                 if (deployVmResult == null) {
                     throw new CloudRuntimeException("Failed to request DeployVirtualMachineForVolume Mold-API.");
