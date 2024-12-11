@@ -68,7 +68,7 @@ public final class LibvirtDeleteACfileToFencedHostCommandWrapper extends Command
 
             String rbdPoolName = "";
             String authUserName = "";
-            String smpTargetPath = "";
+            String nfsOrSmpTargetPath = "";
             try {
                 String[] poolnames = conn.listStoragePools();
                 if (poolnames.length == 0) {
@@ -90,11 +90,11 @@ public final class LibvirtDeleteACfileToFencedHostCommandWrapper extends Command
 
                         Script.runSimpleBashScript("rbd -p " + rbdPoolName + " --id " + authUserName + " rm MOLD-AC");
                     }
-                    if (pdef.getPoolType() == PoolType.DIR) {
+                    if (pdef.getPoolType() == PoolType.DIR || pdef.getPoolType() == PoolType.NETFS) {
                         logger.debug(String.format("SharedMountPoint Pool source path [%s]", pdef.getTargetPath()));
-                        smpTargetPath = pdef.getTargetPath();
+                        nfsOrSmpTargetPath = pdef.getTargetPath();
 
-                        Script.runSimpleBashScript("rm -rf" + smpTargetPath + "/MOLD-AC");
+                        Script.runSimpleBashScript("rm -rf " + nfsOrSmpTargetPath + "/MOLD-AC");
                     }
                 }
                 return new Answer(command, true, "success");
