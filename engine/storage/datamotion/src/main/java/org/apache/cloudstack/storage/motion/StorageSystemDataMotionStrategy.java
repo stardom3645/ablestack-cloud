@@ -326,26 +326,21 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
 
     @Override
     public void copyAsync(DataObject srcData, DataObject destData, Host destHost, AsyncCompletionCallback<CopyCommandResult> callback) {
-            logger.debug("kvdo_test20");
         if (srcData instanceof SnapshotInfo) {
             SnapshotInfo srcSnapshotInfo = (SnapshotInfo)srcData;
-            logger.debug("kvdo_excute1");
             handleCopyAsyncForSnapshot(srcSnapshotInfo, destData, callback);
         } else if (srcData instanceof TemplateInfo && destData instanceof VolumeInfo) {
             TemplateInfo srcTemplateInfo = (TemplateInfo)srcData;
             VolumeInfo destVolumeInfo = (VolumeInfo)destData;
-            logger.debug("kvdo_excute2");
             handleCopyAsyncForTemplateAndVolume(srcTemplateInfo, destVolumeInfo, callback);
         } else if (srcData instanceof VolumeInfo && destData instanceof VolumeInfo) {
             VolumeInfo srcVolumeInfo = (VolumeInfo)srcData;
             VolumeInfo destVolumeInfo = (VolumeInfo)destData;
-            logger.debug("kvdo_excute3");
             handleCopyAsyncForVolumes(srcVolumeInfo, destVolumeInfo, callback);
         } else if (srcData instanceof VolumeInfo && destData instanceof TemplateInfo &&
                 (destData.getDataStore().getRole() == DataStoreRole.Image || destData.getDataStore().getRole() == DataStoreRole.ImageCache)) {
             VolumeInfo srcVolumeInfo = (VolumeInfo)srcData;
             TemplateInfo destTemplateInfo = (TemplateInfo)destData;
-            logger.debug("kvdo_excute4");
             handleCreateTemplateFromManagedVolume(srcVolumeInfo, destTemplateInfo, callback);
             logger.info("handleCreateTemplateFromManagedVolume excute2");
         }
