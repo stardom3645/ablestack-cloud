@@ -50,6 +50,8 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
 
+import static org.apache.cloudstack.query.QueryService.SortKeyAscending;
+
 @Component
 public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJoinVO, Long> implements ServiceOfferingJoinDao {
 
@@ -236,13 +238,15 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
 
     @Override
     public List<ServiceOfferingJoinVO> searchByIds(Long... offeringIds) {
+        Filter searchFilter = new Filter(ServiceOfferingJoinVO.class, "sortKey", SortKeyAscending.value());
+        searchFilter.addOrderBy(ServiceOfferingJoinVO.class, "id", true);
+
         // set detail batch query size
         int DETAILS_BATCH_SIZE = 2000;
         String batchCfg = configDao.getValue("detail.batch.query.size");
         if (batchCfg != null) {
             DETAILS_BATCH_SIZE = Integer.parseInt(batchCfg);
         }
-        Filter searchFilter = new Filter(ServiceOfferingJoinVO.class, "sortKey", true);
         List<ServiceOfferingJoinVO> uvList = new ArrayList<>();
         // query details by batches
         int curr_index = 0;
@@ -254,9 +258,9 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
                 }
                 SearchCriteria<ServiceOfferingJoinVO> sc = srvOfferingSearch.create();
                 sc.setParameters("idIN", ids);
-                List<ServiceOfferingJoinVO> accounts = searchIncludingRemoved(sc, searchFilter, null, false);
-                if (accounts != null) {
-                    uvList.addAll(accounts);
+                List<ServiceOfferingJoinVO> offerings = searchIncludingRemoved(sc, searchFilter, null, false);
+                if (offerings != null) {
+                    uvList.addAll(offerings);
                 }
                 curr_index += DETAILS_BATCH_SIZE;
             }
@@ -270,9 +274,9 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
             }
             SearchCriteria<ServiceOfferingJoinVO> sc = srvOfferingSearch.create();
             sc.setParameters("idIN", ids);
-            List<ServiceOfferingJoinVO> accounts = searchIncludingRemoved(sc, searchFilter, null, false);
-            if (accounts != null) {
-                uvList.addAll(accounts);
+            List<ServiceOfferingJoinVO> offerings = searchIncludingRemoved(sc, searchFilter, null, false);
+            if (offerings != null) {
+                uvList.addAll(offerings);
             }
         }
         return uvList;

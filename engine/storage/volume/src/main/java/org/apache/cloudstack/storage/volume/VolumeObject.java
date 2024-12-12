@@ -332,7 +332,7 @@ public class VolumeObject implements VolumeInfo {
     @Override
     public boolean getShareable() {
         DiskOfferingVO diskOfferingVO = getDiskOfferingVO();
-        return diskOfferingVO.getShareable();
+        return diskOfferingVO == null ? false : diskOfferingVO.getShareable();
     }
 
     @Override
@@ -948,6 +948,11 @@ public class VolumeObject implements VolumeInfo {
     @Override
     public void setEncryptFormat(String encryptFormat) {
         volumeVO.setEncryptFormat(encryptFormat);
+    }
+
+    @Override
+    public boolean isDeleteProtection() {
+        return volumeVO.isDeleteProtection();
     }
 
     @Override

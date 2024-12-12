@@ -280,8 +280,11 @@ public class HostResponse extends BaseResponseWithAnnotations {
 
     @SerializedName("ueficapability")
     @Param(description = "true if the host has capability to support UEFI boot")
-    private Boolean uefiCapabilty;
-    private boolean tpmCapabilty;
+    private Boolean uefiCapability;
+
+    @SerializedName("tpmcapability")
+    @Param(description = "true if the host has capability to support TPM 2.0 Device")
+    private Boolean tpmCapabilty;
 
     @SerializedName(ApiConstants.ENCRYPTION_SUPPORTED)
     @Param(description = "true if the host supports encryption", since = "4.18")
@@ -290,6 +293,10 @@ public class HostResponse extends BaseResponseWithAnnotations {
     @SerializedName(ApiConstants.INSTANCE_CONVERSION_SUPPORTED)
     @Param(description = "true if the host supports instance conversion (using virt-v2v)", since = "4.19.1")
     private Boolean instanceConversionSupported;
+
+    @SerializedName(ApiConstants.ARCH)
+    @Param(description = "CPU Arch of the host", since = "4.20")
+    private String arch;
 
     @Override
     public String getObjectId() {
@@ -736,7 +743,7 @@ public class HostResponse extends BaseResponseWithAnnotations {
         return clusterType;
     }
 
-    public Boolean isLocalStorageActive() {
+    public Boolean getLocalStorageActive() {
         return localStorageActive;
     }
 
@@ -756,7 +763,7 @@ public class HostResponse extends BaseResponseWithAnnotations {
         return hasEnoughCapacity;
     }
 
-    public Boolean isSuitableForMigration() {
+    public Boolean getSuitableForMigration() {
         return suitableForMigration;
     }
 
@@ -768,8 +775,8 @@ public class HostResponse extends BaseResponseWithAnnotations {
         return haHost;
     }
 
-    public void setUefiCapabilty(Boolean hostCapability) {
-        this.uefiCapabilty = hostCapability;
+    public void setUefiCapability(Boolean hostCapability) {
+        this.uefiCapability = hostCapability;
     }
 
     public void setTpmCapabilty(Boolean hostCapability) {
@@ -790,5 +797,85 @@ public class HostResponse extends BaseResponseWithAnnotations {
 
     public void setIsTagARule(Boolean tagARule) {
         isTagARule = tagARule;
+    }
+
+    public void setArch(String arch) {
+        this.arch = arch;
+    }
+
+    public String getArch() {
+        return arch;
+    }
+
+    public Long getCpuAllocatedValue() {
+        return cpuAllocatedValue;
+    }
+
+    public String getCpuAllocatedPercentage() {
+        return cpuAllocatedPercentage;
+    }
+
+    public String getCpuAllocatedWithOverprovisioning() {
+        return cpuAllocatedWithOverprovisioning;
+    }
+
+    public Double getCpuloadaverage() {
+        return cpuloadaverage;
+    }
+
+    public void setCpuloadaverage(Double cpuloadaverage) {
+        this.cpuloadaverage = cpuloadaverage;
+    }
+
+    public String getMemWithOverprovisioning() {
+        return memWithOverprovisioning;
+    }
+
+    public String getMemoryAllocatedPercentage() {
+        return memoryAllocatedPercentage;
+    }
+
+    public Long getMemoryAllocatedBytes() {
+        return memoryAllocatedBytes;
+    }
+
+    public Boolean getTagARule() {
+        return isTagARule;
+    }
+
+    public void setTagARule(Boolean tagARule) {
+        isTagARule = tagARule;
+    }
+
+    public Boolean getHasEnoughCapacity() {
+        return hasEnoughCapacity;
+    }
+
+    public void setDetails(Map details) {
+        this.details = details;
+    }
+
+    public String getAnnotation() {
+        return annotation;
+    }
+
+    public Date getLastAnnotated() {
+        return lastAnnotated;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public Boolean getUefiCapability() {
+        return uefiCapability;
+    }
+
+    public Boolean getEncryptionSupported() {
+        return encryptionSupported;
+    }
+
+    public Boolean getInstanceConversionSupported() {
+        return instanceConversionSupported;
     }
 }

@@ -819,7 +819,8 @@ public class TemplateServiceImpl implements TemplateService {
         String templateName = dataDiskTemplate.isIso() ? dataDiskTemplate.getPath().substring(dataDiskTemplate.getPath().lastIndexOf(File.separator) + 1) : template.getName() + suffix + diskCount;
         VMTemplateVO templateVO = new VMTemplateVO(templateId, templateName, format, false, false, false, ttype, template.getUrl(),
                 template.requiresHvm(), template.getBits(), template.getAccountId(), null, templateName, false, guestOsId, false, template.getHypervisorType(), null,
-                null, false, false, false, false, false);
+                null, false, false, false, false, false, template.getArch());
+
         if (dataDiskTemplate.isIso()){
             templateVO.setUniqueName(templateName);
         }
@@ -964,7 +965,6 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     private AsyncCallFuture<TemplateApiResult> copyAsync(DataObject source, TemplateInfo template, DataStore store) {
-        logger.debug("kvdo_test5");
         AsyncCallFuture<TemplateApiResult> future = new AsyncCallFuture<TemplateApiResult>();
         DataObject templateOnStore = store.create(template);
         templateOnStore.processEvent(Event.CreateOnlyRequested);
@@ -978,13 +978,11 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     public AsyncCallFuture<TemplateApiResult> createTemplateFromSnapshotAsync(SnapshotInfo snapshot, TemplateInfo template, DataStore store) {
-        logger.debug("kvdo_test3");
         return copyAsync(snapshot, template, store);
     }
 
     @Override
     public AsyncCallFuture<TemplateApiResult> createTemplateFromVolumeAsync(VolumeInfo volume, TemplateInfo template, DataStore store) {
-        logger.debug("kvdo_test4");
         return copyAsync(volume, template, store);
     }
 

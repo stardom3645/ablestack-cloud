@@ -295,6 +295,9 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "used_physical_size")
     private Long usedPhysicalSize;
 
+    @Column(name = "delete_protection")
+    protected Boolean deleteProtection;
+
     public VolumeJoinVO() {
     }
 
@@ -652,6 +655,10 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public Long getUsedPhysicalSize() {
         return usedPhysicalSize;
+    }
+
+    public Boolean getDeleteProtection() {
+        return deleteProtection;
     }
 
     @Override

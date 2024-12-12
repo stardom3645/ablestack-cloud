@@ -38,7 +38,8 @@ import java.util.List;
 import java.util.Map;
 
 public class CephObjectStoreLifeCycleImpl implements ObjectStoreLifeCycle {
-    protected Logger logger = LogManager.getLogger(getClass());
+
+    private Logger logger = LogManager.getLogger(CephObjectStoreLifeCycleImpl.class);
 
     @Inject
     ObjectStoreHelper objectStoreHelper;

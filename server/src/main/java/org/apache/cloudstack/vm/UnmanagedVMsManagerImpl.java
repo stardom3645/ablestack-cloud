@@ -542,6 +542,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         final String dsPath = disk.getDatastorePath();
         final String dsType = disk.getDatastoreType();
         final String dsName = disk.getDatastoreName();
+        logger.debug("### DataStore [Host:%s, Path:%s, Type:%s, Uuid:%s" ,dsHost, dsPath, dsType, dsName);
         if (dsType != null) {
             List<StoragePoolVO> pools = primaryDataStoreDao.listPoolByHostPath(dsHost, dsPath);
             for (StoragePool pool : pools) {
@@ -557,10 +558,12 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             List<StoragePoolVO> pools = primaryDataStoreDao.listPoolsByCluster(cluster.getId());
             pools.addAll(primaryDataStoreDao.listByDataCenterId(zone.getId()));
             for (StoragePool pool : pools) {
-                String searchPoolParam = StringUtils.isNotBlank(dsPath) ? dsPath : dsName;
-                if (StringUtils.contains(pool.getPath(), searchPoolParam)) {
-                    storagePool = pool;
-                    break;
+                if (pool.getUuid().equals(dsName)) {
+                    StoragePoolVO spool = primaryDataStoreDao.findByUuid(dsName);
+                    if (spool != null) {
+                        storagePool = pool;
+                        break;
+                    }
                 }
             }
         }
@@ -1636,7 +1639,11 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
                     " from VMware to KVM ", convertHost.getId(), convertHost.getName(), sourceVMName));
 
             temporaryConvertLocation = selectInstanceConversionTemporaryLocation(destinationCluster, convertStoragePoolId);
-            List<StoragePoolVO> convertStoragePools = findInstanceConversionStoragePoolsInCluster(destinationCluster);
+            // List<StoragePoolVO> convertStoragePools = findInstanceConversionStoragePoolsInCluster(destinationCluster);
+            DiskOffering diskOffering = diskOfferingDao.findById(serviceOffering.getDiskOfferingId());
+            List<StoragePoolVO> convertStoragePools = primaryDataStoreDao.findZoneWideScopeZoneOrClusterStoragePoolsByTags(zone.getId(), diskOffering.getTagsArray(), true);
+            logger.info("diskOffering :::::::: " + diskOffering.getName());
+            logger.info("convertStoragePools :::::::: " + convertStoragePools);
             long importStartTime = System.currentTimeMillis();
             Pair<UnmanagedInstanceTO, Boolean> sourceInstanceDetails = getSourceVmwareUnmanagedInstance(vcenter, datacenterName, username, password, clusterName, sourceHostName, sourceVMName);
             sourceVMwareInstance = sourceInstanceDetails.first();
@@ -2106,6 +2113,13 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
                     vmVO.getHypervisorType().toString());
         } else if (vmVO.getType() != VirtualMachine.Type.User) {
             throw new UnsupportedServiceException("Unmanage VM is currently allowed for guest VMs only");
+        }
+
+        if (vmVO.getType().equals(VirtualMachine.Type.User)) {
+            UserVmVO userVm = userVmDao.findById(vmId);
+            if (UserVmManager.SHAREDFSVM.equals(userVm.getUserVmType())) {
+                throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
+            }
         }
 
         performUnmanageVMInstancePrechecks(vmVO);
@@ -2601,7 +2615,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         logger.debug("Creating network for account " + owner + " from the network offering id=" + requiredOfferings.get(0).getId() + " as a part of deployVM process");
         Network newNetwork = networkMgr.createGuestNetwork(requiredOfferings.get(0).getId(), owner.getAccountName() + "-network", owner.getAccountName() + "-network",
                 null, null, null, false, null, owner, null, physicalNetwork, zone.getId(), ControlledEntity.ACLType.Account, null, null, null, null, true, null, null,
-                null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null);
         if (newNetwork != null) {
             defaultNetwork = networkDao.findById(newNetwork.getId());
         }

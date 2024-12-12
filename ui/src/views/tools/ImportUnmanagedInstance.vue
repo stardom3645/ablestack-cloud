@@ -222,7 +222,7 @@
                   :cpuNumberInputDecorator="cpuNumberKey"
                   :cpuSpeedInputDecorator="cpuSpeedKey"
                   :memoryInputDecorator="memoryKey"
-                  :computeOfferingId="computeOffering.id"
+                  :serviceofferingId="computeOffering.id"
                   :preFillContent="dataPreFill"
                   :isConstrained="'serviceofferingdetails' in computeOffering"
                   :minCpu="getMinCpu()"
@@ -715,6 +715,7 @@ export default {
       this.rules = reactive({
         displayname: [{ required: true, message: this.$t('message.error.input.value') }],
         templateid: [{ required: this.templateType !== 'auto', message: this.$t('message.error.input.value') }],
+        serviceofferingid: [{ required: true, message: this.$t('message.error.input.value') }],
         rootdiskid: [{ required: this.templateType !== 'auto', message: this.$t('message.error.input.value') }]
       })
     },
@@ -852,7 +853,7 @@ export default {
       this.form[name] = value
     },
     updateComputeOffering (id) {
-      this.updateFieldValue('computeofferingid', id)
+      this.updateFieldValue('serviceofferingid', id)
       this.computeOffering = this.computeOfferings.filter(x => x.id === id)[0]
       if (this.computeOffering && !this.computeOffering.iscustomizediops) {
         this.updateFieldValue(this.minIopsKey, undefined)
@@ -879,6 +880,7 @@ export default {
       this.rules = reactive({
         displayname: [{ required: true, message: this.$t('message.error.input.value') }],
         templateid: [{ required: this.templateType !== 'auto', message: this.$t('message.error.input.value') }],
+        serviceofferingid: [{ required: true, message: this.$t('message.error.input.value') }],
         rootdiskid: [{ required: this.templateType !== 'auto', message: this.$t('message.error.input.value') }]
       })
     },
@@ -1040,7 +1042,7 @@ export default {
           })
           return
         }
-        params.serviceofferingid = values.computeofferingid
+        params.serviceofferingid = values.serviceofferingid
         if (this.computeOffering.iscustomized) {
           var details = [this.cpuNumberKey, this.cpuSpeedKey, this.memoryKey]
           for (var detail of details) {
@@ -1188,6 +1190,7 @@ export default {
               successMethod: result => {
                 this.$emit('refresh-data')
                 resolve(result)
+                this.closeAction()
               },
               errorMethod: (result) => {
                 this.updateLoading(false)
@@ -1198,7 +1201,7 @@ export default {
             this.updateLoading(false)
             this.$notifyError(error)
           }).finally(() => {
-            this.closeAction()
+            // this.closeAction()
             this.updateLoading(false)
           })
         })
@@ -1211,7 +1214,7 @@ export default {
       this.$emit('loading-changed', value)
     },
     resetForm () {
-      var fields = ['displayname', 'hostname', 'domainid', 'account', 'projectid', 'computeofferingid']
+      var fields = ['displayname', 'hostname', 'domainid', 'account', 'projectid', 'serviceofferingid']
       for (var field of fields) {
         this.updateFieldValue(field, undefined)
       }

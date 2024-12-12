@@ -194,6 +194,9 @@ public class VolumeVO implements Volume {
     @Column(name = "used_physical_size")
     private Long usedPhysicalSize;
 
+    @Column(name = "delete_protection")
+    private boolean deleteProtection;
+
     // Real Constructor
     public VolumeVO(Type type, String name, long dcId, long domainId,
             long accountId, long diskOfferingId, Storage.ProvisioningType provisioningType, long size,
@@ -709,4 +712,13 @@ public class VolumeVO implements Volume {
     public Long getUsedPhysicalSize() { return usedPhysicalSize; }
 
     public void setUsedPhysicalSize(Long usedPhysicalSize) { this.usedPhysicalSize = usedPhysicalSize; }
+
+    @Override
+    public boolean isDeleteProtection() {
+        return deleteProtection;
+    }
+
+    public void setDeleteProtection(boolean deleteProtection) {
+        this.deleteProtection = deleteProtection;
+    }
 }

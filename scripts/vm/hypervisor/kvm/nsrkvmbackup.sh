@@ -113,7 +113,7 @@ sanity_checks() {
                 exit 4
         fi
 
-        log -ne "\t[4] Checking Permissions \t\t"
+        log -ne "\t[5] Checking Permissions \t\t"
         if groups $USER | grep -q '\blibvirt\b'; then
             log -n "Success"
             log -ne "\t\t User $USER is part of libvirt group"

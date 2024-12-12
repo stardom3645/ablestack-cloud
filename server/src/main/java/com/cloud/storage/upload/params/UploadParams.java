@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.storage.upload.params;
 
+import com.cloud.cpu.CPU;
 import com.cloud.hypervisor.Hypervisor;
 
 import java.util.Map;
@@ -48,4 +49,5 @@ public interface UploadParams {
     boolean isDirectDownload();
     boolean isKvdoEnable();
     boolean isDeployAsIs();
+    CPU.CPUArch getArch();
 }
