@@ -112,6 +112,7 @@ Requires: tzdata-java
 Requires: %{name}-common = %{_ver}
 Requires: libvirt
 Requires: bridge-utils
+Requires: libvirt-daemon-driver-storage-rbd
 Requires: ebtables
 Requires: iptables
 Requires: ethtool
@@ -119,8 +120,9 @@ Requires: net-tools
 Requires: iproute
 Requires: ipset
 Requires: perl
-Requires: python36-libvirt
-Requires: qemu-img
+Requires: rsync
+Requires: (python3-libvirt or python3-libvirt-python)
+Requires: (qemu-img or qemu-tools)
 Requires: qemu-kvm
 Requires: cryptsetup
 Requires: rng-tools

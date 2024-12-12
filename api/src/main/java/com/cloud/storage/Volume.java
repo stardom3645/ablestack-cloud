@@ -271,11 +271,11 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
 
     void setExternalUuid(String externalUuid);
 
-    public Long getPassphraseId();
+    Long getPassphraseId();
 
-    public void setPassphraseId(Long id);
+    void setPassphraseId(Long id);
 
-    public String getEncryptFormat();
+    String getEncryptFormat();
 
     public void setEncryptFormat(String encryptFormat);
 
@@ -294,4 +294,8 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
     Long getUsedPhysicalSize();
 
     void setUsedPhysicalSize(Long usedPhysicalSize);
+
+    void setEncryptFormat(String encryptFormat);
+
+    boolean isDeleteProtection();
 }

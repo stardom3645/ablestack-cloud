@@ -36,6 +36,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 import org.libvirt.Secret;
@@ -73,6 +75,7 @@ import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 
@@ -81,6 +84,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
     private StorageLayer _storageLayer;
     private String _mountPoint = "/mnt";
     private String _manageSnapshotPath;
+    private static final ConcurrentHashMap<String, Integer> storagePoolRefCounts = new ConcurrentHashMap<>();
 
     private String rbdTemplateSnapName = "cloudstack-base-snap";
     private static final int RBD_FEATURE_LAYERING = 1;
@@ -682,12 +686,48 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         }
     }
 
+    /**
+     * adjust refcount
+     */
+    private int adjustStoragePoolRefCount(String uuid, int adjustment) {
+        final String mutexKey = storagePoolRefCounts.keySet().stream()
+                .filter(k -> k.equals(uuid))
+                .findFirst()
+                .orElse(uuid);
+        synchronized (mutexKey) {
+            // some access on the storagePoolRefCounts.key(mutexKey) element
+            int refCount = storagePoolRefCounts.computeIfAbsent(mutexKey, k -> 0);
+            refCount += adjustment;
+            if (refCount < 1) {
+                storagePoolRefCounts.remove(mutexKey);
+            } else {
+                storagePoolRefCounts.put(mutexKey, refCount);
+            }
+            return refCount;
+        }
+    }
+    /**
+     * Thread-safe increment storage pool usage refcount
+     * @param uuid UUID of the storage pool to increment the count
+     */
+    private void incStoragePoolRefCount(String uuid) {
+        adjustStoragePoolRefCount(uuid, 1);
+    }
+    /**
+     * Thread-safe decrement storage pool usage refcount for the given uuid and return if storage pool still in use.
+     * @param uuid UUID of the storage pool to decrement the count
+     * @return true if the storage pool is still used, else false.
+     */
+    private boolean decStoragePoolRefCount(String uuid) {
+        return adjustStoragePoolRefCount(uuid, -1) > 0;
+    }
+
     @Override
-    public KVMStoragePool createStoragePool(String name, String host, int port, String path, String userInfo, StoragePoolType type, Map<String, String> details) {
+    public KVMStoragePool createStoragePool(String name, String host, int port, String path, String userInfo, StoragePoolType type, Map<String, String> details, boolean isPrimaryStorage) {
         logger.info("Attempting to create storage pool " + name + " (" + type.toString() + ") in libvirt");
 
         // gluefs mount script call
-        if (type == StoragePoolType.SharedMountPoint && details != null && !details.isEmpty() && !details.get("provider").isEmpty() && "ABLESTACK".equals(details.get("provider"))) {
+        if (type == StoragePoolType.SharedMountPoint && !MapUtils.isEmpty(details) && !ObjectUtils.isEmpty(details.get("provider")) && "ABLESTACK".equals(details.get("provider"))) {
             logger.info("Run the command to create the gluefs mount.");
             Boolean gluefs = createGluefsMount(host, path, userInfo, details);
             if (!gluefs) {
@@ -786,7 +826,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
                     throw new CloudRuntimeException(e.toString());
                 }
             } else if (type == StoragePoolType.SharedMountPoint || type == StoragePoolType.Filesystem) {
-                if (details != null && !details.isEmpty() && !details.get("provider").isEmpty() && "ABLESTACK".equals(details.get("provider"))) {
+                if (!MapUtils.isEmpty(details) && !ObjectUtils.isEmpty(details.get("provider")) && "ABLESTACK".equals(details.get("provider"))) {
                     sp = createGluefsSharedStoragePool(conn, name, host, path);
                 } else {
                     sp = createSharedStoragePool(conn, name, host, path);
@@ -803,6 +843,12 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         }
 
         try {
+            if (!isPrimaryStorage) {
+                // only ref count storage pools for secondary storage, as primary storage is assumed
+                // to be always mounted, as long the primary storage isn't fully deleted.
+                incStoragePoolRefCount(name);
+            }
+
             if (sp.isActive() == 0) {
                 logger.debug("Attempting to activate pool " + name);
                 sp.create(0);
@@ -814,6 +860,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
 
             return getStoragePool(name);
         } catch (LibvirtException e) {
+            decStoragePoolRefCount(name);
             String error = e.toString();
             if (error.contains("Storage source conflict")) {
                 throw new CloudRuntimeException("A pool matching this location already exists in libvirt, " +
@@ -825,9 +872,52 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         }
     }
 
+    private boolean destroyStoragePool(Connect conn, String uuid) throws LibvirtException {
+        StoragePool sp;
+        try {
+            sp = conn.storagePoolLookupByUUIDString(uuid);
+        } catch (LibvirtException exc) {
+            logger.warn("Storage pool " + uuid + " doesn't exist in libvirt. Assuming it is already removed");
+            logger.warn(exc.getStackTrace());
+            return true;
+        }
+
+        if (sp != null) {
+            if (sp.isPersistent() == 1) {
+                sp.destroy();
+                sp.undefine();
+            } else {
+                sp.destroy();
+            }
+            sp.free();
+
+            return true;
+        } else {
+            logger.warn("Storage pool " + uuid + " doesn't exist in libvirt. Assuming it is already removed");
+            return false;
+        }
+    }
+
+    private boolean destroyStoragePoolHandleException(Connect conn, String uuid)
+    {
+        try {
+            return destroyStoragePool(conn, uuid);
+        } catch (LibvirtException e) {
+            logger.error(String.format("Failed to destroy libvirt pool %s: %s", uuid, e));
+        }
+        return false;
+    }
+
     @Override
     public boolean deleteStoragePool(String uuid) {
         logger.info("Attempting to remove storage pool " + uuid + " from libvirt");
+
+        // decrement and check if storage pool still in use
+        if (decStoragePoolRefCount(uuid)) {
+            logger.info(String.format("deleteStoragePool: Storage pool %s still in use", uuid));
+            return true;
+        }
+
         Connect conn = null;
         try {
             conn = LibvirtConnection.getConnection();
@@ -835,15 +925,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
             throw new CloudRuntimeException(e.toString());
         }
 
-        StoragePool sp = null;
         Secret s = null;
-
-        try {
-            sp = conn.storagePoolLookupByUUIDString(uuid);
-        } catch (LibvirtException e) {
-            logger.warn("Storage pool " + uuid + " doesn't exist in libvirt. Assuming it is already removed");
-            return true;
-        }
 
         /*
          * Some storage pools, like RBD also have 'secret' information stored in libvirt
@@ -856,13 +938,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         }
 
         try {
-            if (sp.isPersistent() == 1) {
-                sp.destroy();
-                sp.undefine();
-            } else {
-                sp.destroy();
-            }
-            sp.free();
+            destroyStoragePool(conn, uuid);
             if (s != null) {
                 s.undefine();
                 s.free();
@@ -880,6 +956,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
                 String result = Script.runSimpleBashScript("sleep 5 && umount " + targetPath);
                 if (result == null) {
                     logger.info("Succeeded in unmounting " + targetPath);
+                    destroyStoragePoolHandleException(conn, uuid);
                     return true;
                 }
                 logger.error("Failed to unmount " + targetPath);
@@ -1445,7 +1522,10 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
          */
 
         KVMStoragePool srcPool = disk.getPool();
-        PhysicalDiskFormat sourceFormat = disk.getFormat();
+        /* Linstor images are always stored as RAW, but Linstor uses qcow2 in DB,
+           to support snapshots(backuped) as qcow2 files. */
+        PhysicalDiskFormat sourceFormat = srcPool.getType() != StoragePoolType.Linstor ?
+                disk.getFormat() : PhysicalDiskFormat.RAW;
         String sourcePath = disk.getPath();
 
         KVMPhysicalDisk newDisk;
@@ -1667,9 +1747,9 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
     }
 
     private boolean createPathFolder(String path) {
-        String mountPoint = _mountPoint + File.separator + path;
+        // String mountPoint = _mountPoint + File.separator + path;
 
-        File f = new File(mountPoint + File.separator + path);
+        File f = new File(_mountPoint + File.separator + path);
         if (!f.exists()) {
             f.mkdirs();
         }

@@ -82,6 +82,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "the name of the domain in which the virtual machine exists")
     private String domainName;
 
+    @SerializedName(ApiConstants.DOMAIN_PATH)
+    @Param(description = "path of the domain in which the virtual machine exists", since = "4.19.2.0")
+    private String domainPath;
+
     @SerializedName(ApiConstants.CREATED)
     @Param(description = "the date when this virtual machine was created")
     private Date created;
@@ -320,6 +324,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "true if vm contains XS/VMWare tools inorder to support dynamic scaling of VM cpu/memory.")
     private Boolean isDynamicallyScalable;
 
+    @SerializedName(ApiConstants.DELETE_PROTECTION)
+    @Param(description = "true if vm has delete protection.", since = "4.20.0")
+    private boolean deleteProtection;
+
     @SerializedName(ApiConstants.SERVICE_STATE)
     @Param(description = "State of the Service from LB rule")
     private String serviceState;
@@ -403,6 +411,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @SerializedName(ApiConstants.KVDO_ENABLE)
     @Param(description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
     private Boolean kvdoEnable;
+
+    @SerializedName((ApiConstants.VM_TYPE))
+    @Param(description = "User VM type", since = "4.20.0")
+    private String vmType;
 
     public UserVmResponse() {
         securityGroupList = new LinkedHashSet<>();
@@ -727,6 +739,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
         this.domainName = domainName;
     }
 
+    @Override
+    public void setDomainPath(String domainPath) {
+        this.domainPath = domainPath;
+    }
     public void setCreated(Date created) {
         this.created = created;
     }
@@ -1011,6 +1027,14 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
         isDynamicallyScalable = dynamicallyScalable;
     }
 
+    public boolean isDeleteProtection() {
+        return deleteProtection;
+    }
+
+    public void setDeleteProtection(boolean deleteProtection) {
+        this.deleteProtection = deleteProtection;
+    }
+
     public String getOsTypeId() {
         return osTypeId;
     }
@@ -1190,4 +1214,15 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
         this.kvdoEnable = kvdoEnable;
     }
 
+    public void setVmType(String vmType) {
+        this.vmType = vmType;
+    }
+
+    public String getVmType() {
+        return vmType;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
 }

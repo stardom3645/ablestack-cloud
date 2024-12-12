@@ -249,7 +249,9 @@
         :current="page"
         :pageSize="pageSize"
         :total="totalUsageRecords"
-        :showTotal="total => `${$t('label.showing')} ${Math.min(total, 1 + ((page - 1) * pageSize))}-${Math.min(page * pageSize, total)} ${$t('label.of')} ${total} ${$t('label.items')}`"
+        :showTotal="total => this.$localStorage.get('LOCALE') == 'ko_KR' ?
+          `${$t('label.total')} ${total} ${$t('label.items')} ${$t('label.of')} ${Math.min(total, 1 + ((page - 1) * pageSize))}-${Math.min(page * pageSize, total)} ${$t('label.showing')}` :
+          `${$t('label.showing')} ${Math.min(total, 1 + ((page - 1) * pageSize))}-${Math.min(page * pageSize, total)} ${$t('label.of')} ${total} ${$t('label.items')}`"
         :pageSizeOptions="['20', '50', '100']"
         @change="handleTableChange"
         :showSizeChanger="true"
@@ -585,9 +587,9 @@ export default {
         pagesize: pageSize || this.pageSize
       }
       if (values.dateRange) {
-        if (this.$store.getters.usebrowsertimezone) {
+        if (!this.$store.getters.usebrowsertimezone) {
           params.startdate = dayjs.utc(dayjs(values.dateRange[0]).startOf('day')).format('YYYY-MM-DD HH:mm:ss')
-          params.enddate = dayjs.utc(dayjs(values.dateRange[0]).endOf('day')).format('YYYY-MM-DD HH:mm:ss')
+          params.enddate = dayjs.utc(dayjs(values.dateRange[1]).endOf('day')).format('YYYY-MM-DD HH:mm:ss')
         } else {
           params.startdate = dayjs(values.dateRange[0]).startOf('day').format('YYYY-MM-DD HH:mm:ss')
           params.enddate = dayjs(values.dateRange[1]).endOf('day').format('YYYY-MM-DD HH:mm:ss')
@@ -641,7 +643,7 @@ export default {
         if (json && json.listusagetypesresponse && json.listusagetypesresponse.usagetype) {
           this.usageTypes = [{ id: null, value: '' }, ...json.listusagetypesresponse.usagetype.map(x => {
             return {
-              id: x.usagetypeid,
+              id: x.id,
               value: x.description
             }
           })]

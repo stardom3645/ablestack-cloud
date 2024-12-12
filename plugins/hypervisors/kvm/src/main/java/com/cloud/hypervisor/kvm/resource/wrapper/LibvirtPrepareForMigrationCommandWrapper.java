@@ -100,10 +100,9 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
                         libvirtComputingResource.getVolumePath(conn, volume);
                     }
                 } else {
-                    KVMPhysicalDisk physicalDisk = null;
                     final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
-                    physicalDisk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                     if (store.getPoolType() == StoragePoolType.RBD) {
+                        KVMPhysicalDisk physicalDisk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                         if(store.getProvider() != null && !store.getProvider().isEmpty() && "ABLESTACK".equals(store.getProvider())){
                             final VolumeObjectTO volumeObject = (VolumeObjectTO)data;
                             String device = libvirtComputingResource.mapRbdDevice(physicalDisk,volumeObject.getKvdoEnable());

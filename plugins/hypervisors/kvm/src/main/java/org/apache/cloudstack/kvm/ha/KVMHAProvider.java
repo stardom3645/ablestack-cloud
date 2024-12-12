@@ -19,6 +19,7 @@
 
 package org.apache.cloudstack.kvm.ha;
 
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.host.Host;
 import com.cloud.hypervisor.Hypervisor;
 
@@ -39,7 +40,6 @@ import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 import org.joda.time.DateTime;
 
 import javax.inject.Inject;
-import java.security.InvalidParameterException;
 
 public final class KVMHAProvider extends HAAbstractHostProvider implements HAProvider<Host>, Configurable {
 
@@ -139,7 +139,7 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
             case MaxDegradedWaitTimeout:
                 return KVMHAConfig.KvmHADegradedMaxPeriod.valueIn(clusterId);
             default:
-                throw new InvalidParameterException("Unknown HAProviderConfig " + name.toString());
+                throw new InvalidParameterValueException("Unknown HAProviderConfig " + name.toString());
         }
     }
 

@@ -161,20 +161,20 @@
           <template v-if="column.key == 'associatedResource'">
             <template v-if="record.snapshotid">
               <router-link :to="{ path: '/snapshot/' + record.snapshotid }" target='_blank' >
-                {{ $t('label.snapshot') }}
+                {{ record.snapshotname }}
               </router-link>
             </template>
             <template v-else-if="record.volumeid">
               <router-link :to="{ path: '/volume/' + record.volumeid }" target='_blank' >
-                {{ $t('label.volume') }}
+                {{ record.volumename }}
               </router-link>
             </template>
             <template v-else-if="record.templateid">
               <router-link v-if="record.format === 'ISO'" :to="{ path: '/iso/' + record.templateid }" target='_blank' >
-                {{ $t('label.iso') }}
+                {{ record.templatename }}
               </router-link>
               <router-link v-else :to="{ path: '/template/' + record.templateid }" target='_blank'>
-                {{ $t('label.templatename') }}
+                {{ record.templatename }}
               </router-link>
             </template>
             <template v-else>
@@ -202,16 +202,6 @@
                 <template #icon><plus-outlined /></template>
               </a-button>
             </a-tooltip>
-              <a-button
-                type="primary"
-                size="medium"
-                shape="circle"
-                :tooltip="$t('label.create')"
-                @click="showAddTyModal(record.name, record.size)"
-                :loading="loading"
-                >
-                  <template #icon><plus-outlined /></template>
-              </a-button>
                 <a-popconfirm
                   :title="`${$t('label.delete.rbd.image')}?`"
                   @confirm="deleteRbdImage(record.name)"
@@ -228,14 +218,6 @@
                     <template #icon><delete-outlined /></template>
                   </a-button>
                 </a-tooltip>
-                <tooltip-button
-                  tooltipPlacement="bottom"
-                  type="primary"
-                  size="medium"
-                  icon="delete-outlined"
-                  :tooltip="$t('label.delete')"
-                  :danger="true"
-                />
                 </a-popconfirm>
               </a-col>
             </template>
