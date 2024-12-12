@@ -1416,7 +1416,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                             if (volVo.getPath().contains(key)) {
                                                 volVo.setUsedFsBytes(fsUsageMap.get(key));
                                                 _volsDao.update(volVo.getId(), volVo);
-                                                // break;
                                             }
                                         }
                                     }
@@ -1430,7 +1429,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                             if (volVo.getPath().contains(rbdUuid)) {
                                                 volVo.setUsedPhysicalSize(rbdDuMap.get(rbdUuid));
                                                 _volsDao.update(volVo.getId(), volVo);
-                                                // break;
                                             }
                                         }
                                     }

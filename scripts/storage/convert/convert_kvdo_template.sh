@@ -40,11 +40,9 @@ do
   esac
 done
 
-# 1 nbd enable
-# qemu-nbd -d /dev/nbd0
 sudo modprobe nbd
 
-# 2 Check for unused nbd
+# Check for unused nbd
 targetNbd=$(lsblk /dev/nbd* -p |grep 0B | cut -d ' ' -f 1 | grep -v '^$' | head -n 1)
 
 fileName=$(find / -path "*$TempPath/template.properties" 2>/dev/null | head -n 1  | xargs grep '^filename=' | cut -d'=' -f2)
@@ -53,7 +51,7 @@ TmpFile=$(find / -path "*$TempPath/$fileName" 2>/dev/null | head -n 1)
 # nbd connection
 sudo qemu-nbd -c $targetNbd $TmpFile
 
-# 5 Check the vg of the corresponding pv
+# Check the vg of the corresponding pv
 max_checks=60 # Maximum number of checks
 for ((i=1; i<=max_checks; i++)); do
     child_name=$(lsblk "$targetNbd" -p -J | jq -r '.blockdevices[0].children[0].name')
@@ -68,19 +66,19 @@ firstPartitionPath=$(lsblk $targetNbd -p -J |jq -r '.blockdevices[0].children[0]
 
 ex_vg_name=$(sudo pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
 
-# 6 vg disable
+# vg disable
 sudo vgchange -an $ex_vg_name
 
-# 7 Change vg name
+# Change vg name
 sudo vgrename $ex_vg_name $Uuid
 
-# 8 change pv uuid
+# change pv uuid
 sudo vgchange --uuid $Uuid
 
-# 9 change vg uuid
+# change vg uuid
 sudo pvchange --uuid $firstPartitionPath
 
-# 10 nbd Disconnect
+# nbd Disconnect
 sudo qemu-nbd -d $targetNbd
 
 exit 0
