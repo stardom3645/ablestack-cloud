@@ -4833,52 +4833,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             VmStatsEntry metrics = calculateVmMetrics(dm, oldStats, newStats);
             vmStats.put(vmName, newStats);
 
-            /* get cpu utilization */
-            VmStats oldStats = null;
-
-            final Calendar now = Calendar.getInstance();
-
-            oldStats = vmStats.get(vmName);
-
-            long elapsedTime = 0;
-            if (oldStats != null) {
-                elapsedTime = now.getTimeInMillis() - oldStats.timestamp.getTimeInMillis();
-                double utilization = (info.cpuTime - oldStats.usedTime) / ((double)elapsedTime * 1000000);
-
-                utilization = utilization / info.nrVirtCpu;
-                if (utilization > 0) {
-                    stats.setCPUUtilization(utilization * 100);
-                }
-            }
-
-            /* get network stats */
-
-            final List<InterfaceDef> vifs = getInterfaces(conn, vmName);
-            long rx = 0;
-            long tx = 0;
-            for (final InterfaceDef vif : vifs) {
-                final DomainInterfaceStats ifStats = dm.interfaceStats(vif.getDevName());
-                rx += ifStats.rx_bytes;
-                tx += ifStats.tx_bytes;
-            }
-
-            if (oldStats != null) {
-                final double deltarx = rx - oldStats.rx;
-                if (deltarx > 0) {
-                    stats.setNetworkReadKBs(deltarx / 1024);
-                }
-                final double deltatx = tx - oldStats.tx;
-                if (deltatx > 0) {
-                    stats.setNetworkWriteKBs(deltatx / 1024);
-                }
-            }
-
             /* get disk stats */
             final List<DiskDef> disks = getDisks(conn, vmName);
-            long io_rd = 0;
-            long io_wr = 0;
-            long bytes_rd = 0;
-            long bytes_wr = 0;
             Map<String, Long> rbdDuMap = new HashMap<String, Long>();
             String rbdLsCommand = String.format("timeout 3 rbd ls --format json 2>/dev/null");
             String rbdLsResult = Script.runSimpleBashScript(rbdLsCommand);
@@ -4886,11 +4842,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 if (disk.getDeviceType() == DeviceType.CDROM || disk.getDeviceType() == DeviceType.FLOPPY) {
                     continue;
                 }
-                final DomainBlockStats blockStats = dm.blockStats(disk.getDiskLabel());
-                io_rd += blockStats.rd_req;
-                io_wr += blockStats.wr_req;
-                bytes_rd += blockStats.rd_bytes;
-                bytes_wr += blockStats.wr_bytes;
 
                 if (rbdLsResult != null && rbdLsResult != ""){
                     // JSON 배열 파싱
@@ -4913,26 +4864,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     if (rbdUuid != "") {
                         rbdDuMap.put(rbdUuid, usedPhysicalSize);
                     }
-                    stats.setRbdDuMap(rbdDuMap);
-                }
-            }
-
-            if (oldStats != null) {
-                final long deltaiord = io_rd - oldStats.ioRead;
-                if (deltaiord > 0) {
-                    stats.setDiskReadIOs(deltaiord);
-                }
-                final long deltaiowr = io_wr - oldStats.ioWrote;
-                if (deltaiowr > 0) {
-                    stats.setDiskWriteIOs(deltaiowr);
-                }
-                final double deltabytesrd = bytes_rd - oldStats.bytesRead;
-                if (deltabytesrd > 0) {
-                    stats.setDiskReadKBs(deltabytesrd / 1024);
-                }
-                final double deltabyteswr = bytes_wr - oldStats.bytesWrote;
-                if (deltabyteswr > 0) {
-                    stats.setDiskWriteKBs(deltabyteswr / 1024);
+                    metrics.setRbdDuMap(rbdDuMap);
                 }
             }
 
@@ -5020,7 +4952,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             }
                         }
                     }
-                    stats.setFsUsageMap(fsUsageMap);
+                    metrics.setFsUsageMap(fsUsageMap);
                 }
             }
 

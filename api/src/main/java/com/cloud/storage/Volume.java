@@ -277,7 +277,7 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
 
     String getEncryptFormat();
 
-    public void setEncryptFormat(String encryptFormat);
+    void setEncryptFormat(String encryptFormat);
 
     boolean getCompress();
 
@@ -294,8 +294,6 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
     Long getUsedPhysicalSize();
 
     void setUsedPhysicalSize(Long usedPhysicalSize);
-
-    void setEncryptFormat(String encryptFormat);
 
     boolean isDeleteProtection();
 }
