@@ -342,7 +342,6 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
             VolumeInfo srcVolumeInfo = (VolumeInfo)srcData;
             TemplateInfo destTemplateInfo = (TemplateInfo)destData;
             handleCreateTemplateFromManagedVolume(srcVolumeInfo, destTemplateInfo, callback);
-            logger.info("handleCreateTemplateFromManagedVolume excute2");
         }
         else {
             handleError(OPERATION_NOT_SUPPORTED, callback);
