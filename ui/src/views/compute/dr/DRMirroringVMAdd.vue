@@ -409,6 +409,7 @@ export default {
               this.maxCpu = offering.serviceofferingdetails.maxcpunumber * 1
               this.minMemory = offering.serviceofferingdetails.minmemory * 1
               this.maxMemory = offering.serviceofferingdetails.maxmemory * 1
+              this.fillValue()
             }
           }
         }
