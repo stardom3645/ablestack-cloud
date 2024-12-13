@@ -2730,7 +2730,9 @@ public class DisasterRecoveryClusterUtil {
                         NetworkResponse networkResponse = new NetworkResponse();
                         networkResponse.setId(networkJSONObject.get("id").toString());
                         networkResponse.setName(networkJSONObject.get("name").toString());
-                        networkResponsesList.add(networkResponse);
+                        if (networkJSONObject.get("account").toString().equals("admin")) {
+                            networkResponsesList.add(networkResponse);
+                        }
                     }
                 }
                 return networkResponsesList;
