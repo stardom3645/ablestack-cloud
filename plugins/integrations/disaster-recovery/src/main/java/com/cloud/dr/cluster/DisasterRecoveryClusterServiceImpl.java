@@ -1256,7 +1256,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         throw new CloudRuntimeException("Failed to promote image, For volumes with a path of " + imageName + ", You must manually promote local images and resync remote image, add a local image snapshots schedule.");
                                     } else {
                                         break;
-                                    }    
+                                    }
                                 } else {
                                     break;
                                 }
