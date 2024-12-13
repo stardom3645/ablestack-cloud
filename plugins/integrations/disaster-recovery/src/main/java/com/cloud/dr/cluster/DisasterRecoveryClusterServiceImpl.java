@@ -1237,22 +1237,26 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         if (mirrorImageStatus != null) {
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             if (statObject.has("description")) {
-                                if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().equals("starting replay") && !statObject.get("description").getAsString().contains("force promoting")) {
-                                    Map<String, String> glueParams = new HashMap<>();
-                                    glueParams.put("mirrorPool", "rbd");
-                                    glueParams.put("imageName", imageName);
-                                    glueCommand = "/mirror/image/promote/rbd/" + imageName;
-                                    glueMethod = "POST";
-                                    while(glueStep < 100) {
-                                        glueStep += 1;
-                                        result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                        if (result) {
-                                            break Loop;
-                                        } else {
-                                            LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
+                                if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().contains("force promoting")) {
+                                    if (!statObject.get("description").getAsString().equals("starting replay")) {
+                                        Map<String, String> glueParams = new HashMap<>();
+                                        glueParams.put("mirrorPool", "rbd");
+                                        glueParams.put("imageName", imageName);
+                                        glueCommand = "/mirror/image/promote/rbd/" + imageName;
+                                        glueMethod = "POST";
+                                        while(glueStep < 100) {
+                                            glueStep += 1;
+                                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            if (result) {
+                                                break Loop;
+                                            } else {
+                                                LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
+                                            }
                                         }
-                                    }
-                                    throw new CloudRuntimeException("Failed to promote image, For volumes with a path of " + imageName + ", You must manually promote local images and resync remote image, add a local image snapshots schedule.");
+                                        throw new CloudRuntimeException("Failed to promote image, For volumes with a path of " + imageName + ", You must manually promote local images and resync remote image, add a local image snapshots schedule.");
+                                    } else {
+                                        break;
+                                    }    
                                 } else {
                                     break;
                                 }
