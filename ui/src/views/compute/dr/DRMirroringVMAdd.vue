@@ -236,8 +236,7 @@ export default {
     fetchDRClusterList () {
       this.loading = true
       var drName = ''
-      // api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
-      api('getDisasterRecoveryClusterList').then(json => {
+      api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster
         for (const dr of this.drCluster) {
           for (const vm of dr.drclustervmmap) {
@@ -291,8 +290,7 @@ export default {
       }
     },
     SecDRClusterInfoList (selectId) {
-      // api('getDisasterRecoveryClusterList', { id: selectId, drclustertype: 'secondary' }).then(json => {
-      api('getDisasterRecoveryClusterList', { id: selectId }).then(json => {
+      api('getDisasterRecoveryClusterList', { id: selectId, drclustertype: 'secondary' }).then(json => {
         const response = json.getdisasterrecoveryclusterlistresponse
         const clusters = response ? response.disasterrecoverycluster : null
         if (clusters && clusters.length > 0) {
@@ -398,8 +396,7 @@ export default {
     updateSelectedOfferingId (selectOff) {
       this.loading = true
       this.isCustomized = false
-      // api('getDisasterRecoveryClusterList', { id: this.selectedClusterId, drclustertype: 'secondary' }).then(json => {
-      api('getDisasterRecoveryClusterList', { id: this.selectedClusterId }).then(json => {
+      api('getDisasterRecoveryClusterList', { id: this.selectedClusterId, drclustertype: 'secondary' }).then(json => {
         const response = json.getdisasterrecoveryclusterlistresponse
         const clusters = response ? response.disasterrecoverycluster : null
         if (clusters && clusters.length > 0) {
