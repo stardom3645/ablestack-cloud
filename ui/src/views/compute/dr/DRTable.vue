@@ -162,10 +162,9 @@ export default {
         this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         for (const cluster of this.drClusterList) {
           const clusterId = cluster.id
-          // const clusterType = cluster.drclustertype
+          const clusterType = cluster.drclustertype
           for (const vm of cluster.drclustervmmap) {
-            // if (vm.drclustervmname === this.drVmName && clusterType !== 'primary') {
-            if (vm.drclustervmname === this.drVmName) {
+            if (vm.drclustervmname === this.drVmName && clusterType !== 'primary') {
               if (this.drCluster.length === 0) {
                 this.drCluster.push({ drName: vm.drclustername, drId: clusterId, drVmId: this.resource.id, mirroredVm: vm.drclustermirrorvmname, mirroredVmId: vm.drclustermirrorvmid, mirroredStatus: vm.drclustermirrorvmstatus })
               }

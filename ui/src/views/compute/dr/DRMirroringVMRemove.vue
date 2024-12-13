@@ -87,8 +87,7 @@ export default {
     },
     fetchData () {
       this.loading = true
-      // api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
-      api('getDisasterRecoveryClusterList').then(json => {
+      api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster
         for (const dr of this.drCluster) {
           for (const vm of dr.drclustervmmap) {

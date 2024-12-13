@@ -97,8 +97,8 @@ export default {
       label: 'label.action.promote.disaster.recovery.cluster',
       message: 'message.promote.dr.cluster.confirm',
       dataView: true,
-      popup: true
-      // show: (record) => { return record.drclustertype === 'primary' }
+      popup: true,
+      show: (record) => { return record.drclustertype === 'primary' }
     },
     {
       api: 'demoteDisasterRecoveryCluster',
@@ -106,24 +106,24 @@ export default {
       label: 'label.action.demote.disaster.recovery.cluster',
       message: 'message.demote.dr.cluster.confirm',
       dataView: true,
-      popup: true
-      // show: (record) => { return record.drclustertype === 'primary' }
+      popup: true,
+      show: (record) => { return record.drclustertype === 'primary' }
     },
     {
       api: 'resyncDisasterRecoveryCluster',
       icon: 'SyncOutlined',
       label: 'label.action.sync.disaster.recovery.cluster',
       message: 'message.sync.dr.cluster.confirm',
-      dataView: true
-      // show: (record) => { return record.drclustertype === 'primary' }
+      dataView: true,
+      show: (record) => { return record.drclustertype === 'primary' }
     },
     {
       api: 'clearDisasterRecoveryCluster',
       icon: 'ClearOutlined',
       label: 'label.action.clear.disaster.recovery.cluster',
       message: 'message.clear.dr.cluster.confirm',
-      dataView: true
-      // show: (record) => { return record.drclustertype === 'primary' }
+      dataView: true,
+      show: (record) => { return record.drclustertype === 'primary' }
     },
     {
       api: 'deleteDisasterRecoveryCluster',
