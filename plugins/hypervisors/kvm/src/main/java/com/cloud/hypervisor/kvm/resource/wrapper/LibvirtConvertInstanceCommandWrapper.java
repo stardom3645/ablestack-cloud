@@ -262,10 +262,9 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
                                                                   KVMStoragePoolManager storagePoolMgr) {
         List<KVMPhysicalDisk> targetDisks = new ArrayList<>();
         String poolUuid = destinationStoragePools.get(0);
-        logger.debug("Destination Pool UUID : %s", poolUuid);
+        logger.debug(String.format("Destination Pool UUID : %s", poolUuid));
         for (int i = 0; i < temporaryDisks.size(); i++) {
             KVMStoragePool destinationPool = storagePoolMgr.getStoragePool(Storage.StoragePoolType.RBD, poolUuid);
-            logger.debug(":::destinationPool Info : %s", destinationPool);
             if (destinationPool == null) {
                 String err = String.format("Could not find a storage pool : %s", destinationPool);
                 logger.error(err);

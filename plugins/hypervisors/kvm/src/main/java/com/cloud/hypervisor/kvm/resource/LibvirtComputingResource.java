@@ -1017,9 +1017,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat.sh");
         }
 
-        heartBeatPathGfs = Script.findScript(kvmScriptsDir, "kvmheartbeat_gluegfs.sh");
+        heartBeatPathGfs = Script.findScript(kvmScriptsDir, "kvmheartbeat_gfs.sh");
         if (heartBeatPathGfs == null) {
-            throw new ConfigurationException("Unable to find kvmheartbeat_gluegfs.sh");
+            throw new ConfigurationException("Unable to find kvmheartbeat_gfs.sh");
         }
 
         heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
@@ -1052,9 +1052,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmvmactivity.sh");
         }
 
-        vmActivityCheckPathGfs = Script.findScript(kvmScriptsDir, "kvmvmactivity_gluegfs.sh");
+        vmActivityCheckPathGfs = Script.findScript(kvmScriptsDir, "kvmvmactivity_gfs.sh");
         if (vmActivityCheckPathGfs == null) {
-            throw new ConfigurationException("Unable to find kvmvmactivity.sh");
+            throw new ConfigurationException("Unable to find kvmvmactivity_gfs.sh");
         }
 
         vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.sh");
