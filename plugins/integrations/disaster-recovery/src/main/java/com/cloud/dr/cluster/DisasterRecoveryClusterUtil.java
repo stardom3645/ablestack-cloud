@@ -208,7 +208,7 @@ public class DisasterRecoveryClusterUtil {
                 }
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
-                String daemonHealth = jObject.get("daemon_health").toString();
+                String daemonHealth = jObject.get("health").toString();
                 return daemonHealth;
             } else {
                 // mirror pool 비활성화된 경우 처리
