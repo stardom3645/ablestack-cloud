@@ -1021,9 +1021,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat.sh");
         }
 
-        heartBeatPathGfs = Script.findScript(kvmScriptsDir, "kvmheartbeat_gluegfs.sh");
+        heartBeatPathGfs = Script.findScript(kvmScriptsDir, "kvmheartbeat_gfs.sh");
         if (heartBeatPathGfs == null) {
-            throw new ConfigurationException("Unable to find kvmheartbeat_gluegfs.sh");
+            throw new ConfigurationException("Unable to find kvmheartbeat_gfs.sh");
         }
 
         heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
@@ -1066,9 +1066,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmvmactivity.sh");
         }
 
-        vmActivityCheckPathGfs = Script.findScript(kvmScriptsDir, "kvmvmactivity_gluegfs.sh");
+        vmActivityCheckPathGfs = Script.findScript(kvmScriptsDir, "kvmvmactivity_gfs.sh");
         if (vmActivityCheckPathGfs == null) {
-            throw new ConfigurationException("Unable to find kvmvmactivity.sh");
+            throw new ConfigurationException("Unable to find kvmvmactivity_gfs.sh");
         }
 
         vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.sh");
@@ -3326,6 +3326,17 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return dataPath;
     }
 
+    public static boolean useBLOCKDiskType(KVMPhysicalDisk physicalDisk) {
+        return physicalDisk != null &&
+                physicalDisk.getPool().getType() == StoragePoolType.Linstor &&
+                physicalDisk.getFormat() != null &&
+                physicalDisk.getFormat()== PhysicalDiskFormat.RAW;
+    }
+
+    public static DiskDef.DiskType getDiskType(KVMPhysicalDisk physicalDisk) {
+        return useBLOCKDiskType(physicalDisk) ? DiskDef.DiskType.BLOCK : DiskDef.DiskType.FILE;
+    }
+
     public void createVbd(final Connect conn, final VirtualMachineTO vmSpec, final String vmName, final LibvirtVMDef vm) throws InternalErrorException, LibvirtException, URISyntaxException {
         final Map<String, String> details = vmSpec.getDetails();
         final List<DiskTO> disks = Arrays.asList(vmSpec.getDisks());
@@ -3371,7 +3382,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         physicalDisk = getPhysicalDiskFromNfsStore(dataStoreUrl, data);
                     } else if (primaryDataStoreTO.getPoolType().equals(StoragePoolType.SharedMountPoint) ||
                             primaryDataStoreTO.getPoolType().equals(StoragePoolType.Filesystem) ||
-                            primaryDataStoreTO.getPoolType().equals(StoragePoolType.StorPool)) {
+                            primaryDataStoreTO.getPoolType().equals(StoragePoolType.StorPool) ||
+                            primaryDataStoreTO.getPoolType().equals(StoragePoolType.Linstor)) {
                         physicalDisk = getPhysicalDiskPrimaryStore(primaryDataStoreTO, data);
                     }
                 }
@@ -3421,8 +3433,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             final DiskDef disk = new DiskDef();
             int devId = volume.getDiskSeq().intValue();
             if (volume.getType() == Volume.Type.ISO) {
-
-                disk.defISODisk(volPath, devId, isUefiEnabled);
+                final DiskDef.DiskType diskType = getDiskType(physicalDisk);
+                disk.defISODisk(volPath, devId, isUefiEnabled, diskType);
 
                 if (guestCpuArch != null && guestCpuArch.equals("aarch64")) {
                     disk.setBusType(DiskDef.DiskBus.SCSI);
@@ -3568,7 +3580,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         if (vmSpec.getType() != VirtualMachine.Type.User) {
             final DiskDef iso = new DiskDef();
-            iso.defISODisk(sysvmISOPath);
+            iso.defISODisk(sysvmISOPath, DiskDef.DiskType.FILE);
             if (guestCpuArch != null && guestCpuArch.equals("aarch64")) {
                 iso.setBusType(DiskDef.DiskBus.SCSI);
             }
@@ -3781,7 +3793,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         List<DiskDef> disks = getDisks(conn, vmName);
         DiskDef configdrive = null;
         for (DiskDef disk : disks) {
-            if (disk.getDeviceType() == DiskDef.DeviceType.CDROM && disk.getDiskLabel() == CONFIG_DRIVE_ISO_DISK_LABEL) {
+            if (disk.getDeviceType() == DiskDef.DeviceType.CDROM && CONFIG_DRIVE_ISO_DISK_LABEL.equals(disk.getDiskLabel())) {
                 configdrive = disk;
             }
         }
@@ -3811,11 +3823,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             final String name = isoPath.substring(index + 1);
             final KVMStoragePool secondaryPool = storagePoolManager.getStoragePoolByURI(path);
             final KVMPhysicalDisk isoVol = secondaryPool.getPhysicalDisk(name);
+            final DiskDef.DiskType diskType = getDiskType(isoVol);
             isoPath = isoVol.getPath();
 
-            iso.defISODisk(isoPath, diskSeq);
+            iso.defISODisk(isoPath, diskSeq, diskType);
         } else {
-            iso.defISODisk(null, diskSeq);
+            iso.defISODisk(null, diskSeq, DiskDef.DiskType.FILE);
         }
 
         final String result = attachOrDetachDevice(conn, true, vmName, iso.toString());
@@ -3823,7 +3836,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             final List<DiskDef> disks = getDisks(conn, vmName);
             for (final DiskDef disk : disks) {
                 if (disk.getDeviceType() == DiskDef.DeviceType.CDROM
-                        && (diskSeq == null || disk.getDiskLabel() == iso.getDiskLabel())) {
+                        && (diskSeq == null || disk.getDiskLabel().equals(iso.getDiskLabel()))) {
                     cleanupDisk(disk);
                 }
             }
@@ -4426,7 +4439,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return stopVMInternal(conn, vmName, true);
         }
         String ret = stopVMInternal(conn, vmName, false);
-        if (ret == Script.ERR_TIMEOUT) {
+        if (Script.ERR_TIMEOUT.equals(ret)) {
             ret = stopVMInternal(conn, vmName, true);
         } else if (ret != null) {
             /*
