@@ -178,7 +178,6 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
 
     VmWorkJobHandlerProxy _jobHandlerProxy = new VmWorkJobHandlerProxy(this);
 
-    int _vmSnapshotMax;
     int _wait;
 
     static final ConfigKey<Long> VmJobCheckInterval = new ConfigKey<Long>("Advanced",
@@ -191,8 +190,6 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
         if (_configDao == null) {
             throw new ConfigurationException("Unable to get the configuration dao.");
         }
-
-        _vmSnapshotMax = NumbersUtil.parseInt(_configDao.getValue("vmsnapshot.max"), VMSNAPSHOTMAX);
 
         String value = _configDao.getValue("vmsnapshot.create.wait");
         _wait = NumbersUtil.parseInt(value, 1800);
@@ -403,8 +400,10 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
         _accountMgr.checkAccess(caller, null, true, userVmVo);
 
         // check max snapshot limit for per VM
-        if (_vmSnapshotDao.findByVm(vmId).size() >= _vmSnapshotMax) {
-            throw new CloudRuntimeException("Creating vm snapshot failed due to a VM can just have : " + _vmSnapshotMax + " VM snapshots. Please delete old ones");
+        int vmSnapshotMax = VMSnapshotManager.VMSnapshotMax.value();
+
+        if (_vmSnapshotDao.findByVm(vmId).size() >= vmSnapshotMax) {
+            throw new CloudRuntimeException("Creating vm snapshot failed due to a VM can just have : " + vmSnapshotMax + " VM snapshots. Please delete old ones");
         }
 
         // check if there are active volume snapshots tasks
@@ -1400,6 +1399,6 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {VMSnapshotExpireInterval};
+        return new ConfigKey<?>[] {VMSnapshotExpireInterval, VMSnapshotMax};
     }
 }

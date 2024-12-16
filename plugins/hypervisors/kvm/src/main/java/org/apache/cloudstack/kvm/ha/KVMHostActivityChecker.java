@@ -21,6 +21,7 @@ import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.CheckOnHostCommand;
 import com.cloud.agent.api.CheckVMActivityOnStoragePoolCommand;
+import com.cloud.agent.api.DeleteACfileToFencedHostCommand;
 import com.cloud.exception.StorageUnavailableException;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.Host;
@@ -257,4 +258,14 @@ public class KVMHostActivityChecker extends AdapterBase implements ActivityCheck
         return ArrayUtils.toPrimitive(neighbors.toArray(new Long[neighbors.size()]));
     }
 
+    public void deleteACfileToFencedHost(Host agent) throws HACheckerException, StorageUnavailableException {
+        if (agent.getHypervisorType() != Hypervisor.HypervisorType.KVM && agent.getHypervisorType() != Hypervisor.HypervisorType.LXC) {
+            throw new IllegalStateException(String.format("Calling KVM investigator for non KVM Host of type [%s].", agent.getHypervisorType()));
+        }
+        HashMap<StoragePool, List<Volume>> poolVolMap = getVolumeUuidOnHost(agent);
+        for (StoragePool pool : poolVolMap.keySet()) {
+            final DeleteACfileToFencedHostCommand cmd = new DeleteACfileToFencedHostCommand(agent, pool);
+            storageManager.sendToPool(pool, getNeighbors(agent), cmd);
+        }
+    }
 }
