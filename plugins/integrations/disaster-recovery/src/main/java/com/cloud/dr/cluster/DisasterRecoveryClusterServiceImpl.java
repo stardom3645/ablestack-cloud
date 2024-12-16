@@ -1779,6 +1779,27 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 String deployVmResult = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                 if (deployVmResult == null) {
+                    String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
+                    if (ipList != null || !ipList.isEmpty()) {
+                        ipList = ipList.replaceAll(",$", "");
+                        String[] array = ipList.split(",");
+                        for (int j=0; j < array.length; j++) {
+                            String glueIp = array[j];
+                            ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                            String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                            String glueCommand = "/mirror/image/rbd/" + rootVolumeUuid;
+                            String glueMethod = "DELETE";
+                            Map<String, String> glueParams = new HashMap<>();
+                            glueParams.put("mirrorPool", "rbd");
+                            glueParams.put("imageName", rootVolumeUuid);
+                            result = DisasterRecoveryClusterUtil.glueImageMirrorDeleteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                            if (result) {
+                                break;
+                            }
+                        }
+                    } else {
+                        throw new CloudRuntimeException("Failed to request DeployVirtualMachineForVolume Mold-API. Secondary cluster scvm list lookup fails. Manually disable mirroring for that image.");
+                    }
                     throw new CloudRuntimeException("Failed to request DeployVirtualMachineForVolume Mold-API.");
                 } else {
                     jsonObject = new JSONObject(deployVmResult);
