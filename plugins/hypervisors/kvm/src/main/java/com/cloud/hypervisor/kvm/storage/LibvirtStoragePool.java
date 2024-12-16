@@ -435,7 +435,6 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-r");
             cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
         } else if (pool.getPool().getType() == StoragePoolType.CLVM) {
-
             logger.info("RBD Pool or GFS Pool Setting...");
             Connect conn = null;
             try {
