@@ -297,6 +297,7 @@ export default {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
+          console.log(this.secDrClusterOfferings)
           if (this.secDrClusterOfferings[0].serviceofferingdetails) {
             this.isCustomized = true
             this.minCpu = this.secDrClusterOfferings[0].serviceofferingdetails.mincpunumber * 1
@@ -403,6 +404,9 @@ export default {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           for (const offering of this.secDrClusterOfferings) {
+            console.log(offering.name)
+            console.log(selectOff)
+            console.log(offering.serviceofferingdetails)
             if (offering.name === selectOff && offering.serviceofferingdetails) {
               this.isCustomized = true
               this.minCpu = offering.serviceofferingdetails.mincpunumber * 1

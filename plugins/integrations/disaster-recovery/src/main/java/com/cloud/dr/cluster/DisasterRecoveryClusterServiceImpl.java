@@ -1779,6 +1779,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 String deployVmResult = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                 if (deployVmResult == null) {
+                    LOGGER.info("deployVmResult:::::::::::::::::::::::::::");
                     String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
                     if (ipList != null || !ipList.isEmpty()) {
                         ipList = ipList.replaceAll(",$", "");
@@ -1788,12 +1789,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                             String glueUrl = "https://" + glueIp + ":8080/api/v1";
                             String glueCommand = "/mirror/image/rbd/" + rootVolumeUuid;
+                            LOGGER.info("deployVmResult:::::::::::::::::::::::::::"+ rootVolumeUuid);
                             String glueMethod = "DELETE";
                             Map<String, String> glueParams = new HashMap<>();
                             glueParams.put("mirrorPool", "rbd");
                             glueParams.put("imageName", rootVolumeUuid);
-                            result = DisasterRecoveryClusterUtil.glueImageMirrorDeleteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                            if (result) {
+                            boolean glueResult = DisasterRecoveryClusterUtil.glueImageMirrorDeleteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                            LOGGER.info("deployVmResult:::::::::::::::::::::::::::"+ glueResult);
+                            if (glueResult) {
                                 break;
                             }
                         }
