@@ -270,7 +270,7 @@ export default {
         if (this.form.drCluster != null) {
           this.secDrClusterOfferings = this.drCluster[0].serviceofferingdetails || []
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : null
-          if (this.secDrClusterOfferings[0].serviceofferingdetails) {
+          if (this.secDrClusterOfferings[0].serviceofferingdetails && this.secDrClusterOfferings[0].iscustomized === true) {
             this.isCustomized = true
             this.minCpu = this.secDrClusterOfferings[0].serviceofferingdetails.mincpunumber * 1
             this.maxCpu = this.secDrClusterOfferings[0].serviceofferingdetails.maxcpunumber * 1
@@ -297,7 +297,7 @@ export default {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
-          if (this.secDrClusterOfferings[0].serviceofferingdetails) {
+          if (this.secDrClusterOfferings[0].serviceofferingdetails && this.secDrClusterOfferings[0].iscustomized === true) {
             this.isCustomized = true
             this.minCpu = this.secDrClusterOfferings[0].serviceofferingdetails.mincpunumber * 1
             this.maxCpu = this.secDrClusterOfferings[0].serviceofferingdetails.maxcpunumber * 1
@@ -403,7 +403,7 @@ export default {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           for (const offering of this.secDrClusterOfferings) {
-            if (offering.name === selectOff && offering.serviceofferingdetails) {
+            if (offering.name === selectOff && offering.serviceofferingdetails && offering.iscustomized === true) {
               this.isCustomized = true
               this.minCpu = offering.serviceofferingdetails.mincpunumber * 1
               this.maxCpu = offering.serviceofferingdetails.maxcpunumber * 1
