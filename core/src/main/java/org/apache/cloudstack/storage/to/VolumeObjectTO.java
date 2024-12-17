@@ -76,6 +76,7 @@ public class VolumeObjectTO extends DownloadableObjectTO implements DataTO {
     private byte[] passphrase;
     private String encryptFormat;
     private boolean shareable;
+    private boolean kvdoEnable;
 
     public VolumeObjectTO() {
 
@@ -122,6 +123,7 @@ public class VolumeObjectTO extends DownloadableObjectTO implements DataTO {
         this.passphrase = volume.getPassphrase();
         this.encryptFormat = volume.getEncryptFormat();
         shareable = volume.getShareable();
+        kvdoEnable = volume.getKvdoEnable();
         this.followRedirects = volume.isFollowRedirects();
     }
 
@@ -349,6 +351,14 @@ public class VolumeObjectTO extends DownloadableObjectTO implements DataTO {
 
     public boolean getShareable() {
         return shareable;
+    }
+
+    public void setKvdoEnable(boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
+    }
+
+    public boolean getKvdoEnable() {
+        return kvdoEnable;
     }
 
     public MigrationOptions getMigrationOptions() {

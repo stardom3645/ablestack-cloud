@@ -125,9 +125,9 @@ import com.cloud.agent.api.to.DiskTO;
 import com.cloud.agent.api.to.NfsTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.api.ApiDBUtils;
+import com.cloud.api.ApiResponseHelper;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.api.query.vo.UserVmJoinVO;
-import com.cloud.api.ApiResponseHelper;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.dc.DataCenter;
@@ -1977,7 +1977,8 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         VMTemplateVO privateTemplate = null;
         privateTemplate = new VMTemplateVO(nextTemplateId, name, ImageFormat.RAW, isPublic, featured, isExtractable,
                 TemplateType.USER, null, true, 64, templateOwner.getId(), null, description,
-                false, guestOS.getId(), true, hyperType, null, new HashMap<>(){{put("template to be cleared", "yes");}}, false, false, false, false, arch);
+                false, guestOS.getId(), true, hyperType, null, new HashMap<>(){{put("template to be cleared", "yes");}}, false, false, false, false, false, arch);
+
         List<ImageStoreVO> stores = _imgStoreDao.findRegionImageStores();
         if (!CollectionUtils.isEmpty(stores)) {
             privateTemplate.setCrossZones(true);
@@ -2189,16 +2190,25 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                 logger.debug("Adding template tag: " + templateTag);
             }
         }
+
+        boolean kvdoEnable = false;
+        if (volumeId != null) {
+            VolumeInfo volInfo = _volFactory.getVolume(volumeId);
+            kvdoEnable = volInfo.getKvdoEnable();
+        } else if (volume != null) {
+            VolumeInfo volInfo = _volFactory.getVolume(volume.getId());
+            kvdoEnable = volInfo.getKvdoEnable();
+        }
+
         privateTemplate = new VMTemplateVO(nextTemplateId, name, ImageFormat.RAW, isPublic, featured, isExtractable,
                 TemplateType.USER, null, requiresHvmValue, bitsValue, templateOwner.getId(), null, description,
-                passwordEnabledValue, guestOS.getId(), true, hyperType, templateTag, cmd.getDetails(), sshKeyEnabledValue, isDynamicScalingEnabled, false, false, arch);
+                passwordEnabledValue, guestOS.getId(), true, hyperType, templateTag, cmd.getDetails(), sshKeyEnabledValue, isDynamicScalingEnabled, false, kvdoEnable, false, arch);
 
         if (sourceTemplateId != null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("This template is getting created from other template, setting source template Id to: " + sourceTemplateId);
             }
         }
-
 
         // for region wide storage, set cross zones flag
         List<ImageStoreVO> stores = _imgStoreDao.findRegionImageStores();

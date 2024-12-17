@@ -93,6 +93,20 @@ notifyqemu() {
     then
       sizeinkb=$(($newsize/1024))
       devicepath=$(virsh domblklist $vmname | grep $path | awk '{print $1}')
+      if [ "$kvdoenable" == "true" ]; then
+        # kvdo devicepath
+        IFS='/' read -r -a image_info <<< "$path"
+        devicePath=$(rbd showmapped | grep "${image_info[0]}[ ]*${image_info[1]}" | grep -o "[^ ]*[ ]*$")
+        result="${image_info[1]}"
+        image_name="${result//-/}"
+        partition_name=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
+
+        parted -f --script $devicePath resizepart 1 100%
+        pvresize $partition_name
+        lvresize -l +100%FREE "vg_"$image_name
+        lvresize --size $sizeinkb"kb" "vg_"$image_name"/ablestack_kvdo"
+        devicepath=$(virsh domblklist $vmname | grep "/dev/mapper/vg_$image_name-ablestack_kvdo" | awk '{print $1}')
+      fi
       virsh blockresize --path $devicepath --size $sizeinkb $vmname >/dev/null 2>&1
       retval=$?
       if [ -z $retval ] || [ $retval -ne 0 ]
@@ -238,8 +252,9 @@ pflag=
 vflag=
 tflag=
 rflag=
+kflag=
 
-while getopts 'c:s:v:p:t:r:' OPTION
+while getopts 'c:s:v:p:t:r:k:' OPTION
 do
   case $OPTION in
   s)	sflag=1
@@ -260,6 +275,9 @@ do
   r)    rflag=1
                 shrink="$OPTARG"
                 ;;
+  k)	kflag=1
+		kvdoenable="$OPTARG"
+		;;
   ?)	usage
 		exit 2
 		;;

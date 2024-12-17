@@ -180,8 +180,13 @@ export default {
         volumeid: this.resource.id,
         listall: true
       }).then(response => {
-        this.diskOfferings = response.listdiskofferingsresponse.diskoffering
-        if (this.diskOfferings) {
+        var ret = response.listdiskofferingsresponse.diskoffering
+        ret.forEach((item) => {
+          if (item.kvdoenable === this.resource.kvdoenable) {
+            this.diskOfferings.push(item)
+          }
+        })
+        if (this.diskOfferings.length > 0) {
           this.selectedDiskOfferingId = this.diskOfferings[0].id
           this.customDiskOffering = this.diskOfferings[0].iscustomized || false
           this.isCustomizedDiskIOps = this.diskOfferings[0]?.iscustomizediops || false

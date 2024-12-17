@@ -131,6 +131,11 @@ public class ApiConstants {
     public static final String CURRENT_END_IP = "currentendip";
     public static final String ENCRYPT = "encrypt";
     public static final String ENCRYPT_FORMAT = "encryptformat";
+    public static final String COMPRESS = "compress";
+    public static final String DEDUP = "dedup";
+    public static final String USED_FS_BYTES = "usedfsbytes";
+    public static final String USED_PHYSICAL_SIZE = "usedphysicalsize";
+    public static final String SAVING_RATE = "savingrate";
     public static final String ENCRYPT_ROOT = "encryptroot";
     public static final String ENCRYPTION_SUPPORTED = "encryptionsupported";
     public static final String MIN_IOPS = "miniops";
@@ -1247,6 +1252,7 @@ public class ApiConstants {
     public static final String REDIRECT_URI = "redirecturi";
 
     public static final String SHAREABLE = "shareable";
+    public static final String KVDO_ENABLE = "kvdoenable";
     public static final String VBMC_PORT = "vbmcport";
     public static final String IS_TAG_A_RULE = "istagarule";
     public static final String LINK_STATE = "linkstate";
