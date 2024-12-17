@@ -35,6 +35,7 @@
       <template #headerCell="{ column }">
         <template v-if="column.key === 'cpu'"><appstore-outlined /> {{ $t('label.cpu') }}</template>
         <template v-if="column.key === 'ram'"><bulb-outlined /> {{ $t('label.memory') }}</template>
+        <template v-if="column.key === 'kvdo'"><appstore-outlined /> {{ $t('label.kvdoenable') }}</template>
       </template>
     </a-table>
 
@@ -43,7 +44,7 @@
         size="small"
         :current="options.page"
         :pageSize="options.pageSize"
-        :total="rowCount"
+        :total="rowCountSet"
         :showTotal="total => `${$t('label.total')} ${total} ${$t('label.items')}`"
         :pageSizeOptions="['10', '20', '40', '80', '100', '200']"
         @change="onChangePage"
@@ -119,7 +120,7 @@ export default {
           key: 'name',
           dataIndex: 'name',
           title: this.$t('label.serviceofferingid'),
-          width: '40%'
+          width: '30%'
         },
         {
           key: 'cpu',
@@ -129,7 +130,12 @@ export default {
         {
           key: 'ram',
           dataIndex: 'ram',
-          width: '30%'
+          width: '20%'
+        },
+        {
+          key: 'kvdo',
+          dataIndex: 'kvdo',
+          width: '20%'
         }
       ],
       selectedRowKeys: [],
@@ -142,14 +148,26 @@ export default {
     }
   },
   computed: {
+    filteredComputeItems () {
+      let computeItems = this.computeItems
+      if (this.selectedTemplate && Object.keys(this.selectedTemplate).length >= 1 && this.preFillContent.kvdoenable !== undefined) {
+        computeItems = computeItems.filter(item => item.kvdoenable === this.preFillContent.kvdoenable)
+      }
+      return computeItems
+    },
+    rowCountSet () {
+      return this.filteredComputeItems.length
+    },
     tableSource () {
-      return this.computeItems.map((item) => {
+      return this.filteredComputeItems.map((item) => {
         var maxCpuNumber = item.cpunumber
         var maxCpuSpeed = item.cpuspeed
         var maxMemory = item.memory
         var cpuNumberValue = (item.cpunumber !== null && item.cpunumber !== undefined && item.cpunumber > 0) ? item.cpunumber + '' : ''
         var cpuSpeedValue = (item.cpuspeed !== null && item.cpuspeed !== undefined && item.cpuspeed > 0) ? parseFloat(item.cpuspeed / 1000.0).toFixed(2) + '' : ''
         var ramValue = (item.memory !== null && item.memory !== undefined && item.memory > 0) ? item.memory + '' : ''
+        var kvdoValue = item.kvdoenable ? this.$t('label.enabled') : this.$t('label.disabled')
+        var selectKvdoEnable = item.kvdoenable
         if (item.iscustomized === true) {
           if ('serviceofferingdetails' in item &&
             'mincpunumber' in item.serviceofferingdetails &&
@@ -191,6 +209,8 @@ export default {
           name: item.name,
           cpu: cpuNumberValue.length > 0 ? `${cpuNumberValue} CPU x ${cpuSpeedValue} Ghz` : '',
           ram: ramValue.length > 0 ? `${ramValue} MB` : '',
+          kvdo: kvdoValue,
+          selectKvdoEnable: selectKvdoEnable,
           disabled: disabled
         }
       })
@@ -209,6 +229,12 @@ export default {
     }
   },
   watch: {
+    computeItems () {
+      if (this.tableSource.length > 0) {
+        this.selectedRowKeys = [this.tableSource[0].key]
+        this.$emit('select-compute-item', this.tableSource[0].key, this.tableSource[0].selectKvdoEnable)
+      }
+    },
     value (newValue, oldValue) {
       if (newValue && newValue !== oldValue) {
         this.selectedRowKeys = [newValue]
@@ -223,7 +249,7 @@ export default {
         }
         if (this.preFillContent.computeofferingid) {
           this.selectedRowKeys = [this.preFillContent.computeofferingid]
-          this.$emit('select-compute-item', this.preFillContent.computeofferingid)
+          this.$emit('select-compute-item', this.preFillContent.computeofferingid, this.preFillContent.kvdoenable)
         } else {
           if (this.oldZoneId === this.zoneId) {
             return
@@ -231,7 +257,7 @@ export default {
           this.oldZoneId = this.zoneId
           if (this.computeItems && this.computeItems.length > 0) {
             this.selectedRowKeys = [this.computeItems[0].id]
-            this.$emit('select-compute-item', this.computeItems[0].id)
+            this.$emit('select-compute-item', this.computeItems[0].id, this.computeItems[0].kvdoenable)
           }
         }
       }
@@ -239,8 +265,12 @@ export default {
   },
   methods: {
     onSelectRow (value) {
-      this.selectedRowKeys = value
-      this.$emit('select-compute-item', value[0])
+      for (let i = 0; i < this.tableSource.length; i++) {
+        if (value[0] === this.tableSource[i].key) {
+          this.selectedRowKeys = value
+          this.$emit('select-compute-item', value[0], this.tableSource[i].selectKvdoEnable)
+        }
+      }
     },
     handleSearch (value) {
       this.filter = value
@@ -266,7 +296,7 @@ export default {
             return
           }
           this.selectedRowKeys = [record.key]
-          this.$emit('select-compute-item', record.key)
+          this.$emit('select-compute-item', record.key, record.selectKvdoEnable)
         }
       }
     }

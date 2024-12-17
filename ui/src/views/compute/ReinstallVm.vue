@@ -173,7 +173,9 @@ export default {
       templateKey: 0,
       dataPrefill: {
         templateid: this.resource.templateid,
-        diskofferingid: this.resource.diskofferingid
+        diskofferingid: this.resource.diskofferingid,
+        isreinstall: true,
+        kvdoenable: this.resource.kvdoenable
       }
     }
   },

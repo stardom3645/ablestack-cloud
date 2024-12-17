@@ -21,7 +21,7 @@
       class="form-item-scroll"
       itemLayout="vertical"
       size="small"
-      :dataSource="osList"
+      :dataSource="setData()"
       :pagination="false">
       <template #renderItem="{ item, index }">
         <a-list-item :key="item.id" @click="onClickRow(item)">
@@ -45,7 +45,14 @@
                 :osId="item.ostypeid"
                 :os-name="item.osName" />
               &nbsp;
-              {{ item.displaytext }}
+              {{ item.displaytext  }} <span v-if="item.kvdoenable">
+                <a-tooltip>
+                  <template #title>
+                    {{ $t('label.kvdoenable') }}
+                  </template>
+                  <clear-outlined/>
+                </a-tooltip>
+              </span>
               <span v-if="item?.projectid">
                 | <project-outlined /> {{ item.project }}
             </span>
@@ -60,7 +67,7 @@
         size="small"
         :current="options.page"
         :pageSize="options.pageSize"
-        :total="itemCount"
+        :total="itemCountNum"
         :showTotal="total => `${$t('label.total')} ${total} ${$t('label.items')}`"
         :pageSizeOptions="['10', '20', '40', '80', '100', '200']"
         @change="onChangePage"
@@ -126,6 +133,16 @@ export default {
     }
   },
   methods: {
+    setData () {
+      if (this.preFillContent.isreinstall) {
+        const osListFilter = this.osList.filter(osList => osList.kvdoenable === this.preFillContent.kvdoenable)
+        this.itemCountNum = osListFilter.length
+        return osListFilter
+      } else {
+        this.itemCountNum = this.osList.length
+        return this.osList
+      }
+    },
     onSelectTemplateIso () {
       if (this.inputDecorator === 'templateid') {
         this.value = !this.preFillContent.templateid ? this.selected : this.preFillContent.templateid
