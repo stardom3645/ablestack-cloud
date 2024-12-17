@@ -59,10 +59,12 @@ export default {
           fields.push('project')
         }
         fields.push('zonename')
+        fields.push('usedfsbytes')
+        fields.push('kvdoenable')
 
         return fields
       },
-      details: ['name', 'id', 'type', 'storagetype', 'diskofferingdisplaytext', 'deviceid', 'sizegb', 'physicalsize', 'provisioningtype', 'utilization', 'diskkbsread', 'diskkbswrite', 'diskioread', 'diskiowrite', 'diskiopstotal', 'miniops', 'maxiops', 'path', 'deleteprotection'],
+      details: ['name', 'id', 'type', 'storagetype', 'diskofferingdisplaytext', 'deviceid', 'sizegb', 'physicalsize', 'provisioningtype', 'utilization', 'usedfsbytes', 'kvdoenable', 'compress', 'dedup', 'savingrate', 'diskkbsread', 'diskkbswrite', 'diskioread', 'diskiowrite', 'diskiopstotal', 'miniops', 'maxiops', 'path', 'deleteprotection'],
       related: [{
         name: 'snapshot',
         title: 'label.snapshots',
@@ -159,6 +161,16 @@ export default {
               value: (record) => { return record.domainid }
             }
           }
+        },
+        {
+          api: 'updateCompressDedup',
+          icon: 'clear-outlined',
+          label: 'label.action.update.compress.dedup',
+          message: 'message.enable.compress.dedup',
+          dataView: true,
+          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && record.kvdoenable },
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/UpdateCompressDedup.vue')))
         },
         {
           api: 'createSnapshot',

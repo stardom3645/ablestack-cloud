@@ -311,6 +311,10 @@
         <router-link v-if="record.storageid" :to="{ path: '/storagepool/' + record.storageid }">{{ text }}</router-link>
         <span v-else>{{ text }}</span>
       </template>
+      <template v-if="column.key === 'diskofferingname'">
+        <router-link v-if="record.diskofferingname" :to="{ path: '/diskoffering/' + record.diskofferingid }">{{ text }}</router-link>
+        <span v-else>{{ text }}</span>
+      </template>
       <template v-for="(value, name) in thresholdMapping" :key="name">
         <template v-if="column.key === name">
           <span>
@@ -464,6 +468,15 @@
       </template>
       <template v-if="column.key === 'duration' && ['webhook', 'webhookdeliveries'].includes($route.path.split('/')[1])">
         <span>  {{ getDuration(record.startdate, record.enddate) }} </span>
+      </template>
+      <template v-if="column.key === 'kvdoenable'">
+        <status :text="record.kvdoenable ? record.kvdoenable.toString() : 'false'" />
+        {{ record.kvdoenable ? 'Enabled' : 'Disabled' }}
+      </template>
+      <template v-if="column.key === 'usedfsbytes'">
+        <span v-if="text">
+          {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
+        </span>
       </template>
       <template v-if="['startdate', 'enddate'].includes(column.key) && ['usage'].includes($route.path.split('/')[1])">
         {{ $toLocaleDate(text.replace('\'T\'', ' ')) }}

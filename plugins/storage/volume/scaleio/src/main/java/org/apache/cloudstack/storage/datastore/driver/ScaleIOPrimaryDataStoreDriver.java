@@ -1270,7 +1270,7 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
                 ResizeVolumeCommand resizeVolumeCommand = new ResizeVolumeCommand(
                         volumeInfo.getPath(), new StorageFilerTO(storagePool), volumeInfo.getSize(), newSizeInBytes,
                         payload.shrinkOk, payload.instanceName, volumeInfo.getChainInfo(),
-                        volumeInfo.getPassphrase(), volumeInfo.getEncryptFormat());
+                        volumeInfo.getPassphrase(), volumeInfo.getEncryptFormat(), volumeInfo.getKvdoEnable());
 
                 try {
                     VolumeVO volume = volumeDao.findById(volumeInfo.getId());

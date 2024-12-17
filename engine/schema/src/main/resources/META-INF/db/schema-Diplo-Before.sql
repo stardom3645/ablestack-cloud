@@ -66,11 +66,23 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash_final_result` (
 
 CALL `cloud`.`ADD_COL`('disk_offering', 'shareable', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
 
+CALL `cloud`.`ADD_COL`('disk_offering', 'kvdo_enable', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+
+CALL `cloud`.`ADD_COL`('vm_template', 'kvdo_enable', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+
 CALL `cloud`.`ADD_COL`('nics', 'link_state', 'tinyint(1) unsigned NOT NULL DEFAULT 1');
 
 CALL `cloud`.`ADD_COL`('vm_instance', 'qemu_agent_version', 'varchar(16)');
 
 CALL `cloud`.`ADD_COL`('snapshots', 'clone_type', 'varchar(32)');
+
+CALL `cloud`.`ADD_COL`('volumes', 'compress', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+
+CALL `cloud`.`ADD_COL`('volumes', 'dedup', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+
+CALL `cloud`.`ADD_COL`('volumes', 'used_fs_bytes', 'bigint unsigned');
+
+CALL `cloud`.`ADD_COL`('volumes', 'used_physical_size', 'bigint unsigned');
 
 -- Adding disaster_recovery_cluster table
 CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster` (
@@ -116,4 +128,3 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster_details` (
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_disaster_recovery_cluster_details__dr_cluster_id` FOREIGN KEY (`dr_cluster_id`) REFERENCES `disaster_recovery_cluster` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB CHARSET=utf8mb3;
-

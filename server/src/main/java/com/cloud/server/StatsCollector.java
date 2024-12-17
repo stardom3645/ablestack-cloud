@@ -1428,6 +1428,36 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                         }
                                     }
                                 }
+
+                                SearchCriteria<VolumeVO> sc_volume = _volsDao.createSearchCriteria();
+                                sc_volume.addAnd("removed", SearchCriteria.Op.NULL);
+                                sc_volume.addAnd("path", SearchCriteria.Op.NNULL);
+                                Map<String, Long> fsUsageMap = statsForCurrentIteration.getFsUsageMap();
+                                if (fsUsageMap != null) {
+                                    List<VolumeVO> volumes = _volsDao.search(sc_volume, null);
+                                    for (String key : fsUsageMap.keySet()) {
+                                        for (VolumeVO volVo : volumes){
+                                            if (volVo.getPath().contains(key)) {
+                                                volVo.setUsedFsBytes(fsUsageMap.get(key));
+                                                _volsDao.update(volVo.getId(), volVo);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Map<String, Long> rbdDuMap = statsForCurrentIteration.getRbdDuMap();
+                                if (rbdDuMap != null) {
+                                    List<VolumeVO> volumes = _volsDao.search(sc_volume, null);
+                                    for (String rbdUuid : rbdDuMap.keySet()) {
+                                        for (VolumeVO volVo : volumes){
+                                            if (volVo.getPath().contains(rbdUuid)) {
+                                                volVo.setUsedPhysicalSize(rbdDuMap.get(rbdUuid));
+                                                _volsDao.update(volVo.getId(), volVo);
+                                            }
+                                        }
+                                    }
+                                }
+
                                 persistVirtualMachineStats(statsForCurrentIteration, timestamp);
 
                                 if (externalStatsType == ExternalStatsProtocol.GRAPHITE) {

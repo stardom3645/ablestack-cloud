@@ -60,6 +60,7 @@ import {
   CloudSyncOutlined,
   CodeOutlined,
   CompassOutlined,
+  CompressOutlined,
   ContainerOutlined,
   ControlOutlined,
   CopyOutlined,
@@ -247,6 +248,7 @@ export default {
     app.component('ContainerOutlined', ContainerOutlined)
     app.component('ControlOutlined', ControlOutlined)
     app.component('CompassOutlined', CompassOutlined)
+    app.component('CompressOutlined', CompressOutlined)
     app.component('CopyOutlined', CopyOutlined)
     app.component('CreditCardOutlined', CreditCardOutlined)
     app.component('DashboardOutlined', DashboardOutlined)
