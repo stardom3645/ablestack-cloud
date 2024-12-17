@@ -3321,7 +3321,6 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         if (answer != null && answer instanceof UnsupportedAnswer) {
             return null;
         }
-
         if (answer == null || !answer.getResult()) {
             final String msg = "Unable to obtain host " + hostId + " statistics. ";
             logger.warn(msg);

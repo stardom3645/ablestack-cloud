@@ -336,6 +336,12 @@ public class VolumeObject implements VolumeInfo {
     }
 
     @Override
+    public boolean getKvdoEnable() {
+        DiskOfferingVO diskOfferingVO = getDiskOfferingVO();
+        return diskOfferingVO.getKvdoEnable();
+    }
+
+    @Override
     public MigrationOptions getMigrationOptions() {
         return migrationOptions;
     }
@@ -952,5 +958,45 @@ public class VolumeObject implements VolumeInfo {
     @Override
     public boolean isFollowRedirects() {
         return followRedirects;
+    }
+
+    @Override
+    public boolean getCompress() {
+        return volumeVO.getCompress();
+    }
+
+    @Override
+    public void setCompress(boolean compress) {
+        volumeVO.setCompress(compress);
+    }
+
+    @Override
+    public boolean getDedup() {
+        return volumeVO.getDedup();
+    }
+
+    @Override
+    public void setDedup(boolean dedup) {
+        volumeVO.setDedup(dedup);
+    }
+
+    @Override
+    public Long getUsedFsBytes() {
+        return volumeVO.getUsedFsBytes();
+    }
+
+    @Override
+    public void setUsedFsBytes(Long usedFsBytes) {
+        volumeVO.setUsedFsBytes(usedFsBytes);
+    }
+
+    @Override
+    public Long getUsedPhysicalSize() {
+        return volumeVO.getUsedPhysicalSize();
+    }
+
+    @Override
+    public void setUsedPhysicalSize(Long usedPhysicalSize) {
+        volumeVO.setUsedPhysicalSize(usedPhysicalSize);
     }
 }

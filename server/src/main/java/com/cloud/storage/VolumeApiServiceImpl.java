@@ -45,6 +45,7 @@ import org.apache.cloudstack.api.command.user.volume.ChangeOfferingForVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.CheckAndRepairVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.CreateVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.DetachVolumeCmd;
+import org.apache.cloudstack.api.command.user.volume.UpdateCompressDedupCmd;
 import org.apache.cloudstack.api.command.user.volume.ExtractVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.GetUploadParamsForVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.MigrateVolumeCmd;
@@ -122,6 +123,7 @@ import org.joda.time.DateTimeZone;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
+import com.cloud.agent.api.CompressDedupVolumeCommand;
 import com.cloud.agent.api.ModifyTargetsCommand;
 import com.cloud.agent.api.to.DataTO;
 import com.cloud.agent.api.to.DiskTO;
@@ -737,6 +739,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         Long maxIops = null;
         // Volume VO used for extracting the source template id
         VolumeVO parentVolume = null;
+        boolean kvdoEnable = false;
 
         // validate input parameters before creating the volume
         if (cmd.getSnapshotId() == null && cmd.getDiskOfferingId() == null) {
@@ -801,6 +804,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
 
             Boolean isCustomizedIops = diskOffering.isCustomizedIops();
+            kvdoEnable = diskOffering.getKvdoEnable();
 
             if (isCustomizedIops != null) {
                 if (isCustomizedIops) {
@@ -934,7 +938,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         String userSpecifiedName = getVolumeNameFromCommand(cmd);
 
         return commitVolume(cmd, caller, owner, displayVolume, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentVolume, userSpecifiedName,
-                _uuidMgr.generateUuid(Volume.class, cmd.getCustomId()), details);
+                _uuidMgr.generateUuid(Volume.class, cmd.getCustomId()), details, kvdoEnable);
     }
 
     @Override
@@ -948,7 +952,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     }
 
     private VolumeVO commitVolume(final CreateVolumeCmd cmd, final Account caller, final Account owner, final Boolean displayVolume, final Long zoneId, final Long diskOfferingId,
-                                  final Storage.ProvisioningType provisioningType, final Long size, final Long minIops, final Long maxIops, final VolumeVO parentVolume, final String userSpecifiedName, final String uuid, final Map<String, String> details) {
+                                  final Storage.ProvisioningType provisioningType, final Long size, final Long minIops, final Long maxIops, final VolumeVO parentVolume, final String userSpecifiedName, final String uuid, final Map<String, String> details, boolean kvdoEnable) {
         return Transaction.execute(new TransactionCallback<VolumeVO>() {
             @Override
             public VolumeVO doInTransaction(TransactionStatus status) {
@@ -971,6 +975,11 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                     volume.setFormat(parentVolume.getFormat());
                 } else {
                     volume.setTemplateId(null);
+                }
+
+                if(kvdoEnable){
+                    volume.setCompress(true);
+                    volume.setDedup(true);
                 }
 
                 volume = _volsDao.persist(volume);
@@ -2069,6 +2078,10 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         DiskOfferingVO existingDiskOffering = _diskOfferingDao.findByIdIncludingRemoved(existingDiskOfferingId);
         DiskOfferingVO newDiskOffering = _diskOfferingDao.findById(newDiskOfferingId);
         Integer newHypervisorSnapshotReserve = null;
+
+        if (existingDiskOffering.getKvdoEnable() != newDiskOffering.getKvdoEnable()) {
+            throw new CloudRuntimeException(String.format("If the KVDO settings of the existing disk offering and the KVDO settings of the disk offering to be changed are different, changes are not possible."));
+        }
 
         boolean volumeMigrateRequired = false;
         boolean volumeResizeRequired = false;
@@ -3290,6 +3303,79 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
             logger.warn(msg);
         }
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_UPDATE, eventDescription = "update compress dedup volume", async = true)
+    public Volume updateCompressDedupVolume(UpdateCompressDedupCmd cmmd) {
+        Account caller = CallContext.current().getCallingAccount();
+        if (cmmd.getId() == null) {
+            throw new InvalidParameterValueException("Please provide either a volume id");
+        }
+
+        Long volumeId = cmmd.getId();
+        VolumeVO volume = null;
+
+        if (volumeId != null) {
+            volume = _volsDao.findById(volumeId);
+        }
+
+        // Check that the volume ID is valid
+        if (volume == null) {
+            throw new InvalidParameterValueException("Unable to find volume with ID: " + volumeId);
+        }
+
+        DiskOfferingVO diskOffering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+        // Check that the diskOffering ID is valid
+        if (diskOffering == null) {
+            throw new InvalidParameterValueException("Unable to find diskOffering with ID: " + volume.getDiskOfferingId());
+        }
+
+        // Check that the diskOffering ID is valid
+        if (!diskOffering.getKvdoEnable()) {
+            throw new InvalidParameterValueException("KVM and ABLESTACK Block Only: volume compression/deduplication feature is used.");
+        }
+
+        Long vmId = null;
+        vmId = volume.getInstanceId();
+
+        // Check that the VM ID is valid
+        if (vmId == null) {
+            throw new InvalidParameterValueException("Unable to find instance VM with ID: " + vmId);
+        }
+
+        // Permissions check
+        _accountMgr.checkAccess(caller, null, true, volume);
+
+        // Check that the VM is in the correct state
+        UserVmVO vm = _userVmDao.findById(vmId);
+        if (vm.getState() != State.Running) {
+            throw new InvalidParameterValueException("Please specify a VM that is either running.");
+        }
+
+        // Check that the volume is a data/root volume
+        if (!(volume.getVolumeType() == Volume.Type.ROOT || volume.getVolumeType() == Volume.Type.DATADISK)) {
+            throw new InvalidParameterValueException("Please specify volume of type " + Volume.Type.DATADISK.toString() + " or " + Volume.Type.ROOT.toString());
+        }
+
+        _accountMgr.checkAccess(caller, null, true, vm);
+
+        Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
+
+        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand(cmmd.getCompress() ? "y" : "n", cmmd.getDedup() ? "y" : "n", volume.getPath());
+        try {
+            Answer answer = _agentMgr.send(hostId, cdvCmd);
+            if (answer == null || !answer.getResult()) {
+                throw new InvalidParameterValueException(String.format("Failed to update compressed duplicate volume action. %s", caller.getUuid()));
+            }
+            volume.setCompress(cmmd.getCompress());
+            volume.setDedup(cmmd.getDedup());
+            _volsDao.update(volume.getId(), volume);
+        } catch (Exception ex) {
+            throw new CloudRuntimeException(ex.getMessage());
+        }
+
+        return volume;
     }
 
     @DB
