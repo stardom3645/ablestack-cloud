@@ -87,6 +87,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.xerces.impl.xpath.regex.Match;
 import org.joda.time.Duration;
+import org.json.JSONArray;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainBlockStats;
@@ -219,6 +220,7 @@ import com.cloud.vm.VmDetailConstants;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 
@@ -341,6 +343,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String heartBeatPathGfs;
     private String heartBeatPathRbd;
     private String heartBeatPathClvm;
+    private String createKvdo;
+    private String compressDedupVolume;
     private String vmActivityCheckPath;
     private String vmActivityCheckPathGfs;
     private String vmActivityCheckPathRbd;
@@ -1032,6 +1036,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat_clvm.sh");
         }
 
+        createKvdo = Script.findScript(kvmScriptsDir, "create_kvdo.sh");
+        if (createKvdo == null) {
+            throw new ConfigurationException("Unable to find create_kvdo.sh");
+        }
+
+        compressDedupVolume = Script.findScript(kvmScriptsDir, "compress_dedup_volume.sh");
+        if (compressDedupVolume == null) {
+            throw new ConfigurationException("Unable to find compress_dedup_volume.sh");
+        }
+
         createVmPath = Script.findScript(storageScriptsDir, "createvm.sh");
         if (createVmPath == null) {
             throw new ConfigurationException("Unable to find the createvm.sh");
@@ -1404,6 +1418,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         final KVMStorageProcessor storageProcessor = new KVMStorageProcessor(storagePoolManager, this);
         storageProcessor.configure(name, params);
         storageHandler = new StorageSubsystemCommandHandlerBase(storageProcessor);
+        LOGGER.info("StorageSubsystemCommandHandlerBase excute1");
 
         Boolean iscsiCleanUpEnabled = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.ISCSI_SESSION_CLEANUP_ENABLED);
 
@@ -2002,6 +2017,42 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         command.add(action);
         command.add(domid);
         command.add(port);
+        LOGGER.info(command);
+        String result = command.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean createKvdoCmdLine(final String poolName, final String poolUsername, final String imageName, final String imageSize) throws InternalErrorException {
+        if (poolName == null || poolUsername == null || imageName == null || imageName == null) {
+            return false;
+        }
+
+        final Script command = new Script("/bin/sh", timeout);
+        command.add(createKvdo);
+        command.add("-p", poolName);
+        command.add("-n", poolUsername);
+        command.add("-i", imageName);
+        command.add("-s", imageSize);
+        String result = command.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean CompressDedupVolumeCmdLine(final String compress, final String dedup, final String imageName) throws InternalErrorException {
+        if (compress == null || dedup == null || imageName == null) {
+            return false;
+        }
+
+        final Script command = new Script("/bin/sh", timeout);
+        command.add(compressDedupVolume);
+        command.add("-c", compress);
+        command.add("-d", dedup);
+        command.add("-i", imageName);
         LOGGER.info(command);
         String result = command.execute();
         if (result != null) {
@@ -3422,15 +3473,27 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                      */
                     final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
                     if(store.getProvider() != null && !store.getProvider().isEmpty() && "ABLESTACK".equals(store.getProvider())){
-                        final String device = mapRbdDevice(physicalDisk);
+                        final VolumeObjectTO volumeObject = (VolumeObjectTO)data;
+                        final String device = mapRbdDevice(physicalDisk, volumeObject.getKvdoEnable());
                         if (device != null) {
                             LOGGER.debug("RBD device on host is: " + device);
                             String path = store.getKrbdPath() == null ? "/dev/rbd/" : store.getKrbdPath() + "/";
+                            if(volumeObject.getKvdoEnable()){
+                                path = device;
+                            }
                             if (volume.getType() == Volume.Type.DATADISK) {
-                                disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusTypeData);
+                                if(!volumeObject.getKvdoEnable()){
+                                    disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusTypeData);
+                                }else{
+                                    disk.defBlockBasedDisk(path, devId, diskBusTypeData);
+                                }
                             }
                             else {
-                                disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusType);
+                                if(!volumeObject.getKvdoEnable()){
+                                    disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusType);
+                                }else{
+                                    disk.defBlockBasedDisk(path, devId, diskBusType);
+                                }
                             }
                         } else {
                             throw new InternalErrorException("Error while mapping RBD device on host");
@@ -3538,7 +3601,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     final KVMStoragePool pool = physicalDisk.getPool();
                     if(StoragePoolType.RBD.equals(pool.getType())) {
                         final int devId = volume.getDiskSeq().intValue();
-                        final String device = mapRbdDevice(physicalDisk);
+                        final String device = mapRbdDevice(physicalDisk,false);
                         if (device != null) {
                             LOGGER.debug("RBD device on host is: " + device);
                             final DiskDef diskdef = new DiskDef();
@@ -4783,7 +4846,43 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             VmStatsEntry metrics = calculateVmMetrics(dm, oldStats, newStats);
             vmStats.put(vmName, newStats);
 
+            /* get disk stats */
+            final List<DiskDef> disks = getDisks(conn, vmName);
+            Map<String, Long> rbdDuMap = new HashMap<String, Long>();
+            String rbdLsCommand = String.format("timeout 3 rbd ls --format json 2>/dev/null");
+            String rbdLsResult = Script.runSimpleBashScript(rbdLsCommand);
+            for (final DiskDef disk : disks) {
+                if (disk.getDeviceType() == DeviceType.CDROM || disk.getDeviceType() == DeviceType.FLOPPY) {
+                    continue;
+                }
+
+                if (rbdLsResult != null && rbdLsResult != ""){
+                    // JSON 배열 파싱
+                    JSONArray rbdLsJsonArray = new JSONArray(rbdLsResult);
+                    String diskUuid = convertDiskPathToUuid(disk.getDiskPath());
+                    String rbdUuid = "";
+                    long usedPhysicalSize = 0;
+                    for (int i = 0; i < rbdLsJsonArray.length(); i++) {
+                        String rbdImageName = rbdLsJsonArray.getString(i);
+                        if (rbdImageName.contains(diskUuid)) {
+                            String rbdDuCommand = String.format("timeout 1 rbd du --format json --merge-snapshots --image " + rbdImageName + " 2>/dev/null");
+                            String rbdDuResult = Script.runSimpleBashScript(rbdDuCommand);
+                            if (rbdDuResult != null && rbdDuResult != "" && rbdDuResult.contains("images")){
+                                JsonArray rbdDuJsonArray = (JsonArray) new JsonParser().parse(rbdDuResult).getAsJsonObject().get("images");
+                                rbdUuid = rbdDuJsonArray.get(0).getAsJsonObject().get("name").getAsString();
+                                usedPhysicalSize = Long.parseLong(rbdDuJsonArray.get(0).getAsJsonObject().get("used_size").getAsString());
+                            }
+                        }
+                    }
+                    if (rbdUuid != "") {
+                        rbdDuMap.put(rbdUuid, usedPhysicalSize);
+                    }
+                    metrics.setRbdDuMap(rbdDuMap);
+                }
+            }
+
             Map<String, String> nicAddrMap = new HashMap<String, String>();
+            Map<String, Long> fsUsageMap = new HashMap<String, Long>();
             String qemuAgentVersion = "Not Installed";
             metrics.setQemuAgentVersion(qemuAgentVersion);
 
@@ -4827,6 +4926,46 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         }
                     }
                     metrics.setNicAddrMap(nicAddrMap);
+                }
+
+                result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_GET_FSINFO, null), 2, 0);
+                if (result != null && !(result.startsWith("error"))) {
+                    // logger.debug(dm.getName() + " >>  " + result);
+
+                    JsonArray arrData = (JsonArray) new JsonParser().parse(result).getAsJsonObject().get("return");
+
+                    for (JsonElement je : arrData) {
+                        JsonObject jsonObj = je.getAsJsonObject();
+                        JsonElement diskInfo = jsonObj.get("disk");
+
+                        if (diskInfo != null && diskInfo.isJsonArray()) {
+                            for (JsonElement diskElement : diskInfo.getAsJsonArray()) {
+                                // Capacity used by disk file system
+                                JsonObject diskObj = diskElement.getAsJsonObject();
+
+                                JsonElement serialElement = diskObj.get("serial");
+                                JsonElement usedFsBytesElement = jsonObj.get("used-bytes");
+                                if (serialElement == null || serialElement.isJsonNull() || usedFsBytesElement == null || usedFsBytesElement.isJsonNull()) {
+                                    continue;
+                                }
+
+                                String serial = diskObj.get("serial").getAsString();
+                                long usedFsBytes = usedFsBytesElement.getAsLong();
+                                if (serial.length() >= 20) {
+                                    //serial to half path uuid
+                                    String serial_val = serial.substring(serial.length() - 20);
+                                    String serial_uuid = serial_val.substring(0, 8) + "-"
+                                    + serial_val.substring(8, 12) + "-"
+                                    + serial_val.substring(12, 16) + "-"
+                                    + serial_val.substring(16, 20);
+                                    serial = serial_uuid;
+                                    System.out.println(serial);
+                                }
+                                fsUsageMap.put(serial, fsUsageMap.getOrDefault(serial, 0L) + usedFsBytes);
+                            }
+                        }
+                    }
+                    metrics.setFsUsageMap(fsUsageMap);
                 }
             }
 
@@ -5515,7 +5654,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return hypervisorType;
     }
 
-    public String mapRbdDevice(final KVMPhysicalDisk disk){
+    public String mapRbdDevice(final KVMPhysicalDisk disk, boolean kvdoEnable){
+
         final KVMStoragePool pool = disk.getPool();
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
@@ -5525,17 +5665,40 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             Script.runSimpleBashScript("rbd map " + disk.getPath() + " --id " + pool.getAuthUserName());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
+
+        // kvdo가 활성화 되어있음
+        device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+
+        if(kvdoEnable){
+            try {
+                createKvdoCmdLine(splitPoolImage[0], pool.getAuthUserName(), splitPoolImage[1], String.valueOf(disk.getSize()));
+                device = "/dev/mapper/vg_"+splitPoolImage[1].replace("-","")+"-ablestack_kvdo";
+                logger.info("device name : "+device);
+            } catch (InternalErrorException e) {
+                logger.info("createKvdoCmdLine Action Error : "+e);
+            }
+        }
+
         return device;
     }
 
-    public String unmapRbdDevice(final KVMPhysicalDisk disk){
+    public String unmapRbdDevice(final KVMPhysicalDisk disk, boolean kvdoEnable){
         final KVMStoragePool pool = disk.getPool();
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
+
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
 
         if(device != null) {
             //If not mapped, map and return mapped device
+            if(kvdoEnable){
+                try {
+                    String vgName = "vg_"+splitPoolImage[1].replace("-","");
+                    Script.runSimpleBashScript("vgchange -an " + vgName);
+                } catch (Exception e) {
+                    logger.info("unmapRbdDevice Action error : "+e);
+                }
+            }
             Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
@@ -5979,5 +6142,24 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             throw new RuntimeException(e);
         }
+    }
+
+    public static String convertDiskPathToUuid(String diskPath) {
+        String uuidRegex = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$";
+        Pattern uuidPattern = Pattern.compile(uuidRegex);
+        String uuid = "";
+        if (diskPath != null && !diskPath.isEmpty()) {
+            String[] parts = diskPath.split("/");
+            String diskName = parts[parts.length - 1];
+
+            if (diskName.contains("vg_") && diskName.contains("-ablestack_kvdo")) {
+                uuid = diskName.substring(3, diskName.indexOf("-ablestack_kvdo")).replaceFirst("(^.{8})(.{4})(.{4})(.{4})(.{12}$)", "$1-$2-$3-$4-$5");
+            }
+
+            if(uuidPattern.matcher(diskName).matches()){
+                uuid = diskName;
+            }
+        }
+        return uuid;
     }
 }

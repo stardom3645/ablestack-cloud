@@ -185,9 +185,20 @@ public class VolumeVO implements Volume {
     @Column(name = "encrypt_format")
     private String encryptFormat;
 
+    @Column(name = "compress")
+    private boolean compress;
+
+    @Column(name = "dedup")
+    private boolean dedup;
+
+    @Column(name = "used_fs_bytes")
+    private Long usedFsBytes;
+
+    @Column(name = "used_physical_size")
+    private Long usedPhysicalSize;
+
     @Column(name = "delete_protection")
     private boolean deleteProtection;
-
 
     // Real Constructor
     public VolumeVO(Type type, String name, long dcId, long domainId,
@@ -286,6 +297,10 @@ public class VolumeVO implements Volume {
         uuid = UUID.randomUUID().toString();
         deployAsIs = that.isDeployAsIs();
         externalUuid = that.getExternalUuid();
+        compress = that.getCompress();
+        dedup = that.getDedup();
+        usedFsBytes = that.getUsedFsBytes();
+        usedPhysicalSize = that.getUsedPhysicalSize();
     }
 
     @Override
@@ -684,6 +699,22 @@ public class VolumeVO implements Volume {
     public String getEncryptFormat() { return encryptFormat; }
 
     public void setEncryptFormat(String encryptFormat) { this.encryptFormat = encryptFormat; }
+
+    public boolean getCompress() { return compress; }
+
+    public void setCompress(boolean compress) { this.compress = compress; }
+
+    public boolean getDedup() { return dedup; }
+
+    public void setDedup(boolean dedup) { this.dedup = dedup; }
+
+    public Long getUsedFsBytes() { return usedFsBytes; }
+
+    public void setUsedFsBytes(Long usedFsBytes) { this.usedFsBytes = usedFsBytes; }
+
+    public Long getUsedPhysicalSize() { return usedPhysicalSize; }
+
+    public void setUsedPhysicalSize(Long usedPhysicalSize) { this.usedPhysicalSize = usedPhysicalSize; }
 
     @Override
     public boolean isDeleteProtection() {
