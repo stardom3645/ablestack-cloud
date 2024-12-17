@@ -2708,6 +2708,7 @@ public class DisasterRecoveryClusterUtil {
                         serviceOfferingResponse.setId(serviceOfferingJSONObject.get("id").toString());
                         serviceOfferingResponse.setName(serviceOfferingJSONObject.get("name").toString());
                         serviceOfferingResponse.setIscutomized(Boolean.parseBoolean(serviceOfferingJSONObject.get("iscustomized").toString()));
+                        serviceOfferingResponse.setKvdoEnable(Boolean.parseBoolean(serviceOfferingJSONObject.get(ApiConstants.KVDO_ENABLE).toString()));
                         serviceOfferingsList.add(serviceOfferingResponse);
                     }
                 }
