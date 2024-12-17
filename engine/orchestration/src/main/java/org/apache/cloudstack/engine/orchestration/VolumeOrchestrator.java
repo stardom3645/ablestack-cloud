@@ -808,6 +808,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
                 volumeInfo = volFactory.getVolume(volumeInfo.getId());
             }
             dskCh.setShareable(diskOffering.getShareable());
+            dskCh.setKvdoEnable(diskOffering.getKvdoEnable());
         }
 
         dskCh.setHyperType(hyperType);
@@ -937,7 +938,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
 
     protected DiskProfile toDiskProfile(Volume vol, DiskOffering offering) {
         return new DiskProfile(vol.getId(), vol.getVolumeType(), vol.getName(), offering.getId(), vol.getSize(), offering.getTagsArray(), offering.isUseLocalStorage(), offering.isRecreatable(),
-                vol.getTemplateId(), offering.getShareable());
+                vol.getTemplateId(), offering.getEncrypt(), offering.getShareable(), offering.getKvdoEnable());
     }
     @ActionEvent(eventType = EventTypes.EVENT_VOLUME_CREATE, eventDescription = "creating volume", create = true)
     @Override
@@ -1037,6 +1038,11 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
             vol.setDisplayVolume(userVm.isDisplayVm());
         }
 
+        if (offering.getKvdoEnable()) {
+            vol.setCompress(true);
+            vol.setDedup(true);
+        }
+
         vol.setFormat(getSupportedImageFormatForCluster(vm.getHypervisorType()));
         vol = _volsDao.persist(vol);
 
@@ -1093,6 +1099,11 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         if (vm.getType() == VirtualMachine.Type.User) {
             UserVmVO userVm = _userVmDao.findById(vm.getId());
             vol.setDisplayVolume(userVm.isDisplayVm());
+        }
+
+        if (offering.getKvdoEnable()) {
+            vol.setCompress(true);
+            vol.setDedup(true);
         }
 
         vol = _volsDao.persist(vol);

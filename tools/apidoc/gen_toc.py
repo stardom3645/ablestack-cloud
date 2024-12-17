@@ -286,6 +286,7 @@ known_categories = {
     'Webhook': 'Webhook',
     'Webhooks': 'Webhook',
     'purgeExpungedResources': 'Resource',
+    'updateCompressDedup': 'Volume',
     'forgotPassword': 'Authentication',
     'resetPassword': 'Authentication',
     'BgpPeer': 'BGP Peer',
