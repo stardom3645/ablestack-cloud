@@ -2289,7 +2289,7 @@ public class DisasterRecoveryClusterUtil {
      *  GET
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static String moldListDiskOfferingsAPI(String region, String command, String method, String apiKey, String secretKey) {
+    protected static String moldListDiskOfferingsAPI(String region, String command, String method, String apiKey, String secretKey, boolean kvdo) {
         try {
             String readLine = null;
             StringBuffer sb = null;
@@ -2353,7 +2353,7 @@ public class DisasterRecoveryClusterUtil {
                 }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jSONObject = array.getJSONObject(i);
-                    if (jSONObject.get("iscustomized").equals(true) && jSONObject.get("shareable").equals(false)) {
+                    if (jSONObject.get("iscustomized").equals(true) && jSONObject.get("shareable").equals(false) && jSONObject.get("kvdoenable").equals(kvdo)) {
                         result = jSONObject.get("id").toString();
                         break;
                     }
