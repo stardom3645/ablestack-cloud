@@ -179,14 +179,9 @@ public class LibvirtImportConvertedInstanceCommandWrapper extends CommandWrapper
         }
         for (int i = 0; i < temporaryDisks.size(); i++) {
             String poolPath = destinationStoragePools.get(i);
-            KVMStoragePool destinationPool = storagePoolMgr.getStoragePool(Storage.StoragePoolType.NetworkFilesystem, poolPath);
+            KVMStoragePool destinationPool = storagePoolMgr.getStoragePool(Storage.StoragePoolType.RBD, poolPath);
             if (destinationPool == null) {
                 String err = String.format("Could not find a storage pool by URI: %s", poolPath);
-                logger.error(err);
-                continue;
-            }
-            if (destinationPool.getType() != Storage.StoragePoolType.NetworkFilesystem) {
-                String err = String.format("Storage pool by URI: %s is not an NFS storage", poolPath);
                 logger.error(err);
                 continue;
             }
