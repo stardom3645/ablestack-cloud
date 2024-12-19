@@ -155,6 +155,9 @@
               </div>
             </div>
           </div>
+          <div v-else-if="item === 'usersource'">
+            {{ $t(getUserSourceLabel(dataResource[item])) }}
+          </div>
           <div v-else>{{ dataResource[item] }}</div>
         </div>
       </a-list-item>
@@ -444,6 +447,15 @@ export default {
       if (val < 1024 * 1024 * 1024) return `${(val / 1024 / 1024).toFixed(2)} GB`
       if (val < 1024 * 1024 * 1024 * 1024) return `${(val / 1024 / 1024 / 1024).toFixed(2)} TB`
       return val
+    },
+    getUserSourceLabel (source) {
+      if (source === 'saml2') {
+        source = 'saml'
+      } else if (source === 'saml2disabled') {
+        source = 'saml.disabled'
+      }
+
+      return `label.${source}`
     }
   }
 }
