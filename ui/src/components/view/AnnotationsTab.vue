@@ -41,7 +41,9 @@
               </template>
               <template #actions>
                 <a-popconfirm
-                  :title="$t('label.make') + ' ' + (item.adminsonly ? $t('label.annotation.everyone') : $t('label.adminsonly')) + ' ?'"
+                  :title="this.$localStorage.get('LOCALE') == 'ko_KR' ?
+                          (item.adminsonly ? $t('label.annotation.everyone') : $t('label.adminsonly')) + $t('label.make') + '?' :
+                          $t('label.make') + ' ' + (item.adminsonly ? $t('label.annotation.everyone') : $t('label.adminsonly')) + '?'"
                   v-if="['Admin'].includes($store.getters.userInfo.roletype)"
                   key="visibility"
                   @confirm="updateVisibility(item)"

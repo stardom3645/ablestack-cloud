@@ -140,14 +140,12 @@ export default {
     }
   },
   created () {
-    this.fetchEvents()
-    this.refreshInterval = setInterval(this.fetchEvents, 5000)
-    // console.log('EventsListBar:', this.$store.getters.globalSettings.EventsListBar)
-  },
-  unmounted () {
-    clearInterval(this.refreshInterval)
   },
   methods: {
+    openSiderBar () {
+      this.fetchEvents()
+      this.refreshInterval = setInterval(this.fetchEvents, 5000)
+    },
     closeSidebar () {
       clearInterval(this.refreshInterval)
       this.$emit('update:isVisible', false)
