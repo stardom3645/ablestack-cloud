@@ -269,6 +269,9 @@ export default {
       if (this.selectedClusterId === undefined) {
         if (this.form.drCluster != null) {
           this.secDrClusterOfferings = this.drCluster[0].serviceofferingdetails || []
+          this.secDrClusterOfferings = this.secDrClusterOfferings.filter(off => {
+            return off.kvdoenable === this.resource.kvdoenable
+          })
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : null
           if (this.secDrClusterOfferings[0].serviceofferingdetails && this.secDrClusterOfferings[0].iscustomized === true) {
             this.isCustomized = true
@@ -296,6 +299,9 @@ export default {
         if (clusters && clusters.length > 0) {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
+          this.secDrClusterOfferings = this.secDrClusterOfferings.filter(off => {
+            return off.kvdoenable === this.resource.kvdoenable
+          })
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
           if (this.secDrClusterOfferings[0].serviceofferingdetails && this.secDrClusterOfferings[0].iscustomized === true) {
             this.isCustomized = true
@@ -402,6 +408,9 @@ export default {
         if (clusters && clusters.length > 0) {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
+          this.secDrClusterOfferings = this.secDrClusterOfferings.filter(off => {
+            return off.kvdoenable === this.resource.kvdoenable
+          })
           for (const offering of this.secDrClusterOfferings) {
             if (offering.name === selectOff && offering.serviceofferingdetails && offering.iscustomized === true) {
               this.isCustomized = true

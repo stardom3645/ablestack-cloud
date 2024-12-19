@@ -1681,13 +1681,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         moldCommand = "listAccounts";
         String domainId = DisasterRecoveryClusterUtil.moldListAccountsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         moldCommand = "listDiskOfferings";
-        String diskOfferingId = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         String jobId = null;
         int jobStatus = 0;
         JSONObject jsonObject;
         // 미러링 ROOT 디스크 생성 및 편집 mold-api 호출
         List<VolumeVO> rootVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.ROOT);
         VolumeVO rootVol = rootVolumes.get(0);
+        boolean kvdo = false;
+        DiskOffering offering = diskOfferingDao.findById(rootVol.getDiskOfferingId());
+        if (offering.getKvdoEnable()) {
+            kvdo = true;
+        }
+        String diskOfferingId = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, kvdo);
         String rootVolumeUuid = rootVol.getPath();
         moldMethod = "POST";
         moldCommand = "createVolume";
@@ -1826,11 +1831,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
                     if (!dataVolumes.isEmpty()) {
                         for (VolumeVO dataVolume : dataVolumes) {
+                            kvdo = false;
+                            DiskOffering dataOffering = diskOfferingDao.findById(dataVolume.getDiskOfferingId());
+                            if (dataOffering.getKvdoEnable()) {
+                                kvdo = true;
+                            }
+                            moldMethod = "GET";
+                            moldCommand = "listDiskOfferings";
+                            String dataDiskOfferingId = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, kvdo);
                             // DATA 디스크 생성 및 편집 및 연결 mold-api 호출
                             String dataVolumeUuid = dataVolume.getPath();
                             moldMethod = "POST";
                             moldCommand = "createVolume";
-                            volParams.put("diskofferingid", diskOfferingId);
+                            volParams.put("diskofferingid", dataDiskOfferingId);
                             volParams.put("size", String.valueOf(dataVolume.getSize() / (1024 * 1024 * 1024)));
                             volParams.put("name", dataVolumeUuid);
                             volParams.put("zoneid", zoneId);
@@ -2319,18 +2332,20 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldCommand = "listDiskOfferings";
         String moldUrl = url + "/client/api/";
         String moldMethod = "GET";
-        String diskOffering = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (diskOffering == "" || diskOffering.isEmpty()) {
-            throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a disk offering with a custom disk size or shared volumes disabled does not exist.");
-        }
-        // 압축 중복 제거 개발 완료 후 해당 VM에 적용 여부 판단하여 Secondary 클러스터의 디스크오퍼링에 동일한 기능이 적용된 오퍼링이 있는지 예외처리 로직 추가 예정
-
+        boolean kvdo = false;
         UserVmJoinVO userVM = userVmJoinDao.findById(cmd.getVmId());
         List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
         for (VolumeVO vol : volumes) {
             DiskOffering offering = diskOfferingDao.findById(vol.getDiskOfferingId());
             if (offering.getShareable()) {
                 throw new CloudRuntimeException("Shared volumes are enabled for the virtual machine's disk offering cannot add a mirrored virtual machine.");
+            }
+            if (offering.getKvdoEnable()) {
+                kvdo = true;
+            }
+            String diskOffering = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, kvdo);
+            if (diskOffering == "" || diskOffering.isEmpty()) {
+                throw new CloudRuntimeException("You cannot add a mirrored virtual machine because no disk offering exists with custom disk sizes enabled, shared volumes disabled, and the same compression deduplication settings as the virtual machines.");
             }
         }
         moldCommand = "listVirtualMachines";
