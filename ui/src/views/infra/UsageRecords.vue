@@ -425,6 +425,9 @@ export default {
   beforeCreate () {
     this.apiParams = this.$getApiParams('listUsageRecords')
   },
+  mounted () {
+    this.listUsageRecords()
+  },
   created () {
     this.rangePresets[this.$t('label.range.today')] = [dayjs(), dayjs()]
     this.rangePresets[this.$t('label.range.yesterday')] = [dayjs().add(-1, 'd'), dayjs().add(-1, 'd')]
@@ -461,7 +464,7 @@ export default {
         account: null,
         type: null,
         id: null,
-        dateRange: [],
+        dateRange: [dayjs().add(-1, 'd'), dayjs()],
         isRecursive: false
       })
       this.rules = reactive({
