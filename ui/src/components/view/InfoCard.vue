@@ -48,6 +48,11 @@
             </div>
             <slot name="name">
               <div v-if="['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(resource.name)">{{ $t(resource.name.toLowerCase()) }}</div>
+              <div v-else-if="['quotasummary'].includes($route.path.split('/')[1]) && resource.account">
+                <h4 class="name">
+                  {{ resource.account }}
+                </h4>
+              </div>
               <div v-else>
                 <h4 class="name">
                   {{ name }}
