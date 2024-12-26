@@ -2954,11 +2954,11 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
         try {
             SSHCmdHelper.SSHCmdResult result = SSHCmdHelper.sshExecuteCmdOneShot(
-                    connection, "service cloudstack-agent restart");
+                    connection, "service mold-agent restart");
             if (result.getReturnCode() != 0) {
                 throw new CloudRuntimeException(String.format("Could not restart agent on %s due to: %s", host, result.getStdErr()));
             }
-            logger.debug("cloudstack-agent restart result: " + result.toString());
+            logger.debug("mold-agent restart result: " + result.toString());
         } catch (final SshException e) {
             throw new CloudRuntimeException("SSH to agent is enabled, but agent restart failed", e);
         }

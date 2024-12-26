@@ -340,7 +340,7 @@ mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/agent
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/log/%{name}/agent
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-agent/lib
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-agent/plugins
-install -D packaging/systemd/cloudstack-agent.service ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-agent.service
+install -D packaging/systemd/cloudstack-agent.service ${RPM_BUILD_ROOT}%{_unitdir}/mold-agent.service
 install -D packaging/systemd/cloudstack-rolling-maintenance@.service ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-rolling-maintenance@.service
 install -D packaging/systemd/cloudstack-agent.default ${RPM_BUILD_ROOT}%{_sysconfdir}/default/%{name}-agent
 install -D agent/target/transformed/agent.properties ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/agent/agent.properties
@@ -444,7 +444,7 @@ fi
 # Install mysql-connector-python
 pip3 install %{_datadir}/%{name}-management/setup/wheel/six-1.15.0-py2.py3-none-any.whl %{_datadir}/%{name}-management/setup/wheel/setuptools-47.3.1-py3-none-any.whl %{_datadir}/%{name}-management/setup/wheel/protobuf-3.19.6-py2.py3-none-any.whl %{_datadir}/%{name}-management/setup/wheel/mysql_connector_python-8.0.31-py2.py3-none-any.whl
 
-/usr/bin/systemctl enable cloudstack-management > /dev/null 2>&1 || true
+/usr/bin/systemctl enable mold > /dev/null 2>&1 || true
 /usr/bin/systemctl enable --now rngd > /dev/null 2>&1 || true
 
 grep -s -q "db.cloud.driver=jdbc:mysql" "%{_sysconfdir}/%{name}/management/db.properties" || sed -i -e "\$adb.cloud.driver=jdbc:mysql" "%{_sysconfdir}/%{name}/management/db.properties"
@@ -480,7 +480,7 @@ if [ -f "/usr/share/cloudstack-common/scripts/installer/cloudstack-help-text" ];
 fi
 
 %preun agent
-/sbin/service cloudstack-agent stop || true
+/sbin/service mold-agent stop || true
 if [ "$1" == "0" ] ; then
     /sbin/chkconfig --del cloudstack-agent > /dev/null 2>&1 || true
 fi
@@ -505,7 +505,7 @@ fi
 cp -a ${RPM_BUILD_ROOT}%{_datadir}/%{name}-agent/lib/libvirtqemuhook %{_sysconfdir}/libvirt/hooks/qemu
 mkdir -m 0755 -p /usr/share/cloudstack-agent/tmp
 /usr/bin/systemctl restart libvirtd
-/usr/bin/systemctl enable cloudstack-agent > /dev/null 2>&1 || true
+/usr/bin/systemctl enable mold-agent > /dev/null 2>&1 || true
 /usr/bin/systemctl enable cloudstack-rolling-maintenance@p > /dev/null 2>&1 || true
 /usr/bin/systemctl enable --now rngd > /dev/null 2>&1 || true
 
@@ -540,7 +540,7 @@ if [ -f "%{_sysconfdir}/%{name}/management/db.properties" ]; then
     echo "Replacing usage server's db.properties with a link to the management server's db.properties"
     rm -f %{_sysconfdir}/%{name}/usage/db.properties
     ln -s %{_sysconfdir}/%{name}/management/db.properties %{_sysconfdir}/%{name}/usage/db.properties
-    /usr/bin/systemctl enable cloudstack-usage > /dev/null 2>&1 || true
+    /usr/bin/systemctl enable mold-usage > /dev/null 2>&1 || true
 fi
 
 if [ -f "%{_sysconfdir}/%{name}/management/key" ]; then
@@ -623,7 +623,7 @@ pip3 install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 %attr(0755,root,root) %{_bindir}/%{name}-agent-upgrade
 %attr(0755,root,root) %{_bindir}/%{name}-guest-tool
 %attr(0755,root,root) %{_bindir}/%{name}-ssh
-%attr(0644,root,root) %{_unitdir}/%{name}-agent.service
+%attr(0644,root,root) %{_unitdir}/mold-agent.service
 %attr(0644,root,root) %{_unitdir}/%{name}-rolling-maintenance@.service
 %config(noreplace) %{_sysconfdir}/default/%{name}-agent
 %attr(0644,root,root) %{_sysconfdir}/profile.d/%{name}-agent-profile.sh
