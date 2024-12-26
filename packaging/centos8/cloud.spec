@@ -660,7 +660,7 @@ pip3 install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 %{_defaultdocdir}/%{name}-ui-%{version}/NOTICE
 
 %files usage
-%attr(0644,root,root) %{_unitdir}/%{name}-usage.service
+%attr(0644,root,root) %{_unitdir}/mold-usage.service
 %config(noreplace) %{_sysconfdir}/default/%{name}-usage
 %config(noreplace) %attr(0644,root,root) %{_sysconfdir}/logrotate.d/%{name}-usage
 %attr(0644,root,root) %{_datadir}/%{name}-usage/*.jar
