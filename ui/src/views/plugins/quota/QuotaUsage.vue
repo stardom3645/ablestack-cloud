@@ -29,7 +29,7 @@
     >
       <template #bodyCell="{ column, text }">
         <template v-if="column.key === 'quota'">
-          <span v-if="text!==undefined">{{ `${currency} ${text}` }}</span>
+          <span v-if="text!==undefined">{{ `${currency} ${text.toLocaleString()}` }}</span>
         </template>
       </template>
     </a-table>
