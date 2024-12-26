@@ -360,7 +360,7 @@
         </template>
         <template v-if="text && !text.startsWith('PrjAcct-')">
           <router-link
-            v-if="'quota' in record && $router.resolve(`${$route.path}/${record.account}`).matched[0].redirect !== '/exception/404'"
+            v-if="'quotausage' in record && $router.resolve(`${$route.path}/${record.account}`).matched[0].redirect !== '/exception/404'"
             :to="{ path: `${$route.path}/${record.account}`, query: { account: record.account, domainid: record.domainid, quota: true } }">{{ text }}</router-link>
           <router-link :to="{ path: '/account/' + record.accountid }" v-else-if="record.accountid">{{ text }}</router-link>
           <router-link :to="{ path: '/account', query: { name: record.account, domainid: record.domainid, dataView: true } }" v-else-if="$store.getters.userInfo.roletype !== 'User'">{{ text }}</router-link>
@@ -478,7 +478,7 @@
           {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
         </span>
       </template>
-      <template v-if="['startdate', 'enddate'].includes(column.key) && ['usage'].includes($route.path.split('/')[1])">
+      <template v-if="['startdate', 'enddate'].includes(column.key) && ['quotasummary', 'usage'].includes($route.path.split('/')[1])">
         {{ $toLocaleDate(text.replace('\'T\'', ' ')) }}
       </template>
       <template v-if="column.key === 'order'">
