@@ -560,7 +560,7 @@ public class ConfigDriveNetworkElement extends AdapterBase implements NetworkEle
 
         final String isoFileName = ConfigDrive.configIsoFileName(profile.getInstanceName());
         final String isoPath = ConfigDrive.createConfigDrivePath(profile.getInstanceName());
-        List<NicProfile> nicProfiles = _networkOrchestrationService.getNicProfiles(nic.getVirtualMachineId(), profile.getHypervisorType());
+        List<NicProfile> nicProfiles = _networkOrchestrationService.getNicProfiles(profile.getVirtualMachine().getId(), profile.getHypervisorType());
         final Map<Long, List<Service>> supportedServices = getSupportedServicesByElementForNetwork(nicProfiles);
         final String isoData = ConfigDriveBuilder.buildConfigDrive(nicProfiles, profile.getVmData(), isoFileName, profile.getConfigDriveLabel(), customUserdataParamMap, supportedServices);
         final HandleConfigDriveIsoCommand configDriveIsoCommand = new HandleConfigDriveIsoCommand(isoPath, isoData, null, false, true, true);
