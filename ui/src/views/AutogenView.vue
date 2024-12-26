@@ -635,7 +635,7 @@
 
     <div :style="this.$store.getters.shutdownTriggered ? 'margin-top: 24px; margin-bottom: 12px' : null">
       <div v-if="dataView">
-        <slot name="resource" v-if="$route.path.startsWith('/quotasummary') || $route.path.startsWith('/publicip')"></slot>
+        <slot name="resource" v-if="$route.path.startsWith('/publicip')"></slot>
         <resource-view
           v-else
           :resource="resource"
@@ -983,8 +983,6 @@ export default {
       }
     },
     getCsvDownload (paramFields) {
-      console.log('123123123')
-      console.log(JSON.stringify(paramFields.resource))
       var csvFile = 'event.csv'
       var downloadLink
       var row = []
@@ -1358,6 +1356,7 @@ export default {
         if (this.items.length > 0) {
           if (!this.showAction || this.dataView) {
             this.resource = this.items[0]
+            console.log('1111resource :>> ', this.resource)
             this.$emit('change-resource', this.resource)
           }
         } else {
