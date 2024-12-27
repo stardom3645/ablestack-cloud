@@ -1292,7 +1292,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
      */
     protected boolean isUsageLocal() {
         boolean local = false;
-        String usageInstall = Script.runSimpleBashScript("systemctl status cloudstack-usage | grep \"  Loaded:\"");
+        String usageInstall = Script.runSimpleBashScript("systemctl status mold-usage | grep \"  Loaded:\"");
         logger.debug(String.format("usage install: %s", usageInstall));
 
         if (StringUtils.isNotBlank(usageInstall)) {

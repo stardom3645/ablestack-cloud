@@ -764,7 +764,7 @@
 "label.deleting.iso": "ISO \uc0ad\uc81c\ud558\ub294 \uc911...",
 "label.deleting.snapshot": "\uc2a4\ub0c5\uc0f7 \uc0ad\uc81c\ud558\ub294 \uc911...",
 "label.deleting.template": "\ud15c\ud50c\ub9bf \uc0ad\uc81c\ud558\ub294 \uc911...",
-"label.deleteprotection": "\ubcf4\ud638 \uc0ad\uc81c",
+"label.deleteprotection": "\uc0ad\uc81c \ubcf4\ud638",
 "label.demote.project.owner": "\uacc4\uc815\uc744 \uc77c\ubc18 \uc5ed\ud560\ub85c \ub0b4\ub9ac\ub2e4.",
 "label.demote.project.owner.user": "\uc0ac\uc6a9\uc790\ub97c \uc77c\ubc18 \uc5ed\ud560\ub85c \ub0b4\ub9ac\ub2e4.",
 "label.deny": "\uac70\ubd80",

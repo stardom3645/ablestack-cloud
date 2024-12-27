@@ -1076,7 +1076,7 @@ public class MetricsServiceImpl extends MutualExclusiveIdsManagerBase implements
      */
     protected boolean isUsageRunning() {
         boolean local = false;
-        String usageStatus = Script.runSimpleBashScript("systemctl status cloudstack-usage | grep \"  Active:\"");
+        String usageStatus = Script.runSimpleBashScript("systemctl status mold-usage | grep \"  Active:\"");
 
         if (logger.isTraceEnabled()) {
             logger.trace(String.format("The current usage status is: %s.", usageStatus));
