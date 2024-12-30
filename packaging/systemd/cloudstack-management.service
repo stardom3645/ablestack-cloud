@@ -23,7 +23,7 @@
 # add a Requires dependency there. Check systemd documentation for details
 
 [Unit]
-Description=CloudStack Management Server
+Description=Mold Management Server
 After=syslog.target network.target mariadb.service mysqld.service mysql.service
 Wants=mariadb.service mysqld.service mysql.service
 
