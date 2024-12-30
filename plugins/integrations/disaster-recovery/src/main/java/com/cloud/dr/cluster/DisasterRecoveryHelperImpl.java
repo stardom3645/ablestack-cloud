@@ -145,47 +145,56 @@ public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterR
                         }
                     }
                 }
-            }
-        } catch (SQLException e) {
-            throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed. ", e);
-        }
-        // 정상적인 Ready 상태가 아닌 경우 VM 시작 예외처리
-        for (DisasterRecoveryClusterVO drc : drCluster) {
-            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drc.getId());
-            if (!CollectionUtils.isEmpty(vmMap)) {
-                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    if (map.getVmId() == vmId) {
-                        if (ipList != null || !ipList.isEmpty()) {
-                            ipList = ipList.replaceAll(",$", "");
-                            String[] array = ipList.split(",");
-                            String imageName = map.getMirroredVmVolumePath();
-                            int cnt = 0;
-                            for (int i=0; i < array.length; i++) {
-                                String glueIp = array[i];
-                                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                                String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                                String glueCommand = "/mirror/image/status/rbd/" +imageName;
-                                String glueMethod = "GET";
-                                String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
-                                if (mirrorImageStatus != null) {
-                                    JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
-                                    if (statObject.has("description")) {
-                                        if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().equals("orphan (force promoting)")) {
-                                            throw new CloudRuntimeException("The virtual machine cannot be started because the mirroring image not ready status.");
+            } else {
+                // Primary 클러스터의 모의시험 기록이 있는 경우 제외하고 정상적인 Ready 상태가 아닌 경우 VM 시작 예외처리
+                pstmt = txn.prepareAutoCloseStatement("select * from `cloud`.`event` where type = 'DR.VM.DEMOTE' and state = 'Completed' and description = 'Successfully completed demoting disaster recovery cluster virtual machine' and created > CURRENT_DATE()");
+                numRows = 0;
+                rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    numRows = rs.getInt(1);
+                }
+                if (numRows == 0) {
+                    for (DisasterRecoveryClusterVO drc : drCluster) {
+                        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drc.getId());
+                        if (!CollectionUtils.isEmpty(vmMap)) {
+                            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                                if (map.getVmId() == vmId) {
+                                    if (ipList != null || !ipList.isEmpty()) {
+                                        ipList = ipList.replaceAll(",$", "");
+                                        String[] array = ipList.split(",");
+                                        String imageName = map.getMirroredVmVolumePath();
+                                        int cnt = 0;
+                                        for (int i=0; i < array.length; i++) {
+                                            String glueIp = array[i];
+                                            ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                                            String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                                            String glueCommand = "/mirror/image/status/rbd/" +imageName;
+                                            String glueMethod = "GET";
+                                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                                            if (mirrorImageStatus != null) {
+                                                JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                                if (statObject.has("description")) {
+                                                    if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().equals("orphan (force promoting)")) {
+                                                        throw new CloudRuntimeException("The virtual machine cannot be started because the mirroring image not ready status.");
+                                                    }
+                                                }
+                                                break;
+                                            } else {
+                                                cnt += 1;
+                                            }
+                                        }
+                                        if (cnt > 2) {
+                                            throw new CloudRuntimeException("The virtual machine cannot be started because the mirroring image status Glue-API failed.");
                                         }
                                     }
-                                    break;
-                                } else {
-                                    cnt += 1;
                                 }
-                            }
-                            if (cnt > 2) {
-                                throw new CloudRuntimeException("The virtual machine cannot be started because the mirroring image status Glue-API failed.");
                             }
                         }
                     }
                 }
             }
+        } catch (SQLException e) {
+            throw new CloudRuntimeException("The virtual machine cannot be started. ", e);
         }
         return;
     }
