@@ -314,14 +314,14 @@ public class LinstorStoragePool implements KVMStoragePool {
         }
         boolean otherNodeOnline = false;
         if (connectionFound) {
-            s_logger.warn(String.format(
+            LOGGER.warn(String.format(
                     "checkingHeartBeat: connection found, but not in state 'Connected' to %s", otherNodeName));
         } else {
-            s_logger.warn(String.format(
+            LOGGER.warn(String.format(
                     "checkingHeartBeat: no resource connected to %s, checking LINSTOR", otherNodeName));
             otherNodeOnline = checkLinstorNodeOnline(otherNodeName);
         }
-        s_logger.info(String.format(
+        LOGGER.info(String.format(
                 "checkingHeartBeat: other node %s is %s.",
                 otherNodeName,
                 otherNodeOnline ? "online on controller" : "down"));
