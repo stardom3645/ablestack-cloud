@@ -157,16 +157,10 @@ export default {
           this.stepData.stepMove.push('stepOneTestDr')
         }
         await this.stepTwoTestDr()
-        setTimeout(() => {
-          // status check
-        }, 60000)
         await this.stepThreeTestDr()
         await this.stepFourTestDr()
         await this.stepFiveTestDr()
         await this.stepSixTestDr()
-        setTimeout(() => {
-          // status check
-        }, 60000)
         await this.stepSevenTestDr()
         this.$emit('nextPressed')
       } catch (e) {
@@ -314,7 +308,10 @@ export default {
         params.virtualmachineid = this.resource.id
         params.drclustername = this.clusters.name
         api('demoteDisasterRecoveryClusterVm', params).then(json => {
-          resolve()
+          setTimeout(() => {
+            // 3 min status check
+            resolve()
+          }, 180000)
         }).catch(error => {
           message = error.response.headers['x-description']
           reject(message)
@@ -350,7 +347,10 @@ export default {
         params.virtualmachineid = this.resource.id
         params.drclustername = this.clusters.name
         api('promoteDisasterRecoveryClusterVm', params).then(json => {
-          resolve()
+          setTimeout(() => {
+            // 3 min status check
+            resolve()
+          }, 180000)
         }).catch(error => {
           message = error.response.headers['x-description']
           reject(message)
