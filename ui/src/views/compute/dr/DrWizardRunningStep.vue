@@ -157,10 +157,16 @@ export default {
           this.stepData.stepMove.push('stepOneTestDr')
         }
         await this.stepTwoTestDr()
+        setTimeout(() => {
+          // status check
+        }, 60000)
         await this.stepThreeTestDr()
         await this.stepFourTestDr()
         await this.stepFiveTestDr()
         await this.stepSixTestDr()
+        setTimeout(() => {
+          // status check
+        }, 60000)
         await this.stepSevenTestDr()
         this.$emit('nextPressed')
       } catch (e) {
