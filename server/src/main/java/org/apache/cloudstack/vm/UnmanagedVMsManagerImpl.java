@@ -2074,7 +2074,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             DiskOfferingVO diskOffering = diskOfferingDao.findById(diskOfferingId);
             if (diskOffering == null) {
                 String msg = String.format("Cannot find disk offering with ID %s", diskOfferingId);
-                LOGGER.error(msg);
+                logger.error(msg);
                 throw new CloudRuntimeException(msg);
             }
             diskOfferingTags.add(diskOffering.getTags());
@@ -2110,7 +2110,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             }
             if (!tagsMatched) {
                 String msg = String.format("Cannot find suitable storage pools for the conversion with disk offering tags %s", tags);
-                LOGGER.error(msg);
+                logger.error(msg);
                 throw new CloudRuntimeException(msg);
             }
         }
