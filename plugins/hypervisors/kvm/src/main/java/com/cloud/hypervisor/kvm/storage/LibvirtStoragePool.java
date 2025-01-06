@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.Duration;
@@ -28,8 +29,6 @@ import org.libvirt.LibvirtException;
 import org.libvirt.StoragePool;
 
 import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.cloud.agent.api.to.HostTO;
 import com.cloud.hypervisor.kvm.resource.KVMHABase.HAStoragePool;
@@ -410,7 +409,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("uuid", getUuid()).append("path", getLocalPath()).toString();
+        return String.format("LibvirtStoragePool %s", ReflectionToStringBuilderUtils.reflectOnlySelectedFields(this, "uuid", "path"));
     }
 
     @Override
