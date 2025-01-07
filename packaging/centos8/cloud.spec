@@ -482,7 +482,7 @@ fi
 %preun agent
 /sbin/service mold-agent stop || true
 if [ "$1" == "0" ] ; then
-    /sbin/chkconfig --del cloudstack-agent > /dev/null 2>&1 || true
+    /sbin/chkconfig --del mold-agent > /dev/null 2>&1 || true
 fi
 
 %pre agent

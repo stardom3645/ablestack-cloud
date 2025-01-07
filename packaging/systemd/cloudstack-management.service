@@ -26,6 +26,7 @@
 Description=Mold Management Server
 After=syslog.target network.target mariadb.service mysqld.service mysql.service
 Wants=mariadb.service mysqld.service mysql.service
+Requires=mold-usage.service
 
 [Service]
 UMask=0022
