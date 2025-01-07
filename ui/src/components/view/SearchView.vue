@@ -71,8 +71,7 @@
                     <a-select-option
                       v-for="(opt, idx) in field.opts"
                       :key="idx"
-                      :value="['account'].includes(field.name) ? opt.name : opt.id"
-                      :label="$t((['storageid'].includes(field.name) || !opt.path) ? opt.name : opt.path)">
+                      :value="['account'].includes(field.name) ? opt.name : opt.id">
                       <div>
                         <span v-if="(field.name.startsWith('zone'))">
                           <span v-if="opt.icon">
@@ -969,7 +968,7 @@ export default {
     },
     fetchVolumes (searchKeyword) {
       return new Promise((resolve, reject) => {
-        api('listvolumes', { listAll: true, isencrypted: searchKeyword }).then(json => {
+        api('listVolumes', { listAll: true, isencrypted: searchKeyword }).then(json => {
           const volumes = json.listvolumesresponse.volume
           resolve({
             type: 'isencrypted',
