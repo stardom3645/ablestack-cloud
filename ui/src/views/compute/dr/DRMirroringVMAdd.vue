@@ -444,6 +444,13 @@ export default {
       if (this.loading) return
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
+        if (this.resource.kvdoenable) {
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('message.error.confirm.create.dr.mirroring.vm')
+          })
+          return
+        }
         this.loading = true
         const params = {
           virtualmachineid: this.resource.id,
