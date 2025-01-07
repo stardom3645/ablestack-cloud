@@ -1356,7 +1356,6 @@ export default {
         if (this.items.length > 0) {
           if (!this.showAction || this.dataView) {
             this.resource = this.items[0]
-            console.log('1111resource :>> ', this.resource)
             this.$emit('change-resource', this.resource)
           }
         } else {
