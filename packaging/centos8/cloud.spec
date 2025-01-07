@@ -478,6 +478,7 @@ if [ -f "/usr/share/cloudstack-common/scripts/installer/cloudstack-help-text" ];
     sed -i "s,^ACS_VERSION=.*,ACS_VERSION=%{_maventag},g" /usr/share/cloudstack-common/scripts/installer/cloudstack-help-text
     /usr/share/cloudstack-common/scripts/installer/cloudstack-help-text management
 fi
+/usr/bin/systemctl enable mold > /dev/null 2>&1 || true
 
 %preun agent
 /sbin/service mold-agent stop || true
