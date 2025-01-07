@@ -530,9 +530,9 @@ id cloud > /dev/null 2>&1 || /usr/sbin/useradd -M -U -c "CloudStack unprivileged
      -r -s /bin/sh -d %{_localstatedir}/cloudstack/management cloud|| true
 
 %preun usage
-/sbin/service cloudstack-usage stop || true
+/sbin/service mold-usage stop || true
 if [ "$1" == "0" ] ; then
-    /sbin/chkconfig --del cloudstack-usage > /dev/null 2>&1 || true
+    /sbin/chkconfig --del mold-usage > /dev/null 2>&1 || true
 fi
 
 %post usage
