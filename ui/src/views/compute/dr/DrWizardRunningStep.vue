@@ -243,6 +243,28 @@ export default {
         }, 1000)
       })
     },
+    async drJob () {
+      return new Promise(resolve => {
+        const drJobInterval = setInterval(() => {
+          api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(async json => {
+            this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
+            for (const cluster of this.drClusterList) {
+              const vmList = cluster.drclustervmmap
+              if (vmList.some(vm => vm.drclustervmid === this.resource.id)) {
+                this.clusters = cluster
+                var map = cluster.drclustervmmap
+                this.vmMap = map.filter(it => it.drclustervmid === this.resource.id)
+                if (this.vmMap[0].drclustervmvolstatus !== 'SYNCING') {
+                  return
+                }
+              }
+            }
+            clearInterval(drJobInterval)
+            resolve()
+          })
+        }, 60000)
+      })
+    },
     drInfo () {
       return new Promise((resolve, reject) => {
         api('getDisasterRecoveryClusterList', {
@@ -301,44 +323,15 @@ export default {
         })
       })
     },
-    demoteImage () {
+    async demoteImage () {
       return new Promise((resolve, reject) => {
         let message = ''
         const params = {}
         params.virtualmachineid = this.resource.id
         params.drclustername = this.clusters.name
-        api('demoteDisasterRecoveryClusterVm', params).then(json => {
-          // setTimeout(() => {
-          // 3 min status check
-          console.log('start')
-          console.log(this.vmMap.drclustervmvolstatus)
-          console.log(this.vmMap.drclustermirrorvmvolstatus)
-          while (this.vmMap.drclustervmvolstatus !== 'SYNCING' && this.vmMap.drclustermirrorvmvolstatus !== 'READY') {
-            api('getDisasterRecoveryClusterList', {
-              drclustertype: 'secondary'
-            }).then(json => {
-              this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
-              for (const cluster of this.drClusterList) {
-                const vmList = cluster.drclustervmmap
-                if (vmList.some(vm => vm.drclustervmid === this.resource.id)) {
-                  var map = cluster.drclustervmmap
-                  this.vmMap = map.filter(it => it.drclustervmid === this.resource.id)
-                  console.log('while-------------------------')
-                  console.log('this.vmMap.drclustervmvolstatus')
-                  console.log(this.vmMap.drclustervmvolstatus)
-                  console.log('this.vmMap.drclustermirrorvmvolstatus')
-                  console.log(this.vmMap.drclustermirrorvmvolstatus)
-                  console.log('while-------------------------')
-                }
-              }
-            }).catch(error => {
-              console.log(error)
-            })
-          }
-          console.log('end')
+        api('demoteDisasterRecoveryClusterVm', params).then(async json => {
+          await this.drJob()
           resolve()
-          // }, 180000)
-          // }, 60000)
         }).catch(error => {
           message = error.response.headers['x-description']
           reject(message)
