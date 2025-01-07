@@ -414,8 +414,8 @@ if [ ! -z $python_dir ];then
 fi
 
 %preun management
-/usr/bin/systemctl stop cloudstack-management || true
-/usr/bin/systemctl disable cloudstack-management || true
+/usr/bin/systemctl stop mold || true
+/usr/bin/systemctl disable mold || true
 
 %pre management
 id cloud > /dev/null 2>&1 || /usr/sbin/useradd -M -U -c "CloudStack unprivileged user" \
