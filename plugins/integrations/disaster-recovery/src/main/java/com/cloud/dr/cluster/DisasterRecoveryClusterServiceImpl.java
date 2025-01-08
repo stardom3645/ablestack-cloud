@@ -2142,7 +2142,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         glueCommand = "/mirror/image/promote/rbd/" + volumeUuid;
                         glueMethod = "POST";
-                        while(glueStep < 20) {
+                        while(glueStep < 100) {
                             glueStep += 1;
                             try {
                                 Thread.sleep(10000);
