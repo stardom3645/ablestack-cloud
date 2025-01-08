@@ -478,11 +478,12 @@ if [ -f "/usr/share/cloudstack-common/scripts/installer/cloudstack-help-text" ];
     sed -i "s,^ACS_VERSION=.*,ACS_VERSION=%{_maventag},g" /usr/share/cloudstack-common/scripts/installer/cloudstack-help-text
     /usr/share/cloudstack-common/scripts/installer/cloudstack-help-text management
 fi
+/usr/bin/systemctl enable mold > /dev/null 2>&1 || true
 
 %preun agent
 /sbin/service mold-agent stop || true
 if [ "$1" == "0" ] ; then
-    /sbin/chkconfig --del cloudstack-agent > /dev/null 2>&1 || true
+    /sbin/chkconfig --del mold-agent > /dev/null 2>&1 || true
 fi
 
 %pre agent
@@ -530,9 +531,9 @@ id cloud > /dev/null 2>&1 || /usr/sbin/useradd -M -U -c "CloudStack unprivileged
      -r -s /bin/sh -d %{_localstatedir}/cloudstack/management cloud|| true
 
 %preun usage
-/sbin/service cloudstack-usage stop || true
+/sbin/service mold-usage stop || true
 if [ "$1" == "0" ] ; then
-    /sbin/chkconfig --del cloudstack-usage > /dev/null 2>&1 || true
+    /sbin/chkconfig --del mold-usage > /dev/null 2>&1 || true
 fi
 
 %post usage
