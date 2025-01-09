@@ -2333,7 +2333,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     while(glueStep < 100) {
                         glueStep += 1;
                         try {
-                            Thread.sleep(10000);
+                            Thread.sleep(60000);
                         } catch (InterruptedException e) {
                             LOGGER.error("takeSnapshotDisasterRecoveryClusterVm sleep interrupted");
                         }
@@ -2936,7 +2936,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 while(glueStep < 100) {
                                     glueStep += 1;
                                     try {
-                                        Thread.sleep(10000);
+                                        Thread.sleep(60000);
                                     } catch (InterruptedException e) {
                                         LOGGER.error("takeSnapDemoteDisasterRecoveryClusterMirror sleep interrupted");
                                     }
@@ -2962,7 +2962,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                 }
                                             }
                                         }
-                                        status = false;
+                                        status = true;
                                     }
                                     if (status) {
                                         break Loop;
