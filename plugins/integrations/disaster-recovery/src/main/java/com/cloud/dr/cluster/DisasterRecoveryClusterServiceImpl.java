@@ -97,6 +97,7 @@ import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterC
 import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.dr.StartDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.dr.StopDisasterRecoveryClusterVmCmd;
+import org.apache.cloudstack.api.command.admin.dr.TakeSnapshotDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.ListResponse;
@@ -1310,12 +1311,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 checkDemoteDisasterRecoveryClusterMirror(drCluster);
                 // 강제 디모트 전 각 이미지 수동 스냅샷 생성
                 takeSnapDemoteDisasterRecoveryClusterMirror(drCluster);
-                // 스냅샷 생성 후 바로 디모트 하지않고 간격을 두고 진행
-                try {
-                    Thread.sleep(60000);
-                } catch (InterruptedException e) {
-                    LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
-                }
                 // DR 상황 발생 시 glue-API로 이미지를 조회하지않고, vmMap 조회하여 실행
                 List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
                 if (!CollectionUtils.isEmpty(vmMap)) {
@@ -2299,6 +2294,83 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return result;
     }
 
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_SNAPSHOT, eventDescription = "taking snapshot disaster recovery cluster virtual machine", resourceType = "DisasterRecoveryCluster")
+    public boolean takeSnapshotDisasterRecoveryClusterVm(TakeSnapshotDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        Long vmId = cmd.getId();
+        boolean result = false;
+        boolean status = false;
+        int glueStep = 0;
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
+            UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
+            String vmName = userVM.getInstanceName();
+            List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+            StringJoiner join = new StringJoiner(",");
+            for (VolumeVO vol : volumes) {
+                join.add(vol.getPath());
+            }
+            Loop :
+            for (int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                String glueCommand = "/mirror/image/snapshot/rbd/" + vmName;
+                String glueMethod = "POST";
+                Map<String, String> glueParams = new HashMap<>();
+                glueParams.put("mirrorPool", "rbd");
+                glueParams.put("imageList", join.toString());
+                glueParams.put("vmName", vmName);
+                result = DisasterRecoveryClusterUtil.glueImageMirrorSnapAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                if (result) {
+                    while(glueStep < 100) {
+                        glueStep += 1;
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            LOGGER.error("takeSnapshotDisasterRecoveryClusterVm sleep interrupted");
+                        }
+                        for (VolumeVO vol : volumes) {
+                            String volumeUuid = vol.getPath();
+                            glueCommand = "/mirror/image/status/rbd/" +volumeUuid;
+                            glueMethod = "GET";
+                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                            if (mirrorImageStatus != null) {
+                                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                                if (drArray.size() != 0) {
+                                    JsonElement peerDescription = null;
+                                    for (JsonElement dr : drArray) {
+                                        if (dr.getAsJsonObject().get("description") != null) {
+                                            peerDescription = dr.getAsJsonObject().get("description");
+                                        }
+                                    }
+                                    if (peerDescription != null) {
+                                        if (!peerDescription.getAsString().contains("idle")) {
+                                            status = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            status = true;
+                        }
+                        if (status) {
+                            break Loop;
+                        }
+                    }
+                }
+            }
+            return result;
+        } else {
+            throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
+        }
+    }
+
     private void validateDisasterRecoveryClusterVmCreateParameters(final CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         final Long vmId = cmd.getVmId();
         final String drClusterName = cmd.getDrClusterName();
@@ -2788,15 +2860,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    boolean status = false;
+                    int glueStep = 0;
                     if (map.getMirroredVmVolumeType().equalsIgnoreCase("ROOT")) {
                         UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
-                        String hostName = userVM.getHostName();
                         String vmName = userVM.getInstanceName();
                         List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
                         StringJoiner join = new StringJoiner(",");
                         for (VolumeVO vol : volumes) {
                             join.add(vol.getPath());
                         }
+                        Loop :
                         for (int i=0; i < array.length; i++) {
                             String glueIp = array[i];
                             ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -2809,7 +2883,41 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             glueParams.put("vmName", vmName);
                             boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSnapAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
-                                break;
+                                while(glueStep < 100) {
+                                    glueStep += 1;
+                                    try {
+                                        Thread.sleep(10000);
+                                    } catch (InterruptedException e) {
+                                        LOGGER.error("takeSnapDemoteDisasterRecoveryClusterMirror sleep interrupted");
+                                    }
+                                    for (VolumeVO vol : volumes) {
+                                        String volumeUuid = vol.getPath();
+                                        glueCommand = "/mirror/image/status/rbd/" +volumeUuid;
+                                        glueMethod = "GET";
+                                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                                        if (mirrorImageStatus != null) {
+                                            JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                                            if (drArray.size() != 0) {
+                                                JsonElement peerDescription = null;
+                                                for (JsonElement dr : drArray) {
+                                                    if (dr.getAsJsonObject().get("description") != null) {
+                                                        peerDescription = dr.getAsJsonObject().get("description");
+                                                    }
+                                                }
+                                                if (peerDescription != null) {
+                                                    if (!peerDescription.getAsString().contains("idle")) {
+                                                        status = false;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        status = false;
+                                    }
+                                    if (status) {
+                                        break Loop;
+                                    }
+                                }
                             }
                         }
                     }
@@ -3000,6 +3108,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(DemoteDisasterRecoveryClusterVmCmd.class);
         cmdList.add(ResyncDisasterRecoveryClusterCmd.class);
         cmdList.add(ClearDisasterRecoveryClusterCmd.class);
+        cmdList.add(TakeSnapshotDisasterRecoveryClusterVmCmd.class);
         return cmdList;
     }
 
