@@ -162,6 +162,7 @@ export default {
         await this.stepFiveTestDr()
         await this.stepSixTestDr()
         await this.stepSevenTestDr()
+        await this.stepEightTestDr()
         this.$emit('nextPressed')
       } catch (e) {
         this.messageError = e
@@ -176,7 +177,7 @@ export default {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step2', 'stepTwoTestDr')
-      await this.demoteImage()
+      await this.snapVm()
       this.stepData.stepMove.push('stepTwoTestDr')
     },
     async stepThreeTestDr () {
@@ -186,7 +187,7 @@ export default {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step3', 'stepThreeTestDr')
-      await this.startDrVm()
+      await this.demoteImage()
       this.stepData.stepMove.push('stepThreeTestDr')
     },
     async stepFourTestDr () {
@@ -196,7 +197,7 @@ export default {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step4', 'stepFourTestDr')
-      await this.statusVm()
+      await this.startDrVm()
       this.stepData.stepMove.push('stepFourTestDr')
     },
     async stepFiveTestDr () {
@@ -206,7 +207,7 @@ export default {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step5', 'stepFiveTestDr')
-      await this.stopDrVm()
+      await this.statusVm()
       this.stepData.stepMove.push('stepFiveTestDr')
     },
     async stepSixTestDr () {
@@ -216,7 +217,7 @@ export default {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step6', 'stepSixTestDr')
-      await this.promoteDrImage()
+      await this.stopDrVm()
       this.stepData.stepMove.push('stepSixTestDr')
     },
     async stepSevenTestDr () {
@@ -226,8 +227,18 @@ export default {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step7', 'stepSevenTestDr')
-      await this.startVm()
+      await this.promoteDrImage()
       this.stepData.stepMove.push('stepSevenTestDr')
+    },
+    async stepEightTestDr () {
+      if (this.stepData.stepMove.includes('stepEightTestDr')) {
+        return
+      }
+      this.setStepStatus(STATUS_FINISH)
+      this.currentStep++
+      this.addStep('message.dr.simulation.test.step8', 'stepEightTestDr')
+      await this.startVm()
+      this.stepData.stepMove.push('stepEightTestDr')
     },
     async pollJob (jobId) {
       return new Promise(resolve => {
@@ -316,6 +327,19 @@ export default {
         params.virtualmachineid = this.resource.id
         params.drclustername = this.clusters.name
         api('stopDisasterRecoveryClusterVm', params).then(json => {
+          resolve()
+        }).catch(error => {
+          message = error.response.headers['x-description']
+          reject(message)
+        })
+      })
+    },
+    snapVm () {
+      return new Promise((resolve, reject) => {
+        let message = ''
+        const params = {}
+        params.virtualmachineid = this.resource.id
+        api('takeSnapshotDisasterRecoveryClusterVm', params).then(json => {
           resolve()
         }).catch(error => {
           message = error.response.headers['x-description']
