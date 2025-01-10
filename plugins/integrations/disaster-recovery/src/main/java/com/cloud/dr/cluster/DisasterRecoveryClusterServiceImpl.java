@@ -2030,6 +2030,58 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         String drName = cmd.getDrClusterName();
         Long vmId = cmd.getId();
+        UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
+        List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+        boolean status = false;
+        int glueStep = 0;
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
+            Loop :
+            for (int i=0; i < array.length; i++) {
+                while(glueStep < 100) {
+                    glueStep += 1;
+                    try {
+                        Thread.sleep(60000);
+                    } catch (InterruptedException e) {
+                        LOGGER.error("startDisasterRecoveryClusterVm sleep interrupted");
+                    }
+                    for (VolumeVO vol : volumes) {
+                        String volumeUuid = vol.getPath();
+                        String glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        String glueCommand = "/mirror/image/status/rbd/" +volumeUuid;
+                        String glueMethod = "GET";
+                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageStatus != null) {
+                            JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                            if (drArray.size() != 0) {
+                                JsonElement peerDescription = null;
+                                for (JsonElement dr : drArray) {
+                                    if (dr.getAsJsonObject().get("description") != null) {
+                                        peerDescription = dr.getAsJsonObject().get("description");
+                                    }
+                                }
+                                if (peerDescription != null) {
+                                    if (!peerDescription.getAsString().contains("idle")) {
+                                        status = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        status = true;
+                    }
+                    if (status) {
+                        break Loop;
+                    }
+                }
+            }
+        } else {
+            throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
+        }
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
         String url = drCluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
