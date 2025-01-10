@@ -4644,6 +4644,7 @@
 "dr.vm.stop": "DR.VM.STOP",
 "dr.vm.promote": "DR.VM.PROMOTE",
 "dr.vm.demote": "DR.VM.DEMOTE",
+"dr.vm.snapshot": "DR.VM.SNAPSHOT",
 "disaster.recovery.cluster": "DR",
 "placeholder.disaster.recovery.cluster.ip": "Select a Disaster recovery cluster IP",
 "placeholder.disaster.recovery.cluster.port": "Select a Disaster recovery cluster Port",
