@@ -35,5 +35,6 @@ public class DisasterRecoveryClusterEventTypes {
     public static final String EVENT_DR_VM_STOP = "DR.VM.STOP";
     public static final String EVENT_DR_VM_PROMOTE = "DR.VM.PROMOTE";
     public static final String EVENT_DR_VM_DEMOTE = "DR.VM.DEMOTE";
+    public static final String EVENT_DR_VM_SNAPSHOT = "DR.VM.SNAPSHOT";
 
 }
