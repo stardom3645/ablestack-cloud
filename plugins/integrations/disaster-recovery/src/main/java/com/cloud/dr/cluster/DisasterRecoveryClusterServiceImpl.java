@@ -2056,8 +2056,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String glueMethod = "GET";
                         String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                         if (mirrorImageStatus != null) {
+                            JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                            if (drArray.size() != 0) {
+                            if (statObject.has("description") && drArray.size() != 0) {
                                 JsonElement peerDescription = null;
                                 for (JsonElement dr : drArray) {
                                     if (dr.getAsJsonObject().get("description") != null) {
@@ -2065,9 +2066,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     }
                                 }
                                 if (peerDescription != null) {
-                                    if (!peerDescription.getAsString().contains("idle")) {
-                                        status = false;
-                                        break;
+                                    if (peerDescription.getAsString().equals("local image is primary")) {
+                                        if (!statObject.get("description").getAsString().contains("idle")) {
+                                            status = false;
+                                            break;
+                                        }
                                     }
                                 }
                             }
