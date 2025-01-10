@@ -2074,8 +2074,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     }
                                 }
                             }
+                            status = true;
+                        } else {
+                            status = false;
+                            break;
                         }
-                        status = true;
                     }
                     if (status) {
                         break Loop;
@@ -2413,8 +2416,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         }
                                     }
                                 }
+                                status = true;
+                            } else {
+                                status = false;
+                                break;
                             }
-                            status = true;
                         }
                         if (status) {
                             break Loop;
@@ -3016,8 +3022,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                     }
                                                 }
                                             }
+                                            status = true;
+                                        } else {
+                                            status = false;
+                                            break;
                                         }
-                                        status = true;
                                     }
                                     if (status) {
                                         break Loop;
