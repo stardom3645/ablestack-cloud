@@ -4639,6 +4639,7 @@
 "dr.vm.stop": "DR.VM.\uc815\uc9c0",
 "dr.vm.promote": "DR.VM.\ud504\ub85c\ubaa8\ud2b8",
 "dr.vm.demote": "DR.VM.\ub514\ubaa8\ud2b8",
+"dr.vm.snapshot": "DR.VM.\uc2a4\ub0c5\uc0f7",
 "disaster.recovery.cluster": "DR",
 "placeholder.disaster.recovery.cluster.ip": "\uc7ac\ud574 \ubcf5\uad6c \ud074\ub7ec\uc2a4\ud130 IP \uc120\ud0dd",
 "placeholder.disaster.recovery.cluster.port": "\uc7ac\ud574 \ubcf5\uad6c \ud074\ub7ec\uc2a4\ud130 Port \uc120\ud0dd",
