@@ -998,7 +998,8 @@ public class VolumeObject implements VolumeInfo {
     @Override
     public void setUsedPhysicalSize(Long usedPhysicalSize) {
         volumeVO.setUsedPhysicalSize(usedPhysicalSize);
-    
+    }
+
     @Override
     public String toString() {
         return String.format("VolumeObject %s",
