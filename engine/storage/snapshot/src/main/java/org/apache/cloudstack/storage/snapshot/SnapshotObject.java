@@ -476,6 +476,7 @@ public class SnapshotObject implements SnapshotInfo {
     @Override
     public String getVmSnapshotName() {
         return vmSnapshotName;
+    }
 
     @Override
     public String toString() {
