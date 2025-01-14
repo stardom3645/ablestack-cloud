@@ -270,7 +270,9 @@ export default {
         if (this.form.drCluster != null) {
           this.secDrClusterOfferings = this.drCluster[0].serviceofferingdetails || []
           this.secDrClusterOfferings = this.secDrClusterOfferings.filter(off => {
-            return off.kvdoenable === this.resource.kvdoenable
+            // kvdo 오퍼링 필터링 임시 주석처리
+            // return off.kvdoenable === this.resource.kvdoenable
+            return off.kvdoenable === false
           })
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : null
           if (this.secDrClusterOfferings[0].serviceofferingdetails && this.secDrClusterOfferings[0].iscustomized === true) {
@@ -300,7 +302,9 @@ export default {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           this.secDrClusterOfferings = this.secDrClusterOfferings.filter(off => {
-            return off.kvdoenable === this.resource.kvdoenable
+            // kvdo 오퍼링 필터링 임시 주석처리
+            // return off.kvdoenable === this.resource.kvdoenable
+            return off.kvdoenable === false
           })
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
           if (this.secDrClusterOfferings[0].serviceofferingdetails && this.secDrClusterOfferings[0].iscustomized === true) {
@@ -409,7 +413,9 @@ export default {
           const cluster = clusters[0]
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           this.secDrClusterOfferings = this.secDrClusterOfferings.filter(off => {
-            return off.kvdoenable === this.resource.kvdoenable
+            // kvdo 오퍼링 필터링 임시 주석처리
+            // return off.kvdoenable === this.resource.kvdoenable
+            return off.kvdoenable === false
           })
           for (const offering of this.secDrClusterOfferings) {
             if (offering.name === selectOff && offering.serviceofferingdetails && offering.iscustomized === true) {
@@ -438,6 +444,13 @@ export default {
       if (this.loading) return
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
+        if (this.resource.kvdoenable) {
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('message.error.confirm.create.dr.mirroring.vm')
+          })
+          return
+        }
         this.loading = true
         const params = {
           virtualmachineid: this.resource.id,
