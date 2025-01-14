@@ -74,14 +74,14 @@ public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterR
         TransactionLegacy txn = TransactionLegacy.currentTxn();
         PreparedStatement pstmt = null;
         try {
-            pstmt = txn.prepareAutoCloseStatement("select * from `cloud`.`event` where type = 'DR.DEMOTE' and created > CURRENT_DATE()");
+            pstmt = txn.prepareAutoCloseStatement("select * from `cloud`.`event` where type = 'DR.DEMOTE' and date_format(created, '%y-%m-%d') = CURRENT_DATE()");
             int numRows = 0;
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 numRows = rs.getInt(1);
             }
             if (numRows > 0) {
-                pstmt = txn.prepareAutoCloseStatement("select * from `cloud`.`event` where type = 'DR.DEMOTE' and state = 'Completed' and description = 'Successfully completed demoting disaster recovery cluster' and created > CURRENT_DATE()");
+                pstmt = txn.prepareAutoCloseStatement("select * from `cloud`.`event` where type = 'DR.DEMOTE' and state = 'Completed' and description = 'Successfully completed demoting disaster recovery cluster' and date_format(created, '%y-%m-%d') = CURRENT_DATE()");
                 numRows = 0;
                 rs = pstmt.executeQuery();
                 if (rs.next()) {
