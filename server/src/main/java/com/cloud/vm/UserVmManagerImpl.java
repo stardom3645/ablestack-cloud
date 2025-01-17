@@ -4413,10 +4413,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             if (template.getTemplateType().equals(TemplateType.SYSTEM) && !CKS_NODE.equals(vmType) && !SHAREDFSVM.equals(vmType)) {
                 throw new InvalidParameterValueException(String.format("Unable to use system template %s to deploy a user vm", template));
             }
-            List<VMTemplateZoneVO> listZoneTemplate = _templateZoneDao.listByZoneTemplate(zone.getId(), template.getId());
-            if (listZoneTemplate == null || listZoneTemplate.isEmpty()) {
-                throw new InvalidParameterValueException(String.format("The template %s is not available for use", template));
-            }
+
+            // apache#9873 ) kvm-default-vm-import-dummy-template 을 이용한 가상머신 생성을 위해 임시 주석처리
+            // List<VMTemplateZoneVO> listZoneTemplate = _templateZoneDao.listByZoneTemplate(zone.getId(), template.getId());
+            // if (listZoneTemplate == null || listZoneTemplate.isEmpty()) {
+            //     throw new InvalidParameterValueException(String.format("The template %s is not available for use", template));
+            // }
 
             if (isIso && !template.isBootable()) {
                 throw new InvalidParameterValueException(String.format("Installing from ISO requires an ISO that is bootable: %s", template));
