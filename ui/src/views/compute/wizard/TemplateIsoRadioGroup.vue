@@ -139,7 +139,7 @@ export default {
         this.itemCountNum = osListFilter.length
         return osListFilter
       } else {
-        this.itemCountNum = this.osList.length
+        this.itemCountNum = this.itemCount
         return this.osList
       }
     },
