@@ -4593,7 +4593,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 null, cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), cmd.getStoragePoolId(),
                 cmd.getImageStoreId(), hypervisorType, showDomr, cmd.listInReadyState(), permittedAccounts, caller,
                 listProjectResourcesCriteria, tags, showRemovedTmpl, cmd.getIds(), parentTemplateId, cmd.getShowUnique(),
-                templateType, isVnf, cmd.getArch());
+                templateType, isVnf, cmd.getArch(), cmd.getKvdoEnable());
     }
 
     private Pair<List<TemplateJoinVO>, Integer> searchForTemplatesInternal(Long templateId, String name, String keyword,
@@ -4602,7 +4602,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             boolean showDomr, boolean onlyReady, List<Account> permittedAccounts, Account caller,
             ListProjectResourcesCriteria listProjectResourcesCriteria, Map<String, String> tags,
             boolean showRemovedTmpl, List<Long> ids, Long parentTemplateId, Boolean showUnique, String templateType,
-            Boolean isVnf, CPU.CPUArch arch) {
+            Boolean isVnf, CPU.CPUArch arch, Boolean kvdoEnable) {
 
         // check if zone is configured, if not, just return empty list
         List<HypervisorType> hypers = null;
@@ -4632,6 +4632,14 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchBuilder<VMTemplateStoragePoolVO> storagePoolSb = templatePoolDao.createSearchBuilder();
             storagePoolSb.and("pool_id", storagePoolSb.entity().getPoolId(), SearchCriteria.Op.EQ);
             sb.join("storagePool", storagePoolSb, storagePoolSb.entity().getTemplateId(), sb.entity().getId(), JoinBuilder.JoinType.INNER);
+        }
+
+        if (kvdoEnable != null) {
+            if (kvdoEnable) {
+                sb.and("kvdo_enable", sb.entity().isKvdoEnable(), SearchCriteria.Op.EQ);
+            } else {
+                sb.and("kvdo_enable", sb.entity().isKvdoEnable(), SearchCriteria.Op.NEQ);
+            }
         }
 
         SearchCriteria<TemplateJoinVO> sc = sb.create();
