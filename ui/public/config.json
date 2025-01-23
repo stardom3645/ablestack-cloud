@@ -8,14 +8,14 @@
     }
   ],
   "docBase": "http://docs.ablecloud.io/latest",
-  "appTitle": "Mold-ABLESTACK",
-  "footer": "Copyright (c) 2021-2024, ABLECLOUD.Co.Ltd",
+  "appTitle": "ABLESTACK-Mold",
+  "footer": "ⓒ 2021 ABLECLOUD Inc. All Rights Reserved.",
   "buildVersion": "V4.0-4.0.15",
   "loginFooter": "",
   "logo": "assets/ablestack-logo.png",
   "minilogo": "assets/mini-ablestack-logo.png",
   "banner": "assets/ablestack-logo.png",
-  "loginTitle": "Mold-ABLESTACK",
+  "loginTitle": "ABLESTACK-Mold",
   "loginFavicon": "assets/ablestack-favicon.png",
   "error": {
     "403": "assets/403.png",
