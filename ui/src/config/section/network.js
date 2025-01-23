@@ -53,8 +53,8 @@ export default {
         }
         return fields
       },
-      filters: ['all', 'account', 'domain', 'shared'],
-      searchFilters: ['keyword', 'zoneid', 'domainid', 'account', 'type', 'restartrequired', 'tags'],
+      filters: ['all', 'account', 'domainpath', 'shared'],
+      searchFilters: ['keyword', 'zoneid', 'domainid', 'account', 'type', 'restartrequired', 'displaynetwork', 'tags'],
       related: [{
         name: 'vm',
         title: 'label.instances',

@@ -306,7 +306,7 @@ export default {
         if (['zoneid', 'domainid', 'imagestoreid', 'storageid', 'state', 'account', 'hypervisor', 'level',
           'clusterid', 'podid', 'groupid', 'entitytype', 'accounttype', 'systemvmtype', 'scope', 'provider',
           'type', 'scope', 'managementserverid', 'serviceofferingid', 'diskofferingid', 'networkid',
-          'usagetype', 'restartrequired', 'guestiptype', 'usersource'].includes(item)
+          'usagetype', 'restartrequired', 'displaynetwork', 'guestiptype', 'usersource'].includes(item)
         ) {
           type = 'list'
         } else if (item === 'tags') {
@@ -328,6 +328,12 @@ export default {
       return arrayField
     },
     fetchStaticFieldData (arrayField) {
+      if (arrayField.includes('displaynetwork')) {
+        const typeIndex = this.fields.findIndex(item => item.name === 'displaynetwork')
+        this.fields[typeIndex].loading = true
+        this.fields[typeIndex].opts = this.fetchBoolean()
+        this.fields[typeIndex].loading = false
+      }
       if (arrayField.includes('type') || arrayField.includes('guestiptype')) {
         if (this.$route.path.includes('/guestnetwork') || this.$route.path.includes('/networkoffering')) {
           const typeIndex = this.fields.findIndex(item => ['type', 'guestiptype'].includes(item.name))
@@ -1008,6 +1014,18 @@ export default {
           name: 'label.l2'
         })
       }
+      return types
+    },
+    fetchBoolean () {
+      const types = []
+      types.push({
+        id: 'true',
+        name: 'label.true'
+      })
+      types.push({
+        id: 'false',
+        name: 'label.false'
+      })
       return types
     },
     fetchAccountTypes () {
