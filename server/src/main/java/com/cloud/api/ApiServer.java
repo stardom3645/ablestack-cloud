@@ -57,6 +57,8 @@ import javax.naming.ConfigurationException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.cloud.cluster.ManagementServerHostVO;
+import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountManagerImpl;
@@ -117,6 +119,7 @@ import org.apache.cloudstack.framework.messagebus.MessageDispatcher;
 import org.apache.cloudstack.framework.messagebus.MessageHandler;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.user.UserPasswordResetManager;
+import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -229,6 +232,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     private UserDao userDao;
     @Inject
     private AccountDao accountDao;
+    @Inject
+    private ManagementServerHostDao msHostDao;
     @Inject
     private UUIDManager uuidMgr;
     @Inject
@@ -506,7 +511,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 s_apiNameCmdClassMap.put(apiName, apiCmdList);
             }
             apiCmdList.add(cmdClass);
-
         }
 
         setEncodeApiResponse(EncodeApiResponse.value());
@@ -1210,6 +1214,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 if (ApiConstants.FIRST_LOGIN.equalsIgnoreCase(attrName)) {
                     response.setFirstLogin(attrObj.toString());
                 }
+                if (ApiConstants.MANAGEMENT_SERVER_ID.equalsIgnoreCase(attrName)) {
+                    response.setManagementServerId(attrObj.toString());
+                }
             }
         }
         response.setResponseName("loginresponse");
@@ -1324,6 +1331,13 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 session.setAttribute(ApiConstants.FIRST_LOGIN, true);
             } else {
                 session.setAttribute(ApiConstants.FIRST_LOGIN, false);
+            }
+            
+            if (accountMgr.isRootAdmin(userAcct.getAccountId())) {
+                ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+                if (msHost != null && msHost.getUuid() != null) {
+                    session.setAttribute(ApiConstants.MANAGEMENT_SERVER_ID, msHost.getUuid());
+                }
             }
 
             // (bug 5483) generate a session key that the user must submit on every request to prevent CSRF, add that

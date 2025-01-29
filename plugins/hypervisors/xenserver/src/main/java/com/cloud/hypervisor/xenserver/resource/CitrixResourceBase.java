@@ -3724,6 +3724,11 @@ public abstract class CitrixResourceBase extends ServerResourceBase implements S
 
     @Override
     public StartupCommand[] initialize() throws IllegalArgumentException {
+        return initialize(false);
+    }
+
+    @Override
+    public StartupCommand[] initialize(boolean isTransferredConnection) throws IllegalArgumentException {
         final Connection conn = getConnection();
         if (!getHostInfo(conn)) {
             logger.warn("Unable to get host information for " + _host.getIp());
@@ -3734,6 +3739,7 @@ public abstract class CitrixResourceBase extends ServerResourceBase implements S
         cmd.setHypervisorType(HypervisorType.XenServer);
         cmd.setCluster(_cluster);
         cmd.setPoolSync(false);
+        cmd.setConnectionTransferred(isTransferredConnection);
 
         try {
             final Pool pool = Pool.getByUuid(conn, _host.getPool());

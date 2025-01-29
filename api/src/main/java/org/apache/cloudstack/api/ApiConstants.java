@@ -1203,9 +1203,12 @@ public class ApiConstants {
 
     public static final String KRBD_PATH = "krbdpath";
 
-    public static final String READY_FOR_SHUTDOWN = "readyforshutdown";
+    public static final String MAINTENANCE_INITIATED = "maintenanceinitiated";
     public static final String SHUTDOWN_TRIGGERED = "shutdowntriggered";
+    public static final String READY_FOR_SHUTDOWN = "readyforshutdown";
     public static final String PENDING_JOBS_COUNT = "pendingjobscount";
+    public static final String AGENTS_COUNT = "agentscount";
+    public static final String AGENTS = "agents";
 
     public static final String PUBLIC_MTU = "publicmtu";
     public static final String PRIVATE_MTU = "privatemtu";

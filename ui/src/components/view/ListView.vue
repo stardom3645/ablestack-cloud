@@ -751,7 +751,7 @@ export default {
         '/zone', '/pod', '/cluster', '/host', '/storagepool', '/imagestore', '/systemvm', '/router', '/ilbvm', '/annotation',
         '/computeoffering', '/systemoffering', '/diskoffering', '/backupoffering', '/networkoffering', '/vpcoffering',
         '/tungstenfabric', '/oauthsetting', '/guestos', '/guestoshypervisormapping', '/webhook', 'webhookdeliveries', '/quotatariff', '/sharedfs',
-        '/ipv4subnets', '/disasterrecoverycluster'].join('|'))
+        '/ipv4subnets', '/disasterrecoverycluster', '/managementserver'].join('|'))
         .test(this.$route.path)
     },
     enableGroupAction () {
