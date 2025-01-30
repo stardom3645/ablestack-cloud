@@ -379,4 +379,9 @@ public class UserAccountVO implements UserAccount, InternalIdentity {
     public void setDetails(Map<String, String> details) {
         this.details = details;
     }
+
+    @Override
+    public String toString() {
+        return String.format("User %s", ReflectionToStringBuilderUtils.reflectOnlySelectedFields(this, "id", "name", "uuid"));
+    }
 }
