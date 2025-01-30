@@ -145,7 +145,8 @@ export default {
           label: 'label.update.network',
           dataView: true,
           disabled: (record, user) => {
-            return !record.projectid && (record.account !== user.userInfo.account && !['Admin', 'DomainAdmin'].includes(user.userInfo.roletype))
+            return (!record.projectid && (record.account !== user.userInfo.account && !['Admin', 'DomainAdmin'].includes(user.userInfo.roletype))) ||
+              (record.type === 'Shared' && record.specifyvlan && !['Admin'].includes(user.userInfo.roletype))
           },
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/network/UpdateNetwork.vue')))
@@ -157,7 +158,8 @@ export default {
           message: 'message.restart.network',
           dataView: true,
           disabled: (record, user) => {
-            return !record.projectid && (record.account !== user.userInfo.account && !['Admin', 'DomainAdmin'].includes(user.userInfo.roletype))
+            return (!record.projectid && (record.account !== user.userInfo.account && !['Admin', 'DomainAdmin'].includes(user.userInfo.roletype))) ||
+              (record.type === 'Shared' && record.specifyvlan && !['Admin'].includes(user.userInfo.roletype))
           },
           args: (record, store, isGroupAction) => {
             var fields = []
@@ -198,7 +200,8 @@ export default {
           message: 'message.action.delete.network',
           dataView: true,
           disabled: (record, user) => {
-            return !record.projectid && (record.account !== user.userInfo.account && !['Admin', 'DomainAdmin'].includes(user.userInfo.roletype))
+            return (!record.projectid && (record.account !== user.userInfo.account && !['Admin', 'DomainAdmin'].includes(user.userInfo.roletype))) ||
+              (record.type === 'Shared' && record.specifyvlan && !['Admin'].includes(user.userInfo.roletype))
           },
           groupAction: true,
           popup: true,
