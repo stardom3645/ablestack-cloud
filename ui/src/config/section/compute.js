@@ -244,6 +244,10 @@ export default {
           args: ['virtualmachineid', 'backupofferingid'],
           show: (record) => { return !record.backupofferingid },
           mapping: {
+            backupofferingid: {
+              api: 'listBackupOfferings',
+              params: (record) => { return { zoneid: record.zoneid } }
+            },
             virtualmachineid: {
               value: (record, params) => { return record.id }
             }
