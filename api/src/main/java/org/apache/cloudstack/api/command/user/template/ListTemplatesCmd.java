@@ -188,7 +188,7 @@ public class ListTemplatesCmd extends BaseListTaggedResourcesCmd implements User
         return onlyReady;
     }
 
-    public boolean getKvdoEnable() {
+    public Boolean getKvdoEnable() {
         return kvdoEnable;
     }
 
