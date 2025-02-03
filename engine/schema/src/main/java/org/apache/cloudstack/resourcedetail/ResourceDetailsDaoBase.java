@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.cloudstack.api.ResourceDetail;
 import org.apache.commons.collections.CollectionUtils;
 
+import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.SearchBuilder;
@@ -31,7 +31,17 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 
+import org.apache.cloudstack.api.ResourceDetail;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
+
+import javax.inject.Inject;
+
 public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends GenericDaoBase<R, Long> implements ResourceDetailsDao<R> {
+
+    @Inject
+    private ConfigurationDao configDao;
+
     private SearchBuilder<R> AllFieldsSearch;
 
     public ResourceDetailsDaoBase() {
@@ -229,5 +239,14 @@ public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends G
         SearchCriteria<R> sc = sb.create();
         sc.setParameters("ids", ids.toArray());
         return batchExpunge(sc, batchSize);
+    }
+    
+    @Override
+    public String getActualValue(ResourceDetail resourceDetail) {
+        ConfigurationVO configurationVO = configDao.findByName(resourceDetail.getName());
+        if (configurationVO != null && configurationVO.isEncrypted()) {
+            return DBEncryptionUtil.decrypt(resourceDetail.getValue());
+        }
+        return resourceDetail.getValue();
     }
 }

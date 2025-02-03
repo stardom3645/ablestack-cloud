@@ -36,7 +36,6 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class ImageStoreDetailsDaoImpl extends ResourceDetailsDaoBase<ImageStoreDetailVO> implements ImageStoreDetailsDao, ScopedConfigStorage {
-
     protected final SearchBuilder<ImageStoreDetailVO> storeSearch;
 
     public ImageStoreDetailsDaoImpl() {
@@ -110,9 +109,13 @@ public class ImageStoreDetailsDaoImpl extends ResourceDetailsDaoBase<ImageStoreD
         return vo == null ? null : vo.getValue();
     }
 
+    public String getConfigValue(long id, ConfigKey<?> key) {
+        ImageStoreDetailVO vo = findDetail(id, key.key());
+        return vo == null ? null : getActualValue(vo);
+    }
+
     @Override
     public void addDetail(long resourceId, String key, String value, boolean display) {
         super.addDetail(new ImageStoreDetailVO(resourceId, key, value, display));
     }
-
 }
