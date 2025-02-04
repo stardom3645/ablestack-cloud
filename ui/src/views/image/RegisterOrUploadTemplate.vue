@@ -220,7 +220,7 @@
           </template>
           <a-switch v-model:checked="form.kvdoenable" />
         </a-form-item>
-        <a-row :gutter="12" v-if="allowed && (hyperKVMShow || hyperCustomShow) && currentForm === 'Create'">
+        <a-row :gutter="12" v-if="(hyperKVMShow || hyperCustomShow) && currentForm === 'Create'">
           <a-col :md="24" :lg="12">
             <a-form-item ref="directdownload" name="directdownload">
               <template #label>
