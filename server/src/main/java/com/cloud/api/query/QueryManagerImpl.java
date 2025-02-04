@@ -350,14 +350,9 @@ import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
-
-
-
-
-
 @Component
 public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements QueryService, Configurable {
-
+    
 
     private static final String ID_FIELD = "id";
 
@@ -5829,7 +5824,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         Integer count = snapshotDataPair.second();
         if (count == 0) {
-            // empty result
             return snapshotDataPair;
         }
         List<SnapshotJoinVO> snapshotData = snapshotDataPair.first();
@@ -5839,7 +5833,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         } else {
             snapshots = snapshotJoinDao.searchBySnapshotStorePair(snapshotData.stream().map(SnapshotJoinVO::getSnapshotStorePair).toArray(String[]::new));
         }
-
         return new Pair<>(snapshots, count);
     }
 
