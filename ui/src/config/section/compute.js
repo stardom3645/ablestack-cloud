@@ -358,7 +358,7 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#moving-vms-between-hosts-manual-live-migration',
           dataView: true,
           show: (record, store) => {
-            return ['Running'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype)
+            return ['Running'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype) && !record.kvdoinuse
           },
           disabled: (record) => {
             return record.details && 'extraconfig-1' in record.details
@@ -381,7 +381,7 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#moving-vms-between-hosts-manual-live-migration',
           dataView: true,
           show: (record, store) => {
-            return ['Stopped'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype)
+            return ['Stopped'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype) && !record.kvdoinuse
           },
           disabled: (record) => {
             return record.hostcontrolstate === 'Offline' || (record.details && 'extraconfig-1' in record.details)
@@ -1121,3 +1121,4 @@ export default {
     }
   ]
 }
+
