@@ -3836,6 +3836,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         String storageType = cmd.getStorageType();
         ServiceOffering.State state = cmd.getState();
         final Long templateId = cmd.getTemplateId();
+        Boolean kvdoEnable = cmd.getKvdoEnable();
 
         final Account owner = accountMgr.finalizeOwner(caller, accountName, domainId, projectId);
 
@@ -4014,10 +4015,11 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             zone = _dcJoinDao.findById(zoneId);
         }
 
-        if (encryptRoot != null || vmId != null || (zone != null && DataCenter.Type.Edge.equals(zone.getType()))) {
+        if (encryptRoot != null || vmId != null || (zone != null && DataCenter.Type.Edge.equals(zone.getType())) || kvdoEnable != null) {
             SearchBuilder<DiskOfferingVO> diskOfferingSearch = _diskOfferingDao.createSearchBuilder();
             diskOfferingSearch.and("useLocalStorage", diskOfferingSearch.entity().isUseLocalStorage(), SearchCriteria.Op.EQ);
             diskOfferingSearch.and("encrypt", diskOfferingSearch.entity().getEncrypt(), SearchCriteria.Op.EQ);
+            diskOfferingSearch.and("kvdoEnable", diskOfferingSearch.entity().getKvdoEnable(), SearchCriteria.Op.EQ);
 
             if (diskOffering != null) {
                 List<String> storageTags = com.cloud.utils.StringUtils.csvTagsToList(diskOffering.getTags());
@@ -4231,6 +4233,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         if (encryptRoot != null) {
             sc.setJoinParameters("diskOfferingSearch", "encrypt", encryptRoot);
+        }
+
+        if (kvdoEnable != null) {
+            sc.setJoinParameters("diskOfferingSearch", "kvdoEnable", kvdoEnable);
         }
 
         if (name != null) {
@@ -4593,7 +4599,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 null, cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), cmd.getStoragePoolId(),
                 cmd.getImageStoreId(), hypervisorType, showDomr, cmd.listInReadyState(), permittedAccounts, caller,
                 listProjectResourcesCriteria, tags, showRemovedTmpl, cmd.getIds(), parentTemplateId, cmd.getShowUnique(),
-                templateType, isVnf, cmd.getArch());
+                templateType, isVnf, cmd.getArch(), cmd.getKvdoEnable());
     }
 
     private Pair<List<TemplateJoinVO>, Integer> searchForTemplatesInternal(Long templateId, String name, String keyword,
@@ -4602,7 +4608,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             boolean showDomr, boolean onlyReady, List<Account> permittedAccounts, Account caller,
             ListProjectResourcesCriteria listProjectResourcesCriteria, Map<String, String> tags,
             boolean showRemovedTmpl, List<Long> ids, Long parentTemplateId, Boolean showUnique, String templateType,
-            Boolean isVnf, CPU.CPUArch arch) {
+            Boolean isVnf, CPU.CPUArch arch, Boolean kvdoEnable) {
 
         // check if zone is configured, if not, just return empty list
         List<HypervisorType> hypers = null;
@@ -4646,6 +4652,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         if (storagePoolId != null) {
             sc.setJoinParameters("storagePool", "pool_id", storagePoolId);
+        }
+
+        if (kvdoEnable != null) {
+            sc.addAnd("kvdoEnable", SearchCriteria.Op.EQ, kvdoEnable);
         }
 
         // verify templateId parameter and specially handle it
@@ -5034,7 +5044,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         return searchForTemplatesInternal(cmd.getId(), cmd.getIsoName(), cmd.getKeyword(), isoFilter, true, cmd.isBootable(),
                 cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), cmd.getStoragePoolId(), cmd.getImageStoreId(),
                 hypervisorType, true, cmd.listInReadyState(), permittedAccounts, caller, listProjectResourcesCriteria,
-                tags, showRemovedISO, null, null, cmd.getShowUnique(), null, null, cmd.getArch());
+                tags, showRemovedISO, null, null, cmd.getShowUnique(), null, null, cmd.getArch(), null);
     }
 
     @Override

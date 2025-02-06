@@ -1069,7 +1069,7 @@ export default {
       this.primaryStorageScopes = scope
     },
     fetchProtocol () {
-      const hypervisor = this.prefillContent?.hypervisor || null
+      const hypervisor = this.prefillContent?.hypervisor || 'KVM'
       const protocols = []
       if (hypervisor === 'KVM') {
         protocols.push({

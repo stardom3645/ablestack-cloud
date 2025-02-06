@@ -1933,7 +1933,6 @@ export default {
         this.form.templateid = value
         this.form.isoid = null
         this.form.volumeId = null
-        this.resetFromTemplateConfiguration()
         let template = ''
         for (const key in this.options.templates) {
           var t = _.find(_.get(this.options.templates[key], 'template', []), (option) => option.id === value)
@@ -1949,6 +1948,7 @@ export default {
             break
           }
         }
+        this.resetFromTemplateConfiguration()
         if (template) {
           var size = template.size / (1024 * 1024 * 1024) || 0 // bytes to GB
           this.dataPreFill.minrootdisksize = Math.ceil(size)
@@ -2796,6 +2796,9 @@ export default {
       }
     },
     handleSearchFilter (name, options) {
+      if (name === 'serviceOfferings') {
+        this.params[name].options.kvdoenable = this.template.kvdoenable
+      }
       this.params[name].options = { ...this.params[name].options, ...options }
       this.fetchOptions(this.params[name], name)
     },
