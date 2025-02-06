@@ -135,9 +135,7 @@ import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.Pod;
-import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
-import com.cloud.dc.dao.HostPodDao;
 import com.cloud.domain.Domain;
 import com.cloud.domain.dao.DomainDao;
 import com.cloud.event.ActionEvent;
@@ -157,7 +155,6 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.HypervisorCapabilitiesVO;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.offering.DiskOffering;
-import com.cloud.org.Cluster;
 import com.cloud.org.Grouping;
 import com.cloud.projects.Project;
 import com.cloud.projects.ProjectManager;
@@ -326,8 +323,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     private AsyncJobManager _jobMgr;
     @Inject
     private VmWorkJobDao _workJobDao;
-    @Inject
-    ClusterDao clusterDao;
     @Inject
     private ClusterDetailsDao _clusterDetailsDao;
     @Inject
@@ -2589,8 +2584,63 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
 
         UserVmVO vm = _userVmDao.findById(vmId);
-        VolumeVO existingVolumeOfVm = getVmExistingVolumeForVolumeAttach(vm, volumeToAttach);
-        VolumeInfo newVolumeOnPrimaryStorage = createVolumeOnPrimaryForAttachIfNeeded(volumeToAttach, vm, existingVolumeOfVm);
+        VolumeVO existingVolumeOfVm = null;
+        VMTemplateVO template = _templateDao.findById(vm.getTemplateId());
+        List<VolumeVO> rootVolumesOfVm = _volsDao.findByInstanceAndType(vmId, Volume.Type.ROOT);
+        if (rootVolumesOfVm.size() > 1 && template != null && !template.isDeployAsIs()) {
+            throw new CloudRuntimeException("The VM " + vm.getHostName() + " has more than one ROOT volume and is in an invalid state.");
+        } else {
+            if (!rootVolumesOfVm.isEmpty()) {
+                existingVolumeOfVm = rootVolumesOfVm.get(0);
+            } else {
+                // locate data volume of the vm
+                List<VolumeVO> diskVolumesOfVm = _volsDao.findByInstanceAndType(vmId, Volume.Type.DATADISK);
+                for (VolumeVO diskVolume : diskVolumesOfVm) {
+                    if (diskVolume.getState() != Volume.State.Allocated) {
+                        existingVolumeOfVm = diskVolume;
+                        break;
+                    }
+                }
+            }
+        }
+        if (s_logger.isTraceEnabled()) {
+            String msg = "attaching volume %s/%s to a VM (%s/%s) with an existing volume %s/%s on primary storage %s";
+            if (existingVolumeOfVm != null) {
+                s_logger.trace(String.format(msg,
+                        volumeToAttach.getName(), volumeToAttach.getUuid(),
+                        vm.getName(), vm.getUuid(),
+                        existingVolumeOfVm.getName(), existingVolumeOfVm.getUuid(),
+                        existingVolumeOfVm.getPoolId()));
+            }
+        }
+
+        HypervisorType rootDiskHyperType = vm.getHypervisorType();
+        HypervisorType volumeToAttachHyperType = _volsDao.getHypervisorType(volumeToAttach.getId());
+
+        VolumeInfo newVolumeOnPrimaryStorage = volumeToAttach;
+
+        //don't create volume on primary storage if its being attached to the vm which Root's volume hasn't been created yet
+        StoragePoolVO destPrimaryStorage = null;
+        if (existingVolumeOfVm != null && !existingVolumeOfVm.getState().equals(Volume.State.Allocated)) {
+            destPrimaryStorage = _storagePoolDao.findById(existingVolumeOfVm.getPoolId());
+            if (s_logger.isTraceEnabled() && destPrimaryStorage != null) {
+                s_logger.trace(String.format("decided on target storage: %s/%s", destPrimaryStorage.getName(), destPrimaryStorage.getUuid()));
+            }
+        }
+
+        boolean volumeOnSecondary = volumeToAttach.getState() == Volume.State.Uploaded;
+
+        if (destPrimaryStorage != null && (volumeToAttach.getState() == Volume.State.Allocated || volumeOnSecondary)) {
+            try {
+                if (volumeOnSecondary && destPrimaryStorage.getPoolType() == Storage.StoragePoolType.PowerFlex) {
+                    throw new InvalidParameterValueException("Cannot attach uploaded volume, this operation is unsupported on storage pool type " + destPrimaryStorage.getPoolType());
+                }
+                newVolumeOnPrimaryStorage = _volumeMgr.createVolumeOnPrimaryStorage(vm, volumeToAttach, rootDiskHyperType, destPrimaryStorage);
+            } catch (NoTransitionException e) {
+                s_logger.debug("Failed to create volume on primary storage", e);
+                throw new CloudRuntimeException("Failed to create volume on primary storage", e);
+            }
+        }
 
         // reload the volume from db
         newVolumeOnPrimaryStorage = volFactory.getVolume(newVolumeOnPrimaryStorage.getId());
@@ -2609,7 +2659,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             StoragePoolVO vmRootVolumePool = _storagePoolDao.findById(existingVolumeOfVm.getPoolId());
 
             try {
-                HypervisorType volumeToAttachHyperType = _volsDao.getHypervisorType(volumeToAttach.getId());
                 newVolumeOnPrimaryStorage = _volumeMgr.moveVolume(newVolumeOnPrimaryStorage, vmRootVolumePool.getDataCenterId(), vmRootVolumePool.getPodId(), vmRootVolumePool.getClusterId(),
                         volumeToAttachHyperType);
             } catch (ConcurrentOperationException | StorageUnavailableException e) {
@@ -2619,7 +2668,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
         VolumeVO newVol = _volsDao.findById(newVolumeOnPrimaryStorage.getId());
         // Getting the fresh vm object in case of volume migration to check the current state of VM
-        if (moveVolumeNeeded) {
+        if (moveVolumeNeeded || volumeOnSecondary) {
             vm = _userVmDao.findById(vmId);
             if (vm == null) {
                 throw new InvalidParameterValueException("VM not found.");
@@ -2803,6 +2852,9 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             validateRootVolumeDetachAttach(_volsDao.findById(volumeToAttach.getId()), vm);
             if (!_volsDao.findByInstanceAndDeviceId(vm.getId(), 0).isEmpty()) {
                 throw new InvalidParameterValueException("Vm already has root volume attached to it");
+            }
+            if (volumeToAttach.getState() == Volume.State.Uploaded) {
+                throw new InvalidParameterValueException("No support for Root volume attach in state " + Volume.State.Uploaded);
             }
         }
     }
