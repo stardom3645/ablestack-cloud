@@ -6806,6 +6806,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
             volumeToPoolIds.put(volume.getId(), destPool.getId());
         }
+        for (VolumeVO volume : volumes) {
+            DiskOffering dataOffering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            if (dataOffering.getKvdoEnable()) {
+                throw new InvalidParameterValueException("Live migration is not possible when using compressed deduplication volumes.");
+            }
+        }
         _itMgr.storageMigration(vm.getUuid(), volumeToPoolIds);
         return findMigratedVm(vm.getId(), vm.getType());
     }
@@ -6879,6 +6885,18 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
 
         checkIfHostOfVMIsInPrepareForMaintenanceState(vm, "Migrate");
+
+        final List<VolumeVO> volumes = _volsDao.findByInstance(vmId);
+        for (VolumeVO volume : volumes) {
+            DiskOffering dataOffering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            if (dataOffering.getKvdoEnable()) {
+                throw new InvalidParameterValueException("Live migration is not possible when using compressed deduplication volumes.");
+            }
+        }
+
+        if(serviceOfferingDetailsDao.findDetail(vm.getServiceOfferingId(), GPU.Keys.pciDevice.toString()) != null) {
+            throw new InvalidParameterValueException("Live Migration of GPU enabled VM is not supported");
+        }
 
         if(serviceOfferingDetailsDao.findDetail(vm.getServiceOfferingId(), GPU.Keys.pciDevice.toString()) != null) {
             throw new InvalidParameterValueException("Live Migration of GPU enabled VM is not supported");
