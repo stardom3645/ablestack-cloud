@@ -701,4 +701,3 @@ export default {
     }
   ]
 }
-
