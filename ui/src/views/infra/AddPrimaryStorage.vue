@@ -544,7 +544,16 @@ export default {
         primeraPassword: [{ required: true, message: this.$t('label.password') }],
         flashArrayURL: [{ required: true, message: this.$t('label.url') }],
         flashArrayUsername: [{ required: true, message: this.$t('label.username') }],
-        flashArrayPassword: [{ required: true, message: this.$t('label.password') }]
+        kradosmonitor: [{ required: true, message: this.$t('label.required') }],
+        kradospool: [{ required: true, message: this.$t('label.required') }],
+        kradosuser: [{ required: true, message: this.$t('label.required') }],
+        kradossecret: [{ required: true, message: this.$t('label.required') }],
+        kradospath: [{ required: true, message: this.$t('label.required') }],
+        gluefsserver: [{ required: true, message: this.$t('label.required') }],
+        gluefsuser: [{ required: true, message: this.$t('label.required') }],
+        gluefsname: [{ required: true, message: this.$t('label.required') }],
+        gluefssecret: [{ required: true, message: this.$t('label.required') }],
+        gluefstargetpath: [{ required: true, message: this.$t('label.required') }]
       })
     },
     fetchData () {
