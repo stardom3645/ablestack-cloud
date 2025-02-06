@@ -163,6 +163,7 @@ import com.cloud.serializer.GsonHelper;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.service.dao.ServiceOfferingDetailsDao;
+import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.GuestOSCategoryVO;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
@@ -1507,6 +1508,21 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             logger.debug("Unable to find host " + hostId);
             throw new InvalidParameterValueException("Unable to find host with ID: " + hostId + ". Please specify a valid host ID.");
         }
+
+        List<VMInstanceVO> activeVMs =  _vmDao.listByHostId(hostId);
+        for (VMInstanceVO vm : activeVMs) {
+            List<VolumeVO> volumesForVm = volumeDao.findUsableVolumesForInstance(vm.getId());
+            for (VolumeVO vol : volumesForVm) {
+                if (vol.getDiskOfferingId() != null) {
+                    DiskOfferingVO diskOffering = diskOfferingDao.findById(vol.getDiskOfferingId());
+                    if (diskOffering.getKvdoEnable()) {
+                        logger.debug("The host on which maintenance mode is to be set cannot be run because there is a virtual machine using a compressed/deduplicated volume. Check the VM: " + vm.getInstanceName());
+                        throw new InvalidParameterValueException("The host on which maintenance mode is to be set cannot be run because there is a virtual machine using a compressed/deduplicated volume. Check the VM: " + vm.getInstanceName());
+                    }
+                }
+            }
+        }
+
         if (!ResourceState.canAttemptMaintenance(host.getResourceState())) {
             throw new CloudRuntimeException("Host is already in state " + host.getResourceState() + ". Cannot recall for maintenance until resolved.");
         }
