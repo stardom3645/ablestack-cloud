@@ -1121,4 +1121,3 @@ export default {
     }
   ]
 }
-

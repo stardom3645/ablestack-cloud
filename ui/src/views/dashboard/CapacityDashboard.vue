@@ -222,7 +222,7 @@
               />
               <br/>
               <div style="text-align: center">
-                {{ displayData(ctype, statsMap[ctype]?.capacityused) }} <span v-if="ctype !== 'STORAGE'">{{ $t('label.allocated') }}</span><span v-else>{{ $t('label.used') }}</span> | {{ displayData(ctype, statsMap[ctype]?.capacitytotal) }} {{ $t('label.total') }}
+                {{ displayData(ctype, statsMap[ctype]?.capacityused) }} <span v-if="ctype !== 'STORAGE' && ctype !== 'SECONDARY_STORAGE'">{{ $t('label.allocated') }}</span><span v-else>{{ $t('label.used') }}</span> | {{ displayData(ctype, statsMap[ctype]?.capacitytotal) }} {{ $t('label.total') }}
               </div>
             </div>
           </div>
