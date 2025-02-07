@@ -797,6 +797,9 @@ public class EventTypes {
 
     // DISASTER RECOVERY
     public static final String EVENT_DISASTER_RECOVERY_CLUSTER = "DISASTER.RECOVERY.CLUSTER";
+    
+    // Resource Limit
+    public static final String EVENT_RESOURCE_LIMIT_UPDATE = "RESOURCE.LIMIT.UPDATE";
 
     static {
 
