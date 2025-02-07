@@ -360,8 +360,13 @@ public class KubernetesClusterActionWorker {
             return null;
         }
         IpAddress address = ipAddressDao.findByUuid(detailsVO.getValue());
-        if (address == null || !Objects.equals(network.getVpcId(), address.getVpcId())) {
-            logger.warn(String.format("Public IP with ID: %s linked to the Kubernetes cluster: %s is not usable", detailsVO.getValue(), kubernetesCluster.getName()));
+        if (address == null || network.getVpcId() != address.getVpcId()) {
+            logger.warn("Public IP with ID: {} linked to the Kubernetes cluster: {} is not usable", detailsVO.getValue(), kubernetesCluster.getName());
+            if (address == null) {
+                logger.warn("Public IP with ID: {} was not found by uuid", detailsVO.getValue());
+            } else {
+                logger.warn("Public IP with ID: {} was associated with vpc {} instead of {}", detailsVO.getValue(), address.getVpcId(), network.getVpcId());
+            }
             return null;
         }
         return address;
