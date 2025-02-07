@@ -3630,8 +3630,8 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
                                         templateVO = _templateStoreDao.findByStoreTemplate(store.getId(), templateId);
                                         if (templateVO != null) {
                                             try {
-                                                if (SystemVmTemplateRegistration.validateIfSeeded(
-                                                        url, templateVO.getInstallPath(), nfsVersion)) {
+                                                if (systemVmTemplateRegistration.validateIfSeeded(
+                                                        templateVO, url, templateVO.getInstallPath(), nfsVersion)) {
                                                     continue;
                                                 }
                                             } catch (Exception e) {
