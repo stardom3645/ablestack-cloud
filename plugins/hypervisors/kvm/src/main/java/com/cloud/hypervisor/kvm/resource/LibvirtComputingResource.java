@@ -3468,7 +3468,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 disk.setLogicalBlockIOSize(pool.getSupportedLogicalBlockSize());
                 disk.setPhysicalBlockIOSize(pool.getSupportedPhysicalBlockSize());
 
-                if (diskBusType == DiskDef.DiskBus.SCSI ) {
+                if (diskBusType == DiskDef.DiskBus.SCSI || diskBusType == DiskDef.DiskBus.VIRTIOBLK) {
                     disk.setQemuDriver(true);
                     disk.setDiscard(DiscardType.UNMAP);
                 }
