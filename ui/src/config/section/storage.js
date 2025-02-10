@@ -106,7 +106,7 @@ export default {
           icon: 'plus-outlined',
           docHelp: 'adminguide/storage.html#creating-a-new-volume',
           label: 'label.action.create.volume',
-          show: () => { isZoneCreated() },
+          show: isZoneCreated,
           listView: true,
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateVolume.vue')))
@@ -126,7 +126,7 @@ export default {
           icon: 'link-outlined',
           docHelp: 'adminguide/storage.html#uploading-an-existing-volume-to-a-virtual-machine',
           label: 'label.upload.volume.from.url',
-          show: () => { isZoneCreated() },
+          show: isZoneCreated,
           listView: true,
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/UploadVolume.vue')))

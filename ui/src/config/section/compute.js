@@ -108,7 +108,7 @@ export default {
           label: 'label.vm.add',
           docHelp: 'adminguide/virtual_machines.html#creating-vms',
           listView: true,
-          show: () => { isZoneCreated() },
+          show: isZoneCreated,
           component: () => import('@/views/compute/DeployVM.vue')
         },
         {
@@ -661,7 +661,7 @@ export default {
           docHelp: 'plugins/cloudstack-kubernetes-service.html#creating-a-new-kubernetes-cluster',
           listView: true,
           popup: true,
-          show: () => { isZoneCreated() },
+          show: isZoneCreated,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CreateKubernetesCluster.vue')))
         },
         {
@@ -790,7 +790,7 @@ export default {
           icon: 'plus-outlined',
           label: 'label.new.autoscale.vmgroup',
           listView: true,
-          show: () => { isZoneCreated() },
+          show: isZoneCreated,
           component: () => import('@/views/compute/CreateAutoScaleVmGroup.vue')
         },
         {
@@ -881,7 +881,7 @@ export default {
           icon: 'plus-outlined',
           label: 'label.new.instance.group',
           listView: true,
-          show: () => { isZoneCreated() },
+          show: isZoneCreated,
           args: ['name']
         },
         {
