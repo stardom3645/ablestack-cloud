@@ -400,7 +400,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         rbdPoolName = pdef.getSourceDir();
                         authUserName = pdef.getAuthUserName();
                     }
-                    if (pdef.getPoolType() == PoolType.DIR) {
+                    if (pdef.getPoolType() == PoolType.DIR && !"/var/lib/libvirt/images".equals(pdef.getTargetPath())) {
                         logger.debug(String.format("SharedMountPoint Pool source path [%s]", pdef.getTargetPath()));
                         smpTargetPath = pdef.getTargetPath();
                     }
@@ -484,7 +484,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         rbdPoolName = pdef.getSourceDir();
                         authUserName = pdef.getAuthUserName();
                     }
-                    if (pdef.getPoolType() == PoolType.DIR) {
+                    if (pdef.getPoolType() == PoolType.DIR && !"/var/lib/libvirt/images".equals(pdef.getTargetPath())) {
                         logger.debug(String.format("SharedMountPoint Pool source path [%s]", pdef.getTargetPath()));
                         smpTargetPath = pdef.getTargetPath();
                     }
@@ -608,7 +608,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         rbdPoolName = pdef.getSourceDir();
                         authUserName = pdef.getAuthUserName();
                     }
-                    if (pdef.getPoolType() == PoolType.DIR) {
+                    if (pdef.getPoolType() == PoolType.DIR && !"/var/lib/libvirt/images".equals(pdef.getTargetPath())) {
                         logger.debug(String.format("SharedMountPoint Pool source path [%s]", pdef.getTargetPath()));
                         smpTargetPath = pdef.getTargetPath();
                     }
