@@ -101,7 +101,6 @@
     />
 
     <div v-if="guestTrafficRangeMode">
-      <div>{{ isNsxZone }}</div>
       <static-inputs-form
         v-if="steps && steps[currentStep].formKey === 'guestTraffic'"
         @nextPressed="nextPressed"
