@@ -17,13 +17,13 @@
 # under the License.
 
 help() {
-  printf "Usage: $0 
+  printf "Usage: $0
                     -p rbd pool name
                     -n rbd pool auth username
                     -g sharedmountpoint type GFS2 path
                     -h host ip
                     -q clvm pool mount source path
-                    -r write/read hb log 
+                    -r write/read hb log
                     -c cleanup
                     -t interval between read hb log\n"
   exit 1
@@ -34,11 +34,11 @@ RbdPoolAuthUserName=
 GfsPoolPath=
 HostIP=
 poolPath=
-interval=
+interval=0
 rflag=0
 cflag=0
 
-while getopts 'p:n:g:h:q:t:r:c' OPTION
+while getopts 'p:n:g:h:q:t:rc' OPTION
 do
   case $OPTION in
   p)
@@ -55,22 +55,21 @@ do
      ;;
   q)
      poolPath="$OPTARG"
-     ;;  
+     ;;
   t)
      interval="$OPTARG"
      ;;
   r)
-     rflag=1 
+     rflag=1
      ;;
   c)
-    cflag=1
+     cflag=1
      ;;
   *)
      help
      ;;
   esac
 done
-
 
 hbFolder=$GfsPoolPath/MOLD-HB
 hbFile=$hbFolder/$HostIP
@@ -83,19 +82,18 @@ write_hbLog() {
   if [ $? -eq 0 ]
   then
     Timestamp=$(date +%s)
-    if [ -n $RbdPoolName ] ; then
+    if [ -n "$RbdPoolName" ]; then
       obj=$(rbd -p $RbdPoolName ls --id $RbdPoolAuthUserName | grep MOLD-HB)
       if [ $? -gt 0 ]; then
         rbd -p $RbdPoolName create --size 1 --id $RbdPoolAuthUserName MOLD-HB
       fi
-      obj=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta set MOLD-HB $HostIP $Timestamp)`
-
-    elif [ -n $GfsPoolPath ] ; then
+      obj=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta set MOLD-HB $HostIP $Timestamp)
+    elif [ -n "$GfsPoolPath" ] ; then
         stat $hbFile &> /dev/null
         if [ $? -gt 0 ] ; then
           mkdir -p $hbFolder &> /dev/null
           touch $hbFile &> /dev/null
-        if [ $? -gt 0 ] ; then
+          if [ $? -gt 0 ] ; then
             printf "Failed to create $hbFile"
             return 2
           fi
@@ -119,13 +117,13 @@ write_hbLog() {
 check_hbLog() {
 #check the heart beat log
   now=$(date +%s)
-  if [ -n $RbdPoolName ] ; then
+  if [ -n "$RbdPoolName" ] ; then
     getHbTime=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta get MOLD-HB $HostIP)
     if [ $? -gt 0 ] || [ -z "$getHbTime" ]; then
       return 1
     fi
     diff=$(expr $now - $getHbTime)
-  elif [ -n $GfsPoolPath ] ; then
+  elif [ -n "$GfsPoolPath" ] ; then
     now=$(date +%s)
     hb=$(cat $hbFile)
     diff=$(expr $now - $hb)

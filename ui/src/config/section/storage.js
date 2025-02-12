@@ -226,7 +226,7 @@ export default {
           label: 'label.migrate.volume',
           args: ['volumeid', 'storageid', 'livemigrate'],
           dataView: true,
-          show: (record, store) => { return record.state === 'Ready' },
+          show: (record, store) => { return record.state === 'Ready' && !record.kvdoenable },
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/MigrateVolume.vue')))
         },
