@@ -106,13 +106,13 @@ public class ViewResponseHelper {
     protected Logger logger = LogManager.getLogger(getClass());
 
     public static List<UserResponse> createUserResponse(UserAccountJoinVO... users) {
-        return createUserResponse(null, users);
+        return createUserResponse(ResponseView.Restricted, null, users);
     }
 
-    public static List<UserResponse> createUserResponse(Long domainId, UserAccountJoinVO... users) {
+    public static List<UserResponse> createUserResponse(ResponseView responseView, Long domainId, UserAccountJoinVO... users) {
         List<UserResponse> respList = new ArrayList<UserResponse>();
         for (UserAccountJoinVO vt : users) {
-            respList.add(ApiDBUtils.newUserResponse(vt, domainId));
+            respList.add(ApiDBUtils.newUserResponse(responseView, domainId, vt));
         }
         return respList;
     }
@@ -324,14 +324,14 @@ public class ViewResponseHelper {
         return new ArrayList<VolumeResponse>(vrDataList.values());
     }
 
-    public static List<StoragePoolResponse> createStoragePoolResponse(StoragePoolJoinVO... pools) {
+    public static List<StoragePoolResponse> createStoragePoolResponse(boolean customStats, StoragePoolJoinVO... pools) {
         LinkedHashMap<Long, StoragePoolResponse> vrDataList = new LinkedHashMap<>();
         // Initialise the vrdatalist with the input data
         for (StoragePoolJoinVO vr : pools) {
             StoragePoolResponse vrData = vrDataList.get(vr.getId());
             if (vrData == null) {
                 // first time encountering this vm
-                vrData = ApiDBUtils.newStoragePoolResponse(vr);
+                vrData = ApiDBUtils.newStoragePoolResponse(vr, customStats);
             } else {
                 // update tags
                 vrData = ApiDBUtils.fillStoragePoolDetails(vrData, vr);

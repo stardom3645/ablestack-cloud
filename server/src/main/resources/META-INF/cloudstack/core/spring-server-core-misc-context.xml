@@ -73,7 +73,7 @@
     </bean>
 
     <bean id="cloudZonesStartupProcessor" class="com.cloud.hypervisor.CloudZonesStartupProcessor" />
-    
+
     <bean id="managementServerNode" class="org.apache.cloudstack.utils.identity.ManagementServerNode" />
 
     <bean id="ExternalIpAddressAllocator" class="com.cloud.network.ExternalIpAddressAllocator">
@@ -81,5 +81,5 @@
     </bean>
 
     <bean id="DPDKHelper" class="com.cloud.hypervisor.kvm.dpdk.DpdkHelperImpl" />
-    
+
 </beans>

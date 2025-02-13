@@ -214,16 +214,6 @@ CREATE VIEW `cloud`.`domain_router_view` AS
             and async_job.instance_type = 'DomainRouter'
             and async_job.job_status = 0;
 
--- Idempotent ADD COLUMN
-DROP PROCEDURE IF EXISTS `cloud`.`IDEMPOTENT_ADD_COLUMN`;
-CREATE PROCEDURE `cloud`.`IDEMPOTENT_ADD_COLUMN` (
-    IN in_table_name VARCHAR(200)
-, IN in_column_name VARCHAR(200)
-, IN in_column_definition VARCHAR(1000)
-)
-BEGIN
-    DECLARE CONTINUE HANDLER FOR 1060 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', 'ADD COLUMN') ; SET @ddl = CONCAT(@ddl, ' ', in_column_name); SET @ddl = CONCAT(@ddl, ' ', in_column_definition); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
-
 -- Add passphrase table
 CREATE TABLE IF NOT EXISTS `cloud`.`passphrase` (
     `id` bigint unsigned NOT NULL auto_increment,
@@ -278,6 +268,7 @@ SELECT
     `vsphere_storage_policy`.`value` AS `vsphere_storage_policy`,
     `disk_offering`.`encrypt` AS `encrypt`,
     `disk_offering`.`shareable` AS `shareable`,
+    `disk_offering`.`kvdo_enable` AS `kvdo_enable`,
     GROUP_CONCAT(DISTINCT(domain.id)) AS domain_id,
     GROUP_CONCAT(DISTINCT(domain.uuid)) AS domain_uuid,
     GROUP_CONCAT(DISTINCT(domain.name)) AS domain_name,
@@ -434,45 +425,6 @@ WHERE roles.role_type != 'Admin' AND roles.is_default = 1 AND role_perm.rule = '
 
 -- VM autoscaling
 
--- Idempotent ADD COLUMN
-DROP PROCEDURE IF EXISTS `cloud`.`IDEMPOTENT_ADD_COLUMN`;
-CREATE PROCEDURE `cloud`.`IDEMPOTENT_ADD_COLUMN` (
-    IN in_table_name VARCHAR(200)
-, IN in_column_name VARCHAR(200)
-, IN in_column_definition VARCHAR(1000)
-)
-BEGIN
-    DECLARE CONTINUE HANDLER FOR 1060 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', 'ADD COLUMN') ; SET @ddl = CONCAT(@ddl, ' ', in_column_name); SET @ddl = CONCAT(@ddl, ' ', in_column_definition); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
-
--- Idempotent RENAME COLUMN
-DROP PROCEDURE IF EXISTS `cloud`.`IDEMPOTENT_CHANGE_COLUMN`;
-CREATE PROCEDURE `cloud`.`IDEMPOTENT_CHANGE_COLUMN` (
-    IN in_table_name VARCHAR(200)
-, IN in_column_name VARCHAR(200)
-, IN in_column_new_name VARCHAR(200)
-, IN in_column_new_definition VARCHAR(1000)
-)
-BEGIN
-    DECLARE CONTINUE HANDLER FOR 1054 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', 'CHANGE COLUMN') ; SET @ddl = CONCAT(@ddl, ' ', in_column_name); SET @ddl = CONCAT(@ddl, ' ', in_column_new_name); SET @ddl = CONCAT(@ddl, ' ', in_column_new_definition); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
-
--- Idempotent ADD UNIQUE KEY
-DROP PROCEDURE IF EXISTS `cloud`.`IDEMPOTENT_ADD_UNIQUE_KEY`;
-CREATE PROCEDURE `cloud`.`IDEMPOTENT_ADD_UNIQUE_KEY` (
-    IN in_table_name VARCHAR(200)
-, IN in_key_name VARCHAR(200)
-, IN in_key_definition VARCHAR(1000)
-)
-BEGIN
-    DECLARE CONTINUE HANDLER FOR 1061 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', 'ADD UNIQUE KEY ', in_key_name); SET @ddl = CONCAT(@ddl, ' ', in_key_definition); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
-
--- Idempotent DROP FOREIGN KEY
-DROP PROCEDURE IF EXISTS `cloud`.`IDEMPOTENT_DROP_FOREIGN_KEY`;
-CREATE PROCEDURE `cloud`.`IDEMPOTENT_DROP_FOREIGN_KEY` (
-    IN in_table_name VARCHAR(200)
-, IN in_foreign_key_name VARCHAR(200)
-)
-BEGIN
-    DECLARE CONTINUE HANDLER FOR 1091, 1025 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', ' DROP FOREIGN KEY '); SET @ddl = CONCAT(@ddl, ' ', in_foreign_key_name); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
 
 -- Add column 'supports_vm_autoscaling' to 'network_offerings' table
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.network_offerings', 'supports_vm_autoscaling', 'boolean default false');
@@ -727,8 +679,9 @@ CREATE VIEW `cloud`.`template_view` AS
           CONCAT(`vm_template`.`id`,
                  '_',
                  IFNULL(`data_center`.`id`, 0)) AS `temp_zone_pair`,
-          `vm_template`.`direct_download` AS `direct_download`,
-          `vm_template`.`deploy_as_is` AS `deploy_as_is`,
+         `vm_template`.`direct_download` AS `direct_download`,
+         `vm_template`.`kvdo_enable` AS `kvdo_enable`,
+         `vm_template`.`deploy_as_is` AS `deploy_as_is`,
          `user_data`.`id` AS `user_data_id`,
          `user_data`.`uuid` AS `user_data_uuid`,
          `user_data`.`name` AS `user_data_name`,
@@ -1187,16 +1140,6 @@ CREATE TABLE IF NOT EXISTS `cloud`.`tungsten_lb_health_monitor` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --- #6888 add index to speed up querying IPs in the network-tab
-DROP PROCEDURE IF EXISTS `cloud`.`IDEMPOTENT_ADD_KEY`;
-
-CREATE PROCEDURE `cloud`.`IDEMPOTENT_ADD_KEY` (
-		IN in_index_name VARCHAR(200)
-    , IN in_table_name VARCHAR(200)
-    , IN in_key_definition VARCHAR(1000)
-)
-BEGIN
-
-    DECLARE CONTINUE HANDLER FOR 1061 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', ' ADD KEY ') ; SET @ddl = CONCAT(@ddl, ' ', in_index_name); SET @ddl = CONCAT(@ddl, ' ', in_key_definition); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
 
 CALL `cloud`.`IDEMPOTENT_ADD_KEY`('i_user_ip_address_state','user_ip_address', '(state)');
 

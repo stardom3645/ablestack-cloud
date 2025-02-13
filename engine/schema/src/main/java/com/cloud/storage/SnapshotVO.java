@@ -30,12 +30,11 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.apache.cloudstack.util.HypervisorTypeConverter;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.utils.db.GenericDao;
 import com.google.gson.annotations.Expose;
+import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 
 @Entity
 @Table(name = "snapshots")
@@ -106,6 +105,9 @@ public class SnapshotVO implements Snapshot {
 
     @Column(name = "max_iops")
     Long maxIops;
+
+    @Column(name = "clone_type")
+    private String cloneType;
 
     public SnapshotVO() {
         uuid = UUID.randomUUID().toString();
@@ -276,6 +278,14 @@ public class SnapshotVO implements Snapshot {
         this.uuid = uuid;
     }
 
+    public String getCloneType() {
+        return cloneType;
+    }
+
+    public void setCloneType(String cloneType) {
+        this.cloneType = cloneType;
+    }
+
     @Override
     public Class<?> getEntityType() {
         return Snapshot.class;
@@ -283,7 +293,8 @@ public class SnapshotVO implements Snapshot {
 
     @Override
     public String toString() {
-        return String.format("Snapshot %s", new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("uuid", getUuid()).append("name", getName())
-                .append("volumeId", getVolumeId()).toString());
+        return String.format("Snapshot %s",
+                ReflectionToStringBuilderUtils.reflectOnlySelectedFields(
+                        this, "id", "uuid", "name", "volumeId", "version"));
     }
 }

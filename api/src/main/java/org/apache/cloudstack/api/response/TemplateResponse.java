@@ -135,6 +135,10 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
     @Param(description = "the name of the domain to which the template belongs")
     private String domainName;
 
+    @SerializedName(ApiConstants.DOMAIN_PATH)
+    @Param(description = "path of the Domain the template belongs to", since = "4.19.2.0")
+    private String domainPath;
+
     @SerializedName(ApiConstants.DOMAIN_ID)
     @Param(description = "the ID of the domain to which the template belongs")
     private String domainId;
@@ -179,6 +183,10 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
     @Param(description = "Lists the download progress of a template across all secondary storages")
     private List<Map<String, String>> downloadDetails;
 
+    @SerializedName(ApiConstants.ARCH)
+    @Param(description = "CPU Arch of the template", since = "4.20")
+    private String arch;
+
     @SerializedName(ApiConstants.BITS)
     @Param(description = "the processor bit size", since = "4.10")
     private int bits;
@@ -194,6 +202,10 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
     @SerializedName(ApiConstants.DIRECT_DOWNLOAD)
     @Param(description = "KVM Only: true if template is directly downloaded to Primary Storage bypassing Secondary Storage")
     private Boolean directDownload;
+
+    @SerializedName(ApiConstants.KVDO_ENABLE)
+    @Param(description = "KVM and ABLESTACK Block Only: True if volume compression/deduplication feature is used.")
+    private Boolean kvdoEnable;
 
     @SerializedName(ApiConstants.DEPLOY_AS_IS)
     @Param(description = "VMware only: true if template is deployed without orchestrating disks and networks but \"as-is\" defined in the template.",
@@ -355,6 +367,11 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
     }
 
     @Override
+    public void setDomainPath(String domainPath) {
+        this.domainPath = domainPath;
+    }
+
+    @Override
     public void setDomainId(String domainId) {
         this.domainId = domainId;
     }
@@ -436,6 +453,14 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
         return directDownload;
     }
 
+    public void setKvdoEnable(Boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
+    }
+
+    public Boolean getKvdoEnable() {
+        return kvdoEnable;
+    }
+
     public void setDeployAsIs(Boolean deployAsIs) {
         this.deployAsIs = deployAsIs;
     }
@@ -510,5 +535,9 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
 
     public void setUserDataParams(String userDataParams) {
         this.userDataParams = userDataParams;
+    }
+
+    public void setArch(String arch) {
+        this.arch = arch;
     }
 }

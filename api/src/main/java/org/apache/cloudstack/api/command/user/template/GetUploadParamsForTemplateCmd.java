@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Map;
 
+import com.cloud.cpu.CPU;
 import com.cloud.hypervisor.Hypervisor;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
@@ -55,6 +56,11 @@ public class GetUploadParamsForTemplateCmd extends AbstractGetUploadParamsCmd {
             description = "the ID of the OS Type that best represents the OS of this template. Not required for VMware as the guest OS is obtained from the OVF file.")
     private Long osTypeId;
 
+    @Parameter(name = ApiConstants.ARCH, type = CommandType.STRING,
+            description = "the CPU arch of the template. Valid options are: x86_64, aarch64",
+            since = "4.20")
+    private String arch;
+
     @Parameter(name = ApiConstants.BITS, type = CommandType.INTEGER, description = "32 or 64 bits support. 64 by default")
     private Integer bits;
 
@@ -87,6 +93,9 @@ public class GetUploadParamsForTemplateCmd extends AbstractGetUploadParamsCmd {
 
     @Parameter(name = ApiConstants.TEMPLATE_TAG, type = CommandType.STRING, description = "the tag for this template.")
     private String templateTag;
+
+    @Parameter(name = ApiConstants.KVDO_ENABLE, type = CommandType.BOOLEAN, description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
+    private Boolean kvdoEnable;
 
     @Parameter(name=ApiConstants.DEPLOY_AS_IS,
             type = CommandType.BOOLEAN,
@@ -157,9 +166,17 @@ public class GetUploadParamsForTemplateCmd extends AbstractGetUploadParamsCmd {
         return templateTag;
     }
 
+    public Boolean isKvdoEnable() {
+        return kvdoEnable;
+    }
+
     public boolean isDeployAsIs() {
         return Hypervisor.HypervisorType.VMware.toString().equalsIgnoreCase(hypervisor) &&
                 Boolean.TRUE.equals(deployAsIs);
+    }
+
+    public CPU.CPUArch getArch() {
+        return CPU.CPUArch.fromType(arch);
     }
 
     @Override

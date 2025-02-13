@@ -143,6 +143,26 @@
           </template>
           <a-input v-model:value="form.name" :placeholder="apiParams.name.description"/>
         </a-form-item>
+        <div v-if="form.protocol !== 'Linstor'">
+          <a-form-item name="provider" ref="provider">
+            <template #label>
+              <tooltip-label :title="$t('label.providername')" :tooltip="apiParams.provider.description"/>
+            </template>
+            <a-select
+              v-model:value="form.provider"
+              @change="updateProviderAndProtocol"
+              showSearch
+              optionFilterProp="value"
+              :filterOption="(input, option) => {
+                return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }"
+              :placeholder="apiParams.provider.description">
+              <a-select-option :value="provider" v-for="(provider,idx) in providers" :key="idx">
+                {{ provider }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </div>
         <a-form-item name="protocol" ref="protocol" v-if="form.scope === 'zone' || form.scope === 'cluster' || form.scope === 'host'">
           <template #label>
             <tooltip-label :title="$t('label.protocol')" :tooltip="$t('message.protocol.description')"/>
@@ -179,6 +199,17 @@
             <a-input v-model:value="form.path" :placeholder="$t('message.path.description')"/>
           </a-form-item>
         </div>
+        <div
+          v-if="form.protocol === 'nfs' &&
+            ((form.scope === 'zone' && (form.hypervisor === 'KVM' || form.hypervisor === 'Simulator')) ||
+             (form.scope === 'cluster' && (hypervisorType === 'KVM' || hypervisorType === 'Simulator')))">
+          <a-form-item name="nfsMountOpts" ref="nfsMountOpts">
+            <template #label>
+              <tooltip-label :title="$t('label.nfsmountopts')" :tooltip="$t('message.nfs.mount.options.description')"/>
+            </template>
+            <a-input v-model:value="form.nfsMountOpts" :placeholder="$t('message.nfs.mount.options.description')" />
+          </a-form-item>
+        </div>
         <div v-if="form.protocol === 'SMB'">
           <a-form-item :label="$t('label.smbusername')" name="smbUsername" ref="smbUsername">
             <a-input v-model:value="form.smbUsername"/>
@@ -210,26 +241,6 @@
               <tooltip-label :title="$t('label.vcenterdatastore')" :tooltip="$t('message.datastore.description')"/>
             </template>
             <a-input v-model:value="form.vCenterDataStore" :placeholder="$t('message.datastore.description')"/>
-          </a-form-item>
-        </div>
-        <div v-if="form.protocol !== 'Linstor'">
-          <a-form-item name="provider" ref="provider">
-            <template #label>
-              <tooltip-label :title="$t('label.providername')" :tooltip="apiParams.provider.description"/>
-            </template>
-            <a-select
-              v-model:value="form.provider"
-              @change="updateProviderAndProtocol"
-              showSearch
-              optionFilterProp="value"
-              :filterOption="(input, option) => {
-                return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }"
-              :placeholder="apiParams.provider.description">
-              <a-select-option :value="provider" v-for="(provider,idx) in providers" :key="idx">
-                {{ provider }}
-              </a-select-option>
-            </a-select>
           </a-form-item>
         </div>
         <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && form.provider !== 'ABLESTACK' && form.protocol !== 'FiberChannel'">
@@ -333,9 +344,9 @@
           </a-form-item>
           <a-form-item name="flashArrayPassword" ref="flashArrayPassword">
             <template #label>
-              <tooltip-label :title="$t('label.password')" :tooltip="$t('label.flashArray.password')"/>
+              <tooltip-label :title="$t('label.password')" :tooltip="$t('label.password')"/>
             </template>
-            <a-input-password v-model:value="form.flashArrayPassword" :placeholder="$t('label.flashArray.password')"/>
+            <a-input-password v-model:value="form.flashArrayPassword" :placeholder="$t('label.password')"/>
           </a-form-item>
           <a-form-item name="capacityBytes" ref="capacityBytes">
             <template #label>
@@ -533,7 +544,16 @@ export default {
         primeraPassword: [{ required: true, message: this.$t('label.password') }],
         flashArrayURL: [{ required: true, message: this.$t('label.url') }],
         flashArrayUsername: [{ required: true, message: this.$t('label.username') }],
-        flashArrayPassword: [{ required: true, message: this.$t('label.password') }]
+        kradosmonitor: [{ required: true, message: this.$t('label.required') }],
+        kradospool: [{ required: true, message: this.$t('label.required') }],
+        kradosuser: [{ required: true, message: this.$t('label.required') }],
+        kradossecret: [{ required: true, message: this.$t('label.required') }],
+        kradospath: [{ required: true, message: this.$t('label.required') }],
+        gluefsserver: [{ required: true, message: this.$t('label.required') }],
+        gluefsuser: [{ required: true, message: this.$t('label.required') }],
+        gluefsname: [{ required: true, message: this.$t('label.required') }],
+        gluefssecret: [{ required: true, message: this.$t('label.required') }],
+        gluefstargetpath: [{ required: true, message: this.$t('label.required') }]
       })
     },
     fetchData () {
@@ -803,6 +823,9 @@ export default {
       } else if (value === 'Flash Array' || value === 'Primera') {
         this.protocols = ['FiberChannel']
         this.form.protocol = 'FiberChannel'
+      } else if (value === 'ABLESTACK') {
+        this.protocols = ['Glue Block', 'Glue FileSystem']
+        this.form.protocol = 'Glue Block'
       } else {
         this.fetchHypervisor(value)
       }
@@ -859,6 +882,9 @@ export default {
         var url = ''
         if (values.protocol === 'nfs') {
           url = this.nfsURL(server, path)
+          if (values.nfsMountOpts) {
+            params['details[0].nfsmountopts'] = values.nfsMountOpts
+          }
         } else if (values.protocol === 'SMB') {
           url = this.smbURL(server, path)
           const smbParams = {
@@ -899,6 +925,7 @@ export default {
         } else if (values.protocol === 'Glue Block') {
           url = this.rbdURL(values.kradosmonitor, values.kradospool, values.kradosuser, values.kradossecret)
           params.krbdPath = values.kradospath
+          params['details[0].provider'] = 'ABLESTACK'
         } else if (values.protocol === 'Glue FileSystem') {
           url = this.gluefsURL(values.gluefsserver, values.gluefstargetpath, values.gluefsuser, values.gluefssecret)
           params['details[0].gluefsname'] = values.gluefsname
@@ -937,7 +964,7 @@ export default {
           url = values.flashArrayURL
         }
 
-        if (values.provider === 'Linstor') {
+        if (values.provider === 'Linstor' || values.protocol === 'Linstor') {
           url = this.linstorURL(server)
           values.managed = false
           params['details[0].resourceGroup'] = values.resourcegroup

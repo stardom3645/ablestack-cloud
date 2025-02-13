@@ -229,6 +229,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "disk_offering_name")
     private String diskOfferingName;
 
+    @Column(name = "kvdo_enable")
+    private boolean kvdoEnable;
+
     @Column(name = "service_offering_id")
     private long serviceOfferingId;
 
@@ -368,6 +371,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "user_data", updatable = true, nullable = true, length = 2048)
     private String userData;
 
+    @Column(name = "user_vm_type")
+    private String userVmType;
+
     @Column(name = "project_id")
     private long projectId;
 
@@ -439,6 +445,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "dynamically_scalable")
     private boolean isDynamicallyScalable;
 
+    @Column(name = "delete_protection")
+    protected Boolean deleteProtection;
+
 
     public UserVmJoinVO() {
         // Empty constructor
@@ -463,6 +472,10 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public long getDiskOfferingId() {
         return diskOfferingId;
+    }
+
+    public boolean getKvdoEnable() {
+        return kvdoEnable;
     }
 
     public void setPassword(String password) {
@@ -825,6 +838,10 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return userData;
     }
 
+    public String getUserVmType() {
+        return userVmType;
+    }
+
     public long getGuestOsId() {
         return guestOsId;
     }
@@ -945,6 +962,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return isDynamicallyScalable;
     }
 
+    public Boolean getDeleteProtection() {
+        return deleteProtection;
+    }
 
     @Override
     public Class<?> getEntityType() {

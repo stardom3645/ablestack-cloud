@@ -16,21 +16,21 @@
 // under the License.
 package com.cloud.hypervisor.kvm.resource;
 
+import com.cloud.agent.properties.AgentProperties;
+import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.utils.qemu.QemuObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import com.cloud.agent.properties.AgentProperties;
-import com.cloud.agent.properties.AgentPropertiesFileHandler;
+
 
 public class LibvirtVMDef {
     protected static Logger LOGGER = LogManager.getLogger(LibvirtVMDef.class);
@@ -113,6 +113,8 @@ public class LibvirtVMDef {
         }
 
         private GuestType _type;
+        private String manufacturer;
+        private String product;
         private BootType _boottype;
         private BootMode _bootmode;
         private String _arch;
@@ -142,6 +144,28 @@ public class LibvirtVMDef {
 
         public GuestType getGuestType() {
             return _type;
+        }
+
+        public String getManufacturer() {
+            if (StringUtils.isEmpty(manufacturer)) {
+                return "Apache Software Foundation";
+            }
+            return manufacturer;
+        }
+
+        public void setManufacturer(String manufacturer) {
+            this.manufacturer = manufacturer;
+        }
+
+        public String getProduct() {
+            if (StringUtils.isEmpty(product)) {
+                return "CloudStack KVM Hypervisor";
+            }
+            return product;
+        }
+
+        public void setProduct(String product) {
+            this.product = product;
         }
 
         public void setNvram(String nvram) { _nvram = nvram; }
@@ -210,9 +234,10 @@ public class LibvirtVMDef {
 
                 guestDef.append("<sysinfo type='smbios'>\n");
                 guestDef.append("<system>\n");
-                guestDef.append("<entry name='manufacturer'>ABLECLOUD CO.LTD</entry>\n");
-                guestDef.append("<entry name='product'>CloudStack - ABLESTACK CELL Hypervisor</entry>\n");
+                guestDef.append("<entry name='manufacturer'>" + getManufacturer() +"</entry>\n");
+                guestDef.append("<entry name='product'>" + getProduct() + "</entry>\n");
                 guestDef.append("<entry name='uuid'>" + _uuid + "</entry>\n");
+                guestDef.append("<entry name='serial'>" + _uuid + "</entry>\n");
                 guestDef.append("</system>\n");
                 guestDef.append("</sysinfo>\n");
 
@@ -767,6 +792,7 @@ public class LibvirtVMDef {
         private DiskFmtType _diskFmtType; /* qcow2, raw etc. */
         private boolean _readonly = false;
         private boolean _shareable = false;
+        private boolean _kvdoEnable = false;
         private boolean _deferAttach = false;
         private Long _bytesReadRate;
         private Long _bytesReadRateMax;
@@ -897,8 +923,8 @@ public class LibvirtVMDef {
             }
         }
 
-        public void defISODisk(String volPath) {
-            _diskType = DiskType.FILE;
+        public void defISODisk(String volPath, DiskType diskType) {
+            _diskType = diskType;
             _deviceType = DeviceType.CDROM;
             _sourcePath = volPath;
             _diskLabel = getDevLabel(3, DiskBus.IDE, true);
@@ -907,8 +933,8 @@ public class LibvirtVMDef {
             _bus = DiskBus.IDE;
         }
 
-        public void defISODisk(String volPath, boolean isUefiEnabled) {
-            _diskType = DiskType.FILE;
+        public void defISODisk(String volPath, boolean isUefiEnabled, DiskType diskType) {
+            _diskType = diskType;
             _deviceType = DeviceType.CDROM;
             _sourcePath = volPath;
             _bus = isUefiEnabled ? DiskBus.SATA : DiskBus.IDE;
@@ -917,18 +943,18 @@ public class LibvirtVMDef {
             _diskCacheMode = DiskCacheMode.NONE;
         }
 
-        public void defISODisk(String volPath, Integer devId) {
-            defISODisk(volPath, devId, null);
+        public void defISODisk(String volPath, Integer devId, DiskType diskType) {
+            defISODisk(volPath, devId, null, diskType);
         }
 
-        public void defISODisk(String volPath, Integer devId, String diskLabel) {
+        public void defISODisk(String volPath, Integer devId, String diskLabel, DiskType diskType) {
             if (devId == null && StringUtils.isBlank(diskLabel)) {
                 LOGGER.debug(String.format("No ID or label informed for volume [%s].", volPath));
-                defISODisk(volPath);
+                defISODisk(volPath, diskType);
                 return;
             }
 
-            _diskType = DiskType.FILE;
+            _diskType = diskType;
             _deviceType = DeviceType.CDROM;
             _sourcePath = volPath;
 
@@ -945,11 +971,11 @@ public class LibvirtVMDef {
             _bus = DiskBus.IDE;
         }
 
-        public void defISODisk(String volPath, Integer devId,boolean isSecure) {
+        public void defISODisk(String volPath, Integer devId, boolean isSecure, DiskType diskType) {
             if (!isSecure) {
-                defISODisk(volPath, devId);
+                defISODisk(volPath, devId, diskType);
             } else {
-                _diskType = DiskType.FILE;
+                _diskType = diskType;
                 _deviceType = DeviceType.CDROM;
                 _sourcePath = volPath;
                 _diskLabel = getDevLabel(devId, DiskBus.SATA, true);
@@ -1028,6 +1054,10 @@ public class LibvirtVMDef {
 
         public void setSharable() {
             _shareable = true;
+        }
+
+        public void setKvdoEnable() {
+            _kvdoEnable = true;
         }
 
         public void setAttachDeferred(boolean deferAttach) {
@@ -1901,17 +1931,61 @@ public class LibvirtVMDef {
         @Override
         public String toString() {
             StringBuilder videoBuilder = new StringBuilder();
-            if (_videoModel != null && !_videoModel.isEmpty()){
+            if (_videoModel != null && !_videoModel.isEmpty()) {
                 videoBuilder.append("<video>\n");
                 if (_videoRam != 0) {
-                    videoBuilder.append("<model type='" + _videoModel + "' vram='" + _videoRam + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel)
+                                .append("' vram='").append(_videoRam).append("'/>\n");
                 } else {
-                    videoBuilder.append("<model type='" + _videoModel + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel).append("'/>\n");
                 }
                 videoBuilder.append("</video>\n");
                 return videoBuilder.toString();
             }
             return "";
+        }
+    }
+
+    public static class VideoDef2 {
+        private String _videoModel;
+        private int _videoRam;
+
+        public VideoDef2(String videoModel, int videoRam) {
+            _videoModel = videoModel;
+            _videoRam = videoRam;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder videoBuilder = new StringBuilder();
+            if (_videoModel != null && !_videoModel.isEmpty()) {
+                videoBuilder.append("<video>\n");
+                if (_videoRam != 0) {
+                    videoBuilder.append("<model type='").append(_videoModel)
+                                .append("' vram='").append(_videoRam).append("'/>\n");
+                } else {
+                    videoBuilder.append("<model type='").append(_videoModel).append("'/>\n");
+                }
+                videoBuilder.append("</video>\n");
+                return videoBuilder.toString();
+            }
+            return "";
+        }
+    }
+
+    public static class SoundDef {
+        private String _soundModel;
+        public SoundDef(String soundModel) {
+            _soundModel = soundModel;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder soundBuilder = new StringBuilder();
+            if (_soundModel != null && !_soundModel.isEmpty()) {
+                soundBuilder.append("<sound model='" + _soundModel + "'/>\n");
+            }
+            return soundBuilder.toString();
         }
     }
 

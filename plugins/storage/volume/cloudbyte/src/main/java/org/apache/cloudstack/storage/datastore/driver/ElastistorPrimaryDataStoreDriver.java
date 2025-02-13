@@ -133,7 +133,7 @@ public class ElastistorPrimaryDataStoreDriver extends CloudStackPrimaryDataStore
             capacityIops = capacityIops - Iops;
 
             if (capacityIops < 0) {
-                throw new CloudRuntimeException("IOPS not available. [pool:" + storagePool.getName() + "] [availiops:" + capacityIops + "] [requirediops:" + Iops + "]");
+                throw new CloudRuntimeException(String.format("IOPS not available. [pool:%s] [availiops:%d] [requirediops:%d]", storagePool, capacityIops, Iops));
             }
 
             String protocoltype = null;
@@ -436,5 +436,9 @@ public class ElastistorPrimaryDataStoreDriver extends CloudStackPrimaryDataStore
     @Override
     public boolean canHostAccessStoragePool(Host host, StoragePool pool) {
         return true;
+    }
+
+    @Override
+    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
     }
 }

@@ -38,6 +38,7 @@ import java.util.Map;
 import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.storage.command.browser.ListRbdObjectsAnswer;
+
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsAnswer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,11 +49,10 @@ import com.cloud.agent.IAgentControl;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.StartupCommand;
-
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.Script;
-
+import com.cloud.agent.api.ListHostDeviceAnswer;
 
 public abstract class ServerResourceBase implements ServerResource {
     protected Logger logger = LogManager.getLogger(getClass());
@@ -158,6 +158,24 @@ public abstract class ServerResourceBase implements ServerResource {
         }
 
         return true;
+    }
+
+    protected Answer listHostDevices() {
+        List<String> hostDevicesText = new ArrayList<>();
+        Script listCommand = new Script("lspci");
+        OutputInterpreter.AllLinesParser parser = new OutputInterpreter.AllLinesParser();
+        String result = listCommand.execute(parser);
+        if (result == null && parser.getLines() != null) {
+            String[] lines = parser.getLines().split("\\n");
+            for (String line : lines) {
+                if (!line.contains("System peripheral") && !line.contains("PIC")
+                        && !line.contains("Performance counters")) {
+                    String hostDevicesTexts = line;
+                    hostDevicesText.add(hostDevicesTexts);
+                }
+            }
+        }
+        return new ListHostDeviceAnswer(true, hostDevicesText);
     }
 
     protected Answer createImageRbd(String names, long sizes, String poolPath) {
@@ -470,4 +488,3 @@ protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int 
         return true;
     }
 }
-

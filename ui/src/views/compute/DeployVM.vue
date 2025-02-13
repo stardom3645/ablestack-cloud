@@ -152,6 +152,18 @@
                       @tabChange="key => onTabChange(key, 'tabKey')">
                       <div v-if="tabKey === 'templateid'">
                         {{ $t('message.template.desc') }}
+                        <div v-if="isZoneSelectedMultiArch" style="width: 100%; margin-top: 5px">
+                          {{ $t('message.template.arch') }}
+                          <a-select
+                            style="width: 100%"
+                            v-model:value="selectedArchitecture"
+                            :defaultValue="architectureTypes.opts[0].id"
+                            @change="arch => changeArchitecture(arch, true)">
+                            <a-select-option v-for="opt in architectureTypes.opts" :key="opt.id">
+                              {{ opt.name || opt.description }}
+                            </a-select-option>
+                          </a-select>
+                        </div>
                         <template-iso-selection
                           input-decorator="templateid"
                           :items="options.templates"
@@ -181,6 +193,18 @@
                       </div>
                       <div v-else-if="tabKey === 'isoid'">
                         {{ $t('message.iso.desc') }}
+                        <div v-if="isZoneSelectedMultiArch" style="width: 100%; margin-top: 5px">
+                          {{ $t('message.iso.arch') }}
+                          <a-select
+                            style="width: 100%"
+                            v-model:value="selectedArchitecture"
+                            :defaultValue="architectureTypes.opts[0].id"
+                            @change="arch => changeArchitecture(arch, false)">
+                            <a-select-option v-for="opt in architectureTypes.opts" :key="opt.id">
+                              {{ opt.name || opt.description }}
+                            </a-select-option>
+                          </a-select>
+                        </div>
                         <template-iso-selection
                           input-decorator="isoid"
                           :items="options.isos"
@@ -228,6 +252,9 @@
                     <a-form-item class="form-item-hidden">
                       <a-input v-model:value="form.volumeId" />
                     </a-form-item>
+                    <a-form-item class="form-item-hidden">
+                      <a-input v-model:value="form.templateKvdoEnable" />
+                    </a-form-item>
                   </div>
                 </template>
               </a-step>
@@ -271,7 +298,7 @@
                       :minimum-cpunumber="templateConfigurationExists && selectedTemplateConfiguration && selectedTemplateConfiguration.cpunumber ? selectedTemplateConfiguration.cpunumber : 0"
                       :minimum-cpuspeed="templateConfigurationExists && selectedTemplateConfiguration && selectedTemplateConfiguration.cpuspeed ? selectedTemplateConfiguration.cpuspeed : 0"
                       :minimum-memory="templateConfigurationExists && selectedTemplateConfiguration && selectedTemplateConfiguration.memory ? selectedTemplateConfiguration.memory : 0"
-                      @select-compute-item="($event) => updateComputeOffering($event)"
+                      @select-compute-item="($event, $kvdoEnable) => updateComputeOffering($event, $kvdoEnable)"
                       @handle-search-filter="($event) => handleSearchFilter('serviceOfferings', $event)"
                     ></compute-offering-selection>
                     <compute-selection
@@ -281,6 +308,7 @@
                       memoryInputDecorator="memory"
                       :preFillContent="dataPreFill"
                       :computeOfferingId="instanceConfig.computeofferingid"
+                      :computeOfferingKvdoEnable="serviceOffering.kvdoenable"
                       :isConstrained="isOfferingConstrained(serviceOffering)"
                       :minCpu="'serviceofferingdetails' in serviceOffering ? serviceOffering.serviceofferingdetails.mincpunumber*1 : 0"
                       :maxCpu="'serviceofferingdetails' in serviceOffering ? serviceOffering.serviceofferingdetails.maxcpunumber*1 : Number.MAX_SAFE_INTEGER"
@@ -307,6 +335,9 @@
                       <a-form-item class="form-item-hidden" name="memory" ref="memory">
                         <a-input v-model:value="form.memory"/>
                       </a-form-item>
+                      <!-- <a-form-item class="form-item-hidden">
+                        <a-input v-model:value="form.computeOfferingKvdoEnable" />
+                      </a-form-item> -->
                     </span>
                     <span v-if="tabKey!=='isoid' && tabKey!=='volumeId'">
                       {{ $t('label.override.root.diskoffering') }}
@@ -362,6 +393,9 @@
                               @update-root-disk-iops-value="updateIOPSValue"/>
                             <a-form-item class="form-item-hidden">
                               <a-input v-model:value="form.rootdisksize"/>
+                            </a-form-item>
+                            <a-form-item class="form-item-hidden">
+                              <a-input v-model:value="form.offeringKvdoEnable" />
                             </a-form-item>
                           </div>
                         </template>
@@ -556,7 +590,7 @@
                   </span>
                   <div style="margin-top: 15px" v-if="showDetails">
                     <div
-                      v-if="vm.templateid && ['KVM', 'VMware', 'XenServer'].includes(hypervisor) && !template.deployasis">
+                      v-if="(vm.templateid && ['KVM', 'VMware', 'XenServer'].includes(hypervisor) && !template.deployasis) || tabKey == 'volumeId'">
                       <a-form-item :label="$t('label.boottype')" name="boottype" ref="boottype">
                         <a-select
                           v-model:value="form.boottype"
@@ -743,7 +777,7 @@
                         @select-affinity-group-item="($event) => updateAffinityGroups($event)"
                         @handle-search-filter="($event) => handleSearchFilter('affinityGroups', $event)"/>
                     </a-form-item>
-                    <a-form-item name="nicmultiqueuenumber" ref="nicmultiqueuenumber" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="nicmultiqueuenumber" ref="nicmultiqueuenumber" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.nicmultiqueuenumber')" :tooltip="$t('label.nicmultiqueuenumber.tooltip')"/>
                       </template>
@@ -751,7 +785,7 @@
                         style="width: 100%;"
                         v-model:value="form.nicmultiqueuenumber" />
                     </a-form-item>
-                    <a-form-item name="nicpackedvirtqueuesenabled" ref="nicpackedvirtqueuesenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="nicpackedvirtqueuesenabled" ref="nicpackedvirtqueuesenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.nicpackedvirtqueuesenabled')" :tooltip="$t('label.nicpackedvirtqueuesenabled.tooltip')"/>
                       </template>
@@ -760,7 +794,7 @@
                         :checked="nicpackedvirtqueuesenabled"
                         @change="val => { nicpackedvirtqueuesenabled = val }"/>
                     </a-form-item>
-                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.iothreadsenabled')" :tooltip="$t('label.iothreadsenabled.tooltip')"/>
                       </template>
@@ -771,7 +805,7 @@
                           @change="val => { iothreadsenabled = val }"/>
                       </a-form-item>
                     </a-form-item>
-                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.iodriverpolicy')" :tooltip="$t('label.iodriverpolicy.tooltip')"/>
                       </template>
@@ -863,13 +897,13 @@
               </a-button>
               <a-dropdown-button style="margin-left: 10px" type="primary" ref="submit" @click="handleSubmit" :loading="loading.deploy">
                 <rocket-outlined />
-                {{ $t('label.launch.vm') }}
+                {{ this.form.startvm ? $t('label.launch.vm') : $t('label.create.vm') }}
                 <template #icon><down-outlined /></template>
                 <template #overlay>
                   <a-menu type="primary" @click="handleSubmitAndStay" theme="dark" class="btn-stay-on-page">
                     <a-menu-item type="primary" key="1">
                       <rocket-outlined />
-                      {{ $t('label.launch.vm.and.stay') }}
+                      {{ this.form.startvm ? $t('label.launch.vm.and.stay') : $t('label.create.vm.and.stay') }}
                     </a-menu-item>
                   </a-menu>
                 </template>
@@ -953,6 +987,7 @@ export default {
       podId: null,
       clusterId: null,
       zoneSelected: false,
+      isZoneSelectedMultiArch: false,
       dynamicscalingenabled: true,
       templateKey: 0,
       showRegisteredUserdata: true,
@@ -1109,7 +1144,19 @@ export default {
       selectedZone: '',
       formModel: {},
       nicToNetworkSelection: [],
-      rbdSelected: {}
+      rbdSelected: {},
+      selectedArchitecture: null,
+      architectureTypes: {
+        opts: [
+          {
+            id: 'x86_64',
+            description: 'AMD 64 bits (x86_64)'
+          }, {
+            id: 'aarch64',
+            description: 'ARM 64 bits (aarch64)'
+          }
+        ]
+      }
     }
   },
   computed: {
@@ -1123,25 +1170,54 @@ export default {
       return ['User'].includes(this.$store.getters.userInfo.roletype) || store.getters.project.id
     },
     diskSize () {
-      let dataDiskSize
-      let rootDiskSize = _.get(this.instanceConfig, 'rootdisksize', 0)
-      const diskOfferingDiskSize = _.get(this.diskOffering, 'disksize', 0)
-      const customDiskSize = _.get(this.instanceConfig, 'size', 0)
+      const customRootDiskSize = _.get(this.instanceConfig, 'rootdisksize', null)
+      const customDataDiskSize = _.get(this.instanceConfig, 'size', null)
+      let computeOfferingDiskSize = _.get(this.serviceOffering, 'rootdisksize', null)
+      computeOfferingDiskSize = computeOfferingDiskSize > 0 ? computeOfferingDiskSize : null
+      const diskOfferingDiskSize = _.get(this.diskOffering, 'disksize', null)
+      const overrideDiskOfferingDiskSize = _.get(this.overrideDiskOffering, 'disksize', null)
 
+      let rootDiskSize
+      let dataDiskSize
       if (this.vm.isoid != null) {
-        rootDiskSize = diskOfferingDiskSize > 0 ? diskOfferingDiskSize : customDiskSize
+        rootDiskSize = this.diskOffering?.iscustomized ? customDataDiskSize : diskOfferingDiskSize
       } else {
-        dataDiskSize = diskOfferingDiskSize > 0 ? diskOfferingDiskSize : customDiskSize
+        rootDiskSize = this.overrideDiskOffering?.iscustomized ? customRootDiskSize : overrideDiskOfferingDiskSize || computeOfferingDiskSize || this.dataPreFill.minrootdisksize
+        dataDiskSize = this.diskOffering?.iscustomized ? customDataDiskSize : diskOfferingDiskSize
       }
 
       const size = []
-      if (rootDiskSize > 0) {
+      if (rootDiskSize) {
         size.push(`${rootDiskSize} GB (Root)`)
       }
-      if (dataDiskSize > 0) {
+      if (dataDiskSize) {
         size.push(`${dataDiskSize} GB (Data)`)
       }
       return size.join(' | ')
+    },
+    rootDiskOffering () {
+      const rootDiskOffering = this.vm.isoid != null ? this.diskOffering : this.overrideDiskOffering
+
+      const id = _.get(rootDiskOffering, 'id', null)
+      const displayText = _.get(rootDiskOffering, 'displaytext', null)
+
+      return {
+        id: id,
+        displayText: `${displayText} (Root)`
+      }
+    },
+    dataDiskOffering () {
+      if (this.vm.isoid != null) {
+        return null
+      }
+
+      const id = _.get(this.diskOffering, 'id', null)
+      const displayText = _.get(this.diskOffering, 'displaytext', null)
+
+      return {
+        id: id,
+        displayText: `${displayText} (Data)`
+      }
     },
     affinityGroupIds () {
       return _.map(this.affinityGroups, 'id')
@@ -1397,7 +1473,19 @@ export default {
       return tabList
     },
     showSecurityGroupSection () {
-      return (this.networks.length > 0 && this.zone?.securitygroupsenabled) || (this.zone?.networktype === 'Basic')
+      if (this.networks.length < 1) {
+        return false
+      }
+      for (const network of this.options.networks) {
+        if (this.form.networkids && this.form.networkids.includes(network.id)) {
+          for (const service of network.service) {
+            if (service.name === 'SecurityGroup') {
+              return true
+            }
+          }
+        }
+      }
+      return false
     },
     isUserAllowedToListSshKeys () {
       return Boolean('listSSHKeyPairs' in this.$store.getters.apis)
@@ -1496,16 +1584,10 @@ export default {
           this.vm.hostname = host.name
         }
 
-        if (this.serviceOffering?.rootdisksize) {
-          this.vm.disksizetotalgb = this.serviceOffering.rootdisksize
-        } else if (this.diskSize) {
+        if (this.diskSize) {
           this.vm.disksizetotalgb = this.diskSize
         } else {
           this.vm.disksizetotalgb = null
-        }
-
-        if (this.diskSize) {
-          this.vm.disksizetotalgb = this.diskSize
         }
 
         if (this.networks) {
@@ -1562,6 +1644,11 @@ export default {
           this.vm.diskofferingname = this.diskOffering.displaytext
           this.vm.diskofferingsize = this.diskOffering.disksize
         }
+
+        this.vm.rootdiskofferingid = this.rootDiskOffering?.id
+        this.vm.rootdiskofferingdisplaytext = this.rootDiskOffering?.displayText
+        this.vm.datadiskofferingid = this.dataDiskOffering?.id
+        this.vm.datadiskofferingdisplaytext = this.dataDiskOffering?.displayText
 
         if (this.affinityGroups) {
           this.vm.affinitygroup = this.affinityGroups
@@ -1846,7 +1933,6 @@ export default {
         this.form.templateid = value
         this.form.isoid = null
         this.form.volumeId = null
-        this.resetFromTemplateConfiguration()
         let template = ''
         for (const key in this.options.templates) {
           var t = _.find(_.get(this.options.templates[key], 'template', []), (option) => option.id === value)
@@ -1862,9 +1948,11 @@ export default {
             break
           }
         }
+        this.resetFromTemplateConfiguration()
         if (template) {
           var size = template.size / (1024 * 1024 * 1024) || 0 // bytes to GB
           this.dataPreFill.minrootdisksize = Math.ceil(size)
+          this.dataPreFill.kvdoenable = template.kvdoenable
           this.updateTemplateLinkedUserData(template.userdataid)
           this.userdataDefaultOverridePolicy = template.userdatapolicy
           this.form.dynamicscalingenabled = template.isdynamicallyscalable
@@ -1876,6 +1964,9 @@ export default {
           this.form.iothreadsenabled = template.details && Object.prototype.hasOwnProperty.call(template.details, 'iothreads')
           this.form.iodriverpolicy = template.details?.['io.policy']
           this.form.keyboard = template.details?.keyboard
+          this.form.templateKvdoEnable = template.kvdoenable
+          this.showOverrideDiskOfferingOption = false
+          this.updateOverrideRootDiskShowParam(false)
           if (template.details['vmware-to-kvm-mac-addresses']) {
             this.dataPreFill.macAddressArray = JSON.parse(template.details['vmware-to-kvm-mac-addresses'])
           }
@@ -1911,8 +2002,9 @@ export default {
         this.form[name] = value
       }
     },
-    updateComputeOffering (id) {
+    updateComputeOffering (id, kvdoEnable) {
       this.form.computeofferingid = id
+      this.form.computeOfferingKvdoEnable = kvdoEnable
       setTimeout(() => {
         this.updateTemplateConfigurationOfferingDetails(id)
       }, 500)
@@ -1963,18 +2055,16 @@ export default {
         this.form.userdataid = undefined
         return
       }
+
       this.form.userdataid = id
       this.userDataParams = []
       api('listUserData', { id: id }).then(json => {
         const resp = json?.listuserdataresponse?.userdata || []
         if (resp[0]) {
-          var params = resp[0].params
-          if (params) {
-            var dataParams = params.split(',')
-          }
-          var that = this
-          dataParams.forEach(function (val, index) {
-            that.userDataParams.push({
+          const params = resp[0].params
+          const dataParams = params ? params.split(',') : []
+          dataParams.forEach((val, index) => {
+            this.userDataParams.push({
               id: index,
               key: val
             })
@@ -2016,6 +2106,14 @@ export default {
     },
     getText (option) {
       return _.get(option, 'displaytext', _.get(option, 'name'))
+    },
+    changeArchitecture (arch, isTemplate) {
+      this.selectedArchitecture = arch
+      if (isTemplate) {
+        this.fetchAllTemplates()
+      } else {
+        this.fetchAllIsos()
+      }
     },
     handleSubmitAndStay (e) {
       this.form.stayonpage = true
@@ -2084,6 +2182,14 @@ export default {
         if (this.tabKey === 'templateid') {
           deployVmData.templateid = values.templateid
           values.hypervisor = null
+          if (values.templateKvdoEnable !== values.computeOfferingKvdoEnable) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('message.step.3.kvdo')
+            })
+            this.loading.deploy = false
+            return
+          }
         } else if (this.tabKey === 'isoid') {
           deployVmData.templateid = values.isoid
         } else if (this.tabKey === 'volumeId') {
@@ -2259,7 +2365,7 @@ export default {
         const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
 
         if (values.vmNumber) {
-          for (var num = 0; num < Number(values.vmNumber); num++) {
+          for (var num = 1; num <= Number(values.vmNumber); num++) {
             let args = ''
             let data = ''
             if (values.name) {
@@ -2275,9 +2381,8 @@ export default {
                   this.loading.deploy = false
                   return
                 }
-                var numP = num + 1
-                deployVmData.name = values.name + '-' + numP
-                deployVmData.displayname = values.name + '-' + numP
+                deployVmData.name = values.name + '-' + num
+                deployVmData.displayname = values.name + '-' + num
               }
             }
             args = httpMethod === 'POST' ? {} : deployVmData
@@ -2289,48 +2394,40 @@ export default {
               } else {
                 jobId = await this.deployVM(args, httpMethod, data)
               }
-              await this.$pollJob({
-                jobId,
-                title,
-                description,
-                successMethod: result => {
-                  const vm = result.jobresult.virtualmachine
-                  const name = vm.displayname || vm.name || vm.id
-                  if (vm.password) {
-                    this.$notification.success({
-                      message: password + ` ${this.$t('label.for')} ` + name,
-                      description: vm.password,
-                      btn: () => h(
-                        Button,
-                        {
-                          type: 'primary',
-                          size: 'small',
-                          onClick: () => this.copyToClipboard(vm.password)
-                        },
-                        () => [this.$t('label.copy.password')]
-                      ),
-                      duration: 0
-                    })
+              if (num === 1) {
+                this.$pollJob({
+                  jobId,
+                  title,
+                  description,
+                  successMethod: result => {
+                    const vm = result.jobresult.virtualmachine
+                    const name = vm.displayname || vm.name || vm.id
+                    if (vm.password) {
+                      this.$notification.success({
+                        message: password + ` ${this.$t('label.for')} ` + name,
+                        description: vm.password,
+                        btn: () => h(
+                          Button,
+                          {
+                            type: 'primary',
+                            size: 'small',
+                            onClick: () => this.copyToClipboard(vm.password)
+                          },
+                          () => [this.$t('label.copy.password')]
+                        ),
+                        duration: 0
+                      })
+                    }
+                    if (!values.stayonpage) {
+                      eventBus.emit('vm-refresh-data')
+                    }
+                  },
+                  loadingMessage: `${title} ${this.$t('label.in.progress')}`,
+                  catchMessage: this.$t('error.fetching.async.job.result'),
+                  action: {
+                    isFetchData: false
                   }
-                  if (!values.stayonpage) {
-                    eventBus.emit('vm-refresh-data')
-                  }
-                },
-                loadingMessage: `${title} ${this.$t('label.in.progress')}`,
-                catchMessage: this.$t('error.fetching.async.job.result'),
-                action: {
-                  isFetchData: false
-                }
-              })
-
-              // Sending a refresh in case it hasn't picked up the new VM
-              if (values.vmNumber === 1 || !values.stayonpage) {
-                await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-                  eventBus.emit('vm-refresh-data')
                 })
-              }
-              if (!values.stayonpage) {
-                await this.$router.back()
               }
             } catch (error) {
               if (error.message !== undefined) {
@@ -2338,6 +2435,15 @@ export default {
               }
               this.loading.deploy = false
             }
+            if (values.templateKvdoEnable && values.vmNumber > 1) {
+              await new Promise(resolve => setTimeout(resolve, 6000)).then(() => {})
+            }
+          }
+          await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+            eventBus.emit('vm-refresh-data')
+          })
+          if (!values.stayonpage) {
+            await this.$router.back()
           }
           this.form.stayonpage = false
           this.loading.deploy = false
@@ -2352,7 +2458,6 @@ export default {
             })
             return
           }
-
           this.$notification.error({
             message: this.$t('message.request.failed'),
             description: this.$t('error.form.message')
@@ -2386,14 +2491,14 @@ export default {
         domainid: store.getters.userInfo.domainid,
         account: store.getters.userInfo.account
       }
-      if (OwnerOptions.selectedAccountType === this.$t('label.account')) {
+      if (OwnerOptions.selectedAccountType === 'Account') {
         if (!OwnerOptions.selectedAccount) {
           return
         }
         this.owner.account = OwnerOptions.selectedAccount
         this.owner.domainid = OwnerOptions.selectedDomain
         this.owner.projectid = null
-      } else if (OwnerOptions.selectedAccountType === this.$t('label.project')) {
+      } else if (OwnerOptions.selectedAccountType === 'Project') {
         if (!OwnerOptions.selectedProject) {
           return
         }
@@ -2499,6 +2604,9 @@ export default {
         args.pageSize = args.pageSize || 10
       }
       args.zoneid = _.get(this.zone, 'id')
+      if (this.isZoneSelectedMultiArch) {
+        args.arch = this.selectedArchitecture
+      }
       args.account = store.getters.project?.id ? null : this.owner.account
       args.domainid = store.getters.project?.id ? null : this.owner.domainid
       args.projectid = store.getters.project?.id || this.owner.projectid
@@ -2524,6 +2632,9 @@ export default {
         args.pageSize = args.pageSize || 10
       }
       args.zoneid = _.get(this.zone, 'id')
+      if (this.isZoneSelectedMultiArch) {
+        args.arch = this.selectedArchitecture
+      }
       args.isoFilter = isoFilter
       args.bootable = true
       args.showicon = 'true'
@@ -2621,6 +2732,10 @@ export default {
       this.podId = null
       this.clusterId = null
       this.zone = _.find(this.options.zones, (option) => option.id === value)
+      this.isZoneSelectedMultiArch = this.zone.ismultiarch
+      if (this.isZoneSelectedMultiArch) {
+        this.selectedArchitecture = this.architectureTypes.opts[0].id
+      }
       this.zoneSelected = true
       this.form.startvm = true
       this.selectedZone = this.zoneId
@@ -2681,6 +2796,9 @@ export default {
       }
     },
     handleSearchFilter (name, options) {
+      if (name === 'serviceOfferings') {
+        this.params[name].options.kvdoenable = this.template.kvdoenable
+      }
       this.params[name].options = { ...this.params[name].options, ...options }
       this.fetchOptions(this.params[name], name)
     },
@@ -2903,7 +3021,7 @@ export default {
             if (this.selectedTemplateConfiguration) {
               this.updateFieldValue('templateConfiguration', this.selectedTemplateConfiguration.id)
             }
-            this.updateComputeOffering(null) // reset as existing selection may be incompatible
+            this.updateComputeOffering(null, this.template.kvdoEnable) // reset as existing selection may be incompatible
           }
         }, 500)
         this.updateFormProperties()
@@ -2912,7 +3030,7 @@ export default {
     onSelectTemplateConfigurationId (value) {
       this.selectedTemplateConfiguration = _.find(this.templateConfigurations, (option) => option.id === value)
       this.handleTemplateConfiguration()
-      this.updateComputeOffering(null)
+      this.updateComputeOffering(null, null)
     },
     updateTemplateConfigurationOfferingDetails (offeringId) {
       this.rootDiskSizeFixed = 0

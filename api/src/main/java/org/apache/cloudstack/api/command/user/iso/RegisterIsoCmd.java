@@ -18,11 +18,13 @@ package org.apache.cloudstack.api.command.user.iso;
 
 import java.util.List;
 
+import com.cloud.cpu.CPU;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
+import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
@@ -113,10 +115,20 @@ public class RegisterIsoCmd extends BaseCmd implements UserCmd {
             description = "true if ISO should bypass Secondary Storage and be downloaded to Primary Storage on deployment")
     private Boolean directDownload;
 
+    @Parameter(name=ApiConstants.KVDO_ENABLE,
+            type = CommandType.BOOLEAN,
+            description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
+    private Boolean kvdoEnable;
+
     @Parameter(name = ApiConstants.PASSWORD_ENABLED,
             type = CommandType.BOOLEAN,
             description = "true if password reset feature is supported; default is false")
     private Boolean passwordEnabled;
+
+    @Parameter(name = ApiConstants.ARCH, type = CommandType.STRING,
+            description = "the CPU arch of the ISO. Valid options are: x86_64, aarch64",
+            since = "4.20")
+    private String arch;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -221,12 +233,24 @@ public class RegisterIsoCmd extends BaseCmd implements UserCmd {
         return directDownload == null ? false : directDownload;
     }
 
+    public boolean isKvdoEnable() {
+        return kvdoEnable == null ? false : kvdoEnable;
+    }
+
     public void setDirectDownload(Boolean directDownload) {
         this.directDownload = directDownload;
     }
 
     public boolean isPasswordEnabled() {
         return passwordEnabled == null ? false : passwordEnabled;
+    }
+
+    public void setArch(String arch) {
+        this.arch = arch;
+    }
+
+    public CPU.CPUArch getArch() {
+        return CPU.CPUArch.fromType(arch);
     }
 
     /////////////////////////////////////////////////////

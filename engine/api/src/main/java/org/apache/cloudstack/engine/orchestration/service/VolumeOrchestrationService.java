@@ -79,7 +79,7 @@ public interface VolumeOrchestrationService {
     ConfigKey<Long> MaxVolumeSize = new ConfigKey<Long>("Storage",
             Long.class,
             "storage.max.volume.size",
-            "2000",
+            "10000",
             "The maximum size for a volume (in GiB).",
             true);
 
@@ -95,6 +95,8 @@ public interface VolumeOrchestrationService {
     String getVmNameOnVolume(Volume volume);
 
     StoragePool findChildDataStoreInDataStoreCluster(DataCenter dc, Pod pod, Long clusterId, Long hostId, VirtualMachine vm, Long datastoreClusterId);
+
+    VolumeInfo cloneVolumeFromSnapshot(Volume volume, Snapshot snapshot, UserVm vm) throws StorageUnavailableException;
 
     VolumeInfo createVolumeFromSnapshot(Volume volume, Snapshot snapshot, UserVm vm) throws StorageUnavailableException;
 

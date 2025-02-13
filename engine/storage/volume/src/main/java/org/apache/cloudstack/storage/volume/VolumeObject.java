@@ -332,7 +332,13 @@ public class VolumeObject implements VolumeInfo {
     @Override
     public boolean getShareable() {
         DiskOfferingVO diskOfferingVO = getDiskOfferingVO();
-        return diskOfferingVO.getShareable();
+        return diskOfferingVO == null ? false : diskOfferingVO.getShareable();
+    }
+
+    @Override
+    public boolean getKvdoEnable() {
+        DiskOfferingVO diskOfferingVO = getDiskOfferingVO();
+        return diskOfferingVO.getKvdoEnable();
     }
 
     @Override
@@ -402,6 +408,9 @@ public class VolumeObject implements VolumeInfo {
               || event == ObjectInDataStoreStateMachine.Event.MigrateDataRequested) {
                 return;
             }
+        }
+        if (event == ObjectInDataStoreStateMachine.Event.FlattenRequested) {
+            return;
         }
 
         stateTransit(getMapOfEvents().get(event));
@@ -906,7 +915,7 @@ public class VolumeObject implements VolumeInfo {
                     volumeVO.setPassphraseId(null);
                     volumeDao.persist(volumeVO);
 
-                    logger.debug(String.format("Checking to see if we can delete passphrase id %s", passphraseId));
+                    logger.debug("Checking to see if we can delete passphrase id {} for volume {}", passphraseId, volumeVO);
                     List<VolumeVO> volumes = volumeDao.listVolumesByPassphraseId(passphraseId);
 
                     if (volumes != null && !volumes.isEmpty()) {
@@ -942,7 +951,59 @@ public class VolumeObject implements VolumeInfo {
     }
 
     @Override
+    public boolean isDeleteProtection() {
+        return volumeVO.isDeleteProtection();
+    }
+
+    @Override
     public boolean isFollowRedirects() {
         return followRedirects;
+    }
+
+    @Override
+    public boolean getCompress() {
+        return volumeVO.getCompress();
+    }
+
+    @Override
+    public void setCompress(boolean compress) {
+        volumeVO.setCompress(compress);
+    }
+
+    @Override
+    public boolean getDedup() {
+        return volumeVO.getDedup();
+    }
+
+    @Override
+    public void setDedup(boolean dedup) {
+        volumeVO.setDedup(dedup);
+    }
+
+    @Override
+    public Long getUsedFsBytes() {
+        return volumeVO.getUsedFsBytes();
+    }
+
+    @Override
+    public void setUsedFsBytes(Long usedFsBytes) {
+        volumeVO.setUsedFsBytes(usedFsBytes);
+    }
+
+    @Override
+    public Long getUsedPhysicalSize() {
+        return volumeVO.getUsedPhysicalSize();
+    }
+
+    @Override
+    public void setUsedPhysicalSize(Long usedPhysicalSize) {
+        volumeVO.setUsedPhysicalSize(usedPhysicalSize);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("VolumeObject %s",
+                ReflectionToStringBuilderUtils.reflectOnlySelectedFields(
+                        this, "volumeVO", "dataStore"));
     }
 }

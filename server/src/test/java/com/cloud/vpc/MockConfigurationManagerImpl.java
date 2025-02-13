@@ -547,7 +547,8 @@ public class MockConfigurationManagerImpl extends ManagerBase implements Configu
                                                    Integer networkRate, Map<Service, Set<Provider>> serviceProviderMap, boolean isDefault, GuestType type, boolean systemOnly, Long serviceOfferingId,
                                                    boolean conserveMode, Map<Service, Map<Capability, String>> serviceCapabilityMap, boolean specifyIpRanges, boolean isPersistent,
                                                    Map<NetworkOffering.Detail, String> details, boolean egressDefaultPolicy, Integer maxconn, boolean enableKeepAlive, Boolean forVpc,
-                                                   Boolean forTungsten, boolean forNsx, String mode, List<Long> domainIds, List<Long> zoneIds, boolean enableOffering, NetUtils.InternetProtocol internetProtocol) {
+                                                   Boolean forTungsten, boolean forNsx, NetworkOffering.NetworkMode networkMode, List<Long> domainIds, List<Long> zoneIds, boolean enableOffering, NetUtils.InternetProtocol internetProtocol,
+                                                   NetworkOffering.RoutingMode routingMode, boolean specifyAsNumber) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -576,7 +577,7 @@ public class MockConfigurationManagerImpl extends ManagerBase implements Configu
      * @see com.cloud.configuration.ConfigurationManager#releaseDomainSpecificVirtualRanges(long)
      */
     @Override
-    public boolean releaseDomainSpecificVirtualRanges(long domainId) {
+    public boolean releaseDomainSpecificVirtualRanges(Domain domain) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -585,7 +586,7 @@ public class MockConfigurationManagerImpl extends ManagerBase implements Configu
      * @see com.cloud.configuration.ConfigurationManager#releaseAccountSpecificVirtualRanges(long)
      */
     @Override
-    public boolean releaseAccountSpecificVirtualRanges(long accountId) {
+    public boolean releaseAccountSpecificVirtualRanges(Account account) {
         // TODO Auto-generated method stub
         return false;
     }
