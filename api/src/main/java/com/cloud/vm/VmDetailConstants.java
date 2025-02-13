@@ -44,7 +44,9 @@ public interface VmDetailConstants {
     String KVM_VNC_PASSWORD = "kvm.vnc.password";
 
     // KVM specific, custom virtual GPU hardware
+    String SOUND= "sound";
     String VIDEO_HARDWARE = "video.hardware";
+    String VIDEO_HARDWARE_2 = "video.hardware_2";
     String VIDEO_RAM = "video.ram";
 
     //KVM specific, loop threads for block IO requests
@@ -75,6 +77,7 @@ public interface VmDetailConstants {
     String ENCRYPTED_PASSWORD = "Encrypted.Password";
 
     String CONFIG_DRIVE_LOCATION = "configDriveLocation";
+    String LAST_CONFIG_DRIVE_LOCATION = "lastConfigDriveLocation";
 
     String SKIP_DRS = "skipFromDRS";
 

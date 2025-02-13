@@ -93,7 +93,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "display name of the virtual machine")
     private String virtualMachineDisplayName;
 
-    @SerializedName("vmstate")
+    @SerializedName(ApiConstants.VIRTUAL_MACHINE_STATE)
     @Param(description = "state of the virtual machine")
     private String virtualMachineState;
 
@@ -144,6 +144,10 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @SerializedName(ApiConstants.DOMAIN)
     @Param(description = "the domain associated with the disk volume")
     private String domainName;
+
+    @SerializedName(ApiConstants.DOMAIN_PATH)
+    @Param(description = "path of the Domain the disk volume belongs to", since = "4.19.2.0")
+    private String domainPath;
 
     @SerializedName("storagetype")
     @Param(description = "shared or local storage")
@@ -211,7 +215,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     @SerializedName("destroyed")
     @Param(description = "the boolean state of whether the volume is destroyed or not")
-    private Boolean destroyed;
+    private boolean destroyed;
 
     @SerializedName(ApiConstants.SERVICE_OFFERING_ID)
     @Param(description = "ID of the service offering for root disk")
@@ -227,7 +231,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     @SerializedName("isextractable")
     @Param(description = "true if the volume is extractable, false otherwise")
-    private Boolean extractable;
+    private boolean extractable;
 
     @SerializedName(ApiConstants.STATUS)
     @Param(description = "the status of the volume")
@@ -235,7 +239,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     @SerializedName(ApiConstants.DISPLAY_VOLUME)
     @Param(description = "an optional field whether to the display the volume to the end user or not.", authorized = {RoleType.Admin})
-    private Boolean displayVolume;
+    private boolean displayVolume;
 
     @SerializedName(ApiConstants.PATH)
     @Param(description = "the path of the volume")
@@ -257,12 +261,16 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "true if storage snapshot is supported for the volume, false otherwise", since = "4.16")
     private boolean supportsStorageSnapshot;
 
+    @SerializedName(ApiConstants.DELETE_PROTECTION)
+    @Param(description = "true if volume has delete protection.", since = "4.20.0")
+    private boolean deleteProtection;
+
     @SerializedName(ApiConstants.PHYSICAL_SIZE)
-    @Param(description = "the bytes allocated")
+    @Param(description = "the bytes actually consumed on disk")
     private Long physicalsize;
 
     @SerializedName(ApiConstants.VIRTUAL_SIZE)
-    @Param(description = "the bytes actually consumed on disk")
+    @Param(description = "the bytes allocated")
     private Long virtualsize;
 
     @SerializedName(ApiConstants.UTILIZATION)
@@ -301,6 +309,30 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "the format of the disk encryption if applicable", since = "4.19.1")
     private String encryptionFormat;
 
+    @SerializedName(ApiConstants.KVDO_ENABLE)
+    @Param(description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
+    private Boolean kvdoEnable;
+
+    @SerializedName(ApiConstants.COMPRESS)
+    @Param(description = "Whether to On or Off it as a KVDO compress volume", since = "4.20")
+    private Boolean compress;
+
+    @SerializedName(ApiConstants.DEDUP)
+    @Param(description = "Whether to On or Off it as a KVDO dedup volume", since = "4.20")
+    private Boolean dedup;
+
+    @SerializedName(ApiConstants.USED_FS_BYTES)
+    @Param(description = "Disk file system actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
+    private Long usedFsBytes;
+
+    @SerializedName(ApiConstants.USED_PHYSICAL_SIZE)
+    @Param(description = "Disk Physical actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
+    private Long usedPhysicalSize;
+
+    @SerializedName(ApiConstants.SAVING_RATE)
+    @Param(description = "Disk Physical actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
+    private String savingsRate;
+
     public String getPath() {
         return path;
     }
@@ -318,11 +350,11 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         return this.getId();
     }
 
-    public Boolean isDestroyed() {
+    public boolean isDestroyed() {
         return destroyed;
     }
 
-    public void setDestroyed(Boolean destroyed) {
+    public void setDestroyed(boolean destroyed) {
         this.destroyed = destroyed;
     }
 
@@ -407,6 +439,11 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Override
     public void setDomainName(String domainName) {
         this.domainName = domainName;
+    }
+
+    @Override
+    public void setDomainPath(String domainPath) {
+        this.domainPath = domainPath;
     }
 
     public void setStorageType(String storageType) {
@@ -521,7 +558,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         this.serviceOfferingDisplayText = serviceOfferingDisplayText;
     }
 
-    public void setExtractable(Boolean extractable) {
+    public void setExtractable(boolean extractable) {
         this.extractable = extractable;
     }
 
@@ -539,7 +576,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         this.projectName = projectName;
     }
 
-    public void setDisplayVolume(Boolean displayVm) {
+    public void setDisplayVolume(boolean displayVm) {
         this.displayVolume = displayVm;
     }
 
@@ -573,6 +610,14 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     public boolean getSupportsStorageSnapshot() {
         return this.supportsStorageSnapshot;
+    }
+
+    public boolean isDeleteProtection() {
+        return deleteProtection;
+    }
+
+    public void setDeleteProtection(boolean deleteProtection) {
+        this.deleteProtection = deleteProtection;
     }
 
     public String getIsoId() {
@@ -755,7 +800,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         return serviceOfferingDisplayText;
     }
 
-    public Boolean getExtractable() {
+    public boolean isExtractable() {
         return extractable;
     }
 
@@ -763,7 +808,7 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         return status;
     }
 
-    public Boolean getDisplayVolume() {
+    public boolean isDisplayVolume() {
         return displayVolume;
     }
 
@@ -849,5 +894,53 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     public void setEncryptionFormat(String encryptionFormat) {
         this.encryptionFormat = encryptionFormat;
+    }
+
+    public boolean getKvdoEnable() {
+        return kvdoEnable;
+    }
+
+    public void setKvdoEnable(boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
+    }
+
+    public boolean getCompress() {
+        return compress;
+    }
+
+    public void setCompress(boolean compress) {
+        this.compress = compress;
+    }
+
+    public boolean getDedup() {
+        return dedup;
+    }
+
+    public void setDedup(boolean dedup) {
+        this.dedup = dedup;
+    }
+
+    public Long getUsedFsBytes() {
+        return usedFsBytes;
+    }
+
+    public void setUsedFsBytes(Long usedFsBytes) {
+        this.usedFsBytes = usedFsBytes;
+    }
+
+    public Long getUsedPhysicalSize() {
+        return usedPhysicalSize;
+    }
+
+    public void setUsedPhysicalSize(Long usedPhysicalSize) {
+        this.usedPhysicalSize = usedPhysicalSize;
+    }
+
+    public String getSavingsRate() {
+        return savingsRate;
+    }
+
+    public void setSavingsRate(String savingsRate) {
+        this.savingsRate = savingsRate;
     }
 }

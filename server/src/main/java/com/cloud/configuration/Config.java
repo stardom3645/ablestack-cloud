@@ -522,7 +522,7 @@ public enum Config {
             "The time interval in seconds when the management server polls for snapshots to be scheduled.",
             null),
     SnapshotDeltaMax("Snapshots", SnapshotManager.class, Integer.class, "snapshot.delta.max", "16", "max delta snapshots between two full snapshots.", null),
-    KVMSnapshotEnabled("Hidden", SnapshotManager.class, Boolean.class, "kvm.snapshot.enabled", "false", "whether snapshot is enabled for KVM hosts", null),
+    KVMSnapshotEnabled("Snapshots", SnapshotManager.class, Boolean.class, "kvm.snapshot.enabled", "true", "whether snapshot is enabled for KVM hosts", null),
 
     // Advanced
     EventPurgeInterval(
@@ -559,6 +559,15 @@ public enum Config {
             "The interval (in seconds) to wait before running the expunge thread.",
             null),
     ExpungeWorkers("Advanced", UserVmManager.class, Integer.class, "expunge.workers", "1", "Number of workers performing expunge ", null),
+    FlattenInterval(
+            "Advanced",
+            UserVmManager.class,
+            Integer.class,
+            "flatten.interval",
+            "60",
+            "The interval (in seconds) to wait before running the flatten thread.",
+            null),
+    FlattenWorkers("Advanced", UserVmManager.class, Integer.class, "flatten.workers", "3", "Number of workers performing flatten ", null),
     ExtractURLCleanUpInterval(
             "Advanced",
             ManagementServer.class,
@@ -573,7 +582,7 @@ public enum Config {
             Boolean.class,
             "disable.extraction",
             "false",
-            "Flag for disabling extraction of template, isos and volumes",
+            "Flag for disabling extraction of templates, isos, snapshots and volumes",
             null),
     ExtractURLExpirationInterval(
             "Advanced",
@@ -1216,7 +1225,7 @@ public enum Config {
             null),
 
     // Usage
-    UsageExecutionTimezone("Usage", ManagementServer.class, String.class, "usage.execution.timezone", null, "The timezone to use for usage job execution time", null),
+    UsageExecutionTimezone("Usage", ManagementServer.class, String.class, "usage.execution.timezone", "Asia/Seoul", "The timezone to use for usage job execution time", null),
     UsageStatsJobAggregationRange(
             "Usage",
             ManagementServer.class,
@@ -1250,7 +1259,7 @@ public enum Config {
             null,
             "Interval (in days) to check sanity of usage data. To disable set it to 0 or negative.",
             null),
-    UsageAggregationTimezone("Usage", ManagementServer.class, String.class, "usage.aggregation.timezone", "GMT", "The timezone to use for usage stats aggregation", null),
+    UsageAggregationTimezone("Usage", ManagementServer.class, String.class, "usage.aggregation.timezone", "Asia/Seoul", "The timezone to use for usage stats aggregation", null),
     TrafficSentinelIncludeZones(
             "Usage",
             ManagementServer.class,
@@ -1381,6 +1390,14 @@ public enum Config {
             "200",
             "The default maximum primary storage space (in GiB) that can be used for an account",
             null),
+DefaultMaxAccountProjects(
+                "Account Defaults",
+                ManagementServer.class,
+                Long.class,
+                "max.account.projects",
+                "10",
+                "The default maximum number of projects that can be created for an account",
+                null),
 
     //disabling lb as cluster sync does not work with distributed cluster
     SubDomainNetworkAccess(
@@ -1430,6 +1447,7 @@ public enum Config {
     DefaultMaxDomainMemory("Domain Defaults", ManagementServer.class, Long.class, "max.domain.memory", "81920", "The default maximum memory (in MB) that can be used for a domain", null),
     DefaultMaxDomainPrimaryStorage("Domain Defaults", ManagementServer.class, Long.class, "max.domain.primary.storage", "400", "The default maximum primary storage space (in GiB) that can be used for a domain", null),
     DefaultMaxDomainSecondaryStorage("Domain Defaults", ManagementServer.class, Long.class, "max.domain.secondary.storage", "800", "The default maximum secondary storage space (in GiB) that can be used for a domain", null),
+    DefaultMaxDomainProjects("Domain Defaults",ManagementServer.class,Long.class,"max.domain.projects","50","The default maximum number of projects that can be created for a domain",null),
 
     DefaultMaxProjectUserVms(
             "Project Defaults",
@@ -1747,7 +1765,6 @@ public enum Config {
                     null),
 
     // VMSnapshots
-    VMSnapshotMax("Advanced", VMSnapshotManager.class, Integer.class, "vmsnapshot.max", "10", "Maximum vm snapshots for a vm", null),
     VMSnapshotCreateWait("Advanced", VMSnapshotManager.class, Integer.class, "vmsnapshot.create.wait", "1800", "In second, timeout for create vm snapshot", null),
 
     CloudDnsName("Advanced", ManagementServer.class, String.class, "cloud.dns.name", null, "DNS name of the cloud for the GSLB service", null),

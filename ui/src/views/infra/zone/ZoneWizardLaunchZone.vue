@@ -1283,6 +1283,7 @@ export default {
       if (this.isEdgeZone) {
         clusterName = 'Cluster-' + this.stepData.zoneReturned.name
       }
+      params.arch = this.prefillContent?.arch || null
 
       if (hypervisor === 'VMware') {
         params.username = this.prefillContent?.vCenterUsername || null
@@ -1439,6 +1440,7 @@ export default {
           path = '/' + path
         }
         url = this.nfsURL(server, path)
+        params['details[0].nfsmountopts'] = this.prefillContent.primaryStorageNFSMountOptions
       } else if (protocol === 'SMB') {
         let path = this.prefillContent?.primaryStoragePath || ''
         if (path.substring(0, 1) !== '/') {
@@ -2160,7 +2162,11 @@ export default {
           resolve()
         }).catch(error => {
           message = error.response.headers['x-description']
-          reject(message)
+          if (message.includes('is already in the database')) {
+            resolve()
+          } else {
+            reject(message)
+          }
         })
       })
     },

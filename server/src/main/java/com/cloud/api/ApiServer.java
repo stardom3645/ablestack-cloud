@@ -33,6 +33,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,6 +48,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -55,6 +57,14 @@ import javax.naming.ConfigurationException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.cloud.user.Account;
+import com.cloud.user.AccountManager;
+import com.cloud.user.AccountManagerImpl;
+import com.cloud.user.AccountVO;
+import com.cloud.user.DomainManager;
+import com.cloud.user.User;
+import com.cloud.user.UserAccount;
+import com.cloud.user.UserVO;
 import org.apache.cloudstack.acl.APIChecker;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
@@ -106,8 +116,10 @@ import org.apache.cloudstack.framework.messagebus.MessageBus;
 import org.apache.cloudstack.framework.messagebus.MessageDispatcher;
 import org.apache.cloudstack.framework.messagebus.MessageHandler;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+import org.apache.cloudstack.user.UserPasswordResetManager;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
@@ -162,19 +174,13 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.exception.UnavailableCommandException;
 import com.cloud.storage.VolumeApiService;
-import com.cloud.user.Account;
-import com.cloud.user.AccountManager;
-import com.cloud.user.AccountManagerImpl;
-import com.cloud.user.AccountVO;
-import com.cloud.user.DomainManager;
-import com.cloud.user.User;
-import com.cloud.user.UserAccount;
-import com.cloud.user.UserVO;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.user.dao.UserDao;
 import com.cloud.utils.ConstantTimeComparator;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.HttpUtils;
+import com.cloud.utils.HttpUtils.ApiSessionKeySameSite;
+import com.cloud.utils.HttpUtils.ApiSessionKeyCheckOption;
 import com.cloud.utils.Pair;
 import com.cloud.utils.ReflectUtil;
 import com.cloud.utils.StringUtils;
@@ -189,6 +195,9 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.exception.ExceptionProxyObject;
 import com.cloud.utils.net.NetUtils;
 import com.google.gson.reflect.TypeToken;
+
+import static com.cloud.user.AccountManagerImpl.apiKeyAccess;
+import static org.apache.cloudstack.user.UserPasswordResetManager.UserPasswordResetEnabled;
 
 @Component
 public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiServerService, Configurable {
@@ -226,6 +235,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     private EntityManager entityMgr;
     @Inject
     private AlertManager alertMgr;
+    @Inject
+    private UserPasswordResetManager userPasswordResetManager;
 
     private List<PluggableService> pluggableServices;
 
@@ -339,6 +350,24 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , false
             , ConfigKey.Scope.Global);
 
+    static final ConfigKey<String> ApiSessionKeyCookieSameSiteSetting = new ConfigKey<>(String.class
+            , "api.sessionkey.cookie.samesite"
+            , ConfigKey.CATEGORY_ADVANCED
+            , ApiSessionKeySameSite.Lax.name()
+            , "The SameSite attribute of cookie 'sessionkey'. Valid options are: Lax (default), Strict, NoneAndSecure and Null."
+            , true
+            , ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select,
+            EnumSet.allOf(ApiSessionKeySameSite.class).stream().map(Enum::toString).collect(Collectors.joining(", ")));
+
+    public static final ConfigKey<String> ApiSessionKeyCheckLocations = new ConfigKey<>(String.class
+            , "api.sessionkey.check.locations"
+            , ConfigKey.CATEGORY_ADVANCED
+            , ApiSessionKeyCheckOption.CookieAndParameter.name()
+            , "The locations of 'sessionkey' during the validation of the API requests. Valid options are: CookieOrParameter, ParameterOnly, CookieAndParameter (default)."
+            , true
+            , ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select,
+            EnumSet.allOf(ApiSessionKeyCheckOption.class).stream().map(Enum::toString).collect(Collectors.joining(", ")));
+
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
         messageBus.subscribe(AsyncJob.Topics.JOB_EVENT_PUBLISH, MessageDispatcher.getDispatcher(this));
@@ -426,6 +455,17 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         eventDistributor.publish(event);
     }
 
+    protected void setupIntegrationPortListener(Integer apiPort) {
+        if (apiPort == null || apiPort <= 0) {
+            logger.trace(String.format("Skipping setting up listener for integration port as %s is set to %d",
+                    IntegrationAPIPort.key(), apiPort));
+            return;
+        }
+        logger.debug(String.format("Setting up integration API service listener on port: %d", apiPort));
+        final ListenerThread listenerThread = new ListenerThread(this, apiPort);
+        listenerThread.start();
+    }
+
     @Override
     public boolean start() {
         Security.addProvider(new BouncyCastleProvider());
@@ -471,10 +511,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
 
         setEncodeApiResponse(EncodeApiResponse.value());
 
-        if (apiPort != null) {
-            final ListenerThread listenerThread = new ListenerThread(this, apiPort);
-            listenerThread.start();
-        }
+        setupIntegrationPortListener(apiPort);
 
         return true;
     }
@@ -895,6 +932,34 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         }
     }
 
+    protected boolean verifyApiKeyAccessAllowed(User user, Account account) {
+        Boolean apiKeyAccessEnabled = user.getApiKeyAccess();
+        if (apiKeyAccessEnabled != null) {
+            if (Boolean.TRUE.equals(apiKeyAccessEnabled)) {
+                return true;
+            } else {
+                logger.info("Api-Key access is disabled for the User " + user.toString());
+                return false;
+            }
+        }
+        apiKeyAccessEnabled = account.getApiKeyAccess();
+        if (apiKeyAccessEnabled != null) {
+            if (Boolean.TRUE.equals(apiKeyAccessEnabled)) {
+                return true;
+            } else {
+                logger.info("Api-Key access is disabled for the Account " + account.toString());
+                return false;
+            }
+        }
+        apiKeyAccessEnabled = apiKeyAccess.valueIn(account.getDomainId());
+        if (Boolean.TRUE.equals(apiKeyAccessEnabled)) {
+                return true;
+        } else {
+            logger.info("Api-Key access is disabled by the Domain level setting api.key.access");
+        }
+        return false;
+    }
+
     @Override
     public boolean verifyRequest(final Map<String, Object[]> requestParameters, final Long userId, InetAddress remoteAddress) throws ServerApiException {
         try {
@@ -1006,8 +1071,12 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             final Account account = userAcctPair.second();
 
             if (user.getState() != Account.State.ENABLED || !account.getState().equals(Account.State.ENABLED)) {
-                logger.info("disabled or locked user accessing the api, userid = " + user.getId() + "; name = " + user.getUsername() + "; state: " + user.getState() +
-                        "; accountState: " + account.getState());
+                logger.info("disabled or locked user accessing the api, user = {} (state: {}); " +
+                        "account: {} (state: {})", user, user.getState(), account, account.getState());
+                return false;
+            }
+
+            if (!verifyApiKeyAccessAllowed(user, account)) {
                 return false;
             }
 
@@ -1018,7 +1087,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             // verify secret key exists
             secretKey = user.getSecretKey();
             if (secretKey == null) {
-                logger.info("User does not have a secret key associated with the account -- ignoring request, username: " + user.getUsername());
+                logger.info("User does not have a secret key associated with the account -- ignoring request, username: {}", user);
                 return false;
             }
 
@@ -1063,7 +1132,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             throw new ServerApiException(ApiErrorCode.UNAUTHORIZED , errorMessage);
         } catch (final OriginDeniedException ex) {
             // in this case we can remove the session with extreme prejudice
-            final String errorMessage = "The user '" + user.getUsername() + "' is not allowed to execute commands from ip address '" + remoteAddress.getHostName() + "'.";
+            final String errorMessage = String.format("The user '%s' is not allowed to execute commands from ip address '%s'.", user, remoteAddress.getHostName());
             logger.debug(errorMessage);
             return false;
         }
@@ -1158,6 +1227,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         } else {
             domainId = userDomain.getId();
         }
+
         final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
@@ -1303,10 +1373,61 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
 
         if ((user == null) || (user.getRemoved() != null) || !user.getState().equals(Account.State.ENABLED) || (account == null) ||
                 !account.getState().equals(Account.State.ENABLED)) {
-            logger.warn("Deleted/Disabled/Locked user with id=" + userId + " attempting to access public API");
+            logger.warn("Deleted/Disabled/Locked user [{} account={}] with id={} attempting to access public API", user, account, userId);
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean forgotPassword(UserAccount userAccount, Domain domain) {
+        if (!UserPasswordResetEnabled.value()) {
+            String errorMessage = String.format("%s is false. Password reset for the user is not allowed.",
+                    UserPasswordResetEnabled.key());
+            logger.error(errorMessage);
+            throw new CloudRuntimeException(errorMessage);
+        }
+        if (StringUtils.isBlank(userAccount.getEmail())) {
+            logger.error(String.format(
+                    "Email is not set. username: %s account id: %d domain id: %d",
+                    userAccount.getUsername(), userAccount.getAccountId(), userAccount.getDomainId()));
+            throw new CloudRuntimeException("Email is not set for the user.");
+        }
+
+        if (!EnumUtils.getEnumIgnoreCase(Account.State.class, userAccount.getState()).equals(Account.State.ENABLED)) {
+            logger.error(String.format(
+                    "User is not enabled. username: %s account id: %d domain id: %s",
+                    userAccount.getUsername(), userAccount.getAccountId(), domain.getUuid()));
+            throw new CloudRuntimeException("User is not enabled.");
+        }
+
+        if (!EnumUtils.getEnumIgnoreCase(Account.State.class, userAccount.getAccountState()).equals(Account.State.ENABLED)) {
+            logger.error(String.format(
+                    "Account is not enabled. username: %s account id: %d domain id: %s",
+                    userAccount.getUsername(), userAccount.getAccountId(), domain.getUuid()));
+            throw new CloudRuntimeException("Account is not enabled.");
+        }
+
+        if (!domain.getState().equals(Domain.State.Active)) {
+            logger.error(String.format(
+                    "Domain is not active. username: %s account id: %d domain id: %s",
+                    userAccount.getUsername(), userAccount.getAccountId(), domain.getUuid()));
+            throw new CloudRuntimeException("Domain is not active.");
+        }
+
+        userPasswordResetManager.setResetTokenAndSend(userAccount);
+        return true;
+    }
+
+    @Override
+    public boolean resetPassword(UserAccount userAccount, String token, String password) {
+        if (!UserPasswordResetEnabled.value()) {
+            String errorMessage = String.format("%s is false. Password reset for the user is not allowed.",
+                    UserPasswordResetEnabled.key());
+            logger.error(errorMessage);
+            throw new CloudRuntimeException(errorMessage);
+        }
+        return userPasswordResetManager.validateAndResetPassword(userAccount, token, password);
     }
 
     private void checkCommandAvailable(final User user, final String commandName, final InetAddress remoteAddress) throws PermissionDeniedException {
@@ -1623,7 +1744,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 listOfForwardHeaders,
                 ConcurrentConnectEnabled,
                 BlockExistConnection,
-                SecurityFeaturesEnabled
+                SecurityFeaturesEnabled,
+                ApiSessionKeyCookieSameSiteSetting,
+                ApiSessionKeyCheckLocations
         };
     }
 }

@@ -49,7 +49,6 @@ import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.storage.Volume;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
 
 @ResourceWrapper(handles =  PrepareForMigrationCommand.class)
 public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapper<PrepareForMigrationCommand, Answer, LibvirtComputingResource> {
@@ -101,12 +100,12 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
                         libvirtComputingResource.getVolumePath(conn, volume);
                     }
                 } else {
-                    KVMPhysicalDisk physicalDisk = null;
                     final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
-                    physicalDisk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                     if (store.getPoolType() == StoragePoolType.RBD) {
+                        KVMPhysicalDisk physicalDisk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                         if(store.getProvider() != null && !store.getProvider().isEmpty() && "ABLESTACK".equals(store.getProvider())){
-                            String device = libvirtComputingResource.mapRbdDevice(physicalDisk);
+                            final VolumeObjectTO volumeObject = (VolumeObjectTO)data;
+                            String device = libvirtComputingResource.mapRbdDevice(physicalDisk,volumeObject.getKvdoEnable());
                             if (device != null) {
                                 logger.debug("RBD device on host is: " + device);
                             } else {
@@ -135,7 +134,7 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
 
             skipDisconnect = true;
 
-            if (!storagePoolMgr.connectPhysicalDisksViaVmSpec(vm)) {
+            if (!storagePoolMgr.connectPhysicalDisksViaVmSpec(vm, true)) {
                 return new PrepareForMigrationAnswer(command, "failed to connect physical disks to host");
             }
 
@@ -143,9 +142,7 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
         } catch (final LibvirtException | CloudRuntimeException | InternalErrorException | URISyntaxException e) {
             if (MapUtils.isNotEmpty(dpdkInterfaceMapping)) {
                 for (DpdkTO to : dpdkInterfaceMapping.values()) {
-                    String cmd = String.format("ovs-vsctl del-port %s", to.getPort());
-                    logger.debug("Removing DPDK port: " + to.getPort());
-                    Script.runSimpleBashScript(cmd);
+                    removeDpdkPort(to.getPort());
                 }
             }
             return new PrepareForMigrationAnswer(command, e.toString());

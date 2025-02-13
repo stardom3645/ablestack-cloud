@@ -77,6 +77,8 @@ public interface VolumeService {
 
     AsyncCallFuture<VolumeApiResult> createVolumeFromSnapshot(VolumeInfo volume, DataStore store, SnapshotInfo snapshot);
 
+    AsyncCallFuture<VolumeApiResult> cloneVolumeFromSnapshot(VolumeInfo volume, DataStore store, SnapshotInfo snapshot);
+
     VolumeEntity getVolumeEntity(long volumeId);
 
     TemplateInfo createManagedStorageTemplate(long srcTemplateId, long destDataStoreId, long destHostId) throws StorageAccessException;
@@ -121,6 +123,8 @@ public interface VolumeService {
     Pair<String, String> checkAndRepairVolume(VolumeInfo volume);
 
     void checkAndRepairVolumeBasedOnConfig(DataObject dataObject, Host host);
+
+    // AsyncCallFuture<VolumeApiResult> flattenVolumeAsync(SnapshotInfo snapshot, DataStore store);
 
     void validateChangeDiskOfferingEncryptionType(long existingDiskOfferingId, long newDiskOfferingId);
 }

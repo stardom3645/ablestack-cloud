@@ -34,6 +34,7 @@ import org.apache.cloudstack.api.command.user.volume.GetUploadParamsForVolumeCmd
 import org.apache.cloudstack.api.command.user.volume.MigrateVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.ResizeVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.UploadVolumeCmd;
+import org.apache.cloudstack.api.command.user.volume.UpdateCompressDedupCmd;
 import org.apache.cloudstack.api.response.GetUploadParamsResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
 
@@ -103,11 +104,13 @@ public interface VolumeApiService {
 
     boolean deleteVolume(long volumeId, Account caller);
 
+    Volume changeDiskOfferingForVolumeInternal(Long volumeId, Long newDiskOfferingId, Long newSize, Long newMinIops, Long newMaxIops, boolean autoMigrateVolume, boolean shrinkOk) throws ResourceAllocationException;
+
     Volume attachVolumeToVM(AttachVolumeCmd command);
 
-    Volume detachVolumeViaDestroyVM(long vmId, long volumeId);
+    Volume attachVolumeToVM(Long vmId, Long volumeId, Long deviceId, Boolean allowAttachForSharedFS);
 
-    Volume cloneDataVolume(long vmId, long snapshotId, Volume volume) throws StorageUnavailableException;
+    Volume detachVolumeViaDestroyVM(long vmId, long volumeId);
 
     Volume detachVolumeFromVM(DetachVolumeCmd cmd);
 
@@ -116,9 +119,7 @@ public interface VolumeApiService {
 
     Snapshot allocSnapshot(Long volumeId, Long policyId, String snapshotName, Snapshot.LocationType locationType, List<Long> zoneIds) throws ResourceAllocationException;
 
-    Volume updateVolume(long volumeId, String path, String state, Long storageId, Boolean displayVolume, String customId, long owner, String chainInfo, String name, String type);
-
-    Volume attachVolumeToVM(Long vmId, Long volumeId, Long deviceId);
+    Volume updateVolume(long volumeId, String path, String state, Long storageId, Boolean displayVolume, Boolean deleteProtection, String customId, long owner, String chainInfo, String name, String type);
 
     /**
      * Extracts the volume to a particular location.
@@ -189,4 +190,8 @@ public interface VolumeApiService {
     boolean stateTransitTo(Volume vol, Volume.Event event) throws NoTransitionException;
 
     Pair<String, String> checkAndRepairVolume(CheckAndRepairVolumeCmd cmd) throws ResourceAllocationException;
+
+    Volume cloneVolumeFromSnapshot(Volume volume, long snapshotId, Long vmId) throws StorageUnavailableException;
+
+    Volume updateCompressDedupVolume(UpdateCompressDedupCmd cmd);
 }

@@ -238,6 +238,14 @@ public class ServiceOfferingResponse extends BaseResponseWithAnnotations {
     @Param(description = "Whether to use it as a shared volume", since = "4.19")
     private Boolean shareable;
 
+    @SerializedName(ApiConstants.KVDO_ENABLE)
+    @Param(description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
+    private Boolean kvdoEnable;
+
+    @SerializedName(ApiConstants.PURGE_RESOURCES)
+    @Param(description = "Whether to cleanup VM and its associated resource upon expunge", since = "4.20")
+    private Boolean purgeResources;
+
     public ServiceOfferingResponse() {
     }
 
@@ -509,6 +517,10 @@ public class ServiceOfferingResponse extends BaseResponseWithAnnotations {
         this.shareable = shareable;
     }
 
+    public void setKvdoEnable(boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
+    }
+
     public String getVsphereStoragePolicy() {
         return vsphereStoragePolicy;
     }
@@ -563,4 +575,8 @@ public class ServiceOfferingResponse extends BaseResponseWithAnnotations {
     }
 
     public void setEncryptRoot(Boolean encrypt) { this.encryptRoot = encrypt; }
+
+    public void setPurgeResources(Boolean purgeResources) {
+        this.purgeResources = purgeResources;
+    }
 }

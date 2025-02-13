@@ -214,6 +214,12 @@
             </a-form-item>
           </a-col>
         </a-row>
+        <a-form-item ref="kvdoenable" name="kvdoenable" v-if="allowed && hyperKVMShow">
+          <template #label>
+            <tooltip-label :title="$t('label.kvdoenable')" :tooltip="apiParams.kvdoenable.description"/>
+          </template>
+          <a-switch v-model:checked="form.kvdoenable" />
+        </a-form-item>
         <a-row :gutter="12" v-if="allowed && (hyperKVMShow || hyperCustomShow) && currentForm === 'Create'">
           <a-col :md="24" :lg="12">
             <a-form-item ref="directdownload" name="directdownload">
@@ -339,6 +345,25 @@
             v-model:value="form.templatetype"
             :placeholder="apiParams.templatetype.description">
             <a-select-option v-for="opt in templateTypes.opts" :key="opt.id">
+              {{ opt.name || opt.description }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item
+          name="arch"
+          ref="arch">
+          <template #label>
+            <tooltip-label :title="$t('label.arch')" :tooltip="apiParams.arch.description"/>
+          </template>
+          <a-select
+            showSearch
+            optionFilterProp="label"
+            :filterOption="(input, option) => {
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }"
+            v-model:value="form.arch"
+            :placeholder="apiParams.arch.description">
+            <a-select-option v-for="opt in architectureTypes.opts" :key="opt.id">
               {{ opt.name || opt.description }}
             </a-select-option>
           </a-select>
@@ -511,7 +536,8 @@ export default {
       domainLoading: false,
       domainid: null,
       account: null,
-      customHypervisorName: 'Custom'
+      customHypervisorName: 'Custom',
+      architectureTypes: {}
     }
   },
   beforeCreate () {
@@ -563,6 +589,7 @@ export default {
       this.fetchZone()
       this.fetchOsTypes()
       this.fetchTemplateTypes()
+      this.fetchArchitectureTypes()
       this.fetchUserData()
       this.fetchUserdataPolicy()
       if ('listDomains' in this.$store.getters.apis) {
@@ -656,6 +683,14 @@ export default {
         })
       }
 
+      if (store.getters.userInfo.roletype === this.rootAdmin && this.currentForm === 'Upload') {
+        this.allowed = true
+        listZones.push({
+          id: this.$t('label.all.zone'),
+          name: this.$t('label.all.zone')
+        })
+      }
+
       this.zones.loading = true
       this.zones.opts = []
 
@@ -732,6 +767,19 @@ export default {
         })
       }
       this.templateTypes.opts = templatetypes
+    },
+    fetchArchitectureTypes () {
+      this.architectureTypes.opts = []
+      const typesList = []
+      typesList.push({
+        id: 'x86_64',
+        description: 'AMD 64 bits (x86_64)'
+      })
+      typesList.push({
+        id: 'aarch64',
+        description: 'ARM 64 bits (aarch64)'
+      })
+      this.architectureTypes.opts = typesList
     },
     fetchUserData () {
       const params = {}
@@ -1005,6 +1053,7 @@ export default {
       this.selectedFormat = null
       this.form.deployasis = false
       this.form.directdownload = false
+      this.form.kvdoenable = false
       this.form.xenserverToolsVersion61plus = false
 
       this.resetSelect(arrSelectReset)

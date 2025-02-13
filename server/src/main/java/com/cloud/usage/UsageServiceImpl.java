@@ -31,7 +31,6 @@ import com.cloud.utils.DateUtil;
 import org.apache.cloudstack.api.command.admin.usage.GenerateUsageRecordsCmd;
 import org.apache.cloudstack.api.command.admin.usage.ListUsageRecordsCmd;
 import org.apache.cloudstack.api.command.admin.usage.RemoveRawUsageRecordsCmd;
-import org.apache.cloudstack.api.response.UsageTypeResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.usage.Usage;
@@ -191,7 +190,7 @@ public class UsageServiceImpl extends ManagerBase implements UsageService, Manag
             //List records for all the accounts if the caller account is of type admin.
             //If account_id or account_name is explicitly mentioned, list records for the specified account only even if the caller is of type admin
             ignoreAccountId = _accountService.isRootAdmin(caller.getId());
-            logger.debug("Account details not available. Using userContext accountId: " + accountId);
+            logger.debug("Account details not available. Using userContext account: {}", caller);
         }
 
         // Check if a domain admin is allowed to access the requested domain id
@@ -485,10 +484,4 @@ public class UsageServiceImpl extends ManagerBase implements UsageService, Manag
         }
         return true;
     }
-
-    @Override
-    public List<UsageTypeResponse> listUsageTypes() {
-        return UsageTypes.listUsageTypes();
-    }
-
 }

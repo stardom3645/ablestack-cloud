@@ -101,10 +101,17 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
             volResponse.setVmType(volume.getVmType().toString());
         }
 
+        volResponse.setCompress(volume.getCompress());
+        volResponse.setDedup(volume.getDedup());
+        volResponse.setUsedFsBytes(volume.getUsedFsBytes());
+        volResponse.setUsedPhysicalSize(volume.getUsedPhysicalSize());
+
         if (volume.getVolumeType() != null) {
             volResponse.setVolumeType(volume.getVolumeType().toString());
         }
         volResponse.setDeviceId(volume.getDeviceId());
+
+        volResponse.setKvdoEnable(volume.getKvdoEnable());
 
         long instanceId = volume.getVmId();
         if (instanceId > 0 && volume.getState() != Volume.State.Destroy) {
@@ -137,6 +144,12 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
 
         volResponse.setMinIops(volume.getMinIops());
         volResponse.setMaxIops(volume.getMaxIops());
+
+        if (volume.getDeleteProtection() == null) {
+            volResponse.setDeleteProtection(false);
+        } else {
+            volResponse.setDeleteProtection(volume.getDeleteProtection());
+        }
 
         volResponse.setCreated(volume.getCreated());
         if (volume.getState() != null) {
@@ -294,9 +307,10 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
         ServiceOffering serviceOffering = null;
         if (computeOnlyDiskOffering != null) {
             serviceOffering = ApiDBUtils.findServiceOfferingByComputeOnlyDiskOffering(volume.getDiskOfferingId(), false);
-        }
-        if (serviceOffering == null) {
-            serviceOffering = ApiDBUtils.findServiceOfferingByComputeOnlyDiskOffering(volume.getDiskOfferingId(), true);
+            if (serviceOffering == null) {
+                // Check again for removed ones
+                serviceOffering = ApiDBUtils.findServiceOfferingByComputeOnlyDiskOffering(volume.getDiskOfferingId(), true);
+            }
         }
         return serviceOffering;
     }

@@ -64,8 +64,11 @@ import com.cloud.storage.Storage.TemplateType;
 import com.cloud.storage.VnfTemplateDetailVO;
 import com.cloud.storage.VnfTemplateNicVO;
 import com.cloud.storage.Volume;
+import com.cloud.storage.VolumeVO;
+import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.VnfTemplateDetailsDao;
 import com.cloud.storage.dao.VnfTemplateNicDao;
+import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.User;
@@ -113,6 +116,10 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
     VnfTemplateNicDao vnfTemplateNicDao;
     @Inject
     VbmcDao vbmcDao;
+    @Inject
+    VolumeDao _volsDao;
+    @Inject
+    DiskOfferingDao _diskOfferingDao;
 
     private final SearchBuilder<UserVmJoinVO> VmDetailSearch;
     private final SearchBuilder<UserVmJoinVO> activeVmByIsoSearch;
@@ -172,10 +179,12 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         }
         userVmResponse.setDomainId(userVm.getDomainUuid());
         userVmResponse.setDomainName(userVm.getDomainName());
+        userVmResponse.setDomainPath(userVm.getDomainPath());
 
         userVmResponse.setCreated(userVm.getCreated());
         userVmResponse.setLastUpdated(userVm.getLastUpdated());
         userVmResponse.setDisplayVm(userVm.isDisplayVm());
+        userVmResponse.setVmType(userVm.getUserVmType());
 
         if (userVm.getState() != null) {
             userVmResponse.setState(userVm.getState().toString());
@@ -218,6 +227,18 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             if (diskOfferingVO != null) {
                 userVmResponse.setDiskOfferingId(userVm.getDiskOfferingUuid());
                 userVmResponse.setDiskOfferingName(userVm.getDiskOfferingName());
+            }
+        }
+        userVmResponse.setKvdoEnable(userVm.getKvdoEnable());
+        userVmResponse.setKvdoInUse(false);
+        List<VolumeVO> volumesForVm = _volsDao.findUsableVolumesForInstance(userVm.getId());
+        for (VolumeVO vol : volumesForVm) {
+            if (vol.getDiskOfferingId() != null) {
+                DiskOfferingVO diskOffering = _diskOfferingDao.findById(vol.getDiskOfferingId());
+                if (diskOffering.getKvdoEnable()) {
+                    userVmResponse.setKvdoInUse(true);
+                    break;
+                }
             }
         }
         if (details.contains(VMDetails.all) || details.contains(VMDetails.backoff)) {
@@ -429,6 +450,12 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             userVmResponse.setDynamicallyScalable(false);
         } else {
             userVmResponse.setDynamicallyScalable(userVm.isDynamicallyScalable());
+        }
+
+        if (userVm.getDeleteProtection() == null) {
+            userVmResponse.setDeleteProtection(false);
+        } else {
+            userVmResponse.setDeleteProtection(userVm.getDeleteProtection());
         }
 
         if (userVm.getAutoScaleVmGroupName() != null) {

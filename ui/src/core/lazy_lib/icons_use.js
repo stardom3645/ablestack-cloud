@@ -22,6 +22,7 @@ import {
   AppstoreAddOutlined,
   AppstoreOutlined,
   ArrowDownOutlined,
+  ArrowRightOutlined,
   ArrowUpOutlined,
   ArrowsAltOutlined,
   AuditOutlined,
@@ -45,6 +46,7 @@ import {
   CheckCircleTwoTone,
   CheckOutlined,
   CheckSquareOutlined,
+  ClearOutlined,
   CloseSquareOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
@@ -58,6 +60,8 @@ import {
   CloudSyncOutlined,
   CodeOutlined,
   CompassOutlined,
+  CompressOutlined,
+  ContainerOutlined,
   ControlOutlined,
   CopyOutlined,
   CreditCardOutlined,
@@ -83,6 +87,7 @@ import {
   FieldTimeOutlined,
   FileDoneOutlined,
   FileProtectOutlined,
+  FileTextOutlined,
   FilterOutlined,
   FilterTwoTone,
   FileAddOutlined,
@@ -132,7 +137,9 @@ import {
   LaptopOutlined,
   OrderedListOutlined,
   PaperClipOutlined,
+  PartitionOutlined,
   PauseCircleOutlined,
+  PicCenterOutlined,
   PictureOutlined,
   PieChartOutlined,
   PlayCircleOutlined,
@@ -160,6 +167,7 @@ import {
   SettingOutlined,
   ShareAltOutlined,
   ShoppingOutlined,
+  SplitCellsOutlined,
   StopOutlined,
   SwapOutlined,
   SyncOutlined,
@@ -184,7 +192,11 @@ import {
   AreaChartOutlined,
   SolutionOutlined,
   RocketFilled,
-  HeartFilled
+  HeartFilled,
+  SubnodeOutlined,
+  UpSquareOutlined,
+  DownSquareOutlined,
+  ExperimentOutlined
 } from '@ant-design/icons-vue'
 import renderIcon from '@/utils/renderIcon'
 
@@ -196,6 +208,7 @@ export default {
     app.component('AppstoreAddOutlined', AppstoreAddOutlined)
     app.component('AppstoreOutlined', AppstoreOutlined)
     app.component('ArrowDownOutlined', ArrowDownOutlined)
+    app.component('ArrowRightOutlined', ArrowRightOutlined)
     app.component('ArrowUpOutlined', ArrowUpOutlined)
     app.component('ArrowsAltOutlined', ArrowsAltOutlined)
     app.component('AuditOutlined', AuditOutlined)
@@ -219,6 +232,7 @@ export default {
     app.component('CheckCircleTwoTone', CheckCircleTwoTone)
     app.component('CheckOutlined', CheckOutlined)
     app.component('CheckSquareOutlined', CheckSquareOutlined)
+    app.component('ClearOutlined', ClearOutlined)
     app.component('CloseSquareOutlined', CloseSquareOutlined)
     app.component('ClockCircleOutlined', ClockCircleOutlined)
     app.component('CloseCircleOutlined', CloseCircleOutlined)
@@ -231,8 +245,10 @@ export default {
     app.component('CloudUploadOutlined', CloudUploadOutlined)
     app.component('ClusterOutlined', ClusterOutlined)
     app.component('CodeOutlined', CodeOutlined)
+    app.component('ContainerOutlined', ContainerOutlined)
     app.component('ControlOutlined', ControlOutlined)
     app.component('CompassOutlined', CompassOutlined)
+    app.component('CompressOutlined', CompressOutlined)
     app.component('CopyOutlined', CopyOutlined)
     app.component('CreditCardOutlined', CreditCardOutlined)
     app.component('DashboardOutlined', DashboardOutlined)
@@ -258,6 +274,7 @@ export default {
     app.component('FieldTimeOutlined', FieldTimeOutlined)
     app.component('FileDoneOutlined', FileDoneOutlined)
     app.component('FileProtectOutlined', FileProtectOutlined)
+    app.component('FileTextOutlined', FileTextOutlined)
     app.component('FilterOutlined', FilterOutlined)
     app.component('FilterTwoTone', FilterTwoTone)
     app.component('FireOutlined', FireOutlined)
@@ -306,7 +323,9 @@ export default {
     app.component('LaptopOutlined', LaptopOutlined)
     app.component('OrderedListOutlined', OrderedListOutlined)
     app.component('PaperClipOutlined', PaperClipOutlined)
+    app.component('PartitionOutlined', PartitionOutlined)
     app.component('PauseCircleOutlined', PauseCircleOutlined)
+    app.component('PicCenterOutlined', PicCenterOutlined)
     app.component('PictureOutlined', PictureOutlined)
     app.component('PieChartOutlined', PieChartOutlined)
     app.component('PlayCircleOutlined', PlayCircleOutlined)
@@ -334,6 +353,7 @@ export default {
     app.component('SettingOutlined', SettingOutlined)
     app.component('ShareAltOutlined', ShareAltOutlined)
     app.component('ShoppingOutlined', ShoppingOutlined)
+    app.component('SplitCellsOutlined', SplitCellsOutlined)
     app.component('StopOutlined', StopOutlined)
     app.component('SwapOutlined', SwapOutlined)
     app.component('SyncOutlined', SyncOutlined)
@@ -361,5 +381,9 @@ export default {
     app.component('RocketFilled', RocketFilled)
     app.component('HeartFilled', HeartFilled)
     app.component('renderIcon', renderIcon)
+    app.component('SubnodeOutlined', SubnodeOutlined)
+    app.component('UpSquareOutlined', UpSquareOutlined)
+    app.component('DownSquareOutlined', DownSquareOutlined)
+    app.component('ExperimentOutlined', ExperimentOutlined)
   }
 }

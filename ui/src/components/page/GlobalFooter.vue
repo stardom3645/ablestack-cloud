@@ -16,27 +16,22 @@
 // under the License.
 
 <template>
-  <div class="footer">
+  <div :class="['footer']">
     <div class="line">
-      <span v-html="$config.footer" />
-    </div>
-    <div class="line" v-if="$store.getters.userInfo.roletype === 'Admin'">
-      ABLESTACK {{ buildVersion }}
-      <a-divider type="vertical" />
-      <a href="https://github.com/ablecloud-team/ablestack-cloud/issues/new" target="_blank">
-        <github-outlined />
-        {{ $t('label.report.bug') }}
-      </a>
     </div>
   </div>
 </template>
 
 <script>
+import semver from 'semver'
+import { getParsedVersion } from '@/utils/util'
+
 export default {
   name: 'LayoutFooter',
   data () {
     return {
-      buildVersion: this.$config.buildVersion
+      buildVersion: this.$config.buildVersion,
+      isSidebarVisible: false
     }
   },
   created () {
@@ -47,6 +42,19 @@ export default {
     //   const date = m.getFullYear() + ('0' + (m.getMonth() + 1)).slice(-2) + ('0' + m.getDate()).slice(-2)
     //   this.buildVersion = version + '-' + date + '-dev'
     // }
+  },
+  methods: {
+    toggleSidebar () {
+      this.isSidebarVisible = !this.isSidebarVisible
+    },
+    showVersionUpdate () {
+      if (this.$store.getters?.features?.cloudstackversion && this.$store.getters?.latestVersion?.version) {
+        const currentVersion = getParsedVersion(this.$store.getters?.features?.cloudstackversion)
+        const latestVersion = getParsedVersion(this.$store.getters?.latestVersion?.version)
+        return semver.valid(currentVersion) && semver.valid(latestVersion) && semver.gt(latestVersion, currentVersion)
+      }
+      return false
+    }
   }
 }
 </script>
@@ -56,6 +64,11 @@ export default {
     padding: 0 16px;
     margin: 48px 0 24px;
     text-align: center;
+    transition: all 0.3s ease;
+
+    &.expanded {
+      margin-bottom: 324px;
+    }
 
     .line {
       margin-bottom: 8px;

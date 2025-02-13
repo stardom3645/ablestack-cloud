@@ -209,6 +209,9 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
                 hostResponse.setImplicitHostTags(host.getImplicitTag());
 
                 hostResponse.setHypervisorVersion(host.getHypervisorVersion());
+                if (host.getArch() != null) {
+                    hostResponse.setArch(host.getArch().getType());
+                }
 
                 float cpuWithOverprovisioning = host.getCpus() * host.getSpeed() * cpuOverprovisioningFactor;
                 hostResponse.setCpuAllocatedValue(cpu);
@@ -237,11 +240,10 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
 
             Map<String, String> hostDetails = hostDetailsDao.findDetails(host.getId());
             if (hostDetails != null) {
-//                if (hostDetails.containsKey(Host.HOST_UEFI_ENABLE)) {
-                if (true) {
-                    hostResponse.setUefiCapabilty(Boolean.parseBoolean((String) hostDetails.get(Host.HOST_UEFI_ENABLE)));
+                if (hostDetails.containsKey(Host.HOST_UEFI_ENABLE)) {
+                    hostResponse.setUefiCapability(Boolean.parseBoolean((String) hostDetails.get(Host.HOST_UEFI_ENABLE)));
                 } else {
-                    hostResponse.setUefiCapabilty(new Boolean(false));
+                    hostResponse.setUefiCapability(new Boolean(false));
                 }
                 if (hostDetails.containsKey(Host.HOST_TPM_ENABLE)) {
                     hostResponse.setTpmCapabilty(Boolean.parseBoolean((String) hostDetails.get(Host.HOST_TPM_ENABLE)));
@@ -253,7 +255,7 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
                     host.getHypervisorType() == Hypervisor.HypervisorType.Custom)) {
                 //only kvm has the requirement to return host details
                 try {
-                    hostResponse.setDetails(hostDetails);
+                    hostResponse.setDetails(hostDetails, host.getHypervisorType());
                 } catch (Exception e) {
                     logger.debug("failed to get host details", e);
                 }

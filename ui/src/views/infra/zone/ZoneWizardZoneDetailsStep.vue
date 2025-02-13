@@ -158,7 +158,7 @@
         <a-form-item
           name="networkDomain"
           ref="networkDomain"
-          :label="$t('label.network.domain')"
+          :label="$t('label.default.network.domain.isolated.network')"
           v-bind="formItemLayout"
           has-feedback>
           <a-input v-model:value="form.networkDomain" />
@@ -166,7 +166,7 @@
         <a-form-item
           name="guestcidraddress"
           ref="guestcidraddress"
-          :label="$t('label.guest.cidr')"
+          :label="$t('label.default.network.guestcidraddress.isolated.network')"
           v-bind="formItemLayout"
           v-if="isAdvancedZone && !securityGroupsEnabled"
           has-feedback>
@@ -383,6 +383,7 @@ export default {
       if (this.isEdgeZone) {
         return 'KVM'
       }
+      console.log('this.prefillContent.hypervisor :>> ', this.prefillContent.hypervisor)
       if (this.prefillContent.hypervisor) {
         return this.prefillContent.hypervisor
       } else if (this.hypervisors && this.hypervisors.length > 0) {
@@ -460,7 +461,7 @@ export default {
         if ('listSimulatorHAStateTransitions' in this.$store.getters.apis) {
           this.hypervisors.push({ name: 'Simulator' })
         }
-        this.form.hypervisor = this.currentHypervisor
+        this.form.hypervisor = 'KVM'
         this.formModel = toRaw(this.form)
       })
 

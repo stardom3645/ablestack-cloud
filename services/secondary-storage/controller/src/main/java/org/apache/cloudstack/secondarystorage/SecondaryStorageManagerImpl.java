@@ -79,6 +79,9 @@ import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.deploy.DataCenterDeployment;
 import com.cloud.deploy.DeployDestination;
+import com.cloud.deploy.DeploymentPlanner;
+import com.cloud.event.ActionEvent;
+import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.InsufficientCapacityException;
@@ -153,6 +156,8 @@ import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
+
+import static com.cloud.configuration.Config.SecStorageAllowedInternalDownloadSites;
 
 /**
 * Class to manage secondary storages. <br><br>
@@ -283,6 +288,14 @@ public class SecondaryStorageManagerImpl extends ManagerBase implements Secondar
         }
     }
 
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_SSVM_START, eventDescription = "restarting secondary storage VM for HA", async = true)
+    public void startSecStorageVmForHA(VirtualMachine vm, Map<VirtualMachineProfile.Param, Object> params,
+           DeploymentPlanner planner) throws InsufficientCapacityException, ResourceUnavailableException,
+            ConcurrentOperationException, OperationTimedoutException {
+        _itMgr.advanceStart(vm.getUuid(), params, planner);
+    }
+
     SecondaryStorageVmVO getSSVMfromHost(HostVO ssAHost) {
         if (ssAHost.getType() == Host.Type.SecondaryStorageVM) {
             return _secStorageVmDao.findByInstanceName(ssAHost.getName());
@@ -387,7 +400,13 @@ public class SecondaryStorageManagerImpl extends ManagerBase implements Secondar
         }
         String[] cidrs = _allowedInternalSites.split(",");
         for (String cidr : cidrs) {
-            if (NetUtils.isValidIp4Cidr(cidr) || NetUtils.isValidIp4(cidr) || !cidr.startsWith("0.0.0.0")) {
+            if (NetUtils.isValidIp4Cidr(cidr) && !cidr.startsWith("0.0.0.0")) {
+                if (! NetUtils.getCleanIp4Cidr(cidr).equals(cidr)) {
+                    logger.warn(String.format("Invalid CIDR %s in %s", cidr, SecStorageAllowedInternalDownloadSites.key()));
+                }
+                allowedCidrs.add(NetUtils.getCleanIp4Cidr(cidr));
+            } else if (NetUtils.isValidIp4(cidr) && !cidr.startsWith("0.0.0.0")) {
+                logger.warn(String.format("Ip address is not a valid CIDR; %s consider using %s/32", cidr, cidr));
                 allowedCidrs.add(cidr);
             }
         }

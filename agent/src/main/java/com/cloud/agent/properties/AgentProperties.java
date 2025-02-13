@@ -674,6 +674,10 @@ public class AgentProperties{
      */
     public static final Property<String> VM_VIDEO_HARDWARE = new Property<>("vm.video.hardware", null, String.class);
 
+    public static final Property<String> VM_VIDEO_HARDWARE_2 = new Property<>("vm.video.hardware_2", null, String.class);
+
+    public static final Property<String> SOUND = new Property<>("sound", null, String.class);
+
     /**
      * Definition of VMs video, specifies the amount of RAM in kibibytes (blocks of 1024 bytes).<br>
      * Data type: Integer.<br>
@@ -751,7 +755,7 @@ public class AgentProperties{
     public static final Property<Integer> IOTHREADS = new Property<>("iothreads", 1);
 
     /**
-     * Enable verbose mode for virt-v2v Instance Conversion from Vmware to KVM
+     * Enable verbose mode for virt-v2v Instance Conversion from VMware to KVM
      * Data type: Boolean.<br>
      * Default value: <code>false</code>
      */

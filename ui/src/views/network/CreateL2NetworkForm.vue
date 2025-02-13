@@ -146,7 +146,7 @@
               <tooltip-label :title="$t('label.isolatedpvlanid')" :tooltip="apiParams.isolatedpvlan.description"/>
             </template>
             <a-input
-              v-model:value="form.isolatedpvlan"
+              v-model:value="form.isolatedpvlanid"
               :placeholder="apiParams.isolatedpvlan.description"/>
           </a-form-item>
           <div :span="24" class="action-button">
@@ -294,14 +294,14 @@ export default {
         domainid: this.$store.getters.userInfo.domainid,
         account: this.$store.getters.userInfo.account
       }
-      if (OwnerOptions.selectedAccountType === this.$t('label.account')) {
+      if (OwnerOptions.selectedAccountType === 'Account') {
         if (!OwnerOptions.selectedAccount) {
           return
         }
         this.owner.account = OwnerOptions.selectedAccount
         this.owner.domainid = OwnerOptions.selectedDomain
         this.owner.projectid = null
-      } else if (OwnerOptions.selectedAccountType === this.$t('label.project')) {
+      } else if (OwnerOptions.selectedAccountType === 'Project') {
         if (!OwnerOptions.selectedProject) {
           return
         }
@@ -394,8 +394,8 @@ export default {
 
         if (this.isValidValueForKey(values, 'isolatedpvlantype') && values.isolatedpvlantype !== 'none') {
           params.isolatedpvlantype = values.isolatedpvlantype
-          if (this.isValidValueForKey(values, 'isolatedpvlan')) {
-            params.isolatedpvlan = values.isolatedpvlan
+          if (this.isValidValueForKey(values, 'isolatedpvlanid')) {
+            params.isolatedpvlan = values.isolatedpvlanid
           }
         }
         api('createNetwork', params).then(json => {

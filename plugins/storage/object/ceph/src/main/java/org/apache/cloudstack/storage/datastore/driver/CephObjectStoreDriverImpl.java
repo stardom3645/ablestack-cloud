@@ -19,25 +19,26 @@
 package org.apache.cloudstack.storage.datastore.driver;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
+import com.amazonaws.services.s3.model.BucketCrossOriginConfiguration;
+import com.amazonaws.services.s3.model.CORSRule;
+
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.BucketCrossOriginConfiguration;
+import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.BucketPolicy;
 import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
-import com.amazonaws.services.s3.model.CORSRule;
 import com.amazonaws.services.s3.model.DeleteBucketPolicyRequest;
-import com.amazonaws.services.s3.model.GetBucketPolicyRequest;
 import com.amazonaws.services.s3.model.SetBucketPolicyRequest;
+import com.amazonaws.services.s3.model.GetBucketPolicyRequest;
 import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
-
 import com.cloud.agent.api.to.BucketTO;
 import com.cloud.agent.api.to.DataStoreTO;
+import org.apache.cloudstack.storage.object.Bucket;
 import com.cloud.storage.BucketVO;
 import com.cloud.storage.dao.BucketDao;
 import com.cloud.user.Account;
@@ -51,13 +52,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
+
+import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
+import org.apache.cloudstack.framework.async.AsyncCompletionCallback;
+import org.apache.cloudstack.storage.command.CommandResult;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreVO;
 import org.apache.cloudstack.storage.object.BaseObjectStoreDriverImpl;
-import org.apache.cloudstack.storage.object.Bucket;
 import org.apache.cloudstack.storage.object.BucketObject;
+import org.apache.commons.lang3.ObjectUtils;
 import org.twonote.rgwadmin4j.model.BucketInfo;
 import org.twonote.rgwadmin4j.model.S3Credential;
 import org.twonote.rgwadmin4j.model.User;
@@ -65,6 +70,7 @@ import org.twonote.rgwadmin4j.RgwAdmin;
 import org.twonote.rgwadmin4j.RgwAdminBuilder;
 
 public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
+
     @Inject
     AccountDao _accountDao;
 
@@ -262,7 +268,7 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
         RgwAdmin rgwAdmin = getRgwAdminClient(storeId);
         String username = account.getUuid();
 
-        logger.debug("Attempting to create Ceph RGW user for account " + account.getAccountName() + " with UUID " + username);
+        logger.debug("Attempting to create Ceph RGW user for account {} with UUID {}", account, username);
         try {
             Optional<User> user = rgwAdmin.getUserInfo(username);
             if (user.isPresent()) {
@@ -307,7 +313,6 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
 
             SetBucketVersioningConfigurationRequest setBucketVersioningConfigurationRequest =
                     new SetBucketVersioningConfigurationRequest(bucket.getName(), configuration);
-
             client.setBucketVersioningConfiguration(setBucketVersioningConfigurationRequest);
             return true;
         } catch (AmazonS3Exception e) {
@@ -351,7 +356,9 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
             Map<String, Long> bucketsusage = new HashMap<String, Long>();
             for (BucketInfo bucket: bucketinfo) {
                 BucketInfo.Usage usage = bucket.getUsage();
-                bucketsusage.put(bucket.getBucket(), usage.getRgwMain().getSize_kb());
+                if (!ObjectUtils.isEmpty(usage) && usage.getRgwMain() != null){
+                    bucketsusage.put(bucket.getBucket(), usage.getRgwMain().getSize_kb());
+                }
             }
             return bucketsusage;
         } catch (Exception e) {
@@ -402,5 +409,9 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
             throw new CloudRuntimeException("Error while creating Ceph RGW S3 client");
         }
         return client;
+    }
+
+    @Override
+    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
     }
 }

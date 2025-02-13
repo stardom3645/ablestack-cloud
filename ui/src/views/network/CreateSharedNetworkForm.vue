@@ -18,14 +18,7 @@
 <template>
   <a-spin :spinning="loading">
     <div class="form-layout" v-ctrl-enter="handleSubmit">
-      <div v-if="isNsxEnabled">
-        <a-alert type="warning">
-          <template #message>
-            <span v-html="$t('message.shared.network.unsupported.for.nsx')" />
-          </template>
-        </a-alert>
-      </div>
-      <div v-else class="form">
+      <div class="form">
         <a-form
           :ref="formRef"
           :model="form"
@@ -132,7 +125,7 @@
           </a-form-item>
           <a-form-item v-if="form.isolatedpvlantype=='community' || form.isolatedpvlantype=='isolated'" name="isolatedpvlan" ref="isolatedpvlan">
             <template #label>
-              <tooltip-label :title="$t('label.isolatedpvlanid')" :tooltip="apiParams.isolatedpvlan.description"/>
+              <tooltip-label :title="$t('label.isolatedpvlan')" :tooltip="apiParams.isolatedpvlan.description"/>
             </template>
             <a-input
               v-model:value="form.isolatedpvlan"
@@ -725,7 +718,7 @@ export default {
           var trafficTypes = json.listtraffictypesresponse.traffictype
           if (this.arrayHasItems(trafficTypes)) {
             for (const type of trafficTypes) {
-              if (type.traffictype === 'Guest') {
+              if (type.traffictype === 'Guest' && physicalNetwork.isolationmethods !== 'NSX') {
                 this.formPhysicalNetworks.push(physicalNetwork)
                 break
               }
