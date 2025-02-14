@@ -2239,7 +2239,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         Integer maxRetentionTime = vmStatsMaxRetentionTime.value();
         if (maxRetentionTime <= 0) {
             logger.debug(String.format("Skipping VM stats cleanup. The [%s] parameter [%s] is set to 0 or less than 0.",
-                    vmStatsMaxRetentionTime.scope(), vmStatsMaxRetentionTime.toString()));
+                    ConfigKey.Scope.decodeAsCsv(vmStatsMaxRetentionTime.getScopeBitmask()), vmStatsMaxRetentionTime.toString()));
             return;
         }
         logger.trace("Removing older VM stats records.");
@@ -2257,7 +2257,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         if (maxRetentionTime <= 0) {
             if (logger.isDebugEnabled()) {
                 logger.debug(String.format("Skipping Volume stats cleanup. The [%s] parameter [%s] is set to 0 or less than 0.",
-                        vmDiskStatsMaxRetentionTime.scope(), vmDiskStatsMaxRetentionTime.toString()));
+                        ConfigKey.Scope.decodeAsCsv(vmDiskStatsMaxRetentionTime.getScopeBitmask()), vmDiskStatsMaxRetentionTime.toString()));
             }
             return;
         }
