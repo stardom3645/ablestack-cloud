@@ -63,7 +63,7 @@ public class LibvirtRevertSnapshotCommandWrapper extends CommandWrapper<RevertSn
     private static final String RADOS_CONNECTION_TIMEOUT = "30";
 
     protected Set<StoragePoolType> storagePoolTypesThatSupportRevertSnapshot = new HashSet<>(Arrays.asList(StoragePoolType.RBD, StoragePoolType.Filesystem,
-            StoragePoolType.NetworkFilesystem, StoragePoolType.SharedMountPoint));
+            StoragePoolType.NetworkFilesystem, StoragePoolType.SharedMountPoint, StoragePoolType.CLVM));
 
     @Override
     public Answer execute(final RevertSnapshotCommand command, final LibvirtComputingResource libvirtComputingResource) {
