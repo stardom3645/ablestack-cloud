@@ -4173,7 +4173,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
 
         StoragePoolVO storagePoolVO = _storagePoolDao.findById(volume.getPoolId());
-        if (storagePoolVO.getPoolType() === Storage.StoragePoolType.CLVM) {
+        if (storagePoolVO.getPoolType() == Storage.StoragePoolType.CLVM) {
             throw new CloudRuntimeException("Snapshot not supported for pool type: " + storagePoolVO.getPoolType());
         }
 
