@@ -131,10 +131,6 @@ export default {
           listView: true,
           popup: true,
           show: () => {
-            if (!store.getters.zones || store.getters.zones.length === 0) {
-              return false
-            }
-            // const AdvancedZones = store.getters.zones.filter(zone => zone.networktype === 'Advanced')
             const AdvancedZonesWithoutSG = store.getters.zones.filter(zone => zone.securitygroupsenabled === false)
             if (isAdmin() || (AdvancedZonesWithoutSG && AdvancedZonesWithoutSG.length > 0)) {
               return true
