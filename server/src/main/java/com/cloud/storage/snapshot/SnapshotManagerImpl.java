@@ -1074,8 +1074,9 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             }
         }
 
-        if (volume.getPoolType() == Storage.StoragePoolType.CLVM) {
-            throw new InvalidParameterValueException("Snapshot not supported for pool type: " + volume.getPoolType());
+        StoragePoolVO storagePoolVO = _storagePoolDao.findById(volume.getPoolId());
+        if (storagePoolVO.getPoolType() == Storage.StoragePoolType.CLVM) {
+            throw new InvalidParameterValueException("Snapshot not supported for pool type: " + storagePoolVO.getPoolType());
         }
 
         AccountVO owner = _accountDao.findById(volume.getAccountId());
