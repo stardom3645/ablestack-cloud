@@ -841,10 +841,13 @@ export default {
           message: 'message.action.release.ip',
           docHelp: 'adminguide/networking_and_traffic.html#releasing-an-ip-address-alloted-to-a-vpc',
           dataView: true,
-          show: (record) => { return record.state === 'Allocated' && !record.issourcenat },
+          show: (record) => { return record.state === 'Allocated' && !record.issourcenat && !record.issystem },
           groupAction: true,
           popup: true,
-          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+          groupMap: (selection) => { return selection.map(x => { return { id: x } }) },
+          groupShow: (selectedIps) => {
+            return selectedIps.every((ip) => ip.state === 'Allocated' && !ip.issourcenat && !ip.issystem)
+          }
         },
         {
           api: 'reserveIpAddress',
@@ -864,7 +867,10 @@ export default {
           show: (record) => { return record.state === 'Reserved' },
           groupAction: true,
           popup: true,
-          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+          groupMap: (selection) => { return selection.map(x => { return { id: x } }) },
+          groupShow: (selectedIps) => {
+            return selectedIps.every((ip) => ip.state === 'Reserved')
+          }
         }
       ]
     },
