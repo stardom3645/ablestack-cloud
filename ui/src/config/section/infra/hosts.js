@@ -161,19 +161,8 @@ export default {
       message: 'label.outofbandmanagement.configure',
       docHelp: 'adminguide/hosts.html#out-of-band-management',
       dataView: true,
-      post: true,
-      args: ['hostid', 'address', 'port', 'username', 'password', 'driver', 'manageconsoleprotocol', 'manageconsoleport'],
-      mapping: {
-        hostid: {
-          value: (record) => { return record.id }
-        },
-        driver: {
-          options: ['ipmitool', 'nestedcloudstack', 'redfish']
-        },
-        manageconsoleprotocol: {
-          options: ['http', 'https']
-        }
-      }
+      popup: true,
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/ConfigureHostOOBM')))
     },
     {
       api: 'enableOutOfBandManagementForHost',
