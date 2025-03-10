@@ -738,25 +738,25 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         protected void runInContext() {
             logger.debug(String.format("%s is running...", this.getClass().getSimpleName()));
 
-            try {
-                long lastUptime = (dbStats.containsKey(uptime) ? (Long) dbStats.get(uptime) : 0);
-                long lastQueries = (dbStats.containsKey(queries) ? (Long) dbStats.get(queries) : 0);
-                getDynamicDataFromDB();
-                long interval = (Long) dbStats.get(uptime) - lastUptime;
-                long activity = (Long) dbStats.get(queries) - lastQueries;
-                loadHistory.add(0, Double.valueOf(activity / interval));
-                int maxsize = DATABASE_SERVER_LOAD_HISTORY_RETENTION_NUMBER.value();
-                while (loadHistory.size() > maxsize) {
-                    loadHistory.remove(maxsize - 1);
-                }
-            } catch (Throwable e) {
-                // pokemon catch to make sure the thread stays running
-                logger.error("db statistics collection failed due to " + e.getLocalizedMessage());
-                if (logger.isDebugEnabled()) {
-                    logger.debug("db statistics collection failed.", e);
-                }
-            }
-        }
+             try {
+                 long lastUptime = (dbStats.containsKey(uptime) ? (Long) dbStats.get(uptime) : 0);
+                 long lastQueries = (dbStats.containsKey(queries) ? (Long) dbStats.get(queries) : 0);
+                 getDynamicDataFromDB();
+                 long interval = (Long) dbStats.get(uptime) - lastUptime;
+                 long activity = (Long) dbStats.get(queries) - lastQueries;
+                 loadHistory.add(0, interval == 0 ? -1 : Double.valueOf(activity / interval));
+                 int maxsize = DATABASE_SERVER_LOAD_HISTORY_RETENTION_NUMBER.value();
+                 while (loadHistory.size() > maxsize) {
+                     loadHistory.remove(maxsize);
+                 }
+             } catch (Throwable e) {
+                 // pokemon catch to make sure the thread stays running
+                 logger.error("db statistics collection failed due to " + e.getLocalizedMessage());
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("db statistics collection failed.", e);
+                 }
+             }
+         }
 
         private void getDynamicDataFromDB() {
             Map<String, String> stats = DbUtil.getDbInfo("STATUS", queries, uptime);
