@@ -295,7 +295,8 @@ known_categories = {
     'deleteASNRange': 'AS Number Range',
     'listASNumbers': 'AS Number',
     'releaseASNumber': 'AS Number',
-    'listHostDevices': 'listHostDevices'
+    'listHostDevices': 'listHostDevices',
+    'LicenseCheckCmd': 'LicenseCheck'
 }
 
 
