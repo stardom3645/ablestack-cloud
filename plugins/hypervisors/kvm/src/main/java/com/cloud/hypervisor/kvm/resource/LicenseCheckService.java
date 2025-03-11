@@ -22,6 +22,7 @@ import com.cloud.response.LicenseCheckerResponse;
 
 
 
+
 public interface LicenseCheckService {
 
     LicenseCheckerResponse checkLicense(LicenseCheckCmd cmd);
