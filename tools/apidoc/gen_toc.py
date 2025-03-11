@@ -296,7 +296,10 @@ known_categories = {
     'listASNumbers': 'AS Number',
     'releaseASNumber': 'AS Number',
     'listHostDevices': 'listHostDevices',
-    'LicenseCheckCmd': 'LicenseCheck'
+    'LicenseCheckCmd': 'LicenseCheck',
+    'listDomains.xml': 'Domain',
+    'listDomainChildren.xml': 'Domain',
+    'licenseCheck.xml': 'License',
 }
 
 
