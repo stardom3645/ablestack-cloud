@@ -19,8 +19,8 @@ package com.cloud.hypervisor.kvm.resource;
 
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.ha.LicenseCheckCmd;
-import com.cloud.response.LicenseCheckerResponse;
 import com.cloud.host.dao.HostDao;
+import com.cloud.response.LicenseCheckerResponse;
 import com.cloud.utils.exception.CloudRuntimeException;
 import java.util.Date;
 import java.util.Set;
@@ -28,9 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
 import org.apache.cloudstack.ha.HAConfigManager;
 import org.apache.cloudstack.ha.HAResource;
-// import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+// import org.apache.logging.log4j.Logger;
 
 
 public class HostStateManager {
@@ -124,7 +125,12 @@ public class HostStateManager {
 
     public Date getLicenseExpiryDate(Long hostId) {
         try {
-            LicenseCheckerResponse response = licenseCheckService.checkLicense(new LicenseCheckCmd());
+            // LicenseCheckCmd 생성 시 hostId 전달
+            LicenseCheckCmd cmd = new LicenseCheckCmd();
+            // hostId 설정 메서드 필요
+            cmd.setHostId(hostId);
+
+            LicenseCheckerResponse response = licenseCheckService.checkLicense(cmd);
             return response.getExpiryDate();
         } catch (Exception e) {
             logger.error("호스트 " + hostId + "의 라이센스 만료일 조회 실패", e);

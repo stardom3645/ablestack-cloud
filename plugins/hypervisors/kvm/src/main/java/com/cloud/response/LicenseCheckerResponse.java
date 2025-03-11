@@ -41,7 +41,7 @@ public class LicenseCheckerResponse extends BaseResponse {
         return expiryDate;
     }
 
-    public void setHostId(String hostId) {
+    public void setHostId(long hostId) {
         this.HostId = Long.valueOf(hostId);
     }
 

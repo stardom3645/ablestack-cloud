@@ -19,17 +19,24 @@
 package com.cloud.hypervisor.kvm.resource;
 
 import com.cloud.alert.AlertManager;
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.ha.LicenseCheckCmd;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
+import com.cloud.response.LicenseCheckerResponse;
 import com.cloud.utils.component.Manager;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.concurrency.NamedThreadFactory;
+import com.cloud.utils.db.Filter;
+import com.cloud.utils.db.SearchBuilder;
+import com.cloud.utils.db.SearchCriteria;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.spec.KeySpec;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -43,15 +50,13 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
-import javax.naming.ConfigurationException;
-
-import com.cloud.ha.LicenseCheckCmd;
-import com.cloud.response.LicenseCheckerResponse;
+import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.json.JSONObject;
+import org.springframework.stereotype.Component;
 
-
+@Component
 public class LicenseCheckServiceImpl extends ManagerBase implements LicenseCheckService, Manager, Configurable {
 
     @Inject
@@ -66,11 +71,11 @@ public class LicenseCheckServiceImpl extends ManagerBase implements LicenseCheck
     private ScheduledExecutorService executor;
 
     // License configuration keys
-    public static final ConfigKey<Integer> LicenseCheckInterval = new ConfigKey<>("Advanced", Integer.class,
+    private static final ConfigKey<Integer> LicenseCheckInterval = new ConfigKey<>("Advanced", Integer.class,
             "license.check.interval", "1440",
-            "라이센스 체크 간격 (분)", true);
+            "라이센스 체크 주기 (분)", true);
 
-    private static final String LICENSE_FILE_PATH = "/root"; // 라이센스 파일 경로를 하드코딩
+    private static final String LICENSE_FILE_PATH = "/root";
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -207,22 +212,36 @@ public class LicenseCheckServiceImpl extends ManagerBase implements LicenseCheck
 
     @Override
     public String getConfigComponentName() {
-        return "LicenseCheck";
+        return LicenseCheckServiceImpl.class.getSimpleName();
     }
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] { LicenseCheckInterval };
+        return new ConfigKey<?>[]{ LicenseCheckInterval };
     }
 
     @Override
     public LicenseCheckerResponse checkLicense(LicenseCheckCmd cmd) {
         try {
-            Date expiryDate = hostStateManager.getLicenseExpiryDate(cmd.getHostId());
+            Long hostId = cmd.getHostId();
+            if (hostId == null) {
+                throw new InvalidParameterValueException("호스트 ID가 필요합니다.");
+            }
+
+            HostVO host = hostDao.findById(hostId);
+            if (host == null) {
+                throw new InvalidParameterValueException("해당 호스트를 찾을 수 없습니다: " + hostId);
+            }
+
+            String latestLicense = getLatestLicenseFile(LICENSE_FILE_PATH);
+            Date expiryDate = getLicenseExpiryDate(latestLicense);
 
             LicenseCheckerResponse response = new LicenseCheckerResponse();
+            response.setObjectName("licensecheck");
+            response.setHostId(host.getId());
             response.setExpiryDate(expiryDate);
             response.setSuccess(true);
+
             return response;
         } catch (Exception e) {
             logger.error("라이센스 체크 중 오류 발생", e);
@@ -231,5 +250,62 @@ public class LicenseCheckServiceImpl extends ManagerBase implements LicenseCheck
             response.setMessage("라이센스 체크 중 오류 발생: " + e.getMessage());
             return response;
         }
+    }
+    public ListResponse<LicenseCheckerResponse> listLicenseChecks(final LicenseCheckCmd cmd) {
+        final Long hostId = cmd.getHostId();
+        Filter searchFilter = new Filter(HostVO.class, "id", true);
+        SearchBuilder<HostVO> sb = hostDao.createSearchBuilder();
+        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("uuid", sb.entity().getUuid(), SearchCriteria.Op.LIKE);
+        sb.and("name", sb.entity().getName(), SearchCriteria.Op.LIKE);
+
+        SearchCriteria<HostVO> sc = sb.create();
+        // String keyword = cmd.getKeyword();
+        if (hostId != null) {
+            sc.setParameters("id", hostId);
+        }
+
+        // if (keyword != null) {
+        //     sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+        //     sc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+        //     sc.addOr("private_ip_address", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+        // }
+
+        List<HostVO> hosts = hostDao.search(sc, searchFilter);
+        return createLicenseCheckListResponse(hosts);
+    }
+
+    private ListResponse<LicenseCheckerResponse> createLicenseCheckListResponse(List<HostVO> hosts) {
+        List<LicenseCheckerResponse> responseList = new ArrayList<>();
+
+        for (HostVO host : hosts) {
+            try {
+                String latestLicense = getLatestLicenseFile(LICENSE_FILE_PATH);
+                Date expiryDate = getLicenseExpiryDate(latestLicense);
+
+                LicenseCheckerResponse response = new LicenseCheckerResponse();
+                response.setObjectName("licensecheck");
+                response.setHostId(host.getId());
+                response.setExpiryDate(expiryDate);
+                response.setSuccess(true);
+                responseList.add(response);
+            } catch (Exception e) {
+                logger.error("라이센스 체크 중 오류 발생 - 호스트 ID: " + host.getId(), e);
+                LicenseCheckerResponse response = new LicenseCheckerResponse();
+                response.setHostId(host.getId());
+                response.setSuccess(false);
+                response.setMessage("라이센스 체크 중 오류 발생: " + e.getMessage());
+                responseList.add(response);
+            }
+        }
+
+        ListResponse<LicenseCheckerResponse> response = new ListResponse<>();
+        response.setResponses(responseList);
+        return response;
+    }
+    public List<Class<?>> getCommands() {
+        List<Class<?>> cmdList = new ArrayList<>();
+        cmdList.add(LicenseCheckCmd.class);
+        return cmdList;
     }
 }
