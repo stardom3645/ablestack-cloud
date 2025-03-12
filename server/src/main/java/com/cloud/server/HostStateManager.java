@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.apache.cloudstack.metrics;
+package com.cloud.server;
 
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.dao.HostDao;
@@ -24,10 +24,11 @@ import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
-import org.apache.cloudstack.api.LicenseCheckCmd;
+
 import org.apache.cloudstack.ha.HAConfigManager;
 import org.apache.cloudstack.ha.HAResource;
-import org.apache.cloudstack.response.LicenseCheckerResponse;
+import org.apache.cloudstack.api.command.admin.outofbandmanagement.LicenseCheckCmd;
+import org.apache.cloudstack.api.response.LicenseCheckerResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 // import org.apache.logging.log4j.Logger;
@@ -51,18 +52,18 @@ public class HostStateManager {
     // 에이전트가 이미 시작된 호스트를 추적하기 위한 Set
     private final Set<Long> initializedHosts = ConcurrentHashMap.newKeySet();
 
-    public void handleHostState(Long hostId, boolean isLicenseValid) {
+    public void handleHostState(Long hostId, boolean isLicenseValid, String ipAddress) {
         try {
             // HA를 항상 비활성화
             disableHA(hostId);
 
             if (isLicenseValid) {
                 if (!initializedHosts.contains(hostId)) {
-                    startAgent(hostId);
+                    startAgent(hostId, ipAddress);
                     initializedHosts.add(hostId);
                 }
             } else {
-                handleExpiredLicense(hostId);
+                handleExpiredLicense(hostId, ipAddress);
             }
         } catch (Exception e) {
             logger.error("호스트 " + hostId + " 처리 중 오류 발생: " + e.getMessage(), e);
@@ -85,9 +86,9 @@ public class HostStateManager {
         }
     }
 
-    private void startAgent(Long hostId) {
+    private void startAgent(Long hostId, String ipAddress) {
         try {
-            String glueEndpoint = "https://10.10.31.3:8080/api/v1/glue" + hostId + "/start";
+            String glueEndpoint = "https://" + ipAddress + "/api/v1/glue" + hostId + "/start";
             // HTTP 클라이언트를 사용하여 API 호출
             logger.info("호스트 " + hostId + "의 에이전트가 시작되었습니다.");
         } catch (Exception e) {
@@ -96,13 +97,14 @@ public class HostStateManager {
         }
     }
 
-    public void handleExpiredLicense(Long hostId) {
+    public void handleExpiredLicense(Long hostId, String ipAddress) {
+        logger.info("라이센스 만료 처리 시작1");
         try {
             // 1. HA 비활성화
             disableHA(hostId);
 
             // 2. glue-api를 통한 에이전트 정지
-            stopAgent(hostId);
+            stopAgent(hostId, ipAddress);
 
             logger.info("호스트 " + hostId + "의 라이센스 만료 처리가 완료되었습니다.");
         } catch (Exception e) {
@@ -111,9 +113,9 @@ public class HostStateManager {
         }
     }
 
-    private void stopAgent(Long hostId) {
+    private void stopAgent(Long hostId, String ipAddress) {
         try {
-            String glueEndpoint = "https://10.10.31.3:8080/api/v1/glue" + hostId + "/stop";
+            String glueEndpoint = "https://" + ipAddress + "/api/v1/glue" + hostId + "/stop";
             // HTTP 클라이언트를 사용하여 glue-api 호출
             logger.info("호스트 " + hostId + "의 에이전트가 정지되었습니다.");
         } catch (Exception e) {

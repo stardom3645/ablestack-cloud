@@ -1,6 +1,9 @@
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -15,17 +18,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.apache.cloudstack.metrics;
+package com.cloud.server;
 
+import java.util.Date;
 
-import org.apache.cloudstack.api.LicenseCheckCmd;
-import org.apache.cloudstack.response.LicenseCheckerResponse;
+public interface LicenseCheck {
+    long getHostId();
 
+    Date getExpiryDate();
 
-
-
-public interface LicenseCheckService {
-
-    LicenseCheckerResponse checkLicense(LicenseCheckCmd cmd);
-
+    default boolean isLicenseValid() {
+        return getExpiryDate().after(new Date());
+    }
 }
