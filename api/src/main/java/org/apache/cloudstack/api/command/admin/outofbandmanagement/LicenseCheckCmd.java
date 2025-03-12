@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.apache.cloudstack.api;
+package org.apache.cloudstack.api.command.admin.outofbandmanagement;
 
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
@@ -23,23 +23,21 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import java.util.Date;
 import javax.inject.Inject;
 import org.apache.cloudstack.acl.RoleType;
+import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.response.HostResponse;
-import org.apache.cloudstack.metrics.LicenseCheck;
-import org.apache.cloudstack.metrics.LicenseCheckService;
-import org.apache.cloudstack.response.LicenseCheckerResponse;
-// import org.apache.cloudstack.api.APICommand;
-// import org.apache.cloudstack.api.ApiArgValidator;
-// import org.apache.cloudstack.api.ApiConstants;
-// import org.apache.cloudstack.api.ApiErrorCode;
-// import org.apache.cloudstack.api.BaseCmd;
-// import org.apache.cloudstack.api.Parameter;
-// import org.apache.cloudstack.api.ResponseObject;
-// import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiArgValidator;
+import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.ApiErrorCode;
+import org.apache.cloudstack.api.BaseCmd;
+import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.ResponseObject;
+import org.apache.cloudstack.api.ServerApiException;
 
 
 
 
-@APICommand(name = "LicenseCheckCmd",
+@APICommand(name = "licenseCheck",
         description = "licenseCheck results",
         responseObject = LicenseCheckerResponse.class,
         responseView = ResponseObject.ResponseView.Full,
@@ -102,7 +100,9 @@ public class LicenseCheckCmd extends BaseCmd {
     @Override
     public void execute() throws ResourceUnavailableException, ServerApiException {
         try {
+            logger.info("라이센스 체크1");
             LicenseCheckerResponse response = licenseService.checkLicense(this);
+
             setResponseObject(response);
         } catch (CloudRuntimeException ex){
             ex.printStackTrace();
