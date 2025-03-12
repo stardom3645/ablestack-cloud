@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.apache.cloudstack.response;
+package org.apache.cloudstack.api.response;
 
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
@@ -33,12 +33,20 @@ public class LicenseCheckerResponse extends BaseResponse {
     @Param(description = "license expiry date")
     private Date expiryDate;
 
+    @SerializedName(ApiConstants.SUCCESS)
+    @Param(description = "license success")
+    private String success;
+
     public Long getHostId() {
         return HostId;
     }
 
     public Date getExpiryDate() {
         return expiryDate;
+    }
+
+    public String getSuccess() {
+        return success;
     }
 
     public void setHostId(long hostId) {
