@@ -5858,7 +5858,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                 AlertManager.AlertType.ALERT_TYPE_HOST,
                 host.getDataCenterId(),
                 host.getId(),
-                "License expired",
+                "The license file does not exist or has expired.",
                 "The license for host " + host.getName() + "has expired. Please renew the license."
             );
 
