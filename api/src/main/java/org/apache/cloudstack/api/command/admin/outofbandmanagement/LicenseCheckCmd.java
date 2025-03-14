@@ -21,33 +21,26 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 import com.cloud.utils.exception.CloudRuntimeException;
 import java.util.Date;
-import javax.inject.Inject;
 import org.apache.cloudstack.acl.RoleType;
-import org.apache.cloudstack.api.APICommand;
-import org.apache.cloudstack.api.response.HostResponse;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiArgValidator;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
-import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.response.HostResponse;
+import org.apache.cloudstack.api.response.LicenseCheckerResponse;
+// import com.cloud.server.LicenseCheckService;
 
 
-
-
-@APICommand(name = "licenseCheck",
-        description = "licenseCheck results",
-        responseObject = LicenseCheckerResponse.class,
-        responseView = ResponseObject.ResponseView.Full,
-        entityType = {LicenseCheck.class},
-        authorized = {RoleType.Admin})
+@APICommand(name = "licenseCheck", description = "list Host Devices'.", since = "4.20.0.0", responseObject = HostResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {
+    RoleType.Admin })
 public class LicenseCheckCmd extends BaseCmd {
     public static final String APINAME = "licenseCheck";
 
-    @Inject
-    private LicenseCheckService licenseService;
+    // @Inject
+    // private LicenseCheckService licenseService;
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -101,7 +94,7 @@ public class LicenseCheckCmd extends BaseCmd {
     public void execute() throws ResourceUnavailableException, ServerApiException {
         try {
             logger.info("라이센스 체크1");
-            LicenseCheckerResponse response = licenseService.checkLicense(this);
+            LicenseCheckerResponse response = _mgr.checkLicense(this);
 
             setResponseObject(response);
         } catch (CloudRuntimeException ex){

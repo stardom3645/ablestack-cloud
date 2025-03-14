@@ -58,12 +58,6 @@ public class LicenseCheckerResponse extends BaseResponse {
     }
 
     public void setSuccess(boolean isValid) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setSuccess'");
-    }
-
-    public void setMessage(Object object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setMessage'");
+        this.success = Boolean.toString(isValid);
     }
 }
