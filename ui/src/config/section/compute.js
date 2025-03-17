@@ -1011,7 +1011,7 @@ export default {
       related: [{
         name: 'vm',
         title: 'label.instances',
-        param: 'userdata'
+        param: 'userdataid'
       }],
       tabs: [
         {
