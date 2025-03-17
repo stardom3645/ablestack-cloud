@@ -475,7 +475,7 @@ export default {
       if (!this.resource.licenseExpiryDate) {
         return this.$t('message.license.not.found')
       }
-      return `${this.$t('message.alert.licenseexpired')} ${this.resource.licenseExpiryDate} ${this.isLicenseExpired(this.resource.licenseExpiryDate) ? this.$t('message.license.renewal.required') : '(D' + this.calculateDday(this.resource.licenseExpiryDate) + ')'}`
+      return `${this.$t('message.alert.licenseexpired')} ${this.resource.licenseExpiryDate} ${this.isLicenseExpired(this.resource.licenseExpiryDate) ? this.$t('message.license.renewal.required') : '(' + this.calculateDday(this.resource.licenseExpiryDate) + this.$t('message.license.days.left') + ')'}`
     },
     async fetchLicenseInfo () {
       if (this.resource && this.resource.ipaddress) {
@@ -503,7 +503,7 @@ export default {
       const expiry = new Date(expiryDate)
       const diffTime = expiry - today
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      return `-${diffDays}`
+      return diffDays
     }
   }
 }
