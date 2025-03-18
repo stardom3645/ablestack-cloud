@@ -1287,62 +1287,62 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         }
     }
 
-    private boolean handleExpiredLicense(HostVO host) {
-        boolean licenseHostValue = false;
-        try {
-            // HA 비활성화 처리
-            HAConfigVO haConfig = haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
-            if (haConfig != null) {
-                try {
-                    haConfig.setEnabled(false);
-                    haConfigDao.update(haConfig.getId(), haConfig);
-                    boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
-                    if (!result) {
-                        logger.warn("Failed to disable HA for host " + host.getId());
-                    } else {
-                        logger.info("Successfully disabled HA for host " + host.getId());
-                    }
-                } catch (Exception e) {
-                    logger.error("Failed to disable HA for host " + host.getId(), e);
-                }
-            }
+    // private boolean handleExpiredLicense(HostVO host) {
+    //     boolean licenseHostValue = false;
+    //     HAConfigVO haConfig = haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
+    //     try {
+    //         // HA 비활성화 처리
+    //         if (haConfig != null) {
+    //             try {
+    //                 haConfig.setEnabled(false);
+    //                 haConfigDao.update(haConfig.getId(), haConfig);
+    //                 boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
+    //                 if (!result) {
+    //                     logger.warn("Failed to disable HA for host " + host.getId());
+    //                 } else {
+    //                     logger.info("Successfully disabled HA for host " + host.getId());
+    //                 }
+    //             } catch (Exception e) {
+    //                 logger.error("Failed to disable HA for host " + host.getId(), e);
+    //             }
+    //         }
 
-            // 기존 라이센스 체크 로직
-            TrustManager[] trustAllCerts = new TrustManager[] {
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
-                }
-            };
+    //         // 기존 라이센스 체크 로직
+    //         TrustManager[] trustAllCerts = new TrustManager[] {
+    //             new X509TrustManager() {
+    //                 public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+    //                 public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+    //                 public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+    //             }
+    //         };
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+    //         SSLContext sslContext = SSLContext.getInstance("TLS");
+    //         sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+    //         HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
 
-            URL url = new URL("https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/isLicenseExpired");
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setHostnameVerifier((hostname, session) -> hostname.equals(host.getPrivateIpAddress()));
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(60000);
-            connection.setRequestProperty("Accept", "application/json");
+    //         URL url = new URL("https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/isLicenseExpired");
+    //         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+    //         connection.setHostnameVerifier((hostname, session) -> hostname.equals(host.getPrivateIpAddress()));
+    //         connection.setRequestMethod("GET");
+    //         connection.setConnectTimeout(30000);
+    //         connection.setReadTimeout(60000);
+    //         connection.setRequestProperty("Accept", "application/json");
 
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                StringBuilder response = new StringBuilder();
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode jsonNode = mapper.readTree(response.toString());
-                licenseHostValue = jsonNode.get("expired").asBoolean();
-            }
-        } catch (Exception e) {
-            logger.error("Exception occurred during license check: ", e);
-        }
-        return licenseHostValue;
-    }
+    //         try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+    //             StringBuilder response = new StringBuilder();
+    //             String inputLine;
+    //             while ((inputLine = in.readLine()) != null) {
+    //                 response.append(inputLine);
+    //             }
+    //             ObjectMapper mapper = new ObjectMapper();
+    //             JsonNode jsonNode = mapper.readTree(response.toString());
+    //             licenseHostValue = jsonNode.get("expired").asBoolean();
+    //         }
+    //     } catch (Exception e) {
+    //         logger.error("Exception occurred during license check: ", e);
+    //     }
+    //     return licenseHostValue;
+    // }
 
     private void controlHostAgent(HostVO host, String action) {
         try {
@@ -5978,7 +5978,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     private boolean handleValidLicense(HostVO host) {
         boolean licenseHostValue = false;
         try {
-            // HA 비활성화 로직 제거
             TrustManager[] trustAllCerts = new TrustManager[] {
                 new X509TrustManager() {
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -6042,10 +6041,10 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private boolean handleExpiredLicense(HostVO host) {
+        HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
         boolean licenseHostValue = false;
         try {
             // HA 비활성화 처리
-            HAConfigVO haConfig = haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
             if (haConfig != null) {
                 try {
                     haConfig.setEnabled(false);
