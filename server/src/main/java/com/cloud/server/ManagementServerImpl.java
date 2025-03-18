@@ -45,6 +45,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
@@ -639,7 +641,9 @@ import org.apache.cloudstack.framework.config.impl.ConfigurationSubGroupVO;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.apache.cloudstack.framework.security.keystore.KeystoreManager;
 import org.apache.cloudstack.ha.HAConfigManager;
+import org.apache.cloudstack.ha.HAConfigVO;
 import org.apache.cloudstack.ha.HAResource;
+import org.apache.cloudstack.ha.dao.HAConfigDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.query.QueryService;
 import org.apache.cloudstack.resourcedetail.dao.GuestOsDetailsDao;
@@ -862,6 +866,8 @@ import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 public class ManagementServerImpl extends ManagerBase implements ManagementServer, Configurable {
@@ -1048,6 +1054,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     @Inject
     private HAConfigManager haConfigManager;
 
+    @Inject
+    private HAConfigDao haConfigDao;
+
     private LockControllerListener _lockControllerListener;
     private final ScheduledExecutorService _eventExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EventChecker"));
     private final ScheduledExecutorService _alertExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("AlertChecker"));
@@ -1175,7 +1184,143 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         _clusterMgr.registerListener(_lockControllerListener);
 
         enableAdminUser("password");
+
+        // Initialize license check and agent control for all hosts
+        initLicenseCheck();
+
         return true;
+    }
+
+    @PostConstruct
+    public void initLicenseCheck() {
+        logger.info("Initializing license check and agent control for all hosts...");
+        List<HostVO> hosts = _hostDao.listAll();
+
+        if (hosts != null && !hosts.isEmpty()) {
+            for (HostVO host : hosts) {
+                try {
+                    String ipAddress = host.getPrivateIpAddress();
+                    if (StringUtils.isNotEmpty(ipAddress)) {
+                        checkLicenseAndControlAgent(host);
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to check license and control agent for host: " + host.getId(), e);
+                }
+            }
+        }
+    }
+
+    private JsonNode getLicenseStatus(String licenseApiUrl, String ipAddress) throws Exception {
+        TrustManager[] trustAllCerts = new TrustManager[] {
+            new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+                public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+                public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+            }
+        };
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+        URL url = new URL(licenseApiUrl);
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+        connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(30000);
+        connection.setReadTimeout(60000);
+        connection.setRequestProperty("Accept", "application/json");
+
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+            StringBuilder response = new StringBuilder();
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readTree(response.toString());
+        }
+    }
+
+    private void checkLicenseAndControlAgent(HostVO host) {
+        try {
+            String ipAddress = host.getPrivateIpAddress();
+            String licenseApiUrl = "https://" + ipAddress + ":8080/api/v1/license/isLicenseExpired";
+
+            // 라이센스 상태 확인
+            JsonNode licenseStatus = getLicenseStatus(licenseApiUrl, ipAddress);
+            boolean isExpired = licenseStatus.get("expired").asBoolean();
+
+            // 라이센스 상태에 따라 에이전트 제어
+            if (isExpired) {
+                // 만료된 경우 에이전트 중지
+                controlHostAgent(host, "stop");
+                logger.info("License expired - stopping agent for host: " + host.getId());
+
+                // HA 비활성화 처리
+                handleExpiredLicense(host);
+
+                // 알림 전송
+                _alertMgr.sendAlert(
+                    AlertManager.AlertType.ALERT_TYPE_HOST,
+                    host.getDataCenterId(),
+                    host.getId(),
+                    "License expired for host " + host.getName(),
+                    "The license has expired. Agent has been stopped for host " + host.getName()
+                );
+            } else {
+                // 유효한 경우 에이전트 시작
+                controlHostAgent(host, "start");
+                logger.info("License valid - starting agent for host: " + host.getId());
+
+                // 알림 전송
+                _alertMgr.sendAlert(
+                    AlertManager.AlertType.ALERT_TYPE_HOST,
+                    host.getDataCenterId(),
+                    host.getId(),
+                    "License valid for host " + host.getName(),
+                    "The license is valid. Agent has been started for host " + host.getName()
+                );
+            }
+        } catch (Exception e) {
+            logger.error("Error checking license and controlling agent for host: " + host.getId(), e);
+        }
+    }
+
+    private void controlHostAgent(HostVO host, String action) {
+        try {
+            String ipAddress = host.getPrivateIpAddress();
+            String glueEndpoint = "https://" + ipAddress + ":8080/api/v1/license/controlHostAgent/" + action;
+
+            TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+                }
+            };
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+            URL url = new URL(glueEndpoint);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(60000);
+            connection.setRequestProperty("Accept", "application/json");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                logger.info("Successfully " + action + "ed agent for host: " + host.getId());
+            } else {
+                logger.error("Failed to " + action + " agent for host: " + host.getId() + ". Response code: " + responseCode);
+            }
+        } catch (Exception e) {
+            logger.error("Error controlling agent for host: " + host.getId(), e);
+        }
     }
 
     protected Map<String, String> getConfigs() {
@@ -4256,9 +4401,65 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             try {
                 logger.info("Daily license check started");
                 List<HostVO> hosts = _hostDao.listAll();
-                checkLicensesForHosts(hosts);
+
+                for (HostVO host : hosts) {
+                    try {
+                        String ipAddress = host.getPrivateIpAddress();
+                        if (StringUtils.isEmpty(ipAddress)) {
+                            logger.warn("Empty IP address for host: " + host.getId());
+                            continue;
+                        }
+
+                        // 먼저 라이센스 존재 여부 확인
+                        String licenseApiUrl = "https://" + ipAddress + ":8080/api/v1/license/isLicenseExpired";
+                        boolean hasLicense = checkLicenseExists(licenseApiUrl, ipAddress);
+
+                        if (!hasLicense) {
+                            logger.warn("No license found for host: " + host.getId());
+                            continue;
+                        }
+
+                        // 라이센스가 있는 경우 만료 여부 체크 진행
+                        checkLicensesForHosts(Arrays.asList(host));
+
+                    } catch (Exception e) {
+                        logger.error("Error checking license for host: " + host.getId(), e);
+                    }
+                }
             } catch (Exception e) {
                 logger.error("Error occurred during license check", e);
+            }
+        }
+
+        private boolean checkLicenseExists(String licenseApiUrl, String ipAddress) {
+            try {
+                TrustManager[] trustAllCerts = new TrustManager[] {
+                    new X509TrustManager() {
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                    }
+                };
+
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+                URL url = new URL(licenseApiUrl);
+                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+                connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(60000);
+
+                int responseCode = connection.getResponseCode();
+                return responseCode == 200;
+
+            } catch (Exception e) {
+                logger.error("Error checking license existence: ", e);
+                return false;
             }
         }
     }
@@ -5698,8 +5899,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
         for (HostVO host : hosts) {
             try {
-                logger.info("host::: " + host.getPrivateIpAddress());
-                logger.info("getPrivateIpAddress: " + host.getPrivateIpAddress());
                 boolean isExpired = isLicenseExpired(host.getPrivateIpAddress());
                 LicenseCheckerResponse response = createLicenseResponse(host, !isExpired);
                 if (isExpired) {
@@ -5722,13 +5921,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     private boolean handleValidLicense(HostVO host) {
         boolean licenseHostValue = false;
         try {
-            // Disable HA
-            boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
-            if (!result) {
-                logger.warn("Failed to disable HA for host " + host.getId());
-                throw new CloudRuntimeException("Failed to disable HA");
-            }
-
             TrustManager[] trustAllCerts = new TrustManager[] {
                 new X509TrustManager() {
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -5738,10 +5930,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                     public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
                 }
             };
-            logger.info("Starting Glue-API call: " + host.getPrivateIpAddress());
             String glueEndpoint = "https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/controlHostAgent/start";
-            logger.info("Starting Glue-API call: " + glueEndpoint);
-            logger.info("Starting Glue-API call: " + glueEndpoint);
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
@@ -5776,7 +5965,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         AlertManager.AlertType.ALERT_TYPE_HOST,
                         host.getDataCenterId(),
                         host.getId(),
-                        "License activated",
+                        "The license for host has been activated normally.",
                         "The license for host " + host.getName() + "has been activated normally."
                     );
 
@@ -5795,15 +5984,26 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private boolean handleExpiredLicense(HostVO host) {
+        HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
         boolean licenseHostValue = false;
         try {
-            // Disable HA
-            boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
-            if (!result) {
-                logger.warn("Failed to disable HA for host " + host.getId());
-                throw new CloudRuntimeException("Failed to disable HA");
+            // HA 비활성화 처리
+            if (haConfig != null) {
+                try {
+                    haConfig.setEnabled(false);
+                    haConfigDao.update(haConfig.getId(), haConfig);
+                    boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
+                    if (!result) {
+                        logger.warn("Failed to disable HA for host " + host.getId());
+                    } else {
+                        logger.info("Successfully disabled HA for host " + host.getId());
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to disable HA for host " + host.getId(), e);
+                }
             }
 
+            // 기존 라이센스 체크 로직
             TrustManager[] trustAllCerts = new TrustManager[] {
                 new X509TrustManager() {
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -5813,10 +6013,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                     public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
                 }
             };
-            logger.info("Starting Glue-API call: " + host.getPrivateIpAddress());
             String glueEndpoint = "https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/controlHostAgent/stop";
-            logger.info("Starting Glue-API call: " + glueEndpoint);
-            logger.info("Starting Glue-API call: " + glueEndpoint);
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
@@ -5854,7 +6051,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                 AlertManager.AlertType.ALERT_TYPE_HOST,
                 host.getDataCenterId(),
                 host.getId(),
-                "The license file does not exist or has expired.",
+                "The host's license has expired or the file is missing. Please renew the license.",
                 "The license for host " + host.getName() + "has expired. Please renew the license."
             );
 
@@ -5887,9 +6084,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
             String licenseApiUrl = "https://" + ipAddress + ":8080/api/v1/license/isLicenseExpired";
             URL url = new URL(licenseApiUrl);
-            logger.info("Starting Glue-API call: " + ipAddress);
-            logger.info("Starting Glue-API call: " + licenseApiUrl);
-            logger.info("Starting Glue-API call: " + licenseApiUrl);
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 
             connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
@@ -5940,5 +6134,59 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         response.setHostId(host.getId());
         response.setSuccess(false);
         return response;
+    }
+
+    private boolean checkLicenseExists(String licenseApiUrl, String ipAddress) throws Exception {
+        boolean hasLicense = false;
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                }
+            };
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+            URL url = new URL(licenseApiUrl);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
+            connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+
+            connection.setDoOutput(true);
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(60000);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    StringBuilder response = new StringBuilder();
+                    String inputLine;
+
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+
+                    String licenseData = response.toString();
+                    hasLicense = Boolean.parseBoolean(licenseData);
+
+                    return hasLicense;
+                }
+            } else {
+                logger.error("Error: Received HTTP response code " + responseCode);
+            }
+        } catch (Exception e) {
+            logger.error("Exception occurred: ", e);
+            e.printStackTrace();
+        }
+        return hasLicense;
     }
 }
