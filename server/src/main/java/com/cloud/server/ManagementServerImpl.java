@@ -1257,6 +1257,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                 controlHostAgent(host, "stop");
                 logger.info("License expired - stopping agent for host: " + host.getId());
 
+                // HA 비활성화 처리
+                handleExpiredLicense(host);
+
                 // 알림 전송
                 _alertMgr.sendAlert(
                     AlertManager.AlertType.ALERT_TYPE_HOST,
@@ -1282,6 +1285,63 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         } catch (Exception e) {
             logger.error("Error checking license and controlling agent for host: " + host.getId(), e);
         }
+    }
+
+    private boolean handleExpiredLicense(HostVO host) {
+        boolean licenseHostValue = false;
+        try {
+            // HA 비활성화 처리
+            HAConfigVO haConfig = haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
+            if (haConfig != null) {
+                try {
+                    haConfig.setEnabled(false);
+                    haConfigDao.update(haConfig.getId(), haConfig);
+                    boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
+                    if (!result) {
+                        logger.warn("Failed to disable HA for host " + host.getId());
+                    } else {
+                        logger.info("Successfully disabled HA for host " + host.getId());
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to disable HA for host " + host.getId(), e);
+                }
+            }
+
+            // 기존 라이센스 체크 로직
+            TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+                }
+            };
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+            URL url = new URL("https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/isLicenseExpired");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setHostnameVerifier((hostname, session) -> hostname.equals(host.getPrivateIpAddress()));
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(60000);
+            connection.setRequestProperty("Accept", "application/json");
+
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(response.toString());
+                licenseHostValue = jsonNode.get("expired").asBoolean();
+            }
+        } catch (Exception e) {
+            logger.error("Exception occurred during license check: ", e);
+        }
+        return licenseHostValue;
     }
 
     private void controlHostAgent(HostVO host, String action) {
@@ -5896,8 +5956,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
         for (HostVO host : hosts) {
             try {
-                logger.info("host::: " + host.getPrivateIpAddress());
-                logger.info("getPrivateIpAddress: " + host.getPrivateIpAddress());
                 boolean isExpired = isLicenseExpired(host.getPrivateIpAddress());
                 LicenseCheckerResponse response = createLicenseResponse(host, !isExpired);
                 if (isExpired) {
@@ -5918,22 +5976,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private boolean handleValidLicense(HostVO host) {
-        HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
         boolean licenseHostValue = false;
-        logger.info(haConfig+"haConfig");
         try {
-            if (haConfig != null) {
-                logger.info(haConfig+"haConfig");
-                try {
-                    boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
-                    if (!result) {
-                        logger.warn("Failed to disable HA for host " + host.getId() + " but continuing with license check");
-                    }
-                } catch (Exception e) {
-                    logger.warn("Unable to disable HA for host " + host.getId() + ": " + e.getMessage() + " but continuing with license check");
-                }
-            }
-
+            // HA 비활성화 로직 제거
             TrustManager[] trustAllCerts = new TrustManager[] {
                 new X509TrustManager() {
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -5943,10 +5988,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                     public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
                 }
             };
-            logger.info("Starting Glue-API call: " + host.getPrivateIpAddress());
             String glueEndpoint = "https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/controlHostAgent/start";
-            logger.info("Starting Glue-API call: " + glueEndpoint);
-            logger.info("Starting Glue-API call: " + glueEndpoint);
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
@@ -6001,19 +6043,25 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     private boolean handleExpiredLicense(HostVO host) {
         boolean licenseHostValue = false;
-        HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
         try {
+            // HA 비활성화 처리
+            HAConfigVO haConfig = haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
             if (haConfig != null) {
                 try {
+                    haConfig.setEnabled(false);
+                    haConfigDao.update(haConfig.getId(), haConfig);
                     boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
                     if (!result) {
-                        logger.warn("Failed to disable HA for host " + host.getId() + " but continuing with license check");
+                        logger.warn("Failed to disable HA for host " + host.getId());
+                    } else {
+                        logger.info("Successfully disabled HA for host " + host.getId());
                     }
                 } catch (Exception e) {
-                    logger.warn("Unable to disable HA for host " + host.getId() + ": " + e.getMessage() + " but continuing with license check");
+                    logger.error("Failed to disable HA for host " + host.getId(), e);
                 }
             }
 
+            // 기존 라이센스 체크 로직
             TrustManager[] trustAllCerts = new TrustManager[] {
                 new X509TrustManager() {
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
