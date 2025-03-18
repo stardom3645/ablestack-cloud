@@ -643,7 +643,9 @@ import org.apache.cloudstack.framework.config.impl.ConfigurationSubGroupVO;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.apache.cloudstack.framework.security.keystore.KeystoreManager;
 import org.apache.cloudstack.ha.HAConfigManager;
+import org.apache.cloudstack.ha.HAConfigVO;
 import org.apache.cloudstack.ha.HAResource;
+import org.apache.cloudstack.ha.dao.HAConfigDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.query.QueryService;
 import org.apache.cloudstack.resourcedetail.dao.GuestOsDetailsDao;
@@ -1054,6 +1056,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     @Inject
     private HAConfigManager haConfigManager;
+
+    @Inject
+    private HAConfigDao haConfigDao;
 
     private LockControllerListener _lockControllerListener;
     private final ScheduledExecutorService _eventExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EventChecker"));
@@ -5917,10 +5922,12 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private boolean handleValidLicense(HostVO host) {
+        HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
         boolean licenseHostValue = false;
+        logger.info(haConfig+"haConfig");
         try {
-            // HA 비활성화 시도 시 발생하는 예외를 무시하고 계속 진행
-            if (haConfigManager != null) {
+            if (haConfig != null) {
+                logger.info(haConfig+"haConfig");
                 try {
                     boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
                     if (!result) {
@@ -5998,8 +6005,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     private boolean handleExpiredLicense(HostVO host) {
         boolean licenseHostValue = false;
+        HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
         try {
-            if (haConfigManager != null) {
+            if (haConfig != null) {
                 try {
                     boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
                     if (!result) {
