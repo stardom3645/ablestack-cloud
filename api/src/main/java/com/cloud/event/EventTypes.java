@@ -748,6 +748,13 @@ public class EventTypes {
     public static final String EVENT_SECURITY_CHECK = "SECURITY.CHECK";
     public static final String EVENT_INTEGRITY_VERIFICATION = "INTEGRITY.VERIFICATION";
     public static final String EVENT_LOG_AUTO_DELETED = "LOG.DELETED";
+    
+    // Management Server
+    public static final String EVENT_MS_MAINTENANCE_PREPARE = "MS.MAINTENANCE.PREPARE";
+    public static final String EVENT_MS_MAINTENANCE_CANCEL = "MS.MAINTENANCE.CANCEL";
+    public static final String EVENT_MS_SHUTDOWN_PREPARE = "MS.SHUTDOWN.PREPARE";
+    public static final String EVENT_MS_SHUTDOWN_CANCEL = "MS.SHUTDOWN.CANCEL";
+    public static final String EVENT_MS_SHUTDOWN = "MS.SHUTDOWN";
 
     // OBJECT STORE
     public static final String EVENT_OBJECT_STORE_CREATE = "OBJECT.STORE.CREATE";
@@ -1249,6 +1256,12 @@ public class EventTypes {
 
         //Security
         entityEventDetails.put(EVENT_SECURITY_CHECK, "Security");
+        
+        entityEventDetails.put(EVENT_MS_MAINTENANCE_PREPARE, "ManagementServer");
+        entityEventDetails.put(EVENT_MS_MAINTENANCE_CANCEL, "ManagementServer");
+        entityEventDetails.put(EVENT_MS_SHUTDOWN_PREPARE, "ManagementServer");
+        entityEventDetails.put(EVENT_MS_SHUTDOWN_CANCEL, "ManagementServer");
+        entityEventDetails.put(EVENT_MS_SHUTDOWN, "ManagementServer");
 
         //Object Store
         entityEventDetails.put(EVENT_OBJECT_STORE_CREATE, ObjectStore.class);
