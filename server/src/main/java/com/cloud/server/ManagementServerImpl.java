@@ -21,9 +21,10 @@ package com.cloud.server;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 // import java.net.HttpURLConnection;
 import java.net.URL;
-// import java.security.SecureRandom;
+import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +54,7 @@ import javax.inject.Inject;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+// import javax.net.ssl.X509TrustManager;
 import javax.naming.ConfigurationException;
 
 import com.cloud.cpu.CPU;
@@ -660,7 +661,7 @@ import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
 import org.apache.cloudstack.userdata.UserDataManager;
 import org.apache.cloudstack.utils.CloudStackVersion;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-// import org.apache.cloudstack.utils.security.SSLUtils;
+import org.apache.cloudstack.utils.security.SSLUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -845,6 +846,7 @@ import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.utils.net.MacAddress;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.security.CertificateHelper;
+import com.cloud.utils.nio.TrustAllManager;
 import com.cloud.utils.ssh.SSHKeysHelper;
 import com.cloud.vm.ConsoleProxyVO;
 import com.cloud.vm.DiskProfile;
@@ -1214,34 +1216,40 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private JsonNode getLicenseStatus(String licenseApiUrl, String ipAddress) throws Exception {
-        TrustManager[] trustAllCerts = new TrustManager[] {
-            new X509TrustManager() {
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
-                public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
-                public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+
+            URL url = new URL(licenseApiUrl);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
+            connection.setRequestMethod("GET");
+            // 타임아웃 설정 조정
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/json");
+
+            if (connection.getResponseCode() == 200) {
+                StringBuilder response = new StringBuilder();
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+                    String inputLine;
+                    while ((inputLine = br.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                }
+                ObjectMapper mapper = new ObjectMapper();
+                return mapper.readTree(response.toString());
+            } else {
+                String msg = "Failed to request license status API. response code : " + connection.getResponseCode();
+                logger.error(msg);
+                return null;
             }
-        };
-
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-
-        URL url = new URL(licenseApiUrl);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
-        connection.setRequestMethod("GET");
-        connection.setConnectTimeout(30000);
-        connection.setReadTimeout(60000);
-        connection.setRequestProperty("Accept", "application/json");
-
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-            StringBuilder response = new StringBuilder();
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readTree(response.toString());
+        } catch (Exception e) {
+            logger.error("License API endpoint not available", e);
+            return null;
         }
     }
 
@@ -1291,38 +1299,42 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private void controlHostAgent(HostVO host, String action) {
+        HttpsURLConnection connection = null;
         try {
             String ipAddress = host.getPrivateIpAddress();
             String glueEndpoint = "https://" + ipAddress + ":8080/api/v1/license/controlHostAgent/" + action;
 
-            TrustManager[] trustAllCerts = new TrustManager[] {
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }
-                }
-            };
-
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
 
             URL url = new URL(glueEndpoint);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(60000);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/json");
+
+            // 연결 시도 전에 소켓 설정
+            System.setProperty("sun.net.client.defaultConnectTimeout", "5000");
+            System.setProperty("sun.net.client.defaultReadTimeout", "15000");
 
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
-                logger.info("Successfully " + action + "ed agent for host: " + host.getId());
+                logger.info("Successfully " + action + "ed agent for host: " + host.getId() + " (IP: " + ipAddress + ")");
             } else {
-                logger.error("Failed to " + action + " agent for host: " + host.getId() + ". Response code: " + responseCode);
+                logger.error("Failed to " + action + " agent for host: " + host.getId() + " (IP: " + ipAddress + "). Response code: " + responseCode);
             }
+        } catch (SocketTimeoutException e) {
+            logger.error("Connection timed out while controlling agent for host: " + host.getId() + " (IP: " + host.getPrivateIpAddress() + ")", e);
         } catch (Exception e) {
-            logger.error("Error controlling agent for host: " + host.getId(), e);
+            logger.error("Error controlling agent for host: " + host.getId() + " (IP: " + host.getPrivateIpAddress() + ")", e);
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
     }
 
@@ -4437,34 +4449,40 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             }
         }
 
-        private boolean checkLicenseExists(String licenseApiUrl, String ipAddress) {
+        private boolean checkLicenseExists(String licenseApiUrl, String ipAddress) throws Exception {
             try {
-                TrustManager[] trustAllCerts = new TrustManager[] {
-                    new X509TrustManager() {
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return null;
-                        }
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                    }
-                };
+                String readLine = null;
+                StringBuilder response = new StringBuilder();
 
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
 
                 URL url = new URL(licenseApiUrl);
-                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+
+                connection.setDoOutput(true);
                 connection.setRequestMethod("GET");
-                connection.setConnectTimeout(30000);
-                connection.setReadTimeout(60000);
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-                int responseCode = connection.getResponseCode();
-                return responseCode == 200;
-
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    while ((readLine = br.readLine()) != null) {
+                        response.append(readLine);
+                    }
+                    return Boolean.parseBoolean(response.toString());
+                } else {
+                    String msg = "Failed to check license. response code : " + connection.getResponseCode();
+                    logger.error(msg);
+                    return false;
+                }
             } catch (Exception e) {
-                logger.error("Error checking license existence: ", e);
+                logger.error("License check endpoint not available", e);
                 return false;
             }
         }
@@ -5923,33 +5941,31 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private boolean handleValidLicense(HostVO host) {
+        HttpsURLConnection connection = null;
         boolean licenseHostValue = false;
+        String ipAddress = host.getPrivateIpAddress();
+
         try {
-            TrustManager[] trustAllCerts = new TrustManager[] {
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                }
-            };
-            String glueEndpoint = "https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/controlHostAgent/start";
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+            String glueEndpoint = "https://" + ipAddress + ":8080/api/v1/license/controlHostAgent/start";
+
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
 
             URL url = new URL(glueEndpoint);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-
-            connection.setHostnameVerifier((hostname, session) -> hostname.equals(host.getPrivateIpAddress()));
-
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
             connection.setDoOutput(true);
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(60000);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+            // 연결 시도 전에 소켓 설정
+            System.setProperty("sun.net.client.defaultConnectTimeout", "5000");
+            System.setProperty("sun.net.client.defaultReadTimeout", "15000");
 
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
@@ -5961,8 +5977,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         response.append(inputLine);
                     }
 
-                    String licenseData = response.toString();
-                    licenseHostValue = Boolean.parseBoolean(licenseData);
+                    licenseHostValue = Boolean.parseBoolean(response.toString());
 
                     // 라이센스 재시작 알림 전송
                     _alertMgr.sendAlert(
@@ -5970,68 +5985,70 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         host.getDataCenterId(),
                         host.getId(),
                         "The license for host has been activated normally.",
-                        "The license for host " + host.getName() + "has been activated normally."
+                        "The license for host " + host.getName() + " has been activated normally."
                     );
 
-                    logger.info("License is valid and activated. Host ID: " + host.getId());
-
-                    return licenseHostValue;
+                    logger.info("License is valid and activated. Host ID: " + host.getId() + " (IP: " + ipAddress + ")");
                 }
             } else {
-                logger.error("Error: Received HTTP response code " + responseCode);
+                logger.error("Failed to validate license for host: " + host.getId() + " (IP: " + ipAddress + "). Response code: " + responseCode);
             }
+        } catch (SocketTimeoutException e) {
+            logger.error("Connection timed out while validating license for host: " + host.getId() + " (IP: " + ipAddress + ")", e);
         } catch (Exception e) {
-            logger.error("Exception occurred: ", e);
-            e.printStackTrace();
+            logger.error("Error validating license for host: " + host.getId() + " (IP: " + ipAddress + ")", e);
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
         return licenseHostValue;
     }
 
     private boolean handleExpiredLicense(HostVO host) {
-        HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
+        HttpsURLConnection connection = null;
         boolean licenseHostValue = false;
+        String ipAddress = host.getPrivateIpAddress();
+
         try {
             // HA 비활성화 처리
+            HAConfigVO haConfig = (HAConfigVO) haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
             if (haConfig != null) {
                 try {
                     haConfig.setEnabled(false);
                     haConfigDao.update(haConfig.getId(), haConfig);
                     boolean result = haConfigManager.disableHA(host.getId(), HAResource.ResourceType.Host);
                     if (!result) {
-                        logger.warn("Failed to disable HA for host " + host.getId());
+                        logger.warn("Failed to disable HA for host " + host.getId() + " (IP: " + ipAddress + ")");
                     } else {
-                        logger.info("Successfully disabled HA for host " + host.getId());
+                        logger.info("Successfully disabled HA for host " + host.getId() + " (IP: " + ipAddress + ")");
                     }
                 } catch (Exception e) {
-                    logger.error("Failed to disable HA for host " + host.getId(), e);
+                    logger.error("Failed to disable HA for host " + host.getId() + " (IP: " + ipAddress + ")", e);
                 }
             }
 
-            // 기존 라이센스 체크 로직
-            TrustManager[] trustAllCerts = new TrustManager[] {
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                }
-            };
-            String glueEndpoint = "https://" + host.getPrivateIpAddress() + ":8080/api/v1/license/controlHostAgent/stop";
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+            // 라이센스 체크 로직
+            String glueEndpoint = "https://" + ipAddress + ":8080/api/v1/license/controlHostAgent/stop";
+
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
 
             URL url = new URL(glueEndpoint);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-
-            connection.setHostnameVerifier((hostname, session) -> hostname.equals(host.getPrivateIpAddress()));
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
             connection.setDoOutput(true);
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(60000);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+            // 연결 시도 전에 소켓 설정
+            System.setProperty("sun.net.client.defaultConnectTimeout", "5000");
+            System.setProperty("sun.net.client.defaultReadTimeout", "15000");
 
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
@@ -6043,27 +6060,30 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         response.append(inputLine);
                     }
 
-                    String licenseData = response.toString();
-                    licenseHostValue = Boolean.parseBoolean(licenseData);
+                    licenseHostValue = Boolean.parseBoolean(response.toString());
+
+                    // 라이센스 만료 알림 전송
+                    _alertMgr.sendAlert(
+                        AlertManager.AlertType.ALERT_TYPE_HOST,
+                        host.getDataCenterId(),
+                        host.getId(),
+                        "The host's license has expired or the file is missing. Please renew the license.",
+                        "The license for host " + host.getName() + " has expired. Please renew the license."
+                    );
+
+                    logger.warn("License has expired. Host ID: " + host.getId() + " (IP: " + ipAddress + ")");
                 }
             } else {
-                logger.error("Error: Received HTTP response code " + responseCode);
+                logger.error("Failed to handle expired license for host: " + host.getId() + " (IP: " + ipAddress + "). Response code: " + responseCode);
             }
-
-            // 라이센스 만료 알림 전송
-            _alertMgr.sendAlert(
-                AlertManager.AlertType.ALERT_TYPE_HOST,
-                host.getDataCenterId(),
-                host.getId(),
-                "The host's license has expired or the file is missing. Please renew the license.",
-                "The license for host " + host.getName() + "has expired. Please renew the license."
-            );
-
-            logger.warn("License has expired. Host ID: " + host.getId());
-
+        } catch (SocketTimeoutException e) {
+            logger.error("Connection timed out while handling expired license for host: " + host.getId() + " (IP: " + ipAddress + ")", e);
         } catch (Exception e) {
-            logger.error("Exception occurred: ", e);
-            e.printStackTrace();
+            logger.error("Error handling expired license for host: " + host.getId() + " (IP: " + ipAddress + ")", e);
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
 
         return licenseHostValue;
@@ -6071,31 +6091,23 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     private boolean isLicenseExpired(String ipAddress) throws Exception {
         boolean licenseHostValue = false;
-        try {
-            TrustManager[] trustAllCerts = new TrustManager[] {
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                }
-            };
+        HttpsURLConnection connection = null;
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+        try {
+            // SSL 설정
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
 
             String licenseApiUrl = "https://" + ipAddress + ":8080/api/v1/license/isLicenseExpired";
             URL url = new URL(licenseApiUrl);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
-
+            // 연결 설정
             connection.setDoOutput(true);
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(60000);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
@@ -6111,16 +6123,19 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
                     String licenseData = response.toString();
                     licenseHostValue = Boolean.parseBoolean(licenseData);
-
-                    return licenseHostValue;
                 }
             } else {
                 logger.error("Error: Received HTTP response code " + responseCode);
             }
         } catch (Exception e) {
-            logger.error("Exception occurred: ", e);
-            e.printStackTrace();
+            logger.error("Exception occurred while checking license: ", e);
+            throw e;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
+
         return licenseHostValue;
     }
 
@@ -6141,56 +6156,40 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     private boolean checkLicenseExists(String licenseApiUrl, String ipAddress) throws Exception {
-        boolean hasLicense = false;
         try {
-            TrustManager[] trustAllCerts = new TrustManager[] {
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                }
-            };
+            String readLine = null;
+            StringBuilder response = new StringBuilder();
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
 
             URL url = new URL(licenseApiUrl);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
 
             connection.setDoOutput(true);
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(60000);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-            int responseCode = connection.getResponseCode();
-            if (responseCode == 200) {
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                    StringBuilder response = new StringBuilder();
-                    String inputLine;
-
-                    while ((inputLine = in.readLine()) != null) {
-                        response.append(inputLine);
-                    }
-
-                    String licenseData = response.toString();
-                    hasLicense = Boolean.parseBoolean(licenseData);
-
-                    return hasLicense;
+            if (connection.getResponseCode() == 200) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                while ((readLine = br.readLine()) != null) {
+                    response.append(readLine);
                 }
+                return Boolean.parseBoolean(response.toString());
             } else {
-                logger.error("Error: Received HTTP response code " + responseCode);
+                String msg = "Failed to check license. response code : " + connection.getResponseCode();
+                logger.error(msg);
+                return false;
             }
         } catch (Exception e) {
-            logger.error("Exception occurred: ", e);
-            e.printStackTrace();
+            logger.error("License check endpoint not available", e);
+            return false;
         }
-        return hasLicense;
     }
 }
