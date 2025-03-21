@@ -31,18 +31,18 @@ write_files:
       get_block_device() {
         if [ "$HYPERVISOR" == "kvm" ]; then
           BLOCK_DEVICE="sdb"
-          if [ -n "$(blkid /dev/$BLOCK_DEV)" ]; then
-            BLOCK_DEV="sda"
+          if [ -n "$(blkid /dev/$BLOCK_DEVICE)" ]; then
+            BLOCK_DEVICE="sda"
           fi
         elif [ "$HYPERVISOR" == "xenserver" ]; then
           BLOCK_DEVICE="xvdb"
-          if [ -n "$(blkid /dev/$BLOCK_DEV)" ]; then
-            BLOCK_DEV="xvda"
+          if [ -n "$(blkid /dev/$BLOCK_DEVICE)" ]; then
+            BLOCK_DEVICE="xvda"
           fi
         elif [ "$HYPERVISOR" == "vmware" ]; then
           BLOCK_DEVICE="sdb"
-          if [ -n "$(blkid /dev/$BLOCK_DEV)" ]; then
-            BLOCK_DEV="sda"
+          if [ -n "$(blkid /dev/$BLOCK_DEVICE)" ]; then
+            BLOCK_DEVICE="sda"
           fi
         else
           log "Unknown hypervisor"
