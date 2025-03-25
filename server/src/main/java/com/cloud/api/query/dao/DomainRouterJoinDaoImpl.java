@@ -293,6 +293,7 @@ public class DomainRouterJoinDaoImpl extends GenericDaoBase<DomainRouterJoinVO, 
                 nicResponse.setMtu(vr.getMtu());
             }
             nicResponse.setIsDefault(vr.isDefaultNic());
+            nicResponse.setLinkState(vr.getLinkState());
             nicResponse.setObjectName("nic");
             vrData.addNic(nicResponse);
         }
