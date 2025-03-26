@@ -37,6 +37,10 @@ public class LicenseCheckerResponse extends BaseResponse {
     @Param(description = "license success")
     private String success;
 
+    @SerializedName(ApiConstants.HAS_LICENSE)
+    @Param(description = "whether host has a valid license")
+    private String hasLicense;
+
     public Long getHostId() {
         return HostId;
     }
@@ -49,6 +53,10 @@ public class LicenseCheckerResponse extends BaseResponse {
         return success;
     }
 
+    public String getHasLicense() {
+        return hasLicense;
+    }
+
     public void setHostId(long hostId) {
         this.HostId = Long.valueOf(hostId);
     }
@@ -59,5 +67,9 @@ public class LicenseCheckerResponse extends BaseResponse {
 
     public void setSuccess(boolean isValid) {
         this.success = Boolean.toString(isValid);
+    }
+
+    public void setHasLicense(boolean hasLicense) {
+        this.hasLicense = Boolean.toString(hasLicense);
     }
 }
