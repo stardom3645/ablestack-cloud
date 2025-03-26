@@ -1726,7 +1726,7 @@ public class LibvirtVMDef {
             if (StringUtils.isNotBlank(_userIp4Network) && _userIp4Prefix != null) {
                 netBuilder.append(String.format("<ip family='ipv4' address='%s' prefix='%s'/>\n", _userIp4Network, _userIp4Prefix));
             }
-
+            netBuilder.append("<filterref filter='allow-ipv4'/>");
             return netBuilder.toString();
         }
 
