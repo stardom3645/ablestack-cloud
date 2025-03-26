@@ -93,7 +93,6 @@ public class LicenseCheckCmd extends BaseCmd {
     @Override
     public void execute() throws ResourceUnavailableException, ServerApiException {
         try {
-            logger.info("라이센스 체크1");
             LicenseCheckerResponse response = _mgr.checkLicense(this);
 
             setResponseObject(response);
