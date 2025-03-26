@@ -22,10 +22,10 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
-// import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -5887,7 +5887,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     @Override
     public LicenseCheckerResponse checkLicense(LicenseCheckCmd cmd) {
-        logger.info("License check started");
         Long hostId = cmd.getHostId();
         if (hostId == null) {
             throw new InvalidParameterValueException("Host ID is required");
@@ -5898,22 +5897,112 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             throw new InvalidParameterValueException("Host not found: " + hostId);
         }
 
-        return checkLicensesForHosts(List.of(host)).getResponses().get(0);
-    }
-    private List<HostVO> getHostsToCheck(Long hostId) {
-        if (hostId != null) {
-            SearchBuilder<HostVO> sb = _hostDao.createSearchBuilder();
-            sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
-            SearchCriteria<HostVO> sc = sb.create();
-            sc.setParameters("id", hostId);
-            return _hostDao.search(sc, new Filter(HostVO.class, "id", true));
+        LicenseCheckerResponse response = new LicenseCheckerResponse();
+        response.setHostId(hostId);
+        response.setObjectName("licensecheck");
+
+        try {
+            String ipAddress = host.getPrivateIpAddress();
+            String licenseApiUrl = "https://" + ipAddress + ":8080/api/v1/license/isLicenseExpired";
+
+            HttpsURLConnection connection = null;
+            try {
+                // SSL 설정
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+
+                URL url = new URL(licenseApiUrl);
+                connection = (HttpsURLConnection) url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+                connection.setDoOutput(true);
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-Type", "application/json");
+
+                int responseCode = connection.getResponseCode();
+
+                if (responseCode == 200) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder responseData = new StringBuilder();
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        responseData.append(line);
+                    }
+                    in.close();
+
+                    // JSON 응답 파싱
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode jsonNode = mapper.readTree(responseData.toString());
+
+                    // 라이선스 정보 설정
+                    if (jsonNode.has("error")) {
+                        String errorMessage = jsonNode.get("error").asText();
+                        response.setHasLicense(false);
+                        response.setSuccess(false);
+                        response.setExpiryDate(null);
+                    } else {
+                        boolean isExpired = jsonNode.get("expired").asBoolean();
+                        String expiryDateStr = jsonNode.get("expiry_date").asText();
+
+                        response.setSuccess(!isExpired);
+                        response.setHasLicense(true);
+                        if (expiryDateStr != null && !expiryDateStr.isEmpty()) {
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                            Date expiryDate = sdf.parse(expiryDateStr);
+                            response.setExpiryDate(expiryDate);
+                        }
+                    }
+                } else {
+                    response.setHasLicense(false);
+                    response.setSuccess(false);
+                    response.setExpiryDate(null);
+                }
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+            return response;
+        } catch (Exception e) {
+            throw new CloudRuntimeException("라이선스 체크 실패: " + e.getMessage());
         }
-        return _hostDao.listAll();
     }
-    public ListResponse<LicenseCheckerResponse> listLicenseChecks(final LicenseCheckCmd cmd) {
-        final Long hostId = cmd.getHostId();
-        List<HostVO> hosts = getHostsToCheck(hostId);
-        return checkLicensesForHosts(hosts);
+
+    private Date getLicenseExpiryDate(String apiUrl, String ipAddress) throws Exception {
+        HttpsURLConnection connection = null;
+        try {
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+
+            URL url = new URL(apiUrl);
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setHostnameVerifier((hostname, session) -> hostname.equals(ipAddress));
+            connection.setDoOutput(true);
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+            if (connection.getResponseCode() == 200) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    String dateStr = in.readLine();
+                    if (dateStr != null && !dateStr.isEmpty()) {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        return sdf.parse(dateStr);
+                    }
+                }
+            }
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        return null;
     }
 
     private ListResponse<LicenseCheckerResponse> checkLicensesForHosts(List<HostVO> hosts) {

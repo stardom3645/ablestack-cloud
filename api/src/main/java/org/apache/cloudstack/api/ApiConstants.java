@@ -1333,6 +1333,7 @@ public class ApiConstants {
     public static final String DISASTER_RECOVERY_CLUSTER_VM_LIST = "disasterrecoveryclustervmlist";
     public static final String EXPIRY_DATE = "expirydate";
     public static final String LICENSE_CHECK = "licensecheck";
+    public static final String HAS_LICENSE = "haslicense";
 
     public static final String VMWARE_DC = "vmwaredc";
 

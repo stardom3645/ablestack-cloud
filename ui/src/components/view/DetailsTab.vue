@@ -193,6 +193,15 @@
     <DedicateData :resource="dataResource" v-if="dedicatedSectionActive" />
     <VmwareData :resource="dataResource" v-if="$route.meta.name === 'zone' && 'listVmwareDcs' in $store.getters.apis" />
   </a-list>
+  <div class="license-info">
+    <a-descriptions-item label="라이센스 만료일">
+      {{ dataResource.licenseExpiryDate || '정보 없음' }}
+    </a-descriptions-item>
+    <a-descriptions-item label="라이센스 상태">
+      {{ dataResource.hasLicense ? '있음' : '없음' }}
+      ({{ dataResource.licenseValid ? '유효함' : '만료됨' }})
+    </a-descriptions-item>
+  </div>
 </template>
 
 <script>
@@ -200,6 +209,7 @@ import DedicateData from './DedicateData'
 import HostInfo from '@/views/infra/HostInfo'
 import VmwareData from './VmwareData'
 import { genericCompare } from '@/utils/sort'
+import { api } from '@/api'
 
 export default {
   name: 'DetailsTab',
@@ -478,21 +488,37 @@ export default {
       return `${this.$t('message.alert.licenseexpired')} ${this.resource.licenseExpiryDate} ${this.isLicenseExpired(this.resource.licenseExpiryDate) ? this.$t('message.license.renewal.required') : '(' + this.calculateDday(this.resource.licenseExpiryDate) + this.$t('message.license.days.left') + ')'}`
     },
     async fetchLicenseInfo () {
-      if (this.resource && this.resource.ipaddress) {
-        try {
-          const response = await fetch(`https://${this.resource.ipaddress}:8080/api/v1/license/isLicenseExpired`)
-          const data = await response.json()
-          if (data.error) {
-            this.dataResource.licenseExpiryDate = ''
-          } else {
-            this.dataResource.licenseExpiryDate = data.expiry_date
-          }
-        } catch (error) {
-          console.error('라이선스 정보를 가져오는데 실패했습니다:', error)
-        }
+      if (!this.resource || !this.resource.id) {
+        return
       }
-    },
 
+      const params = {
+        hostid: this.resource.id
+      }
+
+      api('licenseCheck', params).then(response => {
+        const licenseData = response?.null?.licensecheck
+
+        if (licenseData) {
+          if (licenseData.expirydate) {
+            const expiryDate = new Date(licenseData.expirydate)
+            this.dataResource.licenseExpiryDate = expiryDate.toLocaleDateString('ko-KR')
+          } else {
+            this.dataResource.licenseExpiryDate = '만료일 정보 없음'
+          }
+
+          this.dataResource.hostId = licenseData.hostid
+          this.dataResource.hasLicense = licenseData.haslicense === 'true'
+          this.dataResource.licenseValid = licenseData.success === 'true'
+        }
+      }).catch(error => {
+        console.error('라이선스 정보를 가져오는데 실패했습니다:', error)
+        this.dataResource.licenseExpiryDate = '조회 실패'
+        this.dataResource.hasLicense = false
+        this.dataResource.licenseValid = false
+        this.$notifyError(error)
+      })
+    },
     isLicenseExpired (expiryDate) {
       const today = new Date()
       const expiry = new Date(expiryDate)
