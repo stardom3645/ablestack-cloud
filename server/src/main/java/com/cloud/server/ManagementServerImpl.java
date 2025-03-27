@@ -46,7 +46,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -847,6 +846,7 @@ import com.cloud.utils.net.MacAddress;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.security.CertificateHelper;
 import com.cloud.utils.nio.TrustAllManager;
+import com.cloud.utils.security.CertificateHelper;
 import com.cloud.utils.ssh.SSHKeysHelper;
 import com.cloud.vm.ConsoleProxyVO;
 import com.cloud.vm.DiskProfile;
@@ -873,6 +873,7 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import javax.naming.ConfigurationException;
 
 
 public class ManagementServerImpl extends ManagerBase implements ManagementServer, Configurable {
@@ -1260,7 +1261,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
             // 라이센스 상태 확인
             JsonNode licenseStatus = getLicenseStatus(licenseApiUrl, ipAddress);
-            boolean isExpired = licenseStatus.get("expired").asBoolean();
+            boolean isExpired = licenseStatus.get("expiry_date").asBoolean();
 
             // 라이센스 상태에 따라 에이전트 제어
             if (isExpired) {
@@ -5944,8 +5945,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         response.setSuccess(false);
                         response.setExpiryDate(null);
                     } else {
-                        boolean isExpired = jsonNode.get("expired").asBoolean();
-                        String expiryDateStr = jsonNode.get("expiry_date").asText();
+                        boolean isExpired = jsonNode.get("expiry_date").asBoolean();
+                        String expiryDateStr = jsonNode.get("expired").asText();
 
                         response.setSuccess(!isExpired);
                         response.setHasLicense(true);
