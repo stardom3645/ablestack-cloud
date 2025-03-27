@@ -24,9 +24,9 @@
     </template>
   </a-alert>
   <div v-if="['host'].includes($route.meta.name)">
-    <a-alert type="error" v-if="!dataResource.licenseExpiryDate" :message="$t('message.license.not.found')" />
-    <a-alert type="error" v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')'" />
-    <a-alert type="success" v-else :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
+    <a-alert type="error" :showIcon="true" v-if="!dataResource.licenseExpiryDate" :message="$t('message.license.not.found')" />
+    <a-alert type="error" :showIcon="true" v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')'" />
+    <a-alert type="success" :showIcon="true" v-else :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
   </div>
   <!-- <a-alert type="error" v-if="['host'].includes($route.meta.name)">
     <template #message>
