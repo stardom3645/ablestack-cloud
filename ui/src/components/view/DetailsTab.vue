@@ -23,12 +23,19 @@
       </div>
     </template>
   </a-alert>
-  <a-alert
-    v-if="resource.licenseExpiryDate !== undefined"
-    :message="getLicenseMessage()"
-    type="error"
-    show-icon>
-  </a-alert>
+  <div v-if="['host'].includes($route.meta.name)">
+    <a-alert type="error" :showIcon="true" v-if="!dataResource.licenseExpiryDate" :message="$t('message.license.not.found')" />
+    <a-alert type="error" :showIcon="true" v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')'" />
+    <a-alert type="success" :showIcon="true" v-else :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
+  </div>
+  <!-- <a-alert type="error" v-if="['host'].includes($route.meta.name)">
+    <template #message>
+      <div v-if="!dataResource.licenseExpiryDate" class="title"> {{ $t('message.license.not.found') }}</div>
+      <div v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" class="title"> {{ $t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')' }}</div>
+      <div v-else class="title"> {{ $t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')' }}</div>
+    </template>
+  </a-alert> -->
+
   <a-alert v-if="ip4routes" type="info" :showIcon="true" :message="$t('label.add.upstream.ipv4.routes')">
     <template #description>
       <p v-html="ip4routes" />
@@ -193,15 +200,6 @@
     <DedicateData :resource="dataResource" v-if="dedicatedSectionActive" />
     <VmwareData :resource="dataResource" v-if="$route.meta.name === 'zone' && 'listVmwareDcs' in $store.getters.apis" />
   </a-list>
-  <div class="license-info">
-    <a-descriptions-item label="라이센스 만료일">
-      {{ dataResource.licenseExpiryDate || '정보 없음' }}
-    </a-descriptions-item>
-    <a-descriptions-item label="라이센스 상태">
-      {{ dataResource.hasLicense ? '있음' : '없음' }}
-      ({{ dataResource.licenseValid ? '유효함' : '만료됨' }})
-    </a-descriptions-item>
-  </div>
 </template>
 
 <script>
@@ -250,7 +248,8 @@ export default {
       licenseInfo: {
         expired: false,
         expiryDate: ''
-      }
+      },
+      licenseStateType: 'error'
     }
   },
   mounted () {
@@ -389,6 +388,9 @@ export default {
   created () {
     this.dataResource = this.resource
     this.dedicatedSectionActive = this.dedicatedRoutes.includes(this.$route.meta.name)
+    if (['host'].includes(this.$route.meta.name)) {
+      this.fetchLicenseInfo()
+    }
   },
   watch: {
     resource: {
@@ -399,11 +401,7 @@ export default {
           this.projectname = this.dataResource.account.substring(this.dataResource.account.indexOf('-') + 1, this.dataResource.account.lastIndexOf('-'))
           this.dataResource.projectname = this.projectname
         }
-        if (newVal.ipaddress) {
-          this.fetchLicenseInfo()
-        }
-      },
-      immediate: true
+      }
     },
     $route () {
       this.dedicatedSectionActive = this.dedicatedRoutes.includes(this.$route.meta.name)
@@ -481,42 +479,26 @@ export default {
 
       return `label.${source}`
     },
-    getLicenseMessage () {
-      if (!this.resource.licenseExpiryDate) {
-        return this.$t('message.license.not.found')
-      }
-      return `${this.$t('message.alert.licenseexpired')} ${this.resource.licenseExpiryDate} ${this.isLicenseExpired(this.resource.licenseExpiryDate) ? this.$t('message.license.renewal.required') : '(' + this.calculateDday(this.resource.licenseExpiryDate) + this.$t('message.license.days.left') + ')'}`
-    },
-    async fetchLicenseInfo () {
-      if (!this.resource || !this.resource.id) {
-        return
-      }
-
-      const params = {
-        hostid: this.resource.id
-      }
-
-      api('licenseCheck', params).then(response => {
+    fetchLicenseInfo () {
+      api('licenseCheck', { hostid: this.resource.id }).then(response => {
         const licenseData = response?.null?.licensecheck
-
-        if (licenseData) {
-          if (licenseData.expirydate) {
-            const expiryDate = new Date(licenseData.expirydate)
-            this.dataResource.licenseExpiryDate = expiryDate.toLocaleDateString('ko-KR')
-          } else {
-            this.dataResource.licenseExpiryDate = '만료일 정보 없음'
-          }
-
+        if (licenseData.expirydate) {
+          var expiryDate = new Date(licenseData.expirydate)
+          this.dataResource.licenseExpiryDate = expiryDate.getFullYear() + '-' + this.leftPad(expiryDate.getMonth() + 1) + '-' + this.leftPad(expiryDate.getDate())
           this.dataResource.hostId = licenseData.hostid
           this.dataResource.hasLicense = licenseData.haslicense === 'true'
           this.dataResource.licenseValid = licenseData.success === 'true'
+          if (this.isLicenseExpired(this.dataResource.licenseExpiryDate)) {
+            this.licenseStateType = 'error'
+          } else {
+            this.licenseStateType = 'success'
+          }
+        } else {
+          this.dataResource.licenseExpiryDate = ''
+          this.dataResource.hasLicense = false
+          this.dataResource.licenseValid = false
+          this.licenseStateType = 'error'
         }
-      }).catch(error => {
-        console.error('라이선스 정보를 가져오는데 실패했습니다:', error)
-        this.dataResource.licenseExpiryDate = '조회 실패'
-        this.dataResource.hasLicense = false
-        this.dataResource.licenseValid = false
-        this.$notifyError(error)
       })
     },
     isLicenseExpired (expiryDate) {
@@ -530,6 +512,12 @@ export default {
       const diffTime = expiry - today
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
       return diffDays
+    },
+    leftPad (value) {
+      if (value >= 10) {
+        return value
+      }
+      return `0${value}`
     }
   }
 }
