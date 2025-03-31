@@ -28,14 +28,6 @@
     <a-alert type="error" :showIcon="true" v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')'" />
     <a-alert type="success" :showIcon="true" v-else :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
   </div>
-  <!-- <a-alert type="error" v-if="['host'].includes($route.meta.name)">
-    <template #message>
-      <div v-if="!dataResource.licenseExpiryDate" class="title"> {{ $t('message.license.not.found') }}</div>
-      <div v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" class="title"> {{ $t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')' }}</div>
-      <div v-else class="title"> {{ $t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')' }}</div>
-    </template>
-  </a-alert> -->
-
   <a-alert v-if="ip4routes" type="info" :showIcon="true" :message="$t('label.add.upstream.ipv4.routes')">
     <template #description>
       <p v-html="ip4routes" />
