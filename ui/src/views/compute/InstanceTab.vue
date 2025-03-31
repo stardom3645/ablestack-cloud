@@ -103,6 +103,8 @@
           <template #icon><edit-outlined /></template> {{ $t('label.action.update.security.groups') }}
         </a-button>
         <ListResourceTable
+          apiName="listSecurityGroups"
+          :params="{virtualmachineid: dataResource.id}"
           :items="dataResource.securitygroup"
           :columns="['name', 'description']"
           :routerlinks="(record) => { return { name: '/securitygroups/' + record.id } }"
@@ -248,6 +250,7 @@ export default {
       totalStorage: 0,
       currentTab: 'details',
       showAddVolumeModal: false,
+      showUpdateSecurityGroupsModal: false,
       diskOfferings: [],
       showAddMirrorVMModal: false,
       showDrSimulationTestModal: false,
