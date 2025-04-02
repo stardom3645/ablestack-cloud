@@ -25,8 +25,9 @@
   </a-alert>
   <div v-if="['host'].includes($route.meta.name)">
     <a-alert type="error" :showIcon="true" v-if="!dataResource.licenseExpiryDate" :message="$t('message.license.not.found')" />
-    <a-alert type="error" :showIcon="true" v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')'" />
-    <a-alert type="success" :showIcon="true" v-else :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
+    <a-alert type="error" :showIcon="true" v-else-if="isLicenseNotStarted(dataResource.licenseStartDate)" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + ' ~ ' + dataResource.licenseExpiryDate+ '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
+    <a-alert type="error" :showIcon="true" v-else-if="isLicenseExpired(dataResource.licenseExpiryDate)" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + ' ~ ' + dataResource.licenseExpiryDate + '(' + $t('message.license.renewal.required') + ')'" />
+    <a-alert type="success" :showIcon="true" v-else :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + ' ~ ' + dataResource.licenseExpiryDate + '(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
   </div>
   <a-alert v-if="ip4routes" type="info" :showIcon="true" :message="$t('label.add.upstream.ipv4.routes')">
     <template #description>
@@ -474,8 +475,10 @@ export default {
     fetchLicenseInfo () {
       api('licenseCheck', { hostid: this.resource.id }).then(response => {
         const licenseData = response?.null?.licensecheck
-        if (licenseData.expirydate) {
+        if (licenseData) {
           var expiryDate = new Date(licenseData.expirydate)
+          var issuedDate = new Date(licenseData.issueddate)
+          this.dataResource.licenseStartDate = issuedDate.getFullYear() + '-' + this.leftPad(issuedDate.getMonth() + 1) + '-' + this.leftPad(issuedDate.getDate())
           this.dataResource.licenseExpiryDate = expiryDate.getFullYear() + '-' + this.leftPad(expiryDate.getMonth() + 1) + '-' + this.leftPad(expiryDate.getDate())
           this.dataResource.hostId = licenseData.hostid
           this.dataResource.hasLicense = licenseData.haslicense === 'true'
@@ -486,6 +489,7 @@ export default {
             this.licenseStateType = 'success'
           }
         } else {
+          this.dataResource.licenseStartDate = ''
           this.dataResource.licenseExpiryDate = ''
           this.dataResource.hasLicense = false
           this.dataResource.licenseValid = false
@@ -510,6 +514,11 @@ export default {
         return value
       }
       return `0${value}`
+    },
+    isLicenseNotStarted (startDate) {
+      const today = new Date()
+      const start = new Date(startDate)
+      return today < start
     }
   }
 }
