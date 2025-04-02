@@ -9877,7 +9877,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     if (rootVolume == null) {
                         throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
                     }
-                    UserVm cloneVM = createCloneVM(cmd, String.valueOf(rootVolume.getId()));
+                    UserVm cloneVM = createCloneVM(cmd, rootVolume.getId());
                     if (cloneVM == null) {
                         throw new CloudRuntimeException("Unable to record the VM to DB!");
                     }
@@ -9969,7 +9969,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         return null;
     }
 
-    public UserVm createCloneVM(CloneVMCmd cmd, String rootVolumeId) throws ConcurrentOperationException, ResourceAllocationException, InsufficientCapacityException, ResourceUnavailableException {
+    public UserVm createCloneVM(CloneVMCmd cmd, Long rootVolumeId) throws ConcurrentOperationException, ResourceAllocationException, InsufficientCapacityException, ResourceUnavailableException {
         //network configurations and check, then create the template
         UserVm curVm = cmd.getTargetVM();
         // check if host is available
@@ -9979,8 +9979,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         DataCenter dataCenter = _entityMgr.findById(DataCenter.class, zoneId);
         Map<String, String> customParameters = userVmDetailsDao.listDetailsKeyPairs(curVm.getId());
         String keyboard = customParameters.get(VmDetailConstants.KEYBOARD);
-        if (!rootVolumeId.isBlank()) {
-            customParameters.put("volumeId", rootVolumeId);
+        Long size = null; // mutual exclusive with disk offering id
+        if (rootVolumeId != null) {
+            customParameters.put("volumeId", String.valueOf(rootVolumeId));
+            VolumeVO vol = _volsDao.findById(rootVolumeId);
+            size = vol.getSize();
+            customParameters.put(VmDetailConstants.ROOT_DISK_SIZE, String.valueOf(size / GiB_TO_BYTES));
         }
         HypervisorType hypervisorType = curVm.getHypervisorType();
         Account curAccount = _accountDao.findById(curVm.getAccountId());
@@ -9993,9 +9997,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         List<Long> securityGroupIdList = securityGroupList.stream().map(SecurityGroupVO::getId).collect(Collectors.toList());
         String name = cmd.getName();
         String displayName = cmd.getName();
-        // VolumeVO curVolume = _volsDao.findByInstance(curVm.getId()).get(0);
-        // Long diskOfferingId = curVolume.getDiskOfferingId();
-        Long size = null; // mutual exclusive with disk offering id
         String userData = curVm.getUserData();
         // String sshKeyPair = null;
         Map<Long, IpAddresses> ipToNetoworkMap = null; // Since we've specified Ip
