@@ -55,6 +55,11 @@ public class LicenseCheckCmd extends BaseCmd {
               description = "license expiry date")
     private Date expiryDate;
 
+    @Parameter(name = ApiConstants.ISSUED_DATE,
+                type = CommandType.DATE,
+                description = "license issued date")
+    private Date issuedDate;
+
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -68,12 +73,20 @@ public class LicenseCheckCmd extends BaseCmd {
         return expiryDate;
     }
 
+    public Date getIssuedDate() {
+        return issuedDate;
+    }
+
 
     public void setHostId(Long hostId) {
         this.hostId = hostId;
     }
     public void setExpiryDate(Date expiryDate) {
         this.expiryDate = expiryDate;
+    }
+
+    public void setIssuedDate(Date issuedDate) {
+        this.issuedDate = issuedDate;
     }
 
     /////////////////////////////////////////////////////

@@ -33,6 +33,10 @@ public class LicenseCheckerResponse extends BaseResponse {
     @Param(description = "license expiry date")
     private Date expiryDate;
 
+    @SerializedName(ApiConstants.ISSUED_DATE)
+    @Param(description = "license issued date")
+    private Date issuedDate;
+
     @SerializedName(ApiConstants.SUCCESS)
     @Param(description = "license success")
     private String success;
@@ -49,6 +53,10 @@ public class LicenseCheckerResponse extends BaseResponse {
         return expiryDate;
     }
 
+    public Date getIssuedDate() {
+        return issuedDate;
+    }
+
     public String getSuccess() {
         return success;
     }
@@ -63,6 +71,10 @@ public class LicenseCheckerResponse extends BaseResponse {
 
     public void setExpiryDate(Date expiryDate) {
         this.expiryDate = expiryDate;
+    }
+
+    public void setIssuedDate(Date issuedDate) {
+        this.issuedDate = issuedDate;
     }
 
     public void setSuccess(boolean isValid) {

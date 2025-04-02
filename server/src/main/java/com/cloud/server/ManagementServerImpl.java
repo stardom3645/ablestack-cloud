@@ -1262,25 +1262,31 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             // 라이센스 상태 확인
             JsonNode licenseStatus = getLicenseStatus(licenseApiUrl, ipAddress);
             boolean isExpired = licenseStatus.get("expiry_date").asBoolean();
+            boolean isIssued = licenseStatus.get("issued_date").asBoolean();
+            String expiryDateStr = licenseStatus.get("expired").asText();
+            String issuedDateStr = licenseStatus.get("issued").asText();
 
-            // 라이센스 상태에 따라 에이전트 제어
-            if (isExpired) {
-                // 만료된 경우 에이전트 중지
-                controlHostAgent(host, "stop");
-                logger.info("License expired - stopping agent for host: " + host.getId());
+            logger.info("License check - isIssued: " + isIssued + ", isExpired: " + isExpired);
+            logger.info("License dates - issued: " + issuedDateStr + ", expired: " + expiryDateStr);
 
-                // HA 비활성화 처리
-                handleExpiredLicense(host);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date currentDate = new Date();
+            Date issuedDate = null;
+            Date expiryDate = null;
 
-                // 알림 전송
-                _alertMgr.sendAlert(
-                    AlertManager.AlertType.ALERT_TYPE_HOST,
-                    host.getDataCenterId(),
-                    host.getId(),
-                    "License expired for host " + host.getName(),
-                    "The license has expired. Agent has been stopped for host " + host.getName()
-                );
-            } else {
+            if (issuedDateStr != null && !issuedDateStr.isEmpty()) {
+                issuedDate = sdf.parse(issuedDateStr);
+            }
+
+            if (expiryDateStr != null && !expiryDateStr.isEmpty()) {
+                expiryDate = sdf.parse(expiryDateStr);
+            }
+
+            // 라이선스 유효성 검사: 발급되지 않았거나 만료되었으면 false
+            boolean isValid = !isExpired && isIssued;
+
+            // 라이선스 상태에 따라 에이전트 제어
+            if (isValid) {
                 // 유효한 경우 에이전트 시작
                 controlHostAgent(host, "start");
                 logger.info("License valid - starting agent for host: " + host.getId());
@@ -1292,6 +1298,22 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                     host.getId(),
                     "License valid for host " + host.getName(),
                     "The license is valid. Agent has been started for host " + host.getName()
+                );
+            } else {
+                // 만료된 경우 에이전트 중지
+                controlHostAgent(host, "stop");
+                logger.info("License expired or not yet valid - stopping agent for host: " + host.getId());
+
+                // HA 비활성화 처리
+                handleExpiredLicense(host);
+
+                // 알림 전송
+                _alertMgr.sendAlert(
+                    AlertManager.AlertType.ALERT_TYPE_HOST,
+                    host.getDataCenterId(),
+                    host.getId(),
+                    "License expired or not yet valid for host " + host.getName(),
+                    "The license has expired or is not yet valid. Agent has been stopped for host " + host.getName()
                 );
             }
         } catch (Exception e) {
@@ -5946,15 +5968,30 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         response.setExpiryDate(null);
                     } else {
                         boolean isExpired = jsonNode.get("expiry_date").asBoolean();
+                        boolean isIssued = jsonNode.get("issued_date").asBoolean();
                         String expiryDateStr = jsonNode.get("expired").asText();
+                        String issuedDateStr = jsonNode.get("issued").asText();
 
-                        response.setSuccess(!isExpired);
-                        response.setHasLicense(true);
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        Date currentDate = new Date();
+                        Date issuedDate = null;
+                        Date expiryDate = null;
+
+                        if (issuedDateStr != null && !issuedDateStr.isEmpty()) {
+                            issuedDate = sdf.parse(issuedDateStr);
+                            response.setIssuedDate(issuedDate);
+                        }
+
                         if (expiryDateStr != null && !expiryDateStr.isEmpty()) {
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                            Date expiryDate = sdf.parse(expiryDateStr);
+                            expiryDate = sdf.parse(expiryDateStr);
                             response.setExpiryDate(expiryDate);
                         }
+
+                        // 라이선스 유효성 검사: 발급되지 않았거나 만료되었으면 false
+                        boolean isValid = !isExpired && isIssued;
+
+                        response.setSuccess(isValid);
+                        response.setHasLicense(true);
                     }
                 } else {
                     response.setHasLicense(false);

@@ -1337,6 +1337,7 @@ public class ApiConstants {
 
     public static final String VMWARE_DC = "vmwaredc";
 
+    public static final String ISSUED_DATE = "issueddate";
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.
      * Qemu guests support "threads" and "native" options Since 0.8.8 ; "io_uring" is supported Since 6.3.0 (QEMU 5.0).
