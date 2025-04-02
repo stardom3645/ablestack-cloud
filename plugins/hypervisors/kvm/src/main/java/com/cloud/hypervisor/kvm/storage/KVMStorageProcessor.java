@@ -1026,9 +1026,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                     logger.debug("Attempting to create " + snapDir.getAbsolutePath() + " recursively for snapshot storage");
                     FileUtils.forceMkdir(snapDir);
 
-                    final QemuImgFile srcFile =
-                            new QemuImgFile(KVMPhysicalDisk.RBDStringBuilder(primaryPool.getSourceHost(), primaryPool.getSourcePort(), primaryPool.getAuthUserName(),
-                                    primaryPool.getAuthSecret(), rbdSnapshot));
+                    final QemuImgFile srcFile = new QemuImgFile(KVMPhysicalDisk.RBDStringBuilder(primaryPool, rbdSnapshot));
                     srcFile.setFormat(snapshotDisk.getFormat());
 
                     final QemuImgFile destFile = new QemuImgFile(snapshotFile);
