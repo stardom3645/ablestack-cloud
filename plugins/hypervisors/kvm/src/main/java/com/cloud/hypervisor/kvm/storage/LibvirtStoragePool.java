@@ -370,7 +370,6 @@ public class LibvirtStoragePool implements KVMStoragePool {
                 cmd.add("-c");
             }
         } else if (primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
-            logger.info("RBD Pool or GFS Pool Setting...");
             Connect conn = null;
             try {
                 conn = LibvirtConnection.getConnection();
@@ -399,10 +398,12 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         logger.debug(String.format("RBD Pool name [%s] auth name [%s]", pdef.getSourceDir(), pdef.getAuthUserName()));
                         rbdPoolName = pdef.getSourceDir();
                         authUserName = pdef.getAuthUserName();
+                        break;
                     }
                     if (pdef.getPoolType() == PoolType.DIR && !"/var/lib/libvirt/images".equals(pdef.getTargetPath())) {
                         logger.debug(String.format("SharedMountPoint Pool source path [%s]", pdef.getTargetPath()));
                         smpTargetPath = pdef.getTargetPath();
+                        break;
                     }
                 }
             } catch (LibvirtException e) {
@@ -454,7 +455,6 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-r");
             cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
         } else if (pool.getPool().getType() == StoragePoolType.CLVM) {
-            logger.info("RBD Pool or GFS Pool Setting...");
             Connect conn = null;
             try {
                 conn = LibvirtConnection.getConnection();
@@ -483,10 +483,12 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         logger.debug(String.format("RBD Pool name [%s] auth name [%s]", pdef.getSourceDir(), pdef.getAuthUserName()));
                         rbdPoolName = pdef.getSourceDir();
                         authUserName = pdef.getAuthUserName();
+                        break;
                     }
                     if (pdef.getPoolType() == PoolType.DIR && !"/var/lib/libvirt/images".equals(pdef.getTargetPath())) {
                         logger.debug(String.format("SharedMountPoint Pool source path [%s]", pdef.getTargetPath()));
                         smpTargetPath = pdef.getTargetPath();
+                        break;
                     }
                 }
             } catch (LibvirtException e) {
@@ -579,7 +581,6 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-u", volumeUUIDListString);
             cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
         } else if (pool.getPool().getType() == StoragePoolType.CLVM) {
-            logger.info("RBD Pool or GFS Pool Setting...");
             Connect conn = null;
             try {
                 conn = LibvirtConnection.getConnection();
