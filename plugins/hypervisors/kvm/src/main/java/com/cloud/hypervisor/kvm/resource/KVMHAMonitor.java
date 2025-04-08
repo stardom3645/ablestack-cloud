@@ -244,10 +244,10 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
     public void run() {
         while (true) {
 
-            logger.info("### HA Checking for NFS Type Storage Pools : %s", storagePool);
-            logger.info("### HA Checking for SharedMountPoint Type Storage Pools : %s", storageGfsPool);
-            logger.info("### HA Checking for RBD Type Storage Pools : %s", storageRbdPool);
-            logger.info("### HA Checking for CLVN Type Storage Pools : %s", storageClvmPool);
+            logger.info(String.format("### HA Checking for NFS Type Storage Pools : %s", storagePool));
+            logger.info(String.format("### HA Checking for SharedMountPoint Type Storage Pools : %s", storageGfsPool));
+            logger.info(String.format("### HA Checking for RBD Type Storage Pools : %s", storageRbdPool));
+            logger.info(String.format("### HA Checking for CLVN Type Storage Pools : %s", storageClvmPool));
 
             runHeartBeat(storagePool);
             runHeartBeat(storageGfsPool);
