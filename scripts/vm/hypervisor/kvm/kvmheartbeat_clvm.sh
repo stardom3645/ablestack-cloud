@@ -77,7 +77,7 @@ hbFile=$hbFolder/$HostIP
 write_hbLog() {
   #write the heart beat log
   poolPath=$(echo $poolPath | cut -d '/' -f2-)
-  path=$(pvs 2>/dev/null | grep $poolPath | awk '{print $1}')
+  path=$(pvs 2>/dev/null | grep -w $poolPath | awk '{print $1}')
   persist=$(sg_persist -ik $path)
   if [ $? -eq 0 ]
   then
@@ -124,9 +124,8 @@ check_hbLog() {
     fi
     diff=$(expr $now - $getHbTime)
   elif [ -n "$GfsPoolPath" ] ; then
-    now=$(date +%s)
-    hb=$(cat $hbFile)
-    diff=$(expr $now - $hb)
+    getHbTime=$(cat $hbFile)
+    diff=$(expr $now - $getHbTime)
   else
     printf "There is no storage information of type RBD or SharedMountPoint."
     return 0
