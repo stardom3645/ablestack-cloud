@@ -48,7 +48,7 @@ export default {
         return fields
       },
       details: () => {
-        var fields = ['name', 'id', 'description', 'type', 'traffictype', 'vpcid', 'vlan', 'broadcasturi', 'cidr', 'ip6cidr', 'netmask', 'gateway', 'asnumber', 'aclname', 'ispersistent', 'restartrequired', 'reservediprange', 'redundantrouter', 'networkdomain', 'egressdefaultpolicy', 'zonename', 'account', 'domain', 'associatednetwork', 'associatednetworkid', 'ip4routing', 'ip6routing', 'dns1', 'dns2', 'ip6dns1', 'ip6dns2', 'publicmtu', 'privatemtu']
+        var fields = ['name', 'id', 'description', 'type', 'traffictype', 'vpcid', 'vlan', 'broadcasturi', 'cidr', 'ip6cidr', 'netmask', 'gateway', 'asnumber', 'aclname', 'ispersistent', 'restartrequired', 'reservediprange', 'redundantrouter', 'networkdomain', 'egressdefaultpolicy', 'zonename', 'account', 'domainpath', 'associatednetwork', 'associatednetworkid', 'ip4routing', 'ip6firewall', 'ip6routing', 'ip6routes', 'dns1', 'dns2', 'ip6dns1', 'ip6dns2', 'publicmtu', 'privatemtu']
         if (!isAdmin()) {
           fields = fields.filter(function (e) { return e !== 'broadcasturi' })
         }
@@ -68,6 +68,14 @@ export default {
         name: 'egress.rules',
         component: shallowRef(defineAsyncComponent(() => import('@/views/network/EgressRulesTab.vue'))),
         show: (record, route, user) => { return record.type === 'Isolated' && !record.ip4routing && !('vpcname' in record) && 'listEgressFirewallRules' in store.getters.apis && (['Admin', 'DomainAdmin'].includes(user.roletype) || record.account === user.account || record.projectid) }
+      }, {
+        name: 'bgp.peers',
+        component: shallowRef(defineAsyncComponent(() => import('@/views/infra/zone/BgpPeersTab.vue'))),
+        show: (record, route, user) => { return !record.vpcid && ['Admin'].includes(user.roletype) && record.ip4routing === 'Dynamic' }
+      }, {
+        name: 'routing.firewall',
+        component: shallowRef(defineAsyncComponent(() => import('@/views/network/RoutingFirewallRulesTab.vue'))),
+        show: (record, route, user) => { return record.type === 'Isolated' && record.ip4routing && !('vpcname' in record) && 'listRoutingFirewallRules' in store.getters.apis && (['Admin', 'DomainAdmin'].includes(user.roletype) || record.account === user.account || record.projectid) }
       }, {
         name: 'bgp.peers',
         component: shallowRef(defineAsyncComponent(() => import('@/views/infra/zone/BgpPeersTab.vue'))),
@@ -1447,6 +1455,46 @@ export default {
         show: (record) => { return (record.allocationstate === 'Allocated') }
       }],
       show: isZoneCreated
+    },
+    {
+      name: 'ipv4subnets',
+      title: 'label.ipv4.subnets',
+      icon: 'pic-center-outlined',
+      permission: ['listIpv4SubnetsForGuestNetwork'],
+      columns: ['subnet', 'zonename', 'parentsubnet', 'networkname', 'vpcname', 'created', 'allocated'],
+      details: ['subnet', 'zonename', 'zoneid', 'parentsubnet', 'networkname', 'networkid', 'vpcname', 'vpcid', 'created', 'allocated', 'state'],
+      searchFilters: ['zoneid'],
+      show: () => {
+        if (!store.getters.zones || store.getters.zones.length === 0) {
+          return false
+        }
+        const AdvancedZonesWithRoutedmode = store.getters.zones.filter(zone => zone.routedmodeenabled)
+        if (isAdmin() && (AdvancedZonesWithRoutedmode && AdvancedZonesWithRoutedmode.length > 0)) {
+          return true
+        }
+        return false
+      },
+      actions: [
+        {
+          api: 'createIpv4SubnetForGuestNetwork',
+          icon: 'plus-outlined',
+          label: 'label.add.ipv4.subnet',
+          listView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/network/CreateIpv4SubnetForNetwork.vue')))
+        },
+        {
+          api: 'deleteIpv4SubnetForGuestNetwork',
+          icon: 'delete-outlined',
+          label: 'label.delete.ipv4.subnet',
+          message: 'message.action.delete.ipv4.subnet',
+          dataView: true,
+          show: (record) => { return !record.networkid },
+          groupAction: true,
+          popup: true,
+          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+        }
+      ]
     }
   ]
 }
