@@ -384,7 +384,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             try {
                 String glueBlockPool = Script.runSimpleBashScript(String.format("virsh pool-list --type rbd | grep active | head -1 | awk '{print $1}'"));
                 if (glueBlockPool != null) {
-                    logger.info("glueBlockPool:::" + glueBlockPool);
+                    logger.info("### [HA Checking] createHeartBeatCommand Method Start!!! - CLVM HA Use GlueBlockPool > ");
                     StoragePool sp = conn.storagePoolLookupByName(glueBlockPool);
                     String poolDefXML = sp.getXMLDesc(0);
                     LibvirtStoragePoolXMLParser parser = new LibvirtStoragePoolXMLParser();
@@ -398,12 +398,16 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         authUserName = pdef.getAuthUserName();
                     }
                 } else  {
-                    String smpPoolCmd = Script.runSimpleBashScript("virsh pool-list --type dir | grep active | awk '{print $1}'");
-                    if (smpPoolCmd != null) {
-                        logger.info("smpPoolCmd:::" + smpPoolCmd);
-                        String[] smpPools = smpPoolCmd.split(System.lineSeparator());
-                        for (String smpPool : smpPools) {
-                            logger.debug("Checking path of existing pool " + smpPool + " against pool we want to create");
+                    logger.info("### [HA Checking] createHeartBeatCommand Method Start!!! - CLVM HA Use SharedMountPointPoolCmd > ");
+                    Script listCommand = new Script("/bin/bash", logger);
+                    listCommand.add("-c");
+                    listCommand.add("virsh pool-list --type dir | grep active | awk '{print $1}' | sort");
+
+                    OutputInterpreter.AllLinesParser pars = new OutputInterpreter.AllLinesParser();
+                    String result = listCommand.execute(pars);
+                    if (result == null && pars.getLines() != null) {
+                        String[] lines = pars.getLines().split(System.lineSeparator());
+                        for (String smpPool : lines) {
                             StoragePool sp = conn.storagePoolLookupByName(smpPool);
                             String poolDefXML = sp.getXMLDesc(0);
                             LibvirtStoragePoolXMLParser parser = new LibvirtStoragePoolXMLParser();
@@ -483,7 +487,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             try {
                 String glueBlockPool = Script.runSimpleBashScript(String.format("virsh pool-list --type rbd | grep active | head -1 | awk '{print $1}'"));
                 if (glueBlockPool != null) {
-                    logger.info("glueBlockPool:::" + glueBlockPool);
+                    logger.info("### [HA Checking] checkingHeartBeat Method Start!!! - CLVM HA Use GlueBlockPool > ");
                     StoragePool sp = conn.storagePoolLookupByName(glueBlockPool);
                     String poolDefXML = sp.getXMLDesc(0);
                     LibvirtStoragePoolXMLParser parser = new LibvirtStoragePoolXMLParser();
@@ -497,12 +501,16 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         authUserName = pdef.getAuthUserName();
                     }
                 } else  {
-                    String smpPoolCmd = Script.runSimpleBashScript("virsh pool-list --type dir | grep active | awk '{print $1}'");
-                    if (smpPoolCmd != null) {
-                        logger.info("smpPoolCmd:::" + smpPoolCmd);
-                        String[] smpPools = smpPoolCmd.split(System.lineSeparator());
-                        for (String smpPool : smpPools) {
-                            logger.debug("Checking path of existing pool " + smpPool + " against pool we want to create");
+                    logger.info("### [HA Checking] checkingHeartBeat Method Start!!! - CLVM HA Use SharedMountPointPoolCmd > ");
+                    Script listCommand = new Script("/bin/bash", logger);
+                    listCommand.add("-c");
+                    listCommand.add("virsh pool-list --type dir | grep active | awk '{print $1}' | sort");
+
+                    OutputInterpreter.AllLinesParser pars = new OutputInterpreter.AllLinesParser();
+                    String result = listCommand.execute(pars);
+                    if (result == null && pars.getLines() != null) {
+                        String[] lines = pars.getLines().split(System.lineSeparator());
+                        for (String smpPool : lines) {
                             StoragePool sp = conn.storagePoolLookupByName(smpPool);
                             String poolDefXML = sp.getXMLDesc(0);
                             LibvirtStoragePoolXMLParser parser = new LibvirtStoragePoolXMLParser();
@@ -601,6 +609,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-m", pool.getMountDestPath());
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-u", volumeUUIDListString);
+            cmd.add("-i", String.valueOf(HeartBeatCheckerFreq / 1000));
             cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
             cmd.add("-d", String.valueOf(duration));
         } else if (pool.getPool().getType() == StoragePoolType.RBD) {
@@ -623,7 +632,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             try {
                 String glueBlockPool = Script.runSimpleBashScript(String.format("virsh pool-list --type rbd | grep active | head -1 | awk '{print $1}'"));
                 if (glueBlockPool != null) {
-                    logger.info("### [HA Checking] vmActivityCheck Method Start!!! - CLVM HA Use GlueBlockPool > " + glueBlockPool);
+                    logger.info("### [HA Checking] vmActivityCheck Method Start!!! - CLVM HA Use GlueBlockPool > ");
                     StoragePool sp = conn.storagePoolLookupByName(glueBlockPool);
                     String poolDefXML = sp.getXMLDesc(0);
                     LibvirtStoragePoolXMLParser parser = new LibvirtStoragePoolXMLParser();
@@ -637,12 +646,16 @@ public class LibvirtStoragePool implements KVMStoragePool {
                         authUserName = pdef.getAuthUserName();
                     }
                 } else  {
-                    String smpPoolCmd = Script.runSimpleBashScript("virsh pool-list --type dir | grep active | awk '{print $1}'");
-                    if (smpPoolCmd != null) {
-                        logger.info("### [HA Checking] vmActivityCheck Method Start!!! - CLVM HA Use SharedMountPointPoolCmd > " + glueBlockPool);
-                        String[] smpPools = smpPoolCmd.split(System.lineSeparator());
-                        for (String smpPool : smpPools) {
-                            logger.debug("Checking path of existing pool " + smpPool + " against pool we want to create");
+                    logger.info("### [HA Checking] vmActivityCheck Method Start!!! - CLVM HA Use SharedMountPointPoolCmd > ");
+                    Script listCommand = new Script("/bin/bash", logger);
+                    listCommand.add("-c");
+                    listCommand.add("virsh pool-list --type dir | grep active | awk '{print $1}' | sort");
+
+                    OutputInterpreter.AllLinesParser pars = new OutputInterpreter.AllLinesParser();
+                    String result = listCommand.execute(pars);
+                    if (result == null && pars.getLines() != null) {
+                        String[] lines = pars.getLines().split(System.lineSeparator());
+                        for (String smpPool : lines) {
                             StoragePool sp = conn.storagePoolLookupByName(smpPool);
                             String poolDefXML = sp.getXMLDesc(0);
                             LibvirtStoragePoolXMLParser parser = new LibvirtStoragePoolXMLParser();
@@ -664,6 +677,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             }
 
             cmd.add("-h", host.getPublicNetwork().getIp());
+            cmd.add("-q", pool.getPoolMountSourcePath());
             cmd.add("-u", volumeUUIDListString);
             cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
             cmd.add("-d", String.valueOf(duration));
