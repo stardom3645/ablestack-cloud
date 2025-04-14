@@ -32,7 +32,6 @@ import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.reflections.Reflections;
@@ -393,7 +392,7 @@ public class KVMStoragePoolManager {
         StorageAdaptor adaptor = getStorageAdaptor(type);
         KVMStoragePool pool = adaptor.createStoragePool(name, host, port, path, userInfo, type, details, primaryStorage);
 
-        if (!MapUtils.isEmpty(details) && !ObjectUtils.isEmpty(details.get("kvm.ha.on.storage.heartbeat")) && "true".equals(details.get("kvm.ha.on.storage.heartbeat"))) {
+        if (MapUtils.isNotEmpty(details) && details.containsKey("kvm.ha.on.storage.heartbeat") && "true".equals(details.get("kvm.ha.on.storage.heartbeat"))) {
             // LibvirtStorageAdaptor-specific statement
             if (type == StoragePoolType.NetworkFilesystem && primaryStorage) {
                 KVMHABase.HAStoragePool storagePool = new KVMHABase.HAStoragePool(pool, host, path, PoolType.PrimaryStorage);
