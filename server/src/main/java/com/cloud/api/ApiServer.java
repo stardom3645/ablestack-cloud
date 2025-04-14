@@ -1236,8 +1236,14 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             domainId = userDomain.getId();
         }
 
-        UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
-        List<String> sessionIds = new ArrayList<>();
+        Long userId = (Long)session.getAttribute("nextUserId");
+        UserAccount userAcct = null;
+        if (userId != null) {
+            userAcct = accountMgr.getUserAccountById(userId);
+        } else {
+            userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
+        }
+
         if (userAcct != null) {
             if (ApiServer.SecurityFeaturesEnabled.value()) { // 보안기능용 : 하나의 세션만 접속
                 if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 기존 세션 차단
