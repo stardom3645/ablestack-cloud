@@ -55,7 +55,7 @@ do
      UUIDList="$OPTARG"
      ;;
   t)
-     MSTime="$OPTARG"
+     interval="$OPTARG"
      ;;
   d)
      SuspectTime="$OPTARG"
@@ -66,10 +66,6 @@ do
   esac
 done
 
-if [ -z "$PoolName" ]; then
-  exit 2
-fi
-
 if [ -z "$SuspectTime" ]; then
   exit 2
 fi
@@ -78,10 +74,10 @@ fi
 # First check: heartbeat file
 now=$(date +%s)
 if [ -n "$RbdPoolName" ] ; then
-   getHbTime=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta get MOLD-HB $HostIP)
+   getHbTime=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta get MOLD-HB $HostIP-CLVM)
    if [ $? -eq 0 ]; then
       diff=$(expr $now - $getHbTime)
-      if [ $diff -le 61 ]; then
+      if [ $diff -le $interval ]; then
          echo "### [HOST STATE : ALIVE] in [PoolType : CLVM] ###"
          exit 0
       fi
@@ -90,7 +86,7 @@ elif [ -n "$GfsPoolPath" ] ; then
    now=$(date +%s)
    getHbTime=$(cat $hbFile)
    diff=$(expr $now - $getHbTime)
-   if [ $diff -le 61 ]; then
+   if [ $diff -le $interval  ]; then
       echo "### [HOST STATE : ALIVE] in [PoolType : CLVM] ###"
       exit 0
    fi

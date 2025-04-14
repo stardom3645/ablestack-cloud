@@ -71,12 +71,13 @@ do
   esac
 done
 
+poolPath=$(echo $poolPath | cut -d '/' -f2-)
+
 hbFolder=$GfsPoolPath/MOLD-HB
-hbFile=$hbFolder/$HostIP
+hbFile=$hbFolder/$HostIP-CLVM
 
 write_hbLog() {
   #write the heart beat log
-  poolPath=$(echo $poolPath | cut -d '/' -f2-)
   path=$(pvs 2>/dev/null | grep -w $poolPath | awk '{print $1}')
   persist=$(sg_persist -ik $path)
   if [ $? -eq 0 ]
@@ -87,7 +88,7 @@ write_hbLog() {
       if [ $? -gt 0 ]; then
         rbd -p $RbdPoolName create --size 1 --id $RbdPoolAuthUserName MOLD-HB
       fi
-      obj=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta set MOLD-HB $HostIP $Timestamp)
+      obj=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta set MOLD-HB $HostIP-CLVM $Timestamp)
     elif [ -n "$GfsPoolPath" ] ; then
         stat $hbFile &> /dev/null
         if [ $? -gt 0 ] ; then
@@ -118,7 +119,7 @@ check_hbLog() {
 #check the heart beat log
   now=$(date +%s)
   if [ -n "$RbdPoolName" ] ; then
-    getHbTime=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta get MOLD-HB $HostIP)
+    getHbTime=$(rbd -p $RbdPoolName --id $RbdPoolAuthUserName image-meta get MOLD-HB $HostIP-CLVM)
     if [ $? -gt 0 ] || [ -z "$getHbTime" ]; then
       return 1
     fi
