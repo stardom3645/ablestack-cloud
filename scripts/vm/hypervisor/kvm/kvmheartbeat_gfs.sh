@@ -95,7 +95,7 @@ done
 # fi
 
 hbFolder=$MountPoint/MOLD-HB
-hbFile=$hbFolder/$HostIP
+hbFile=$hbFolder/$HostIP-$MountPoint
 
 write_hbLog() {
 #write the heart beat log

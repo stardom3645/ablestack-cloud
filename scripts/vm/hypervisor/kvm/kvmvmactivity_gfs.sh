@@ -33,6 +33,7 @@ HostIP=
 UUIDList=
 MSTime=
 SuspectTime=
+interval=
 
 while getopts 'm:u:t:h:d:' OPTION
 do
@@ -45,6 +46,9 @@ do
      ;;
   u)
      UUIDList="$OPTARG"
+     ;;
+  t)
+     interval="$OPTARG"
      ;;
   t)
      MSTime="$OPTARG"
@@ -63,9 +67,9 @@ then
    exit 2
 fi
 
-hbFile="$MountPoint/MOLD-HB/$HostIP"
-acFolder="$MountPoint/MOLD-AC"
-acFile="$acFolder/$HostIP"
+hbFile=$MountPoint/MOLD-HB/$HostIP-$MountPoint
+acFolder=$MountPoint/MOLD-AC
+acFile=$acFolder/$HostIP-$MountPoint
 
 
 if [ ! -f $acFolder ]; then
@@ -76,7 +80,7 @@ fi
 now=$(date +%s)
 hb=$(cat $hbFile)
 diff=$(expr $now - $hb)
-if [ $diff -lt 61 ]
+if [ $diff -lt $interval ]
 then
     echo "### [HOST STATE : ALIVE] in [PoolType : SharedMountPoint] ###"
     exit 0
