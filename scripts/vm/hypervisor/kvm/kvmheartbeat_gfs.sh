@@ -95,7 +95,9 @@ done
 # fi
 
 hbFolder=$MountPoint/MOLD-HB
-hbFile=$hbFolder/$HostIP-$MountPoint
+MPTitle=$(echo $MountPoint | sed 's/\//-/g' 2> /dev/null)
+
+hbFile=$hbFolder/$HostIP$MPTitle
 
 write_hbLog() {
 #write the heart beat log
