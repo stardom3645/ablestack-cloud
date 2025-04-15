@@ -21,6 +21,7 @@ help() {
                     -m mount point
                     -h host
                     -u volume uuid list
+                    -i interval between read hb log
                     -t time on ms
                     -d suspect time\n"
   exit 1
@@ -35,7 +36,7 @@ MSTime=
 SuspectTime=
 interval=
 
-while getopts 'm:u:t:h:d:' OPTION
+while getopts 'm:u:t:i:h:d:' OPTION
 do
   case $OPTION in
   m)
@@ -47,7 +48,7 @@ do
   u)
      UUIDList="$OPTARG"
      ;;
-  t)
+  i)
      interval="$OPTARG"
      ;;
   t)
@@ -67,10 +68,11 @@ then
    exit 2
 fi
 
-hbFile=$MountPoint/MOLD-HB/$HostIP-$MountPoint
-acFolder=$MountPoint/MOLD-AC
-acFile=$acFolder/$HostIP-$MountPoint
+MPTitle=$(echo $MountPoint | sed 's/\//-/g' 2> /dev/null)
 
+hbFile=$MountPoint/MOLD-HB/$HostIP$MPTitle
+acFolder=$MountPoint/MOLD-AC
+acFile=$acFolder/$HostIP$MPTitle
 
 if [ ! -f $acFolder ]; then
     mkdir -p $acFolder &> /dev/null
