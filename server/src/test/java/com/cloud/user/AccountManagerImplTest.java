@@ -115,6 +115,8 @@ public class AccountManagerImplTest extends AccountManagetImplTestBase {
 
     @Mock
     private AccountVO accountVoMock;
+    @Mock
+    private AccountVO _systemAccount;
 
     @Mock
     private ProjectAccountVO projectAccountVO;
