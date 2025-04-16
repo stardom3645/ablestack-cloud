@@ -23,7 +23,7 @@
       </div>
     </template>
   </a-alert>
-  <div v-if="['host'].includes($route.meta.name)">
+  <div v-if="['host'].includes($route.meta.name)  && licenseCode !== ''">
     <a-alert type="success" :showIcon="true" v-if="licenseCode == 'OK'" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + '~' + dataResource.licenseExpiryDate" :description="'(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
     <a-alert type="error" :showIcon="true" v-else-if="licenseCode == 'PASSED'" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + '~' + dataResource.licenseExpiryDate" :description="'(' + $t('message.license.renewal.required') + ')'" />
     <a-alert type="error" :showIcon="true" v-else-if="licenseCode == 'NOSTART'" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + '~' + dataResource.licenseExpiryDate" :description="'(' + $t('message.license.nostart') + ')'" />
@@ -242,7 +242,7 @@ export default {
         expired: false,
         expiryDate: ''
       },
-      licenseCode: 'NONE'
+      licenseCode: ''
     }
   },
   mounted () {
