@@ -1578,6 +1578,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                 }
 
                 if(shareable) {
+                    diskdef.setDiskFormatType(DiskDef.DiskFmtType.RAW);
                     diskdef.setSharable();
                 }
 
@@ -1742,6 +1743,9 @@ public class KVMStorageProcessor implements StorageProcessor {
                 format = primaryPool.getDefaultFormat();
             } else {
                 format = PhysicalDiskFormat.valueOf(volume.getFormat().toString().toUpperCase());
+            }
+            if (volume.getShareable()) {
+                format = PhysicalDiskFormat.RAW;
             }
 
             MigrationOptions migrationOptions = volume.getMigrationOptions();
