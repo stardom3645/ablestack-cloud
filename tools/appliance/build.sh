@@ -76,7 +76,7 @@ done
 set -e
 
 CREATE_DATE=$(date +"%G%m%e%H%M")
-
+CREATE_DATE_FMT=$(date +"%G-%m-%e %H:%M")
 
 ###
 ### Configuration
@@ -207,12 +207,12 @@ function retry() {
 function create_definition() {
   if [ "${appliance}" != "${appliance_build_name}" ]; then
     cp -r "${appliance}" "${appliance_build_name}"
+    sed ${sed_regex_option} -i -e "s/^CREATE_DATE=/CREATE_DATE=${CREATE_DATE_FMT}/" \
+          "${appliance_build_name}/scripts/configure_systemvm_services.sh"
     set +e
     if [ ! -z "${version}" ]; then
       if [ -f "${appliance_build_name}/scripts/configure_systemvm_services.sh" ]; then
-          sed ${sed_regex_option} -i -e "s/^CLOUDSTACK_RELEASE=.+/CLOUDSTACK_RELEASE=${version}/" \
-              "${appliance_build_name}/scripts/configure_systemvm_services.sh"
-          sed ${sed_regex_option} -i -e "s/^CREATE_DATE=.+/CREATE_DATE=${CREATE_DATE}/" \
+        sed ${sed_regex_option} -i -e "s/^CLOUDSTACK_RELEASE=.+/CLOUDSTACK_RELEASE=${version}/" \
               "${appliance_build_name}/scripts/configure_systemvm_services.sh"
       fi
     fi
