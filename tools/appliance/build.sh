@@ -75,6 +75,9 @@ done
 #
 set -e
 
+CREATE_DATE=$(date +"%G%m%e%H%M")
+
+
 ###
 ### Configuration
 ###
@@ -209,6 +212,8 @@ function create_definition() {
       if [ -f "${appliance_build_name}/scripts/configure_systemvm_services.sh" ]; then
           sed ${sed_regex_option} -i -e "s/^CLOUDSTACK_RELEASE=.+/CLOUDSTACK_RELEASE=${version}/" \
               "${appliance_build_name}/scripts/configure_systemvm_services.sh"
+          sed ${sed_regex_option} -i -e "s/^CREATE_DATE=.+/CREATE_DATE=${CREATE_DATE}/" \
+              "${appliance_build_name}/scripts/configure_systemvm_services.sh"
       fi
     fi
     set -e
@@ -306,7 +311,6 @@ function ovm_export() {
 }
 
 function kvm_export() {
-  CREATE_DATE=$(date +"%G%m%e%H%M")
   log INFO "creating kvm export"
   set +e
   qemu-img convert -o compat=0.10 -f qcow2 -c -O qcow2 "dist/${appliance}" "dist/${appliance_build_name}-kvm-${CREATE_DATE}.qcow2"
