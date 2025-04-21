@@ -306,12 +306,13 @@ function ovm_export() {
 }
 
 function kvm_export() {
+  CREATE_DATE=$(date +"%G%m%e%H%M")
   log INFO "creating kvm export"
   set +e
-  qemu-img convert -o compat=0.10 -f qcow2 -c -O qcow2 "dist/${appliance}" "dist/${appliance_build_name}-kvm.qcow2"
+  qemu-img convert -o compat=0.10 -f qcow2 -c -O qcow2 "dist/${appliance}" "dist/${appliance_build_name}-kvm-${CREATE_DATE}.qcow2"
   local qemuresult=$?
-  cd dist && bzip2 "${appliance_build_name}-kvm.qcow2" && cd ..
-  log INFO "${appliance} exported for KVM: dist/${appliance_build_name}-kvm.qcow2.bz2"
+  cd dist && bzip2 "${appliance_build_name}-kvm-${CREATE_DATE}.qcow2" && cd ..
+  log INFO "${appliance} exported for KVM: dist/${appliance_build_name}-kvm-${CREATE_DATE}.qcow2.bz2"
 }
 
 function vmware_export() {
@@ -358,10 +359,10 @@ function main() {
   # process the disk at dist
   kvm_export
   if [ "${target_arch}" == "x86_64" ]; then
-    ovm_export
-    xen_server_export
-    vmware_export
-    hyperv_export
+    # ovm_export
+    # xen_server_export
+    # vmware_export
+    # hyperv_export
   fi
   rm -f "dist/${appliance}"
   cd dist && chmod +r * && cd ..
