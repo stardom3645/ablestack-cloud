@@ -20,7 +20,7 @@ set -e
 set -x
 
 CLOUDSTACK_RELEASE=4.21.0
-CREATE_DATE=$(date +"%G-%m-%e %H:%M")
+CREATE_DATE=
 
 function configure_apache2() {
    # Enable ssl, rewrite and auth
