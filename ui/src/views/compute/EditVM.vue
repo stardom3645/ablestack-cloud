@@ -207,27 +207,6 @@ export default {
       }).then(response => {
         const zone = response?.listzonesresponse?.zone || []
         this.securityGroupsEnabled = zone?.[0]?.securitygroupsenabled || this.$store.getters.showSecurityGroups
-        if (this.securityGroupsEnabled) {
-          api('listNetworks', { supportedservices: 'SecurityGroup' }).then(json => {
-            if (json.listnetworksresponse && json.listnetworksresponse.network) {
-              for (const net of json.listnetworksresponse.network) {
-                if (this.securityGroupNetworkProviderUseThisVM) {
-                  break
-                }
-                const listVmParams = {
-                  id: this.resource.id,
-                  networkid: net.id,
-                  listall: true
-                }
-                api('listVirtualMachines', listVmParams).then(json => {
-                  if (json.listvirtualmachinesresponse && json.listvirtualmachinesresponse?.virtualmachine?.length > 0) {
-                    this.securityGroupNetworkProviderUseThisVM = true
-                  }
-                })
-              }
-            }
-          })
-        }
       })
     },
     fetchSecurityGroups () {
