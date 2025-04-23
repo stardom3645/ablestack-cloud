@@ -38,6 +38,10 @@ public class ApiServiceConfiguration implements Configurable {public static fina
             "3000", "Monitoring Service Wall Portal Port.(ex:3000)", true);
     public static final ConfigKey<String> MonitoringWallPortalVmUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.vm.uri",
             "/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang", "Monitoring Service Wall Portal Uri.(ex:/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang)", true);
+    public static final ConfigKey<String> MonitoringWallPortalHostUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.host.uri",
+            "/d/Q3Jkjf54z/c8fd170", "Monitoring Service Wall Portal Host Uri.(ex:/d/Q3Jkjf54z/c8fd170)", true);
+    public static final ConfigKey<String> MonitoringWallPortalClusterUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.cluster.uri",
+            "/d/fe4e0f7t7qjgga/ed98b8-ec8aa4-ed8ab8-eca285-ed95a9-ed9884-ed99a9", "Monitoring Service Wall Portal Cluster Uri.(ex:/d/fe4e0f7t7qjgga/ed98b8-ec8aa4-ed8ab8-eca285-ed95a9-ed9884-ed99a9)", true);
     public static final ConfigKey<Boolean> EventDeleteEnabled = new ConfigKey<>("Advanced", Boolean.class, "event.delete.enabled",
             "false", "true if Event Delete Button is enabled, false otherwise)", false);
 

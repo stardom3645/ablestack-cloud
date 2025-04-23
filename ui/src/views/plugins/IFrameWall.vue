@@ -16,41 +16,32 @@
 // under the License.
 
 <template>
-  <a :href="uriInfo" target="_blank">
-    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" v-if="uriCreateOk">
-      <AreaChartOutlined />
-    </a-button>
-  </a>
+  <div>
+    <iframe :src="uriInfo" width="100%" frameBorder="0" style="height: 90vh">
+    </iframe>
+  </div>
 </template>
+
 <script>
 import { api } from '@/api'
 export default {
-  name: 'WallLinkUrl',
+  name: 'IFrameWall',
   props: {
     resource: {
       type: Object,
       required: true
-    },
-    scope: {
-      type: String,
-      default: 'vm'
-    },
-    size: {
-      type: String,
-      default: 'small'
     }
   },
   data () {
     return {
-      uriCreateOk: false,
       uriInfo: ''
     }
   },
   created () {
-    this.urlAction()
+    this.urlAction(this.resource.hypervisortype)
   },
   methods: {
-    urlAction () {
+    urlAction (hypervisortype) {
       api('listConfigurations', { keyword: 'monitoring.wall.portal' }).then(json => {
         var items = json.listconfigurationsresponse.configuration
         var wallPortalProtocol = items.filter(x => x.name === 'monitoring.wall.portal.protocol')[0]?.value
@@ -59,20 +50,14 @@ export default {
         if (wallPortalDomain === null || wallPortalDomain === '') {
           wallPortalDomain = this.$store.getters.features.host
         }
-        var uri = ''
-        uri += wallPortalProtocol + '://' + wallPortalDomain + ':' + wallPortalPort
-        if (this.scope === 'vm') {
-          const vmUriPath = items.filter(x => x.name === 'monitoring.wall.portal.vm.uri')[0]?.value
-          this.uriInfo = uri + vmUriPath + '?kiosk&orgId=2&var-vm_uuid=' + this.resource.id
-          this.uriCreateOk = true
-        } else if (this.scope === 'host') {
+        var uri = wallPortalProtocol + '://' + wallPortalDomain + ':' + wallPortalPort
+        if (typeof hypervisortype !== 'undefined' && hypervisortype !== null && hypervisortype !== '') {
+          this.uriInfo = uri + items.filter(x => x.name === 'monitoring.wall.portal.cluster.uri')[0]?.value
+        } else {
           const hostUriPath = items.filter(x => x.name === 'monitoring.wall.portal.host.uri')[0]?.value
           this.uriInfo = uri + hostUriPath + '?from=now-1h&to=now&var-host=' + this.resource.ipaddress
-          this.uriCreateOk = true
-        } else if (this.scope === 'cluster') {
-          this.uriInfo = uri + items.filter(x => x.name === 'monitoring.wall.portal.cluster.uri')[0]?.value
-          this.uriCreateOk = true
         }
+        this.uriCreateOk = true
       })
     }
   }
