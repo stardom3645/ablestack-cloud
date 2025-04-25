@@ -9689,12 +9689,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException(nic + " is not a nic on  " + vmInstance);
         }
 
-        //make sure the VM is Running or Stopped
-        if ((vmInstance.getState() != State.Running)) {
-            throw new CloudRuntimeException("refusing to set default " + vmInstance + " is not Running");
-        }
         final NicProfile nicProfile = new NicProfile(nic, network, nic.getBroadcastUri(), nic.getIsolationUri(), _networkModel.getNetworkRate(network.getId(), vmInstance.getId()),
                 _networkModel.isSecurityGroupSupportedInNetwork(network), _networkModel.getNetworkTag(vmInstance.getHypervisorType(), network));
+
+        nic.setLinkState(cmd.getLinkState());
+        _nicDao.update(nicId, nic);
 
         if (vmInstance.getState() == State.Running) {
             VirtualMachineProfile vmProfile = new VirtualMachineProfileImpl(vmInstance);
@@ -9703,9 +9702,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
             Long hostId = vmInstance.getHostId() != null ? vmInstance.getHostId() : vmInstance.getLastHostId();
             NicLinkStateCommand nlscmd = new NicLinkStateCommand(nicTO, vmInstance.getInstanceName(), cmd.getLinkState());
-
-            nic.setLinkState(cmd.getLinkState());
-            _nicDao.update(nicId, nic);
 
             try {
                 Answer answer = _agentMgr.send(hostId, nlscmd);
