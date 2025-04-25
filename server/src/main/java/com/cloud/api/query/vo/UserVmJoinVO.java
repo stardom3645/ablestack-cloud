@@ -448,6 +448,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "delete_protection")
     protected Boolean deleteProtection;
 
+    @Column(name = "arch")
+    protected String arch;
+
 
     public UserVmJoinVO() {
         // Empty constructor
@@ -999,4 +1002,7 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return qemuAgentVersion;
     }
 
+    public String getArch() {
+        return arch;
+    }
 }

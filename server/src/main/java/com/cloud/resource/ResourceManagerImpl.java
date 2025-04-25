@@ -1203,6 +1203,12 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
 
         if (arch != null) {
+            List<CPU.CPUArch> architectureTypes = _hostDao.listDistinctArchTypes(cluster.getId());
+            if (architectureTypes.stream().anyMatch(a -> !a.equals(arch))) {
+                throw new InvalidParameterValueException(String.format(
+                        "Cluster has host(s) present with arch type(s): %s",
+                        StringUtils.join(architectureTypes.stream().map(CPU.CPUArch::getType).toArray())));
+            }
             cluster.setArch(arch.getType());
             doUpdate = true;
         }
@@ -3570,6 +3576,10 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {KvmSshToAgentEnabled, HOST_MAINTENANCE_LOCAL_STRATEGY};
+        return new ConfigKey<?>[] {
+                KvmSshToAgentEnabled,
+                HOST_MAINTENANCE_LOCAL_STRATEGY,
+                SystemVmPreferredArchitecture
+        };
     }
 }

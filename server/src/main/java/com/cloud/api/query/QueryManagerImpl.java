@@ -1314,6 +1314,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Long userId = cmd.getUserId();
         Long userdataId = cmd.getUserdataId();
         Map<String, String> tags = cmd.getTags();
+        final CPU.CPUArch arch = cmd.getArch();
 
         boolean isAdmin = false;
         boolean isRootAdmin = false;
@@ -1541,8 +1542,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         Boolean isVnf = cmd.getVnf();
-        if (isVnf != null) {
+        boolean templateJoinNeeded = isVnf != null || arch != null;
+        if (templateJoinNeeded) {
             SearchBuilder<VMTemplateVO> templateSearch = _templateDao.createSearchBuilder();
+            templateSearch.and("templateArch", templateSearch.entity().getArch(), Op.EQ);
             templateSearch.and("templateTypeEQ", templateSearch.entity().getTemplateType(), Op.EQ);
             templateSearch.and("templateTypeNEQ", templateSearch.entity().getTemplateType(), Op.NEQ);
 
@@ -1670,6 +1673,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             } else {
                 userVmSearchCriteria.setJoinParameters("vmTemplate", "templateTypeNEQ", TemplateType.VNF);
             }
+        }
+        if (arch != null) {
+            userVmSearchCriteria.setJoinParameters("vmTemplate", "templateArch", arch);
         }
 
         if (isRootAdmin) {
@@ -2375,6 +2381,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Long pageSize = cmd.getPageSizeVal();
         Hypervisor.HypervisorType hypervisorType = cmd.getHypervisor();
         Long msId = cmd.getManagementServerId();
+        final CPU.CPUArch arch = cmd.getArch();
 
         Filter searchFilter = new Filter(HostVO.class, "id", Boolean.TRUE, startIndex, pageSize);
 
@@ -2393,6 +2400,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         hostSearchBuilder.and("resourceState", hostSearchBuilder.entity().getResourceState(), SearchCriteria.Op.EQ);
         hostSearchBuilder.and("hypervisor_type", hostSearchBuilder.entity().getHypervisorType(), SearchCriteria.Op.EQ);
         hostSearchBuilder.and("mgmt_server_id", hostSearchBuilder.entity().getManagementServerId(), SearchCriteria.Op.EQ);
+        hostSearchBuilder.and("arch", hostSearchBuilder.entity().getArch(), SearchCriteria.Op.EQ);
 
         if (keyword != null) {
             hostSearchBuilder.and().op("keywordName", hostSearchBuilder.entity().getName(), SearchCriteria.Op.LIKE);
@@ -2482,6 +2490,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             if (msHost != null) {
                 sc.setParameters("mgmt_server_id", msHost.getMsid());
             }
+        }
+        
+        if (arch != null) {
+            sc.setParameters("arch", arch);
         }
 
         Pair<List<HostVO>, Integer> uniqueHostPair = hostDao.searchAndCount(sc, searchFilter);
