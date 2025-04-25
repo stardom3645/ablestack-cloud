@@ -561,7 +561,21 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         VolumeInfo vol = volFactory.getVolume(volume.getId());
         DataStore store = dataStoreMgr.getDataStore(pool.getId(), DataStoreRole.Primary);
         // DataStoreRole dataStoreRole = snapshotHelper.getDataStoreRole(snapshot);
-        SnapshotInfo snapInfo = snapshotFactory.getSnapshotOnPrimaryStore(snapshot.getId());
+        SnapshotInfo snapInfo = null;
+        int i = 0;
+        while (i++ < 5) {
+            snapInfo = snapshotFactory.getSnapshotOnPrimaryStore(snapshot.getId());
+            if (snapInfo  != null) {
+                break;
+            } else {
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    logger.trace(String.format("Ignoring InterruptedException [%s] when waiting for restore session finishes.", e.getMessage()));
+                }
+            }
+        }
+
          // create volume on primary from snapshot
         AsyncCallFuture<VolumeApiResult> future = volService.cloneVolumeFromSnapshot(vol, store, snapInfo);
         String snapshotToString = getReflectOnlySelectedFields(snapInfo.getSnapshotVO());
