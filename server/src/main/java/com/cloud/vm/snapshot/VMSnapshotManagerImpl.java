@@ -953,7 +953,9 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
             List<VMSnapshotDetailsVO> vmSnapshotDetails = _vmSnapshotDetailsDao.listDetails(vmSnapshotVo.getId());
             List<UserVmDetailVO> userVmDetails = new ArrayList<UserVmDetailVO>();
             for (VMSnapshotDetailsVO detail : vmSnapshotDetails) {
-                userVmDetails.add(new UserVmDetailVO(userVm.getId(), detail.getName(), detail.getValue(), detail.isDisplay()));
+                if (detail.getName() != "kvmStorageSnapshot") {
+                    userVmDetails.add(new UserVmDetailVO(userVm.getId(), detail.getName(), detail.getValue(), detail.isDisplay()));
+                }
             }
             _userVmDetailsDao.saveDetails(userVmDetails);
         }
