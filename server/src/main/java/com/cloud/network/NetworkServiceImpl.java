@@ -2186,12 +2186,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             if (implementedNetwork == null || implementedNetwork.first() == null) {
                 logger.warn("Failed to provision the network " + network);
             }
-            Network implemented = implementedNetwork.second();
-            if (implemented != null) {
-                UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NETWORK_CREATE, implemented.getAccountId(), implemented.getDataCenterId(), implemented.getId(),
-                        implemented.getName(), implemented.getNetworkOfferingId(), null, null, null, Network.class.getName(), implemented.getUuid());
-            }
-            return implemented;
+            return implementedNetwork.second();
         } catch (ResourceUnavailableException ex) {
             logger.warn("Failed to implement persistent guest network " + network + "due to ", ex);
             CloudRuntimeException e = new CloudRuntimeException("Failed to implement persistent guest network");
@@ -3593,8 +3588,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             }
         }
         Network updatedNetwork = getNetwork(network.getId());
-        UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NETWORK_UPDATE, updatedNetwork.getAccountId(), updatedNetwork.getDataCenterId(), updatedNetwork.getId(),
-                updatedNetwork.getName(), updatedNetwork.getNetworkOfferingId(), null, updatedNetwork.getState().name(), Network.class.getName(), updatedNetwork.getUuid(), true);
+        UsageEventUtils.publishNetworkUpdate(updatedNetwork);
         return updatedNetwork;
     }
 
