@@ -590,7 +590,7 @@
                   </span>
                   <div style="margin-top: 15px" v-if="showDetails">
                     <div
-                      v-if="(vm.templateid && ['KVM', 'VMware', 'XenServer'].includes(hypervisor) && !template.deployasis) || tabKey == 'volumeId'">
+                      v-if="['KVM', 'VMware', 'XenServer'].includes(hypervisor) && ((vm.templateid && !template.deployasis) || vm.isoid) || tabKey == 'volumeId'">
                       <a-form-item :label="$t('label.boottype')" name="boottype" ref="boottype">
                         <a-select
                           v-model:value="form.boottype"
