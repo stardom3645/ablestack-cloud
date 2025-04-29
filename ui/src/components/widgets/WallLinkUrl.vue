@@ -63,15 +63,15 @@ export default {
         uri += wallPortalProtocol + '://' + wallPortalDomain + ':' + wallPortalPort
         if (this.scope === 'vm') {
           const vmUriPath = items.filter(x => x.name === 'monitoring.wall.portal.vm.uri')[0]?.value
-          this.uriInfo = uri + vmUriPath + '?kiosk&orgId=2&theme=light&var-vm_uuid=' + this.resource.id
+          this.uriInfo = uri + vmUriPath + '&var-vm_uuid=' + this.resource.id
           this.uriCreateOk = true
         } else if (this.scope === 'host') {
           const hostUriPath = items.filter(x => x.name === 'monitoring.wall.portal.host.uri')[0]?.value
-          this.uriInfo = uri + hostUriPath + '?from=now-1h&to=now&theme=light&var-host=' + this.resource.ipaddress
+          this.uriInfo = uri + hostUriPath + '&var-host=' + this.resource.ipaddress
           this.uriCreateOk = true
         } else if (this.scope === 'cluster') {
           const clusterUriPath = items.filter(x => x.name === 'monitoring.wall.portal.cluster.uri')[0]?.value
-          this.uriInfo = uri + clusterUriPath + '?theme=light'
+          this.uriInfo = uri + clusterUriPath
           this.uriCreateOk = true
         }
       })
