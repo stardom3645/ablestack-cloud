@@ -205,16 +205,16 @@ export default {
     },
     wallPortalLink () {
       api('listConfigurations', { keyword: 'monitoring.wall.portal' }).then(json => {
-        var items = json.listconfigurationsresponse.configuration
-        var wallPortalProtocol = items.filter(x => x.name === 'monitoring.wall.portal.protocol')[0]?.value
+        const items = json.listconfigurationsresponse.configuration
+        const wallPortalProtocol = items.filter(x => x.name === 'monitoring.wall.portal.protocol')[0]?.value
         const wallPortalPort = items.filter(x => x.name === 'monitoring.wall.portal.port')[0]?.value
         var wallPortalDomain = items.filter(x => x.name === 'monitoring.wall.portal.domain')[0]?.value
         if (wallPortalDomain === null || wallPortalDomain === '') {
           wallPortalDomain = this.$store.getters.features.host
         }
-        var uri = wallPortalProtocol + '://' + wallPortalDomain + ':' + wallPortalPort
-        this.uriInfo = uri + '/login?orgId=1'
-        window.open(uri, '_blank')
+        const uri = wallPortalProtocol + '://' + wallPortalDomain + ':' + wallPortalPort
+        this.uriInfo = uri + '/logout'
+        window.open(this.uriInfo, '_blank')
       })
     },
     async fetchConfigurationSwitch () {
