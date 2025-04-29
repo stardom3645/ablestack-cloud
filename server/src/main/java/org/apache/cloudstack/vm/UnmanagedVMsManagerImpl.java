@@ -571,6 +571,17 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             }
         }
         if (storagePool == null) {
+            List<StoragePoolVO> pools = primaryDataStoreDao.listPoolByHostPath(dsHost, dsPath);
+            for (StoragePool pool : pools) {
+                if (pool.getDataCenterId() == zone.getId() &&
+                        (pool.getClusterId() == null || pool.getClusterId().equals(cluster.getId())) &&
+                        volumeApiService.doesTargetStorageSupportDiskOffering(pool, diskOfferingTags)) {
+                    storagePool = pool;
+                    break;
+                }
+            }
+        }
+        if (storagePool == null) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Storage pool for disk %s(%s) with datastore: %s not found in zone ID: %s", disk.getLabel(), disk.getDiskId(), disk.getDatastoreName(), zone.getUuid()));
         }
         return storagePool;
