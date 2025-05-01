@@ -220,8 +220,8 @@
           </template>
           <a-switch v-model:checked="form.kvdoenable" />
         </a-form-item>
-        <a-row :gutter="12" v-if="(hyperKVMShow || hyperCustomShow) && currentForm === 'Create'">
-          <a-col :md="24" :lg="12">
+        <a-row :gutter="12">
+          <a-col :md="24" :lg="12" v-if="(hyperKVMShow || hyperCustomShow) && currentForm === 'Create'">
             <a-form-item ref="directdownload" name="directdownload">
               <template #label>
                 <tooltip-label :title="$t('label.directdownload')" :tooltip="apiParams.directdownload.description"/>
@@ -229,7 +229,7 @@
               <a-switch v-model:checked="form.directdownload" @change="handleChangeDirect" />
             </a-form-item>
           </a-col>
-          <a-col :md="24" :lg="12" v-if="allowDirectDownload">
+          <a-col :md="24" :lg="12">
             <a-form-item ref="checksum" name="checksum">
               <template #label>
                 <tooltip-label :title="$t('label.checksum')" :tooltip="apiParams.checksum.description"/>
