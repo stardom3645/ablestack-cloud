@@ -42,6 +42,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -52,6 +53,9 @@ import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
+import org.apache.cloudstack.command.CommandInfo;
+import org.apache.cloudstack.command.ReconcileCommandService;
+import org.apache.cloudstack.command.ReconcileCommandUtils;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.DeleteRbdObjectsCommand;
@@ -61,6 +65,7 @@ import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
+import org.apache.cloudstack.storage.volume.VolumeOnStorageTO;
 import org.apache.cloudstack.utils.bytescale.ByteScaleUtils;
 import org.apache.cloudstack.utils.cryptsetup.CryptSetup;
 import org.apache.cloudstack.utils.hypervisor.HypervisorUtils;
@@ -113,6 +118,7 @@ import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.HostVmStateReportEntry;
 import com.cloud.agent.api.ListHostDeviceCommand;
+import com.cloud.agent.api.PingAnswer;
 import com.cloud.agent.api.PingCommand;
 import com.cloud.agent.api.PingRoutingCommand;
 import com.cloud.agent.api.PingRoutingWithNwGroupsCommand;
@@ -147,6 +153,7 @@ import com.cloud.exception.InternalErrorException;
 import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
+import com.cloud.hypervisor.kvm.resource.disconnecthook.DisconnectHook;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ChannelDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ClockDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ConsoleDef;
@@ -219,6 +226,7 @@ import com.cloud.utils.ssh.SshHelper;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -351,6 +359,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     public static final int LIBVIRT_CGROUPV2_WEIGHT_MIN = 2;
     public static final int LIBVIRT_CGROUPV2_WEIGHT_MAX = 10000;
+
+    public static final String COMMANDS_LOG_PATH = "/usr/share/cloudstack-agent/tmp/commands";
 
     private String modifyVlanPath;
     private String ablestackVbmcPath;
@@ -534,6 +544,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     private boolean isTungstenEnabled = false;
 
+    private boolean isReconcileCommandsEnabled = false;
+
     private static Gson gson = new Gson();
 
     /**
@@ -578,6 +590,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     @Inject
     private PrimaryDataStoreDao _storagePoolDao;
+
+    protected List<DisconnectHook> _disconnectHooks = new CopyOnWriteArrayList<>();
 
     @Override
     public ExecutionResult executeInVR(final String routerIp, final String script, final String args) {
@@ -810,6 +824,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public StorageSubsystemCommandHandler getStorageHandler() {
         return storageHandler;
     }
+
     private static final class KeyValueInterpreter extends OutputInterpreter {
         private final Map<String, String> map = new HashMap<String, String>();
 
@@ -1641,6 +1656,18 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             isTungstenEnabled = Boolean.parseBoolean(params.get(NetworkOrchestrationService.TUNGSTEN_ENABLED.key()));
         }
 
+        if (params.get(ReconcileCommandService.ReconcileCommandsEnabled.key()) != null) {
+            isReconcileCommandsEnabled = Boolean.parseBoolean(params.get(ReconcileCommandService.ReconcileCommandsEnabled.key()));
+        }
+        if (isReconcileCommandsEnabled) {
+            File commandsLogPath = new File(COMMANDS_LOG_PATH);
+            if (!commandsLogPath.exists()) {
+                commandsLogPath.mkdirs();
+            }
+            // Update state of reconcile commands
+            getCommandInfosFromLogFiles(true);
+        }
+
         return true;
     }
 
@@ -2172,6 +2199,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     @Override
     public Answer executeRequest(final Command cmd) {
+        if (isReconcileCommandsEnabled) {
+            ReconcileCommandUtils.updateLogFileForCommand(COMMANDS_LOG_PATH, cmd, Command.State.STARTED);
+        }
 
         final LibvirtRequestWrapper wrapper = LibvirtRequestWrapper.getInstance();
         try {
@@ -2179,6 +2209,67 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         } catch (final RequestWrapper.CommandNotSupported cmde) {
             return Answer.createUnsupportedCommandAnswer(cmd);
         }
+    }
+
+    public CommandInfo[] getCommandInfosFromLogFiles(boolean update) {
+        File commandsLogPath = new File(COMMANDS_LOG_PATH);
+        File[] files = commandsLogPath.listFiles();
+        if (files != null) {
+            CommandInfo[] commandInfos = new CommandInfo[files.length];
+            int i = 0;
+            for (File file : files) {
+                CommandInfo commandInfo = ReconcileCommandUtils.readLogFileForCommand(file.getAbsolutePath());
+                if (commandInfo == null) {
+                    continue;
+                }
+                if (update) {
+                    if (Command.State.PROCESSING.equals(commandInfo.getState())) {
+                        ReconcileCommandUtils.updateLogFileForCommand(file.getAbsolutePath(), Command.State.INTERRUPTED);
+                    } else if (Command.State.PROCESSING_IN_BACKEND.equals(commandInfo.getState())) {
+                        ReconcileCommandUtils.updateLogFileForCommand(file.getAbsolutePath(), Command.State.DANGLED_IN_BACKEND);
+                    }
+                }
+                logger.debug(String.format("Adding reconcile command with seq: %s, command: %s, answer: %s", commandInfo.getRequestSeq(), commandInfo.getCommandName(), commandInfo.getAnswer()));
+                commandInfos[i++] = commandInfo;
+            }
+            return commandInfos;
+        }
+        return new CommandInfo[0];
+    }
+
+    public void createOrUpdateLogFileForCommand(Command command, Command.State state) {
+        if (isReconcileCommandsEnabled) {
+            ReconcileCommandUtils.updateLogFileForCommand(COMMANDS_LOG_PATH, command, state);
+        }
+    }
+
+    public void createOrUpdateLogFileForCommand(Command command, Answer answer) {
+        if (isReconcileCommandsEnabled) {
+            ReconcileCommandUtils.updateLogFileWithAnswerForCommand(LibvirtComputingResource.COMMANDS_LOG_PATH, command, answer);
+        }
+    }
+
+    @Override
+    public void processPingAnswer(PingAnswer answer) {
+        PingCommand pingCommand = answer.getCommand();
+        List<String> reconcileCommands = answer.getReconcileCommands();
+        CommandInfo[] commandInfos = pingCommand.getCommandInfos();
+        for (CommandInfo commandInfo : commandInfos) {
+            String commandKey = getCommandKey(commandInfo.getRequestSeq(), commandInfo.getCommandName());
+            if (Arrays.asList(Command.State.COMPLETED, Command.State.FAILED, Command.State.INTERRUPTED, Command.State.TIMED_OUT).contains(commandInfo.getState())) {
+                logger.debug(String.format("Removing command %s in %s state as it has been received by the management server", commandKey, commandInfo.getState()));
+                String fileName = String.format("%s/%s-%s.json", COMMANDS_LOG_PATH, commandInfo.getRequestSeq(), commandInfo.getCommandName());
+                ReconcileCommandUtils.deleteLogFile(fileName);
+            } else if (!reconcileCommands.contains(commandKey)) {
+                logger.debug(String.format("Removing command %s in %s state as it cannot be found by the management server", commandKey, commandInfo.getState()));
+                String fileName = String.format("%s/%s-%s.json", COMMANDS_LOG_PATH, commandInfo.getRequestSeq(), commandInfo.getCommandName());
+                ReconcileCommandUtils.deleteLogFile(fileName);
+            }
+        }
+    }
+
+    private String getCommandKey(long requestSeq, String commandName) {
+        return requestSeq + "-" + commandName;
     }
 
     public synchronized boolean destroyTunnelNetwork(final String bridge) {
@@ -2743,7 +2834,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * Set quota and period tags on 'ctd' when CPU limit use is set
      */
     protected void setQuotaAndPeriod(VirtualMachineTO vmTO, CpuTuneDef ctd) {
-        if (vmTO.getLimitCpuUse() && vmTO.getCpuQuotaPercentage() != null) {
+        if (vmTO.isLimitCpuUse() && vmTO.getCpuQuotaPercentage() != null) {
             Double cpuQuotaPercentage = vmTO.getCpuQuotaPercentage();
             int period = CpuTuneDef.DEFAULT_PERIOD;
             int quota = (int) (period * cpuQuotaPercentage);
@@ -4073,6 +4164,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         HealthCheckResult healthCheckResult = getHostHealthCheckResult();
         if (healthCheckResult != HealthCheckResult.IGNORE) {
             pingRoutingCommand.setHostHealthCheckResult(healthCheckResult == HealthCheckResult.SUCCESS);
+        }
+        if (isReconcileCommandsEnabled) {
+            pingRoutingCommand.setCommandInfos(getCommandInfosFromLogFiles(false));
         }
         return pingRoutingCommand;
     }
@@ -6233,5 +6327,65 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
         return uuid;
+    }
+    
+    @Override
+    public void disconnected() {
+        LOGGER.info("Detected agent disconnect event, running through " + _disconnectHooks.size() + " disconnect hooks");
+        for (DisconnectHook hook : _disconnectHooks) {
+            hook.start();
+        }
+        long start = System.currentTimeMillis();
+        for (DisconnectHook hook : _disconnectHooks) {
+            try {
+                long elapsed = System.currentTimeMillis() - start;
+                long remaining = hook.getTimeoutMs() - elapsed;
+                long joinWait = remaining > 0 ? remaining : 1;
+                hook.join(joinWait);
+                hook.interrupt();
+            } catch (InterruptedException ex) {
+                LOGGER.warn("Interrupted disconnect hook: " + ex.getMessage());
+            }
+        }
+        _disconnectHooks.clear();
+    }
+
+    public void addDisconnectHook(DisconnectHook hook) {
+        LOGGER.debug("Adding disconnect hook " + hook);
+        _disconnectHooks.add(hook);
+    }
+
+    public void removeDisconnectHook(DisconnectHook hook) {
+        LOGGER.debug("Removing disconnect hook " + hook);
+        if (_disconnectHooks.contains(hook)) {
+            LOGGER.debug("Removing disconnect hook " + hook);
+            _disconnectHooks.remove(hook);
+        } else {
+            LOGGER.debug("Requested removal of disconnect hook, but hook not found: " + hook);
+        }
+    }
+
+    public VolumeOnStorageTO getVolumeOnStorage(PrimaryDataStoreTO primaryStore, String volumePath) {
+        try {
+            if (primaryStore.isManaged()) {
+                if (!storagePoolManager.connectPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), volumePath, primaryStore.getDetails())) {
+                    logger.warn(String.format("Failed to connect src volume %s, in storage pool %s", volumePath, primaryStore));
+                }
+            }
+            final KVMPhysicalDisk srcVolume = storagePoolManager.getPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), volumePath);
+            if (srcVolume == null) {
+                logger.debug("Failed to get physical disk for volume: " + volumePath);
+                throw new CloudRuntimeException("Failed to get physical disk for volume at path: " + volumePath);
+            }
+            return new VolumeOnStorageTO(HypervisorType.KVM, srcVolume.getName(), srcVolume.getName(), srcVolume.getPath(),
+                    srcVolume.getFormat().toString(), srcVolume.getSize(), srcVolume.getVirtualSize());
+        } catch (final CloudRuntimeException e) {
+            logger.debug(String.format("Failed to get volume %s on storage %s: %s", volumePath, primaryStore, e));
+            return new VolumeOnStorageTO();
+        } finally {
+            if (primaryStore.isManaged()) {
+                storagePoolManager.disconnectPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), volumePath);
+            }
+        }
     }
 }
