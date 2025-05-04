@@ -53,10 +53,10 @@ export default {
         var uri = wallPortalProtocol + '://' + wallPortalDomain + ':' + wallPortalPort
         if (typeof hypervisortype !== 'undefined' && hypervisortype !== null && hypervisortype !== '') {
           const clusterUriPath = items.filter(x => x.name === 'monitoring.wall.portal.cluster.uri')[0]?.value
-          this.uriInfo = uri + clusterUriPath
+          this.uriInfo = uri + clusterUriPath + '&theme=light'
         } else {
           const hostUriPath = items.filter(x => x.name === 'monitoring.wall.portal.host.uri')[0]?.value
-          this.uriInfo = uri + hostUriPath + '&var-host=' + this.resource.ipaddress
+          this.uriInfo = uri + hostUriPath + '&theme=light&var-host=' + this.resource.ipaddress
         }
         this.uriCreateOk = true
       })
