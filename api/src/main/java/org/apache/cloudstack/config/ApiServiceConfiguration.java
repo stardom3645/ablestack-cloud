@@ -37,11 +37,11 @@ public class ApiServiceConfiguration implements Configurable {public static fina
     public static final ConfigKey<String> MonitoringWallPortalPort = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.port",
             "3000", "Monitoring Service Wall Portal Port.(ex:3000)", true);
     public static final ConfigKey<String> MonitoringWallPortalVmUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.vm.uri",
-            "/d/uservm?kiosk&theme=light", "Monitoring Service Wall Portal VM Uri.(ex:/d/uservm?kiosk&theme=light)", true);
+            "/d/uservm?kiosk", "Monitoring Service Wall Portal VM Uri.(ex:/d/uservm?kiosk)", true);
     public static final ConfigKey<String> MonitoringWallPortalHostUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.host.uri",
-            "/d/Q3Jkjf54zs?kiosk&theme=light", "Monitoring Service Wall Portal Host Uri.(ex:/d/Q3Jkjf54zs?kiosk&theme=light)", true);
+            "/d/Q3Jkjf54zs?kiosk", "Monitoring Service Wall Portal Host Uri.(ex:/d/Q3Jkjf54zs?kiosk)", true);
     public static final ConfigKey<String> MonitoringWallPortalClusterUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.cluster.uri",
-            "/d/fasdasdasdw?kiosk&theme=light", "Monitoring Service Wall Portal Cluster Uri.(ex:/d/fasdasdasdw?kiosk&theme=light)", true);
+            "/d/fasdasdasdw?kiosk", "Monitoring Service Wall Portal Cluster Uri.(ex:/d/fasdasdasdw?kiosk)", true);
     public static final ConfigKey<Boolean> EventDeleteEnabled = new ConfigKey<>("Advanced", Boolean.class, "event.delete.enabled",
             "false", "true if Event Delete Button is enabled, false otherwise)", false);
 
