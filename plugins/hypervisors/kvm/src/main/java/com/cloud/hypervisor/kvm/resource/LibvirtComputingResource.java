@@ -3792,6 +3792,81 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return storagePoolManager;
     }
 
+    public void detachAndAttachConfigDriveISO(final Connect conn, final String vmName, VirtualMachineTO to) {
+        // detach and re-attach configdrive ISO
+        List<DiskDef> disks = getDisks(conn, vmName);
+        DiskDef configdrive = null;
+        for (DiskDef disk : disks) {
+            if (disk.getDeviceType() == DiskDef.DeviceType.CDROM && CONFIG_DRIVE_ISO_DISK_LABEL.equals(disk.getDiskLabel())) {
+                configdrive = disk;
+            }
+        }
+
+        if (configdrive != null) {
+            try {
+                LOGGER.debug(String.format("Detaching ConfigDrive ISO of the VM %s, at path %s", vmName, configdrive.getDiskPath()));
+                String result = attachOrDetachConfigDriveISO(conn, vmName, to, configdrive.getDiskPath(),  false, CONFIG_DRIVE_ISO_DEVICE_ID);
+                if (result != null) {
+                    LOGGER.warn(String.format("Detach ConfigDrive ISO of the VM %s, at path %s with %s: ", vmName, configdrive.getDiskPath(), result));
+                }
+                LOGGER.debug(String.format("Attaching ConfigDrive ISO of the VM %s, at path %s", vmName, configdrive.getDiskPath()));
+                result = attachOrDetachConfigDriveISO(conn, vmName, to, configdrive.getDiskPath(), true, CONFIG_DRIVE_ISO_DEVICE_ID);
+                if (result != null) {
+                    LOGGER.warn(String.format("Attach ConfigDrive ISO of the VM %s, at path %s with %s: ", vmName, configdrive.getDiskPath(), result));
+                }
+            } catch (final LibvirtException | InternalErrorException | URISyntaxException e) {
+                final String msg = "Detach and attach ConfigDrive ISO failed due to " + e.toString();
+                LOGGER.warn(msg, e);
+            }
+        }
+    }
+
+    public synchronized String attachOrDetachConfigDriveISO(final Connect conn, final String vmName, VirtualMachineTO to, String cdPath, final boolean isAttach, final Integer diskSeq) throws LibvirtException, URISyntaxException,
+            InternalErrorException {
+        String isoPath = "";
+        DiskTO configDriveDisk = null;
+        for (DiskTO disk : to.getDisks()) {
+            if (disk.getPath() != null && disk.getPath().contains("configdrive")) {
+                configDriveDisk = disk;
+                break;
+            }
+        }
+        isoPath = getVolumePath(conn, configDriveDisk, to.isConfigDriveOnHostCache());
+        DiskDef iso = new DiskDef();
+        if (isAttach && StringUtils.isNotBlank(isoPath) && configDriveDisk !=null && isoPath.lastIndexOf("/") > 0) {
+            if (isoPath.startsWith(getConfigPath() + "/" + ConfigDrive.CONFIGDRIVEDIR) && isoPath.contains(vmName)) {
+                iso.defISODisk(isoPath, diskSeq, DiskDef.DiskType.FILE);
+            } else {
+                final DataTO diskData = configDriveDisk.getData();
+                final String dataName = configDriveDisk.getPath();
+                final DataStoreTO store = diskData.getDataStore();
+                isoPath = store.getUrl().split("\\?")[0] + File.separator + dataName;
+
+                final int index = isoPath.lastIndexOf("/");
+                final String path = isoPath.substring(0, index);
+                final String name = isoPath.substring(index + 1);
+                final KVMStoragePool storagePool = storagePoolManager.getStoragePoolByURI(path);
+                final KVMPhysicalDisk isoVol = storagePool.getPhysicalDisk(name);
+                final DiskDef.DiskType diskType = getDiskType(isoVol);
+                isoPath = isoVol.getPath();
+                iso.defISODisk(isoPath, diskSeq, diskType);
+            }
+        } else {
+            iso.defISODisk(null, diskSeq, DiskDef.DiskType.FILE);
+        }
+        final String result = attachOrDetachDevice(conn, true, vmName, iso.toString());
+        if (result == null && !isAttach) {
+            final List<DiskDef> disks = getDisks(conn, vmName);
+            for (final DiskDef disk : disks) {
+                if (disk.getDeviceType() == DiskDef.DeviceType.CDROM
+                        && (diskSeq == null || disk.getDiskLabel().equals(iso.getDiskLabel()))) {
+                    cleanupDisk(disk);
+                }
+            }
+        }
+        return result;
+    }
+
     public void detachAndAttachConfigDriveISO(final Connect conn, final String vmName) {
         // detach and re-attach configdrive ISO
         List<DiskDef> disks = getDisks(conn, vmName);
