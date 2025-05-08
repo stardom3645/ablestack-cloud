@@ -17,63 +17,74 @@
 package org.apache.cloudstack.api.command.admin.outofbandmanagement;
 
 import org.apache.cloudstack.acl.RoleType;
-import org.apache.cloudstack.api.ApiArgValidator;
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiArgValidator;
 import org.apache.cloudstack.api.ApiConstants;
-
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
-
+import org.apache.cloudstack.api.response.UpdateHostDevicesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
-import org.apache.cloudstack.api.response.ListHostDevicesResponse;
 import org.apache.cloudstack.context.CallContext;
+// import org.apache.cloudstack.api.response.HostResponse;
 
-@APICommand(name = "updateHostDevices", description = "list Host Devices'.", since = "4.20.0.0", responseObject = ListHostDevicesResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {
+@APICommand(name = "updateHostDevices", description = "list Host Devices'.", since = "4.20.0.0", responseObject = UpdateHostDevicesResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {
         RoleType.Admin })
-    public class UpdateHostDevicesCmd extends BaseListCmd {
+public class UpdateHostDevicesCmd extends BaseListCmd {
 
     private static final String UPDATEHOSTDEVICES = "updatehostdevices";
-    
-        @Parameter(name = ApiConstants.HOST_ID, type = CommandType.UUID, required = true,
-                description = "Host ID")
-        private Long hostId;
-    
-        @Parameter(name = ApiConstants.HOSTDEVICES_NAME, type = CommandType.UUID, required = true,
-                description = "VM ID to allocate the device to")
-        private String deviceName;
-    
-        @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID, type = CommandType.UUID, required = true,
-                description = "VM ID to allocate the device to")
-        private Long vmId;
 
-        @Override
-        public String getCommandName() {
-            return "updatehostdevices";
-        }
-    
-        @Override
-        public long getEntityOwnerId() {
-            return CallContext.current().getCallingAccountId();
-        }
+    /////////////////////////////////////////////////////
+    //////////////// API parameters /////////////////////
+    /////////////////////////////////////////////////////
 
-        @Override
-        public void execute() {
-            ListResponse<ListHostDevicesResponse> response = _mgr.updateHostDevices(this);
-            response.setResponseName(getCommandName());
-            response.setObjectName(getCommandName());
-            this.setResponseObject(response);
-        }
+    @Parameter(name = ApiConstants.HOST_ID, type = BaseCmd.CommandType.UUID, entityType = UpdateHostDevicesResponse.class, description = "host ID", required = true, validations = {
+            ApiArgValidator.PositiveNumber })
+    private Long hostId;
 
-        public Long getHostId() {
-            return hostId;
-        }
+    @Parameter(name = ApiConstants.HOSTDEVICES_NAME, type = CommandType.STRING, required = true,
+            description = "Device name to allocate")
+    private String hostDeviceName;
 
-        public String getDeviceName() {
-            return deviceName;
-        }
+    @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID, type = CommandType.UUID,
+            entityType = UpdateHostDevicesResponse.class,
+            required = false, description = "VM ID to allocate the device to")
+    private Long vmId;
 
-        public Long getVmId() {
-            return vmId;
-        }
+    /////////////////////////////////////////////////////
+    /////////////////// Accessors ///////////////////////
+    /////////////////////////////////////////////////////
+
+    public Long getHostId() {
+        return hostId;
     }
+
+    public String getHostDeviceName() {
+        return hostDeviceName;
+    }
+
+    public Long getVirtualMachineId() {
+        return vmId;
+    }
+
+    /////////////////////////////////////////////////////
+    /////////////// API Implementation///////////////////
+    /////////////////////////////////////////////////////
+
+    public static String getResultObjectName() {
+        return "updatehostdevices";
+    }
+
+    @Override
+    public long getEntityOwnerId() {
+        return CallContext.current().getCallingAccountId();
+    }
+
+    @Override
+    public void execute() {
+        ListResponse<UpdateHostDevicesResponse> response = _mgr.updateHostDevices(this);
+        response.setResponseName(getCommandName());
+        response.setObjectName(getCommandName());
+        this.setResponseObject(response);
+    }
+}
