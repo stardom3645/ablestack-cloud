@@ -3916,7 +3916,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new InternalErrorException("LibvirtVMDef object get devices with null result");
         }
         final InterfaceDef interfaceDef = getVifDriver(nic.getType(), nic.getName()).plug(nic, vm.getPlatformEmulator(), nicAdapter, extraConfig);
-        if (!nic.isSecurityGroupEnabled()) {
+
+        String defaultVifDriver = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.LIBVIRT_VIF_DRIVER);
+        final String bridgeType = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.NETWORK_BRIDGE_TYPE);
+        boolean enableOVSDriver = false;
+
+        if (defaultVifDriver != null && defaultVifDriver.equals(DEFAULT_OVS_VIF_DRIVER_CLASS_NAME) && bridgeType != null && "openvswitch".equals(bridgeType)) {
+            enableOVSDriver = true;
+        }
+
+        if (!nic.isSecurityGroupEnabled() && !enableOVSDriver) {
             interfaceDef.setFilterrefFilterTag();
         }
         if (vmSpec.getDetails() != null) {
