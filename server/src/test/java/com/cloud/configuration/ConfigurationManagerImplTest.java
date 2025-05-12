@@ -19,6 +19,18 @@ package com.cloud.configuration;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.VlanVO;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.storage.StorageManager;
+import com.cloud.user.AccountManagerImpl;
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.net.NetUtils;
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.framework.config.ConfigDepot;
+import org.apache.cloudstack.framework.config.ConfigKey;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.DataCenterIpAddressDao;
 import com.cloud.dc.dao.DedicatedResourceDao;
@@ -883,5 +895,44 @@ public class ConfigurationManagerImplTest {
 
         Pair<Configuration, String> result = configurationManagerImplSpy.resetConfiguration(cmd);
         Assert.assertEquals(".85", result.second());
+    public void testValidateConfigurationAllowedOnlyForDefaultAdmin_withAdminUser_shouldNotThrowException() {
+        CallContext callContext = mock(CallContext.class);
+        when(callContext.getCallingUserId()).thenReturn(User.UID_ADMIN);
+        try (MockedStatic<CallContext> ignored = Mockito.mockStatic(CallContext.class)) {
+            when(CallContext.current()).thenReturn(callContext);
+            configurationManagerImplSpy.validateConfigurationAllowedOnlyForDefaultAdmin(AccountManagerImpl.listOfRoleTypesAllowedForOperationsOfSameRoleType.key(), "Admin");
+        }
+    }
+
+    @Test
+    public void testValidateConfigurationAllowedOnlyForDefaultAdmin_withNonAdminUser_shouldThrowException() {
+        CallContext callContext = mock(CallContext.class);
+        when(callContext.getCallingUserId()).thenReturn(123L);
+        try (MockedStatic<CallContext> ignored = Mockito.mockStatic(CallContext.class)) {
+            when(CallContext.current()).thenReturn(callContext);
+            assertThrows(CloudRuntimeException.class, () ->
+                    configurationManagerImplSpy.validateConfigurationAllowedOnlyForDefaultAdmin(AccountManagerImpl.allowOperationsOnUsersInSameAccount.key(), "Admin")
+            );
+        }
+    }
+
+    @Test
+    public void testValidateConfigurationAllowedOnlyForDefaultAdmin_withNonRestrictedKey_shouldNotThrowException() {
+        CallContext callContext = mock(CallContext.class);
+        try (MockedStatic<CallContext> ignored = Mockito.mockStatic(CallContext.class)) {
+            when(CallContext.current()).thenReturn(callContext);
+            configurationManagerImplSpy.validateConfigurationAllowedOnlyForDefaultAdmin("some.other.config.key", "Admin");
+        }
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void testValidateConfigurationAllowedOnlyForDefaultAdmin_withValidConfigNameAndInvalidValue_shouldThrowException() {
+        CallContext callContext = mock(CallContext.class);
+        try (MockedStatic<CallContext> mockedCallContext = Mockito.mockStatic(CallContext.class)) {
+            mockedCallContext.when(CallContext::current).thenReturn(callContext);
+            when(callContext.getCallingUserId()).thenReturn(User.UID_ADMIN);
+            String invalidValue = "Admin, SuperUser";
+            configurationManagerImplSpy.validateConfigurationAllowedOnlyForDefaultAdmin(AccountManagerImpl.listOfRoleTypesAllowedForOperationsOfSameRoleType.key(), invalidValue);
+        }
     }
 }
