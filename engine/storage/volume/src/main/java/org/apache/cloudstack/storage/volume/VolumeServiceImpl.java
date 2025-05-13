@@ -328,6 +328,11 @@ public class VolumeServiceImpl implements VolumeService {
         } else {
             vo.processEvent(Event.OperationFailed);
             errMsg = result.getResult();
+            VolumeVO volume = volDao.findById(vo.getId());
+            if (volume != null && volume.getState() == State.Allocated && volume.getPodId() != null) {
+                volume.setPoolId(null);
+                volDao.update(volume.getId(), volume);
+            }
         }
         VolumeApiResult volResult = new VolumeApiResult((VolumeObject)vo);
         if (errMsg != null) {
@@ -1266,6 +1271,10 @@ public class VolumeServiceImpl implements VolumeService {
         }
 
         if (volume.getState() == State.Allocated) { // Possible states here: Allocated, Ready & Creating
+            if (volume.getPodId() != null) {
+                volume.setPoolId(null);
+                volDao.update(volume.getId(), volume);
+            }
             return;
         }
 
@@ -2528,7 +2537,7 @@ public class VolumeServiceImpl implements VolumeService {
         try {
             volume.processEvent(Event.ResizeRequested);
         } catch (Exception e) {
-            logger.debug("Failed to change state to resize", e);
+            logger.debug("Failed to change volume state to resize", e);
             result.setResult(e.toString());
             future.complete(result);
             return future;
@@ -2540,10 +2549,8 @@ public class VolumeServiceImpl implements VolumeService {
         try {
             volume.getDataStore().getDriver().resize(volume, caller);
         } catch (Exception e) {
-            logger.debug("Failed to change state to resize", e);
-
+            logger.debug("Failed to resize volume", e);
             result.setResult(e.toString());
-
             future.complete(result);
         }
 
@@ -2587,7 +2594,7 @@ public class VolumeServiceImpl implements VolumeService {
             try {
                 volume.processEvent(Event.OperationFailed);
             } catch (Exception e) {
-                logger.debug("Failed to change state", e);
+                logger.debug("Failed to change volume state (after resize failure)", e);
             }
             VolumeApiResult res = new VolumeApiResult(volume);
             res.setResult(result.getResult());
@@ -2598,13 +2605,8 @@ public class VolumeServiceImpl implements VolumeService {
         try {
             volume.processEvent(Event.OperationSuccessed);
         } catch (Exception e) {
-            logger.debug("Failed to change state", e);
-            VolumeApiResult res = new VolumeApiResult(volume);
-            res.setResult(result.getResult());
-            future.complete(res);
-            return null;
+            logger.debug("Failed to change volume state (after resize success)", e);
         }
-
         VolumeApiResult res = new VolumeApiResult(volume);
         future.complete(res);
 
