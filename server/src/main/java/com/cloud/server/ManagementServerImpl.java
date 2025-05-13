@@ -5841,13 +5841,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         // 라이선스 상태에 따른 에이전트 제어
                         if (isValid) {
                             controlHostAgent(host, "start");
-                            _alertMgr.sendAlert(
-                                AlertManager.AlertType.ALERT_TYPE_HOST,
-                                host.getDataCenterId(),
-                                host.getId(),
-                                "License valid for host " + host.getName(),
-                                "The license is valid. Agent has been started for host " + host.getName()
-                            );
                         } else {
                             controlHostAgent(host, "stop");
                             handleExpiredLicense(host);
