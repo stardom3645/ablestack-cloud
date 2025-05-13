@@ -210,7 +210,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
         scanDirectAgentToLoad();
     }
 
-    private void scanDirectAgentToLoad() {
+    protected void scanDirectAgentToLoad() {
         logger.trace("Begin scanning directly connected hosts");
 
         // for agents that are self-managed, threshold to be considered as disconnected after pingtimeout
@@ -231,11 +231,21 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                                 logger.info("{} is detected down, but we have a forward attache running, disconnect this one before launching the host", host);
                                 removeAgent(agentattache, Status.Disconnected);
                             } else {
-                                continue;
+                                logger.debug("Host {} status is {} but has an AgentAttache which is not forForward, try to load directly", host, host.getStatus());
+                                Status hostStatus = investigate(agentattache);
+                                if (Status.Up == hostStatus) {
+                                    /* Got ping response from host, bring it back */
+                                    logger.info("After investigation, Agent for host {} is determined to be up and running", host);
+                                    agentStatusTransitTo(host, Event.Ping, _nodeId);
+                                } else {
+                                    logger.debug("After investigation, AgentAttache is not null but host status is {}, try to load directly {}", hostStatus, host);
+                                    loadDirectlyConnectedHost(host, false);
+                                }
                             }
+                        } else {
+                            logger.debug("AgentAttache is null, loading directly connected {}", host);
+                            loadDirectlyConnectedHost(host, false);
                         }
-                        logger.debug("Loading directly connected {}", host);
-                        loadDirectlyConnectedHost(host, false);
                     } catch (final Throwable e) {
                         logger.warn(" can not load directly connected {} due to ", host, e);
                     }
@@ -381,20 +391,20 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
             return;
         }
         if (!result) {
-                throw new CloudRuntimeException("Failed to propagate agent change request event:" + Event.ShutdownRequested + " to host:" + hostId);
+                throw new CloudRuntimeException(String.format("Failed to propagate agent change request event: %s to host: %s", Event.ShutdownRequested, hostId));
         }
     }
 
     public void notifyNodesInCluster(final AgentAttache attache) {
         logger.debug("Notifying other nodes of to disconnect");
-        final Command[] cmds = new Command[] {new ChangeAgentCommand(attache.getId(), Event.AgentDisconnected)};
+        final Command[] cmds = new Command[]{new ChangeAgentCommand(attache.getId(), Event.AgentDisconnected)};
         _clusterMgr.broadcast(attache.getId(), _gson.toJson(cmds));
     }
 
     // notifies MS peers to schedule a host scan task immediately, triggered during addHost operation
     public void notifyNodesInClusterToScheduleHostScanTask() {
         logger.debug("Notifying other MS nodes to run host scan task");
-        final Command[] cmds = new Command[] {new ScheduleHostScanTaskCommand()};
+        final Command[] cmds = new Command[]{new ScheduleHostScanTaskCommand()};
         _clusterMgr.broadcast(0, _gson.toJson(cmds));
     }
 
@@ -435,7 +445,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
             }
             try {
                 logD(bytes, "Routing to peer");
-                Link.write(ch, new ByteBuffer[] {ByteBuffer.wrap(bytes)}, sslEngine);
+                Link.write(ch, new ByteBuffer[]{ByteBuffer.wrap(bytes)}, sslEngine);
                 return true;
             } catch (final IOException e) {
                 try {
@@ -644,7 +654,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                         }
                         final Request req = Request.parse(data);
                         final Command[] cmds = req.getCommands();
-                        final CancelCommand cancel = (CancelCommand)cmds[0];
+                        final CancelCommand cancel = (CancelCommand) cmds[0];
                         logD(data, "Cancel request received");
                         agent.cancel(cancel.getSequence());
                         final Long current = agent._currentSequence;
@@ -671,7 +681,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                             return;
                         } else {
                             if (agent instanceof Routable) {
-                                final Routable cluster = (Routable)agent;
+                                final Routable cluster = (Routable) agent;
                                 cluster.routeToAgent(data);
                             } else {
                                 agent.send(Request.parse(data));
@@ -688,7 +698,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                     if (mgmtId != -1 && mgmtId != _nodeId) {
                         routeToPeer(Long.toString(mgmtId), data);
                         if (Request.requiresSequentialExecution(data)) {
-                            final AgentAttache attache = (AgentAttache)link.attachment();
+                            final AgentAttache attache = (AgentAttache) link.attachment();
                             if (attache != null) {
                                 attache.sendNext(Request.getSequence(data));
                             }
@@ -961,7 +971,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                         if (_agentToTransferIds.size() > 0) {
                             logger.debug("Found {} agents to transfer", _agentToTransferIds.size());
                             // for (Long hostId : _agentToTransferIds) {
-                            for (final Iterator<Long> iterator = _agentToTransferIds.iterator(); iterator.hasNext();) {
+                            for (final Iterator<Long> iterator = _agentToTransferIds.iterator(); iterator.hasNext(); ) {
                                 final Long hostId = iterator.next();
                                 final AgentAttache attache = findAttache(hostId);
 
@@ -1105,7 +1115,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
             return;
         }
 
-        final ClusteredAgentAttache forwardAttache = (ClusteredAgentAttache)attache;
+        final ClusteredAgentAttache forwardAttache = (ClusteredAgentAttache) attache;
 
         if (success) {
 
@@ -1156,10 +1166,10 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
         }
 
         synchronized (_agents) {
-            final ClusteredDirectAgentAttache attache = (ClusteredDirectAgentAttache)_agents.get(hostId);
+            final ClusteredDirectAgentAttache attache = (ClusteredDirectAgentAttache) _agents.get(hostId);
             if (attache != null && attache.getQueueSize() == 0 && attache.getNonRecurringListenersSize() == 0) {
                 handleDisconnectWithoutInvestigation(attache, Event.StartAgentRebalance, true, true);
-                final ClusteredAgentAttache forwardAttache = (ClusteredAgentAttache)createAttache(host);
+                final ClusteredAgentAttache forwardAttache = (ClusteredAgentAttache) createAttache(host);
                 if (forwardAttache == null) {
                     logger.warn("Unable to create a forward attache for the host {} as a part of rebalance process", host);
                     return false;
@@ -1263,7 +1273,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
             }
 
             if (cmds.length == 1 && cmds[0] instanceof ChangeAgentCommand) { // intercepted
-                final ChangeAgentCommand cmd = (ChangeAgentCommand)cmds[0];
+                final ChangeAgentCommand cmd = (ChangeAgentCommand) cmds[0];
 
                 logger.debug("Intercepting command for agent change: agent {} event: {}", cmd.getAgentId(), cmd.getEvent());
                 boolean result = false;
@@ -1280,7 +1290,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                 answers[0] = new ChangeAgentAnswer(cmd, result);
                 return _gson.toJson(answers);
             } else if (cmds.length == 1 && cmds[0] instanceof TransferAgentCommand) {
-                final TransferAgentCommand cmd = (TransferAgentCommand)cmds[0];
+                final TransferAgentCommand cmd = (TransferAgentCommand) cmds[0];
 
                 logger.debug("Intercepting command for agent rebalancing: agent: {}, event: {}, connection transfer: {}", cmd.getAgentId(), cmd.getEvent(), cmd.isConnectionTransfer());
                 boolean result = false;
@@ -1299,7 +1309,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                 answers[0] = new Answer(cmd, result, null);
                 return _gson.toJson(answers);
             } else if (cmds.length == 1 && cmds[0] instanceof PropagateResourceEventCommand) {
-                final PropagateResourceEventCommand cmd = (PropagateResourceEventCommand)cmds[0];
+                final PropagateResourceEventCommand cmd = (PropagateResourceEventCommand) cmds[0];
 
                 logger.debug("Intercepting command to propagate event {} for host {} ({})", () -> cmd.getEvent().name(), cmd::getHostId, () -> _hostDao.findById(cmd.getHostId()));
 
@@ -1316,10 +1326,10 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                 answers[0] = new Answer(cmd, result, null);
                 return _gson.toJson(answers);
             } else if (cmds.length == 1 && cmds[0] instanceof ScheduleHostScanTaskCommand) {
-                final ScheduleHostScanTaskCommand cmd = (ScheduleHostScanTaskCommand)cmds[0];
+                final ScheduleHostScanTaskCommand cmd = (ScheduleHostScanTaskCommand) cmds[0];
                 return handleScheduleHostScanTaskCommand(cmd);
             } else if (cmds.length == 1 && cmds[0] instanceof BaseShutdownManagementServerHostCommand) {
-                final BaseShutdownManagementServerHostCommand cmd = (BaseShutdownManagementServerHostCommand)cmds[0];
+                final BaseShutdownManagementServerHostCommand cmd = (BaseShutdownManagementServerHostCommand) cmds[0];
                 return handleShutdownManagementServerHostCommand(cmd);
             }
 
@@ -1372,7 +1382,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                 try {
                     managementServerMaintenanceManager.prepareForShutdown();
                     return "Successfully prepared for shutdown";
-                } catch(CloudRuntimeException e) {
+                } catch (CloudRuntimeException e) {
                     return e.getMessage();
                 }
             }
@@ -1381,7 +1391,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                 try {
                     managementServerMaintenanceManager.triggerShutdown();
                     return "Successfully triggered shutdown";
-                } catch(CloudRuntimeException e) {
+                } catch (CloudRuntimeException e) {
                     return e.getMessage();
                 }
             }
