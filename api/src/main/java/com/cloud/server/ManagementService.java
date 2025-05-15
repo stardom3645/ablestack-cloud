@@ -62,6 +62,8 @@ import org.apache.cloudstack.api.command.admin.outofbandmanagement.ListHostDevic
 import org.apache.cloudstack.api.command.admin.outofbandmanagement.ListHostLunDevicesCmd;
 import org.apache.cloudstack.api.command.admin.outofbandmanagement.ListHostUsbDevicesCmd;
 import org.apache.cloudstack.api.command.admin.outofbandmanagement.UpdateHostDevicesCmd;
+import org.apache.cloudstack.api.command.admin.outofbandmanagement.UpdateHostLunDevicesCmd;
+import org.apache.cloudstack.api.command.admin.outofbandmanagement.UpdateHostUsbDevicesCmd;
 import org.apache.cloudstack.api.command.admin.pod.ListPodsByCmd;
 import org.apache.cloudstack.api.command.admin.resource.ArchiveAlertsCmd;
 import org.apache.cloudstack.api.command.admin.resource.DeleteAlertsCmd;
@@ -98,6 +100,8 @@ import org.apache.cloudstack.api.response.ListHostLunDevicesResponse;
 import org.apache.cloudstack.api.response.ListHostUsbDevicesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.UpdateHostDevicesResponse;
+import org.apache.cloudstack.api.response.UpdateHostLunDevicesResponse;
+import org.apache.cloudstack.api.response.UpdateHostUsbDevicesResponse;
 import org.apache.cloudstack.config.Configuration;
 import org.apache.cloudstack.config.ConfigurationGroup;
 
@@ -508,6 +512,10 @@ public interface ManagementService {
     ListResponse<ListHostUsbDevicesResponse> listHostUsbDevices(ListHostUsbDevicesCmd cmd);
 
     ListResponse<ListHostLunDevicesResponse> listHostLunDevices(ListHostLunDevicesCmd cmd);
+
+    ListResponse<UpdateHostUsbDevicesResponse> updateHostUsbDevices(UpdateHostUsbDevicesCmd cmd);
+
+    ListResponse<UpdateHostLunDevicesResponse> updateHostLunDevices(UpdateHostLunDevicesCmd cmd);
 
     LicenseCheckerResponse checkLicense(LicenseCheckCmd cmd);
 
