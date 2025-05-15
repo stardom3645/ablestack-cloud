@@ -21,6 +21,7 @@ import static com.cloud.host.Host.HOST_VOLUME_ENCRYPTION;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
@@ -5753,9 +5754,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        logger.info("pool::::::::::::::::::::" + pool.getAuthSecret());
+        logger.info("pool::::::::::::::::::::" + pool.getAuthUserName());
+        logger.info("pool::::::::::::::::::::" + pool.getSourceHost());
+        logger.info("pool::::::::::::::::::::" + pool.getSourceDir());
+        logger.info("pool::::::::::::::::::::" + pool.getUuid());
         if(device == null) {
+            createRBDSecretKeyFileIfNoExist(pool.getUuid(), DEFAULT_LOCAL_STORAGE_PATH, pool.getAuthSecret());
             //If not mapped, map and return mapped device
-            Script.runSimpleBashScript("rbd map " + disk.getPath() + " --id " + pool.getAuthUserName());
+            Script.runSimpleBashScript("rbd map " + disk.getPath() + " -m " + pool.getSourceHost() + " --id " + pool.getAuthUserName() +" -K " + DEFAULT_LOCAL_STORAGE_PATH + pool.getUuid());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
         if(kvdoEnable){
@@ -5788,7 +5795,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     logger.info("unmapRbdDevice Action error : "+e);
                 }
             }
-            Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());
+            createRBDSecretKeyFileIfNoExist(pool.getUuid(), DEFAULT_LOCAL_STORAGE_PATH, pool.getAuthSecret());
+
+            Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " -m " + pool.getSourceHost() + " --id " + pool.getAuthUserName() +" -K " + DEFAULT_LOCAL_STORAGE_PATH + pool.getUuid());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
         return device;
@@ -6250,5 +6259,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
         return uuid;
+    }
+
+    public void createRBDSecretKeyFileIfNoExist(String uuid, String localPath, String skey) {
+        File file = new File(localPath + File.separator + uuid);
+        try {
+            // 파일이 존재하지 않을 때만 생성
+            if (!file.exists()) {
+                boolean isCreated = file.createNewFile();
+                if (isCreated) {
+                    // 파일 생성 후 내용 작성
+                    FileWriter writer = new FileWriter(file);
+                    writer.write(skey);
+                    writer.close();
+                }
+            }
+        } catch (IOException e) {}
     }
 }
