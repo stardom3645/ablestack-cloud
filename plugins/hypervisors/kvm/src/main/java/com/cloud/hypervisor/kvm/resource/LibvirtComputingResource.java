@@ -21,6 +21,7 @@ import static com.cloud.host.Host.HOST_VOLUME_ENCRYPTION;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
@@ -3768,7 +3769,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             enableOVSDriver = true;
         }
 
-        if (!nic.isSecurityGroupEnabled() && !enableOVSDriver) {
+        if (!nic.isSecurityGroupEnabled() && !enableOVSDriver && nic.getNwfilter()) {
             interfaceDef.setFilterrefFilterTag();
         }
         if (vmSpec.getDetails() != null) {
@@ -5514,7 +5515,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public Answer listFilesAtPath(ListDataStoreObjectsCommand command) {
         DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize(), command.getPoolPath(), command.getKeyword());
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
+            return listRbdFilesAtPath(storagePool.getUuid(), storagePool.getAuthSecret(), storagePool.getAuthUserName(), storagePool.getSourceHost(), command.getStartIndex(), command.getPageSize(), command.getPoolPath(), command.getKeyword());
         } else {
             KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
             return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize(),command.getKeyword());
@@ -5522,15 +5524,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public Answer createImageRbd(CreateRbdObjectsCommand command) {
+        DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return createImageRbd(command.getNames(), command.getSizes(), command.getPoolPath());
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
+            return createImageRbd(storagePool.getUuid(), storagePool.getAuthSecret(), storagePool.getAuthUserName(), storagePool.getSourceHost(), command.getNames(), command.getSizes(), command.getPoolPath());
         }
         return null;
     }
 
     public Answer deleteImageRbd(DeleteRbdObjectsCommand command) {
+        DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return deleteImageRbd(command.getName(), command.getPoolPath());
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
+            return deleteImageRbd(storagePool.getUuid(), storagePool.getAuthSecret(), storagePool.getAuthUserName(), storagePool.getSourceHost(),command.getName(), command.getPoolPath());
         }
         return null;
     }
@@ -5754,8 +5760,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         final String[] splitPoolImage = disk.getPath().split("/");
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         if(device == null) {
+            createRBDSecretKeyFileIfNoExist(pool.getUuid(), DEFAULT_LOCAL_STORAGE_PATH, pool.getAuthSecret());
             //If not mapped, map and return mapped device
-            Script.runSimpleBashScript("rbd map " + disk.getPath() + " --id " + pool.getAuthUserName());
+            Script.runSimpleBashScript("rbd map " + disk.getPath() + " -m " + pool.getSourceHost() + " --id " + pool.getAuthUserName() +" -K " + DEFAULT_LOCAL_STORAGE_PATH + pool.getUuid());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
         if(kvdoEnable){
@@ -5767,7 +5774,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 logger.info("createKvdoCmdLine Action Error : "+e);
             }
         }
-
         return device;
     }
 
@@ -5788,7 +5794,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     logger.info("unmapRbdDevice Action error : "+e);
                 }
             }
-            Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());
+            createRBDSecretKeyFileIfNoExist(pool.getUuid(), DEFAULT_LOCAL_STORAGE_PATH, pool.getAuthSecret());
+
+            Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " -m " + pool.getSourceHost() + " --id " + pool.getAuthUserName() +" -K " + DEFAULT_LOCAL_STORAGE_PATH + pool.getUuid());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
         return device;
@@ -6250,5 +6258,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
         return uuid;
+    }
+
+    public void createRBDSecretKeyFileIfNoExist(String uuid, String localPath, String skey) {
+        File file = new File(localPath + File.separator + uuid);
+        try {
+            // 파일이 존재하지 않을 때만 생성
+            if (!file.exists()) {
+                boolean isCreated = file.createNewFile();
+                if (isCreated) {
+                    // 파일 생성 후 내용 작성
+                    FileWriter writer = new FileWriter(file);
+                    writer.write(skey);
+                    writer.close();
+                }
+            }
+        } catch (IOException e) {}
     }
 }
