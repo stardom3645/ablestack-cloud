@@ -5515,7 +5515,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public Answer listFilesAtPath(ListDataStoreObjectsCommand command) {
         DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize(), command.getPoolPath(), command.getKeyword());
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
+            return listRbdFilesAtPath(storagePool.getUuid(), storagePool.getAuthSecret(), storagePool.getAuthUserName(), storagePool.getSourceHost(), command.getStartIndex(), command.getPageSize(), command.getPoolPath(), command.getKeyword());
         } else {
             KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
             return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize(),command.getKeyword());
@@ -5523,15 +5524,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public Answer createImageRbd(CreateRbdObjectsCommand command) {
+        DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return createImageRbd(command.getNames(), command.getSizes(), command.getPoolPath());
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
+            return createImageRbd(storagePool.getUuid(), storagePool.getAuthSecret(), storagePool.getAuthUserName(), storagePool.getSourceHost(), command.getNames(), command.getSizes(), command.getPoolPath());
         }
         return null;
     }
 
     public Answer deleteImageRbd(DeleteRbdObjectsCommand command) {
+        DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return deleteImageRbd(command.getName(), command.getPoolPath());
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
+            return deleteImageRbd(storagePool.getUuid(), storagePool.getAuthSecret(), storagePool.getAuthUserName(), storagePool.getSourceHost(),command.getName(), command.getPoolPath());
         }
         return null;
     }
