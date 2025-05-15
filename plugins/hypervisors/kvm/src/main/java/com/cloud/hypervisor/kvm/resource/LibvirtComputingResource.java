@@ -3769,7 +3769,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             enableOVSDriver = true;
         }
 
-        if (!nic.isSecurityGroupEnabled() && !enableOVSDriver) {
+        if (!nic.isSecurityGroupEnabled() && !enableOVSDriver && nic.getNwfilter()) {
             interfaceDef.setFilterrefFilterTag();
         }
         if (vmSpec.getDetails() != null) {
@@ -5759,11 +5759,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
-        logger.info("pool::::::::::::::::::::" + pool.getAuthSecret());
-        logger.info("pool::::::::::::::::::::" + pool.getAuthUserName());
-        logger.info("pool::::::::::::::::::::" + pool.getSourceHost());
-        logger.info("pool::::::::::::::::::::" + pool.getSourceDir());
-        logger.info("pool::::::::::::::::::::" + pool.getUuid());
         if(device == null) {
             createRBDSecretKeyFileIfNoExist(pool.getUuid(), DEFAULT_LOCAL_STORAGE_PATH, pool.getAuthSecret());
             //If not mapped, map and return mapped device
@@ -5779,7 +5774,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 logger.info("createKvdoCmdLine Action Error : "+e);
             }
         }
-
         return device;
     }
 
