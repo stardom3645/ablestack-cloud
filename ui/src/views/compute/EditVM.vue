@@ -202,7 +202,7 @@ export default {
     },
     fetchZoneDetails () {
       api('listZones', {
-        zoneid: this.resource.zoneid
+        id: this.resource.zoneid
       }).then(response => {
         const zone = response?.listzonesresponse?.zone || []
         this.securityGroupsEnabled = zone?.[0]?.securitygroupsenabled || this.$store.getters.showSecurityGroups
