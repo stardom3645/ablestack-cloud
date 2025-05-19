@@ -215,4 +215,6 @@ public interface Host extends StateObject<Status>, Identity, Partition, HAResour
     ResourceState getResourceState();
 
     CPU.CPUArch getArch();
+
+    String getStorageAccessGroups();
 }
