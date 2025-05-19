@@ -1252,9 +1252,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                             }
                         }
                         DataStoreProvider storeProvider = dataStoreProviderManager.getDataStoreProvider(pool.getStorageProviderName());
-                        DataStoreDriver storeDriver = storeProvider.getDataStoreDriver();
-                        if (storeDriver instanceof PrimaryDataStoreDriver) {
-                            ((PrimaryDataStoreDriver)storeDriver).detachVolumeFromAllStorageNodes(vol);
+                        if (storeProvider != null) {
+                            DataStoreDriver storeDriver = storeProvider.getDataStoreDriver();
+                            if (storeDriver instanceof PrimaryDataStoreDriver) {
+                                ((PrimaryDataStoreDriver)storeDriver).detachVolumeFromAllStorageNodes(vol);
+                            }
                         }
                     }
                 }
