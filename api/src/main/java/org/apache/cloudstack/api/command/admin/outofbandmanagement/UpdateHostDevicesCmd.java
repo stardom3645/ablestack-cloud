@@ -23,8 +23,8 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
-import org.apache.cloudstack.api.response.UpdateHostDevicesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.UpdateHostDevicesResponse;
 import org.apache.cloudstack.context.CallContext;
 // import org.apache.cloudstack.api.response.HostResponse;
 
@@ -51,6 +51,14 @@ public class UpdateHostDevicesCmd extends BaseListCmd {
             required = false, description = "VM ID to allocate the device to")
     private Long vmId;
 
+    @Parameter(name = ApiConstants.XML_CONFIG, type = CommandType.STRING, required = false,
+            description = "XML configuration for device attachment")
+    private String xmlConfig;
+
+    @Parameter(name = ApiConstants.CURRENT_VM_ID, type = CommandType.STRING, required = false,
+            description = "Current VM ID")
+    private String currentVmId;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -66,6 +74,23 @@ public class UpdateHostDevicesCmd extends BaseListCmd {
     public Long getVirtualMachineId() {
         return vmId;
     }
+
+    public String getXmlConfig() {
+        return xmlConfig;
+    }
+
+    public void setXmlConfig(String xmlConfig) {
+        this.xmlConfig = xmlConfig;
+    }
+
+    public String getCurrentVmId() {
+        return currentVmId;
+    }
+
+    public void setCurrentVmId(String currentVmId) {
+        this.currentVmId = currentVmId;
+    }
+
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////

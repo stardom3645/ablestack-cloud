@@ -24,8 +24,8 @@ import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.ListResponse;
-import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.api.response.UpdateHostUsbDevicesResponse;
+import org.apache.cloudstack.context.CallContext;
 // import org.apache.cloudstack.api.response.HostResponse;
 
 @APICommand(name = "updateHostUsbDevices", description = "list Host Usb Devices'.", since = "4.20.0.0", responseObject = UpdateHostUsbDevicesResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {
@@ -55,6 +55,10 @@ public class UpdateHostUsbDevicesCmd extends BaseListCmd {
             description = "XML configuration for device attachment")
     private String xmlConfig;
 
+    @Parameter(name = ApiConstants.CURRENT_VM_ID, type = CommandType.STRING, required = false,
+            description = "Current VM ID")
+    private String currentVmId;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -77,6 +81,14 @@ public class UpdateHostUsbDevicesCmd extends BaseListCmd {
 
     public void setXmlConfig(String xmlConfig) {
         this.xmlConfig = xmlConfig;
+    }
+
+    public String getCurrentVmId() {
+        return currentVmId;
+    }
+
+    public void setCurrentVmId(String currentVmId) {
+        this.currentVmId = currentVmId;
     }
 
     /////////////////////////////////////////////////////
