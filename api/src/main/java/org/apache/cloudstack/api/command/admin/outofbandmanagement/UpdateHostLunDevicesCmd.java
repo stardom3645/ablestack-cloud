@@ -55,9 +55,9 @@ public class UpdateHostLunDevicesCmd extends BaseListCmd {
             description = "XML configuration for device attachment")
     private String xmlConfig;
 
-    @Parameter(name = ApiConstants.CURRENT_VM_ID, type = CommandType.STRING, required = false,
+    @Parameter(name = ApiConstants.CURRENT_VM_ID, type = CommandType.LONG, required = false,
             description = "Current VM ID")
-    private String currentVmId;
+    private Long currentVmId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -83,11 +83,11 @@ public class UpdateHostLunDevicesCmd extends BaseListCmd {
         this.xmlConfig = xmlConfig;
     }
 
-    public String getCurrentVmId() {
+    public Long getCurrentVmId() {
         return currentVmId;
     }
 
-    public void setCurrentVmId(String currentVmId) {
+    public void setCurrentVmId(Long currentVmId) {
         this.currentVmId = currentVmId;
     }
 
