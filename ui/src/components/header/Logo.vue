@@ -20,7 +20,9 @@
     <img
       :style="{
         width: $config.theme['@mini-logo-width'],
-        height: $config.theme['@mini-logo-height']
+        height: $config.theme['@mini-logo-height'],
+        marginTop: $config.theme['@mini-logo-magin-top'],
+        marginBottom: $config.theme['@mini-logo-magin-bottom']
       }"
       :src="$config.minilogo" />
   </div>
@@ -31,7 +33,8 @@
         height: $config.theme['@logo-height'],
         marginLeft: '8px',
         marginRight: '8px',
-        marginBottom: '-10px'
+        marginTop: $config.theme['@logo-magin-top'],
+        marginBottom: $config.theme['@logo-magin-bottom']
       }"
       :src="$config.logo" />
   </div>
