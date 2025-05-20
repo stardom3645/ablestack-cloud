@@ -87,8 +87,8 @@ elif [ "hv" == "$type" ]; then
   sed -i "/\"@processing-color\"/ c\    \"@processing-color\": \"#2f54eb\","  $config_path
 
   # 로고 사이즈 설정
-  sed -i "/\"@logo-magin-top\"/ c\    \"@logo-magin-top\": \"-4px\","  $config_path
-  sed -i "/\"@logo-magin-bottom\"/ c\    \"@logo-magin-bottom\": \"-4px\","  $config_path
+  sed -i "/\"@logo-magin-top\"/ c\    \"@logo-magin-top\": \"4px\","  $config_path
+  sed -i "/\"@logo-magin-bottom\"/ c\    \"@logo-magin-bottom\": \"0px\","  $config_path
   sed -i "/\"@mini-logo-magin-top\"/ c\    \"@mini-logo-magin-top\": \"8px\","  $config_path
   sed -i "/\"@mini-logo-magin-bottom\"/ c\    \"@mini-logo-magin-bottom\": \"8px\","  $config_path
 
