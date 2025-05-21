@@ -4759,5 +4759,15 @@
 "message.license.not.found1": "\ub77c\uc774\uc13c\uc2a4 \uc815\ubcf4\ub97c \ud655\uc778\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
 "message.license.not.found2": "\uc2e0\uaddc \ub77c\uc774\uc13c\uc2a4 \ub4f1\ub85d \ud6c4 \uc0ac\uc6a9\ud574 \uc8fc\uc138\uc694.",
 "message.license.days.left": "\uc77c \ud6c4 \ub9cc\ub8cc",
-"message.license.nostart": "\ub77c\uc774\uc13c\uc2a4 \uc720\ud6a8\uae30\uac04\uc758 \uc2dc\uc791\uc77c\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694."
+"message.license.nostart": "\ub77c\uc774\uc13c\uc2a4 \uc720\ud6a8\uae30\uac04\uc758 \uc2dc\uc791\uc77c\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694.",
+"label.theme.light": "\ub77c\uc774\ud2b8",
+"label.theme.dark": "\ub2e4\ud06c",
+"label.theme.daybreak.blue": "\ub370\uc774\ube0c\ub808\uc774\ud06c \ube14\ub8e8",
+"label.theme.dust.red": "\ub354\uc2a4\ud2b8 \ub808\ub4dc",
+"label.theme.volcano": "\ubcfc\ucf00\uc774\ub178",
+"label.theme.sunset.orange": "\uc120\uc14b \uc624\ub80c\uc9c0",
+"label.theme.cyan": "\uc2dc\uc548",
+"label.theme.polar.green": "\ud3f4\ub77c \uadf8\ub9b0",
+"label.theme.geek.blue": "\uae31 \ube14\ub8e8",
+"label.theme.golden.purple": "\uace8\ub4e0 \ud37c\ud50c"
 }
