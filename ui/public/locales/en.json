@@ -4798,5 +4798,15 @@
 "message.license.not.found1": "Unable to verify license information.",
 "message.license.not.found2": "Please register a new license and use it.",
 "message.license.days.left": "Expires in a few days.",
-"message.license.nostart": "Please check the start date of the license validity period."
+"message.license.nostart": "Please check the start date of the license validity period.",
+"label.theme.light": "Light",
+"label.theme.dark": "Dark",
+"label.theme.daybreak.blue": "Daybreak Blue",
+"label.theme.dust.red": "Dust Red",
+"label.theme.volcano": "Volcano",
+"label.theme.sunset.orange": "Sunset Orange",
+"label.theme.cyan": "Cyan",
+"label.theme.polar.green": "Polar Green",
+"label.theme.geek.blue": "Geek Blue",
+"label.theme.golden.purple": "Golden Purple"
 }
