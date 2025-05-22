@@ -17,6 +17,8 @@
 package com.cloud.hypervisor.kvm.storage;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -366,6 +368,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
                     cmd.add("-c");
                 }
         } else if (primaryStoragePool.getPool().getType() == StoragePoolType.RBD) {
+            createRBDSecretKeyFileIfNoExist(primaryStoragePool.getPoolUUID(), "/var/lib/libvirt/images/", primaryStoragePool.getPoolAuthSecret());
             cmd.add("-i", primaryStoragePool.getPoolSourceHost());
             cmd.add("-p", primaryStoragePool.getPoolMountSourcePath());
             cmd.add("-n", primaryStoragePool.getPoolAuthUserName());
@@ -617,6 +620,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
             cmd.add("-d", String.valueOf(duration));
         } else if (pool.getPool().getType() == StoragePoolType.RBD) {
+            cmd.add("-i", pool.getPoolSourceHost());
             cmd.add("-p", pool.getPoolMountSourcePath());
             cmd.add("-n", pool.getPoolAuthUserName());
             cmd.add("-s", pool.getPoolAuthSecret());
@@ -708,4 +712,21 @@ public class LibvirtStoragePool implements KVMStoragePool {
             return true;
         }
     }
+
+        public void createRBDSecretKeyFileIfNoExist(String uuid, String localPath, String skey) {
+        File file = new File(localPath + File.separator + uuid);
+        try {
+            // 파일이 존재하지 않을 때만 생성
+            if (!file.exists()) {
+                boolean isCreated = file.createNewFile();
+                if (isCreated) {
+                    // 파일 생성 후 내용 작성
+                    FileWriter writer = new FileWriter(file);
+                    writer.write(skey);
+                    writer.close();
+                }
+            }
+        } catch (IOException e) {}
+    }
+
 }
