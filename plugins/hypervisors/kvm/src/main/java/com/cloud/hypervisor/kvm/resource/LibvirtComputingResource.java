@@ -3980,7 +3980,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     public synchronized String attachOrDetachConfigDriveISO(final Connect conn, final String vmName, VirtualMachineTO to, String cdPath, final boolean isAttach, final Integer diskSeq) throws LibvirtException, URISyntaxException,
             InternalErrorException {
-        String isoPath = "";
         DiskTO configDriveDisk = null;
         for (DiskTO disk : to.getDisks()) {
             if (disk.getPath() != null && disk.getPath().contains("configdrive")) {
@@ -3988,7 +3987,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 break;
             }
         }
-        isoPath = getVolumePath(conn, configDriveDisk, to.isConfigDriveOnHostCache());
+        String isoPath = getVolumePath(conn, configDriveDisk, to.isConfigDriveOnHostCache());
         DiskDef iso = new DiskDef();
         if (isAttach && StringUtils.isNotBlank(isoPath) && configDriveDisk !=null && isoPath.lastIndexOf("/") > 0) {
             if (isoPath.startsWith(getConfigPath() + "/" + ConfigDrive.CONFIGDRIVEDIR) && isoPath.contains(vmName)) {
