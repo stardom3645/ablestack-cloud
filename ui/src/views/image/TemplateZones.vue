@@ -71,7 +71,7 @@
       </template>
       <template #expandedRowRender="{ record }">
         <a-table
-          style="margin: 10px 0;"
+          style="margin: 0;"
           :columns="storagePoolInnerColumns"
           :data-source="record.downloaddetails.filter((row) => row.datastoreRole === 'Primary')"
           v-if="record.downloaddetails.filter((row) => row.datastoreRole === 'Primary').length > 0"
@@ -87,7 +87,7 @@
           </template>
         </a-table>
         <a-table
-          style="margin: 10px 0;"
+          style="margin: 0;"
           :columns="imageStoreInnerColumns"
           :data-source="record.downloaddetails.filter((row) => row.datastoreRole !== 'Primary')"
           v-if="record.downloaddetails.filter((row) => row.datastoreRole !== 'Primary').length > 0"
@@ -329,11 +329,13 @@ export default {
     this.imageStoreInnerColumns = [
       {
         title: this.$t('label.secondary.storage'),
-        dataIndex: 'datastore'
+        dataIndex: 'datastore',
+        width: '30%'
       },
       {
         title: this.$t('label.download.percent'),
-        dataIndex: 'downloadPercent'
+        dataIndex: 'downloadPercent',
+        width: '30%'
       },
       {
         title: this.$t('label.download.state'),
@@ -343,11 +345,13 @@ export default {
     this.storagePoolInnerColumns = [
       {
         title: this.$t('label.primary.storage'),
-        dataIndex: 'datastore'
+        dataIndex: 'datastore',
+        width: '30%'
       },
       {
         title: this.$t('label.download.percent'),
-        dataIndex: 'downloadPercent'
+        dataIndex: 'downloadPercent',
+        width: '30%'
       },
       {
         title: this.$t('label.download.state'),
