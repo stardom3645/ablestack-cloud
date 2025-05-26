@@ -28,10 +28,10 @@
     <a-list size="small">
       <a-list-item />
       <a-list-item>
-        <strong>{{ $t('label.nic.linkstate') }}</strong><br/> {{ record.linkstate ? 'UP' : 'DOWN' }}
+        <strong>{{ $t('label.nic.linkstate') }}</strong> : {{ record.linkstate ? 'UP' : 'DOWN' }}
       </a-list-item>
       <a-list-item>
-        <strong>{{ $t('label.id') }}</strong><br/>{{ record.id }}
+        <strong>{{ $t('label.id') }}</strong> : {{ record.id }}
       </a-list-item>
       <a-list-item v-if="record.networkid">
         <strong>{{ $t('label.networkid') }}</strong> : {{ record.networkid }}
