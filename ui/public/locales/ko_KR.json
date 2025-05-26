@@ -1837,7 +1837,7 @@
 "label.publickey": "\uacf5\uac1c \ud0a4",
 "label.publicnetwork": "\uc11c\ube44\uc2a4\uc6a9 \ub124\ud2b8\uc6cc\ud06c",
 "label.publicport": "Public \ud3ec\ud2b8",
-"label.purgeresources": "Purge Resources",
+"label.purgeresources": "VM \ud30c\uae30\uc2dc \ub9ac\uc18c\uc2a4 \uc815\ub9ac",
 "label.purge.usage.records.success": "\uc0ac\uc6a9 \uae30\ub85d\uc744 \uc131\uacf5\uc801\uc73c\ub85c \uc0ad\uc81c\ud588\uc2b5\ub2c8\ub2e4",
 "label.purge.usage.records.error": "\uc0ac\uc6a9 \uae30\ub85d\uc744 \uc0ad\uc81c\ub97c \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4",
 "label.purpose": "\ubaa9\uc801",
