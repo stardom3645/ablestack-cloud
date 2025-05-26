@@ -52,6 +52,10 @@
     box-shadow: none;
   }
 
+  .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button:not(.ant-btn-primary) {
+    color: rgba(255, 255, 255, 0.2) !important;
+  }
+
   .ant-drawer-content {
     background-color: rgb(0, 21, 41);
   }
@@ -276,11 +280,11 @@
     color: @dark-text-color-3;
 
     &-thead {
-      background-color: @table-header-bgColor;
+      background-color: @dark-secondary-bgColor;
 
       tr th {
         color: @dark-text-color-4;
-        background-color: @table-header-bgColor;
+        background-color: @dark-secondary-bgColor;
         border-color: @dark-border-color;
 
         .ant-table-column-has-actions.ant-table-column-has-sorters:hover,
