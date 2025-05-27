@@ -55,12 +55,13 @@ export default {
   data () {
     return {
       showClear: false,
-      logoPath: this.$store.getters.darkMode ? this.$config.whiteLogo : this.$config.logo
+      logoPath: this.$config.logo
     }
   },
   watch: {
     '$store.getters.darkMode' (darkMode) {
       document.body.classList.toggle('dark-mode', darkMode)
+      this.logoPath = darkMode ? this.$config.whiteLogo : this.$config.logo
     },
     '$store.getters.countNotify' (countNotify) {
       this.showClear = false
@@ -80,6 +81,8 @@ export default {
     // 로컬스토리지 다크 모드 확인 후 변경
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     let isDark = this.$localStorage.get('DARK_MODE')
+
+    this.logoPath = isDark ? this.$config.whiteLogo : this.$config.logo
 
     if (isDark === null) {
       isDark = prefersDark
