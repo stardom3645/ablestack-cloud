@@ -28,7 +28,7 @@
 @dark-border-color: #434343;
 @dropdown-bgColor: #1f1f1f;
 @dropdown-hover-bgColor: rgba(255, 255, 255, 0.08);
-@table-header-bgColor: #1d1d1d;
+@table-header-bgColor: #33343e;
 @table-header-hover-bgColor: #303030;
 @table-body-hover-bgColor: #262626;
 @disabled-bgColor: #555;
@@ -38,6 +38,20 @@
 
   h1, h2, h3, h4, h5, h6, .ant-statistic-title, .ant-statistic-content {
     color: @dark-text-color-3;
+  }
+
+  .ant-select-multiple .ant-select-selection-item {
+    background-color: @dark-secondary-bgColor;
+    color: @dark-text-color-3;
+    border-color: @dark-border-color;
+  }
+
+  .ant-select-multiple .ant-select-selection-item-remove {
+    color: @dark-text-color-3 !important;
+  }
+
+  .list .item:hover {
+    background: @table-body-hover-bgColor;
   }
 
   .user-layout, .ant-layout {
@@ -50,6 +64,10 @@
 
   .ant-radio-input:focus + .ant-radio-inner {
     box-shadow: none;
+  }
+
+  .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button:not(.ant-btn-primary) {
+    color: rgba(255, 255, 255, 0.2) !important;
   }
 
   .ant-drawer-content {
@@ -276,11 +294,11 @@
     color: @dark-text-color-3;
 
     &-thead {
-      background-color: @table-header-bgColor;
+      background-color: @dark-secondary-bgColor;
 
       tr th {
         color: @dark-text-color-4;
-        background-color: @table-header-bgColor;
+        background-color: @dark-secondary-bgColor;
         border-color: @dark-border-color;
 
         .ant-table-column-has-actions.ant-table-column-has-sorters:hover,
@@ -298,7 +316,7 @@
       & > tr:hover.ant-table-row-selected > td,
       & > tr.ant-table-row-hover:not(.ant-table-expanded-row):not(.ant-table-row-selected) > td,
       & > tr:hover:not(.ant-table-expanded-row):not(.ant-table-row-selected) > td {
-        background-color: @table-body-hover-bgColor;
+        background-color: @dark-secondary-bgColor;
       }
     }
 
@@ -320,11 +338,11 @@
 
 
       & > tr > td.ant-table-cell {
-        background: @dropdown-hover-bgColor;
+        background: @dark-secondary-bgColor;
       }
 
       & > tr > td.ant-table-cell:hover {
-        background: @dropdown-hover-bgColor !important;
+        background: @table-body-hover-bgColor !important;
       }
 
       & > tr.ant-table-row:hover > td, & > tr > td.ant-table-cell-row-hover {
@@ -479,7 +497,7 @@
   }
 
   .ant-tag-error {
-    color: #f5222d !important;
+    color: #ff5959 !important;
     background: #fff1f0;
     border-color: #ffa39e;
   }
