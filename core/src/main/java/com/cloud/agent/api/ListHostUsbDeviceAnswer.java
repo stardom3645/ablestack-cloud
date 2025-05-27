@@ -19,34 +19,37 @@
 
 // package com.cloud.agent.api;
 
-// public class UpdateHostUsbDeviceAnswer extends Answer {
-//     private boolean successMessage;
-//     private String vmName;
-//     private String xmlConfig;
-//     private boolean isAttach;
+// import java.util.Collections;
+// import java.util.List;
 
-//     public UpdateHostUsbDeviceAnswer() {
+// public class ListHostUsbDeviceAnswer extends Answer {
+//     private boolean successMessage;
+//     private List<String> hostDevicesNames;
+//     private List<String> hostDevicesText;
+
+//     public ListHostUsbDeviceAnswer() {
 //         super();
 //     }
 
-//     public UpdateHostUsbDeviceAnswer(boolean successMessage, String vmName, String xmlConfig, boolean isAttach) {
+//     public ListHostUsbDeviceAnswer(boolean successMessage, List<String> hostDevicesNames, List<String> hostDevicesText) {
 //         super();
 //         this.successMessage = successMessage;
-//         this.vmName = vmName;
-//         this.xmlConfig = xmlConfig;
-//         this.isAttach = isAttach;
+//         this.hostDevicesNames = hostDevicesNames;
+//         this.hostDevicesText = hostDevicesText;
 //     }
 
-//     public String getVmName() {
-//         return vmName;
+//     public List<String> getHostDevicesNames() {
+//         if (hostDevicesText == null) {
+//             return Collections.emptyList();
+//         }
+//         return hostDevicesNames;
 //     }
 
-//     public String getXmlConfig() {
-//         return xmlConfig;
-//     }
-
-//     public boolean getIsAttach() {
-//         return isAttach;
+//     public List<String> getHostDevicesTexts() {
+//         if (hostDevicesText == null) {
+//             return Collections.emptyList();
+//         }
+//         return hostDevicesText;
 //     }
 
 //     public boolean isSuccessMessage() {
