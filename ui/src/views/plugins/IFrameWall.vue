@@ -42,7 +42,7 @@ export default {
   },
   methods: {
     urlAction (hypervisortype) {
-      const theme = this.$localStorage.get('DARK_MODE') ? '' : '&theme=light'
+      const theme = this.$localStorage.get('DARK_MODE') ? '&theme=dark' : '&theme=light'
 
       api('listConfigurations', { keyword: 'monitoring.wall.portal' }).then(json => {
         var items = json.listconfigurationsresponse.configuration
