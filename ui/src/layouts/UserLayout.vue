@@ -60,13 +60,7 @@ export default {
   },
   watch: {
     '$store.getters.darkMode' (darkMode) {
-      if (darkMode) {
-        document.body.classList.add('dark-mode')
-        this.logoPath = this.$config.whiteLogo
-      } else {
-        document.body.classList.remove('dark-mode')
-        this.logoPath = this.$config.banner
-      }
+      document.body.classList.toggle('dark-mode', darkMode)
     },
     '$store.getters.countNotify' (countNotify) {
       this.showClear = false

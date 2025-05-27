@@ -202,13 +202,6 @@ export default {
     mainMenu (newMenu) {
       this.menus = newMenu.find((item) => item.path === '/').children
     },
-    '$store.getters.darkMode' (darkMode) {
-      if (darkMode) {
-        document.body.classList.add('dark-mode')
-      } else {
-        document.body.classList.remove('dark-mode')
-      }
-    },
     '$store.getters.countNotify' (countNotify) {
       this.showClear = false
       if (countNotify && countNotify > 0) {
@@ -230,16 +223,6 @@ export default {
     }
   },
   mounted () {
-    // 시스템 테마 변경되었을때 감지 후 테마 변경
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
-      this.$localStorage.set('DARK_MODE', event.matches)
-      this.$store.dispatch('SetDarkMode', event.matches)
-      document.body.classList.toggle('dark-mode', event.matches)
-    })
-    // 로컬스토리지 다크 모드 확인 후 변경
-    const isDark = !!this.$localStorage.get('DARK_MODE')
-    this.$store.dispatch('SetDarkMode', isDark)
-    document.body.classList.toggle('dark-mode', isDark)
     const userAgent = navigator.userAgent
     if (userAgent.indexOf('Edge') > -1) {
       this.$nextTick(() => {
