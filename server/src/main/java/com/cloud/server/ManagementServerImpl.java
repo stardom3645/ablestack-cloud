@@ -19,9 +19,9 @@
 package com.cloud.server;
 
 import java.io.BufferedReader;
-import java.io.File;
+// import java.io.File;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+// import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -187,7 +187,7 @@ import org.apache.cloudstack.api.command.admin.outofbandmanagement.ListHostDevic
 // import org.apache.cloudstack.api.command.admin.outofbandmanagement.ListHostUsbDevicesCmd;
 import org.apache.cloudstack.api.command.admin.outofbandmanagement.UpdateHostDevicesCmd;
 // import org.apache.cloudstack.api.command.admin.outofbandmanagement.UpdateHostLunDevicesCmd;
-// import org.apache.cloudstack.api.command.admin.outofbandmanagement.UpdateHostUsbDevicesCmd;
+// import org.apac
 import org.apache.cloudstack.api.command.admin.pod.CreatePodCmd;
 import org.apache.cloudstack.api.command.admin.pod.DeletePodCmd;
 import org.apache.cloudstack.api.command.admin.pod.ListPodsByCmd;
@@ -693,6 +693,7 @@ import com.cloud.agent.api.ListHostDeviceCommand;
 // import com.cloud.agent.api.ListHostUsbDeviceAnswer;
 // import com.cloud.agent.api.ListHostUsbDeviceCommand;
 import com.cloud.agent.api.PatchSystemVmAnswer;
+import com.cloud.agent.api.PatchSystemVmCommand;
 // import com.cloud.agent.api.PatchSystemVmCommand;
 // import com.cloud.agent.api.UpdateHostUsbDeviceAnswer;
 // import com.cloud.agent.api.UpdateHostUsbDeviceCommand;
@@ -758,6 +759,7 @@ import com.cloud.gpu.GPU;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.DetailVO;
 import com.cloud.host.Host;
+import com.cloud.host.Host.Type;
 import com.cloud.host.HostTagVO;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
@@ -770,8 +772,10 @@ import com.cloud.hypervisor.HypervisorGuru;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
 import com.cloud.info.ConsoleProxyInfo;
+import com.cloud.network.IpAddress;
 import com.cloud.network.IpAddressManager;
 import com.cloud.network.IpAddressManagerImpl;
+import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.Networks;
 import com.cloud.network.dao.IPAddressDao;
@@ -887,8 +891,8 @@ import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import javax.naming.ConfigurationException;
 
 

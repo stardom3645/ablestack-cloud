@@ -4835,5 +4835,6 @@
 "Message.Success.Remove.alloc": "Deallocation of device completed",
 "message.error.remove.alloc": "Unassigning device failed",
 "message.delete.device.alloc": "Unassigning devices in virtual machines",
-"message.success.allocate.device": "Device allocation completed"
+"message.success.allocate.device": "Device allocation completed",
+"message.confirm.delete.device": "Are you sure you want to delete the device"
 }

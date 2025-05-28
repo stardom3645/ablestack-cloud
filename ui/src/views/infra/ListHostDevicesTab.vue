@@ -95,7 +95,7 @@
         @close-action="closeAction"
         @allocation-completed="onAllocationCompleted"
         @device-allocated="handleDeviceAllocated" />
-      <HostUsbDevicesTransfer
+      <!-- <HostUsbDevicesTransfer
         v-else-if="activeKey === '2'"
         ref="hostUsbDevicesTransfer"
         :resource="selectedResource"
@@ -107,39 +107,31 @@
         ref="hostLunDevicesTransfer"
         :resource="selectedResource"
         @close-action="closeAction"
-        @allocation-completed="onAllocationCompleted"
-        @device-allocated="handleDeviceAllocated" />
+        @allocation-completed="onAllocationCompleted" -->
+        <!-- @device-allocated="handleDeviceAllocated" /> -->
     </a-modal>
 
-    <!-- PCI 디바이스 삭제 모달 -->
+    <!-- PCI 디바이스 모달로 통일 -->
     <a-modal
       v-model:visible="showPciDeleteModal"
-      :title="`${selectedPciDevice?.vmName || ''} ${$t('message.delete.device.allocation')}`"
+      :title="`${vmNames[selectedPciDevice?.hostDevicesName] || ''} ${$t('message.delete.device.allocation')}`"
       @ok="handlePciDeviceDelete"
       @cancel="closePciDeleteModal"
     >
-      <div v-if="selectedPciDevice">
+      <div>
         <p>{{ $t('message.confirm.delete.device') }}</p>
       </div>
-    </a-modal>
-
-    <a-modal
-      v-model:visible="deleteModalVisible"
-      :title="`${selectedDevice?.vmName || ''} ${$t('message.delete.device.allocation')}`"
-      @ok="confirmDelete"
-      @cancel="closeDeleteModal"
-    >
-      <p>{{ $t('message.confirm.delete.device') }}</p>
     </a-modal>
   </div>
 </template>
 
 <script>
 import { api } from '@/api'
-import { IdcardOutlined } from '@ant-design/icons-vue'
+import eventBus from '@/config/eventBus'
+import { IdcardOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import HostDevicesTransfer from '@/views/storage/HostDevicesTransfer'
-import HostUsbDevicesTransfer from '@/views/storage/HostUsbDevicesTransfer'
-import HostLunDevicesTransfer from '@/views/storage/HostLunDevicesTransfer'
+// import HostUsbDevicesTransfer from '@/views/storage/HostUsbDevicesTransfer'
+// import HostLunDevicesTransfer from '@/views/storage/HostLunDevicesTransfer'
 
 export default {
   name: 'ListHostDevicesTab',
@@ -147,9 +139,9 @@ export default {
     IdcardOutlined,
     PlusOutlined,
     DeleteOutlined,
-    HostDevicesTransfer,
-    HostUsbDevicesTransfer,
-    HostLunDevicesTransfer
+    HostDevicesTransfer
+    // HostUsbDevicesTransfer,
+    // HostLunDevicesTransfer
   },
   props: {
     resource: {
@@ -200,8 +192,6 @@ export default {
       showPciDeleteModal: false,
       selectedPciDevice: null,
       pciConfigs: {},
-      deleteModalVisible: false,
-      selectedDevice: null,
       vmNames: {},
       vmNameLoading: false
     }
@@ -264,8 +254,73 @@ export default {
   },
   created () {
     this.fetchData()
+    this.setupVMEventListeners()
   },
   methods: {
+    setupVMEventListeners () {
+      const eventTypes = ['DestroyVM', 'ExpungeVM']
+
+      eventTypes.forEach(eventType => {
+        eventBus.emit('register-event', {
+          eventType: eventType,
+          callback: async (event) => {
+            try {
+              const vmId = event.id
+
+              // 현재 호스트의 디바이스 할당 정보 조회
+              const response = await api('listHostDevices', { id: this.resource.id })
+              const devices = response.listhostdevicesresponse?.listhostdevices?.[0]
+
+              if (devices?.vmallocations) {
+                console.log('VM allocations:', devices.vmallocations)
+                console.log('Looking for devices allocated to VM:', vmId)
+
+                // 삭제된 VM에 할당된 디바이스 찾기
+                const allocatedDevices = Object.entries(devices.vmallocations)
+                  .filter(([_, allocatedVmId]) => {
+                    console.log('Checking device allocation:', { allocatedVmId, vmId, match: allocatedVmId === vmId })
+                    return allocatedVmId === vmId
+                  })
+                  .map(([deviceName]) => deviceName)
+
+                console.log('Found allocated devices:', allocatedDevices)
+
+                // 각 디바이스의 할당 해제
+                for (const deviceName of allocatedDevices) {
+                  try {
+                    console.log('Attempting to update host device:', deviceName)
+                    const response = await api('updateHostDevices', {
+                      hostid: this.resource.id,
+                      hostdevicesname: deviceName,
+                      virtualmachineid: null
+                    })
+                    console.log('Update host device response:', response)
+
+                    if (!response || response.error) {
+                      throw new Error(response?.error?.errortext || 'Failed to update host device')
+                    }
+                  } catch (error) {
+                    console.error('Failed to update host device:', deviceName, error)
+                    this.$notification.error({
+                      message: this.$t('label.error'),
+                      description: error.message || this.$t('message.update.host.device.failed')
+                    })
+                  }
+                }
+
+                if (allocatedDevices.length > 0) {
+                  this.$message.info(this.$t('message.device.allocation.removed.vm.deleted'))
+                  await this.fetchData()
+                  await this.updateVmNames()
+                }
+              }
+            } catch (error) {
+              console.error('Error handling VM deletion event:', error)
+            }
+          }
+        })
+      })
+    },
     async fetchData () {
       this.loading = true
       this.selectedDevices = []
@@ -629,36 +684,11 @@ export default {
       this.selectedPciDevice = null
       this.pciConfigs = {}
     },
-    async showConfirmModal (record) {
-      this.selectedDevice = record
-
-      try {
-        const response = await api('listHostDevices', { id: this.resource.id })
-        const devices = response.listhostdevicesresponse?.listhostdevices?.[0]
-        const vmAllocations = devices?.vmallocations || {}
-        const vmId = vmAllocations[record.hostDevicesName]
-
-        if (vmId) {
-          const vmResponse = await api('listVirtualMachines', {
-            id: vmId,
-            listall: true
-          })
-          const vm = vmResponse?.listvirtualmachinesresponse?.virtualmachine?.[0]
-          this.selectedDevice.vmName = vm?.name || vm?.displayname
-        }
-      } catch (error) {
-        console.error('Error fetching VM details:', error)
-      }
-
-      this.deleteModalVisible = true
-    },
-    confirmDelete () {
-      this.deleteModalVisible = false
-      this.handleDelete(this.selectedDevice)
-    },
-    closeDeleteModal () {
-      this.deleteModalVisible = false
-      this.selectedDevice = null
+    showConfirmModal (device) {
+      console.log('Selected device:', device)
+      console.log('VM Names:', this.vmNames)
+      this.selectedPciDevice = device
+      this.showPciDeleteModal = true
     },
     async updateDataWithVmNames () {
       try {
@@ -685,12 +715,13 @@ export default {
         const devices = response.listhostdevicesresponse?.listhostdevices?.[0]
 
         if (devices?.vmallocations) {
-          // 각 디바이스에 대한 VM 이름 매핑
+          console.log('VM allocations:', devices.vmallocations)
           const vmNamesMap = {}
           const entries = Object.entries(devices.vmallocations)
+          const processedDevices = new Set()
 
           for (const [deviceName, vmId] of entries) {
-            if (vmId) {
+            if (vmId && !processedDevices.has(deviceName)) {
               try {
                 const vmResponse = await api('listVirtualMachines', {
                   id: vmId,
@@ -701,20 +732,70 @@ export default {
                 if (vm) {
                   vmNamesMap[deviceName] = vm.name || vm.displayname
                 } else {
-                  vmNamesMap[deviceName] = this.$t('label.no.vm.assigned')
+                  console.log('VM not found, removing device allocation:', deviceName)
+                  try {
+                    console.log('Attempting to update host device:', deviceName)
+                    const updateResponse = await api('updateHostDevices', {
+                      hostid: this.resource.id,
+                      hostdevicesname: deviceName,
+                      virtualmachineid: null
+                    })
+                    console.log('Update host device response:', updateResponse)
+
+                    if (!updateResponse || updateResponse.error) {
+                      throw new Error(updateResponse?.error?.errortext || 'Failed to update host device')
+                    }
+
+                    vmNamesMap[deviceName] = this.$t('label.no.vm.assigned')
+                    processedDevices.add(deviceName)
+
+                    // UI 업데이트 (모달 없이)
+                    this.dataItems = this.dataItems.map(item => {
+                      if (item.hostDevicesName === deviceName) {
+                        return {
+                          ...item,
+                          virtualmachineid: null,
+                          isAssigned: false
+                        }
+                      }
+                      return item
+                    })
+                  } catch (error) {
+                    console.error('Failed to update host device:', deviceName, error)
+                    // 에러 시에만 notification 표시
+                    this.$notification.error({
+                      message: this.$t('label.error'),
+                      description: error.message || this.$t('message.update.host.device.failed')
+                    })
+                  }
                 }
               } catch (error) {
+                console.error('Error processing device:', deviceName, error)
                 vmNamesMap[deviceName] = this.$t('label.no.vm.assigned')
               }
             }
           }
           this.vmNames = vmNamesMap
+
+          // 변경사항이 있을 때만 조용히 데이터 새로고침
+          if (processedDevices.size > 0) {
+            await this.fetchData()
+          }
         }
       } catch (error) {
-
+        console.error('Error in updateVmNames:', error)
       } finally {
         this.vmNameLoading = false
       }
+    },
+    // 컴포넌트가 제거될 때 이벤트 리스너도 제거
+    beforeDestroy () {
+      const eventTypes = ['DestroyVM', 'ExpungeVM']
+      eventTypes.forEach(eventType => {
+        eventBus.emit('unregister-event', {
+          eventType: eventType
+        })
+      })
     }
   },
   watch: {
