@@ -24,16 +24,15 @@ import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.ListHostLunDevicesResponse;
-import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
+// import org.apache.cloudstack.api.response.ListResponse;
 
 
 
-@APICommand(name = "listHostLunDevices", description = "list Host LUN Devices'.", since = "4.20.0.0", responseObject = ListHostLunDevicesResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {
-        RoleType.Admin })
+@APICommand(name = "listHostLunDevices", description = "list Host LUN Devices'.", since = "4.20.0.0", responseObject = ListHostLunDevicesResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = { RoleType.Admin })
 public class ListHostLunDevicesCmd extends BaseListCmd {
 
-    private static final String LISTHOSTUSBDEVICES = "listhostusbdevices";
+    private static final String LISTHOSTLUNDEVICES = "listhostusbdevices";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -44,7 +43,7 @@ public class ListHostLunDevicesCmd extends BaseListCmd {
     private Long id;
 
     /////////////////////////////////////////////////////
-    /////////////////// Accessors ///////////////////////
+    /////////////////// Accessors ///////////////////////a
     /////////////////////////////////////////////////////
 
     public Long getId() {
@@ -66,9 +65,9 @@ public class ListHostLunDevicesCmd extends BaseListCmd {
 
     @Override
     public void execute() {
-        ListResponse<ListHostLunDevicesResponse> response = _mgr.listHostLunDevices(this);
-        response.setResponseName(getCommandName());
-        response.setObjectName(getCommandName());
-        this.setResponseObject(response);
+    //     ListResponse<ListHostLunDevicesResponse> response = _mgr.listHostLunDevices(this);
+    //     response.setResponseName(getCommandName());
+    //     response.setObjectName(getCommandName());
+    //     this.setResponseObject(response);
     }
 }

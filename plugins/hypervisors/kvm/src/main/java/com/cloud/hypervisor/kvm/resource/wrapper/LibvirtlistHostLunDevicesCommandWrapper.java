@@ -31,6 +31,7 @@ public final class LibvirtlistHostLunDevicesCommandWrapper
     @Override
     public Answer execute(final ListHostLunDeviceCommand command,
             final LibvirtComputingResource libvirtComputingResource) {
-        return libvirtComputingResource.listHostLunDevices(command);
+        return null;
+        // libvirtComputingResource.listHostLunDevices(command);
     }
 }
