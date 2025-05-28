@@ -44,6 +44,9 @@ export default {
         if (!(store.getters.project && store.getters.project.id)) {
           filters.unshift('self')
         }
+        if (store.getters.features.instanceleaseenabled) {
+          filters.push('leased')
+        }
         return filters
       },
       columns: () => {
@@ -90,7 +93,7 @@ export default {
         var fields = ['name', 'qemuagentversion', 'displayname', 'id', 'state', 'publicip', 'ipaddress', 'ip6address', 'templatename', 'ostypename',
           'serviceofferingname', 'isdynamicallyscalable', 'haenable', 'hypervisor', 'arch', 'boottype', 'bootmode', 'account',
           'domain', 'zonename', 'userdataid', 'userdataname', 'userdataparams', 'userdatadetails', 'userdatapolicy',
-          'hostcontrolstate', 'vbmcport', 'deleteprotection']
+          'hostcontrolstate', 'vbmcport', 'deleteprotection', 'leaseexpirydate', 'leaseexpiryaction']
         const listZoneHaveSGEnabled = store.getters.zones.filter(zone => zone.securitygroupsenabled === true)
         if (!listZoneHaveSGEnabled || listZoneHaveSGEnabled.length === 0) {
           return fields

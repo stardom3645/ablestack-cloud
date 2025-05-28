@@ -809,6 +809,11 @@ public class EventTypes {
     // Resource Limit
     public static final String EVENT_RESOURCE_LIMIT_UPDATE = "RESOURCE.LIMIT.UPDATE";
 
+    public static final String VM_LEASE_EXPIRED = "VM.LEASE.EXPIRED";
+    public static final String VM_LEASE_DISABLED = "VM.LEASE.DISABLED";
+    public static final String VM_LEASE_CANCELLED = "VM.LEASE.CANCELLED";
+    public static final String VM_LEASE_EXPIRING = "VM.LEASE.EXPIRING";
+
     static {
 
         // TODO: need a way to force author adding event types to declare the entity details as well, with out braking
@@ -1310,6 +1315,12 @@ public class EventTypes {
 
         // Disaster Recovery Cluster
         entityEventDetails.put(EVENT_DISASTER_RECOVERY_CLUSTER, "DisasterRecoveryCluster");
+        
+        // VM Lease
+        entityEventDetails.put(VM_LEASE_EXPIRED, VirtualMachine.class);
+        entityEventDetails.put(VM_LEASE_EXPIRING, VirtualMachine.class);
+        entityEventDetails.put(VM_LEASE_DISABLED, VirtualMachine.class);
+        entityEventDetails.put(VM_LEASE_CANCELLED, VirtualMachine.class);
     }
 
     public static boolean isNetworkEvent(String eventType) {
