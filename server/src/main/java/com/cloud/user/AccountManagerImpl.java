@@ -1604,7 +1604,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         RoleType userAccountRoleType = getRoleType(userAccount);
 
         if (RoleType.Unknown == callerRoleType || RoleType.Unknown == userAccountRoleType) {
-            String errMsg = String.format("The role type of account [%s, %s] or [%s, %s] is unknown",
+            String errMsg = String.format("The role type of caller account [%s, %s] or target account [%s, %s] is unknown",
                     callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid());
             throw new PermissionDeniedException(errMsg);
         }
