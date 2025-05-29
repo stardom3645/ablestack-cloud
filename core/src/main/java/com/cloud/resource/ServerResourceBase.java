@@ -20,6 +20,8 @@
 package com.cloud.resource;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.NetworkInterface;
@@ -69,6 +71,7 @@ public abstract class ServerResourceBase implements ServerResource {
     protected NetworkInterface storageNic;
     protected NetworkInterface storageNic2;
     protected IAgentControl agentControl;
+    protected static final String DEFAULT_LOCAL_STORAGE_PATH = "/var/lib/libvirt/images/";
 
     @Override
     public String getName() {
@@ -184,99 +187,9 @@ public abstract class ServerResourceBase implements ServerResource {
         return new ListHostDeviceAnswer(true, hostDevicesNames, hostDevicesText);
     }
 
-    // protected Answer listHostUsbDevices(Command command) {
-    //     List<String> hostDevicesText = new ArrayList<>();
-    //     List<String> hostDevicesNames = new ArrayList<>();
-    //     Script listCommand = new Script("lsusb");
-    //     OutputInterpreter.AllLinesParser parser = new OutputInterpreter.AllLinesParser();
-    //     String result = listCommand.execute(parser);
-    //     if (result == null && parser.getLines() != null) {
-    //         String[] lines = parser.getLines().split("\\n");
-    //         for (String line : lines) {
-    //             String[] parts = line.split("\\s+", 2);
-    //             if (parts.length >= 2) {
-    //                 hostDevicesNames.add(parts[0].trim());
-    //                 hostDevicesText.add(parts[1].trim());
-    //             }
-    //         }
-    //     }
-    //     return new ListHostUsbDeviceAnswer(true, hostDevicesNames, hostDevicesText);
-    // }
-
-    // public Answer listHostLunDevices(Command command) {
-    //     try {
-    //         List<String> hostDevicesNames = new ArrayList<>();
-    //         List<String> hostDevicesText = new ArrayList<>();
-    //         List<Boolean> hasPartitions = new ArrayList<>();  // 파티션 존재 여부 추가
-
-    //         // lsblk 명령어로 JSON 형식의 디스크 정보 조회
-    //         Script cmd = new Script("/usr/bin/lsblk");
-    //         cmd.add("--json", "--paths", "--output", "NAME,TYPE,SIZE,MOUNTPOINT");
-    //         OutputInterpreter.AllLinesParser parser = new OutputInterpreter.AllLinesParser();
-    //         String result = cmd.execute(parser);
-
-    //         if (result != null) {
-    //             logger.error("Failed to execute lsblk command: " + result);
-    //             return new ListHostLunDeviceAnswer(false, hostDevicesNames, hostDevicesText, hasPartitions);
-    //         }
-
-    //         JSONObject json = new JSONObject(parser.getLines());
-    //         JSONArray blockdevices = json.getJSONArray("blockdevices");
-
-    //         // multipath 서비스 상태 확인
-    //         boolean isMultipathActive = checkMultipathStatus();
-
-    //         for (int i = 0; i < blockdevices.length(); i++) {
-    //             JSONObject device = blockdevices.getJSONObject(i);
-
-    //             // 파티션이 아닌 디스크만 처리
-    //             if (!"part".equals(device.getString("type"))) {
-    //                 String name = device.getString("name");
-    //                 String size = device.getString("size");
-
-    //                 // 파티션 존재 여부 확인
-    //                 JSONArray children = device.optJSONArray("children");
-    //                 boolean hasPartition = (children != null && children.length() > 0);
-
-    //                 StringBuilder info = new StringBuilder();
-    //                 if (isMultipathActive && name.startsWith("/dev/disk/by-path/")) {
-    //                     info.append("Multipath LUN Device: ").append(name);
-    //                 } else {
-    //                     info.append("LUN Device: ").append(name);
-    //                 }
-    //                 info.append(" Size: ").append(size);
-    //                 if (hasPartition) {
-    //                     info.append(" (").append(children.length()).append(" partitions)");
-    //                 }
-
-    //                 hostDevicesNames.add(name);
-    //                 hostDevicesText.add(info.toString());
-    //                 hasPartitions.add(hasPartition);
-
-    //                 if (logger.isDebugEnabled()) {
-    //                     logger.debug("Found LUN device: " + info.toString());
-    //                 }
-    //             }
-    //         }
-
-    //         return new ListHostLunDeviceAnswer(true, hostDevicesNames, hostDevicesText, hasPartitions);
-
-    //     } catch (Exception e) {
-    //         logger.error("Error listing LUN devices: " + e.getMessage(), e);
-    //         return new ListHostLunDeviceAnswer(false, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-    //     }
-    // }
-
-    // private boolean checkMultipathStatus() {
-    //     Script cmd = new Script("systemctl");
-    //     cmd.add("is-active", "multipathd");
-    //     String result = cmd.execute(null);
-    //     return "active".equals(result != null ? result.trim() : "");
-    // }
-
-    protected Answer createImageRbd(String names, long sizes, String poolPath) {
-        sizes = (sizes * 1024);
-        String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " create -s " + sizes + " " + names);
+    protected Answer createImageRbd(String poolUuid, String skey, String authUserName, String host, String names, long sizes, String poolPath) {
+        createRBDSecretKeyFileIfNoExist(poolUuid, DEFAULT_LOCAL_STORAGE_PATH, skey);
+        String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " --id " + authUserName + " -m " + host + " -K " + DEFAULT_LOCAL_STORAGE_PATH + poolUuid + " create -s " + (sizes * 1024) + " " + names);
         if (cmdout == null) {
             logger.debug(cmdout);
         }else{
@@ -284,9 +197,9 @@ public abstract class ServerResourceBase implements ServerResource {
         return new ListRbdObjectsAnswer(true, names);
     }
 
-    protected Answer deleteImageRbd(String name, String poolPath) {
-
-        String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " rm " + name);
+    protected Answer deleteImageRbd(String poolUuid, String skey, String authUserName, String host, String name, String poolPath) {
+        createRBDSecretKeyFileIfNoExist(poolUuid, DEFAULT_LOCAL_STORAGE_PATH, skey);
+        String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " --id " + authUserName + " -m " + host + " -K " + DEFAULT_LOCAL_STORAGE_PATH + poolUuid + " rm " + name);
         if (cmdout == null) {
             logger.debug(cmdout);
         }else{
@@ -294,7 +207,7 @@ public abstract class ServerResourceBase implements ServerResource {
         return new ListRbdObjectsAnswer(true, name);
     }
 
-    protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPath, String keyword) {
+    protected Answer listRbdFilesAtPath(String poolUuid, String skey, String authUserName, String host, int startIndex, int pageSize, String poolPath, String keyword) {
         int count = 0;
         List<String> names = new ArrayList<>();
         List<String> paths = new ArrayList<>();
@@ -303,13 +216,15 @@ public abstract class ServerResourceBase implements ServerResource {
         List<Long> sizes = new ArrayList<>();
         List<Long> modifiedList = new ArrayList<>();
 
+        createRBDSecretKeyFileIfNoExist(poolUuid, DEFAULT_LOCAL_STORAGE_PATH, skey);
+
         Script listCommand = new Script("/bin/bash", logger);
         listCommand.add("-c");
 
         if (keyword != null && !keyword.isEmpty()) {
-            listCommand.add("rbd -p " + poolPath + " ls | grep " + keyword );
+            listCommand.add("rbd ls -p " + poolPath + " --id " + authUserName + " -m " + host + " -K " + DEFAULT_LOCAL_STORAGE_PATH + poolUuid + " | grep " + keyword );
         } else {
-            listCommand.add("rbd -p " + poolPath + " ls");
+            listCommand.add("rbd ls -p " + poolPath + " --id " + authUserName + " -m " + host + " -K " + DEFAULT_LOCAL_STORAGE_PATH + poolUuid);
         }
         OutputInterpreter.AllLinesParser listParser = new OutputInterpreter.AllLinesParser();
         String listResult = listCommand.execute(listParser);
@@ -327,6 +242,9 @@ public abstract class ServerResourceBase implements ServerResource {
 
                     Script infoCommand = new Script("rbd");
                     infoCommand.add("-p", poolPath);
+                    infoCommand.add("--id", authUserName);
+                    infoCommand.add("-m", host);
+                    infoCommand.add("-K", DEFAULT_LOCAL_STORAGE_PATH + poolUuid);
                     infoCommand.add("info", imageName.trim());
                     OutputInterpreter.AllLinesParser infoParser = new OutputInterpreter.AllLinesParser();
                     String infoResult = infoCommand.execute(infoParser);
@@ -361,49 +279,65 @@ public abstract class ServerResourceBase implements ServerResource {
         return new ListDataStoreObjectsAnswer(true, count, names, paths, absPaths, isDirs, sizes, modifiedList);
     }
 
-
-protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize, String keyword) {
-    int count = 0;
-    File file = new File(nfsMountPoint, relativePath);
-    List<String> names = new ArrayList<>();
-    List<String> paths = new ArrayList<>();
-    List<String> absPaths = new ArrayList<>();
-    List<Boolean> isDirs = new ArrayList<>();
-    List<Long> sizes = new ArrayList<>();
-    List<Long> modifiedList = new ArrayList<>();
-    if (file.isFile()) {
-        count = 1;
-        names.add(file.getName());
-        paths.add(file.getPath().replace(nfsMountPoint, ""));
-        absPaths.add(file.getPath());
-        isDirs.add(file.isDirectory());
-        sizes.add(file.length());
-        modifiedList.add(file.lastModified());
-    } else if (file.isDirectory()) {
-        String[] files = file.list();
-        List<String> filteredFiles = new ArrayList<>();
-        if (keyword != null && !"".equals(keyword)) {
-            for (String fileName : files) {
-                if (fileName.contains(keyword)) {
-                    filteredFiles.add(fileName);
+    public void createRBDSecretKeyFileIfNoExist(String uuid, String localPath, String skey) {
+        File file = new File(localPath + File.separator + uuid);
+        try {
+            // 파일이 존재하지 않을 때만 생성
+            if (!file.exists()) {
+                boolean isCreated = file.createNewFile();
+                if (isCreated) {
+                    // 파일 생성 후 내용 작성
+                    FileWriter writer = new FileWriter(file);
+                    writer.write(skey);
+                    writer.close();
                 }
             }
-        } else {
-            filteredFiles.addAll(Arrays.asList(files));
-        }
-        count = filteredFiles.size();
-        for (int i = startIndex; i < startIndex + pageSize && i < count; i++) {
-            File f = new File(nfsMountPoint, relativePath + '/' + filteredFiles.get(i));
-            names.add(f.getName());
-            paths.add(f.getPath().replace(nfsMountPoint, ""));
-            absPaths.add(f.getPath());
-            isDirs.add(f.isDirectory());
-            sizes.add(f.length());
-            modifiedList.add(f.lastModified());
-        }
+        } catch (IOException e) {}
     }
-    return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
-}
+
+    protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize, String keyword) {
+        int count = 0;
+        File file = new File(nfsMountPoint, relativePath);
+        List<String> names = new ArrayList<>();
+        List<String> paths = new ArrayList<>();
+        List<String> absPaths = new ArrayList<>();
+        List<Boolean> isDirs = new ArrayList<>();
+        List<Long> sizes = new ArrayList<>();
+        List<Long> modifiedList = new ArrayList<>();
+        if (file.isFile()) {
+            count = 1;
+            names.add(file.getName());
+            paths.add(file.getPath().replace(nfsMountPoint, ""));
+            absPaths.add(file.getPath());
+            isDirs.add(file.isDirectory());
+            sizes.add(file.length());
+            modifiedList.add(file.lastModified());
+        } else if (file.isDirectory()) {
+            String[] files = file.list();
+            List<String> filteredFiles = new ArrayList<>();
+            if (keyword != null && !"".equals(keyword)) {
+                for (String fileName : files) {
+                    if (fileName.contains(keyword)) {
+                        filteredFiles.add(fileName);
+                    }
+                }
+            } else {
+                filteredFiles.addAll(Arrays.asList(files));
+            }
+            count = filteredFiles.size();
+            for (int i = startIndex; i < startIndex + pageSize && i < count; i++) {
+                File f = new File(nfsMountPoint, relativePath + '/' + filteredFiles.get(i));
+                names.add(f.getName());
+                paths.add(f.getPath().replace(nfsMountPoint, ""));
+                absPaths.add(f.getPath());
+                isDirs.add(f.isDirectory());
+                sizes.add(f.length());
+                modifiedList.add(f.lastModified());
+            }
+        }
+        return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
+    }
+
     protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize) {
         int count = 0;
         File file = new File(nfsMountPoint, relativePath);
@@ -436,6 +370,7 @@ protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int 
         }
         return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
     }
+
     protected void fillNetworkInformation(final StartupCommand cmd) {
         String[] info = null;
         if (privateNic != null) {

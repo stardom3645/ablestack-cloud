@@ -16,13 +16,15 @@
 // under the License.
 
 <template>
-  <div v-if="collapsed && $config.minilogo">
+  <div v-if="collapsed && $config.miniLogo">
     <img
       :style="{
         width: $config.theme['@mini-logo-width'],
-        height: $config.theme['@mini-logo-height']
+        height: $config.theme['@mini-logo-height'],
+        marginTop: $config.theme['@mini-logo-magin-top'],
+        marginBottom: $config.theme['@mini-logo-magin-bottom']
       }"
-      :src="$config.minilogo" />
+      :src="$config.miniLogo" />
   </div>
   <div v-else-if="$config.logo">
     <img
@@ -31,14 +33,14 @@
         height: $config.theme['@logo-height'],
         marginLeft: '8px',
         marginRight: '8px',
-        marginBottom: '-10px'
+        marginTop: $config.theme['@logo-magin-top'],
+        marginBottom: $config.theme['@logo-magin-bottom']
       }"
-      :src="$config.logo" />
+      :src="logoPath" />
   </div>
 </template>
 
 <script>
-
 export default {
   name: 'Logo',
   components: {
@@ -58,6 +60,16 @@ export default {
       type: Boolean,
       default: false,
       required: false
+    }
+  },
+  data () {
+    return {
+      logoPath: this.$store.getters.darkMode ? this.$config.whiteLogo : this.$config.logo
+    }
+  },
+  watch: {
+    '$store.getters.darkMode' (darkMode) {
+      this.logoPath = darkMode ? this.$config.whiteLogo : this.$config.logo
     }
   }
 }
