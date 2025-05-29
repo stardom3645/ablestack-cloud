@@ -368,7 +368,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-i", primaryStoragePool.getPoolSourceHost());
             cmd.add("-p", primaryStoragePool.getPoolMountSourcePath());
             cmd.add("-n", primaryStoragePool.getPoolAuthUserName());
-            cmd.add("-s", primaryStoragePool.getPoolAuthSecret());
+            cmd.add("-s", primaryStoragePool.getPoolUUID());
             cmd.add("-h", hostPrivateIp);
             if (!hostValidation) {
                 cmd.add("-c");
@@ -573,7 +573,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-i", pool.getPoolSourceHost());
             cmd.add("-p", pool.getPoolMountSourcePath());
             cmd.add("-n", pool.getPoolAuthUserName());
-            cmd.add("-s", pool.getPoolAuthSecret());
+            cmd.add("-s", pool.getPoolUUID());
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-u", volumeList.length() > 0 ? volumeList : "");
             cmd.add("-r", "r");
@@ -619,7 +619,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-i", pool.getPoolSourceHost());
             cmd.add("-p", pool.getPoolMountSourcePath());
             cmd.add("-n", pool.getPoolAuthUserName());
-            cmd.add("-s", pool.getPoolAuthSecret());
+            cmd.add("-s", pool.getPoolUUID());
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-u", volumeUUIDListString);
             cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
