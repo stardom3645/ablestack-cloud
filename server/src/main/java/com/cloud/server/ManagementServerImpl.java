@@ -1085,6 +1085,12 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     @Inject
     private HAConfigDao haConfigDao;
 
+    @Inject
+    private HostDetailsDao _hostDetailsDao;
+
+    @Inject
+    private UserVmDetailsDao _vmDetailsDao;
+
     private LockControllerListener _lockControllerListener;
     private final ScheduledExecutorService _eventExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EventChecker"));
     private final ScheduledExecutorService _alertExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("AlertChecker"));
@@ -3955,70 +3961,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     @Override
-    public ListResponse<ListHostDevicesResponse> listHostDevices(ListHostDevicesCmd cmd) {
-        Long id = cmd.getId();
-        HostVO hostVO = _hostDao.findById(id);
-        if (hostVO == null) {
-            throw new CloudRuntimeException("Host not found with ID: " + id);
-        }
-
-        ListHostDeviceCommand pciCmd = new ListHostDeviceCommand(id);
-        Answer answer;
-        try {
-            answer = _agentMgr.send(hostVO.getId(), pciCmd);
-        } catch (Exception e) {
-            String errorMsg = "Error sending ListHostDevicesCommand: " + e.getMessage();
-            logger.error(errorMsg, e);
-            throw new CloudRuntimeException(errorMsg, e);
-        }
-
-        if (answer == null) {
-            throw new CloudRuntimeException("Answer is null");
-        }
-        if (!answer.getResult()) {
-            String errorDetails = (answer.getDetails() != null) ? answer.getDetails()
-                    : "No additional details available";
-            String errorMsg = "Answer result is false. Details: " + errorDetails;
-            logger.error(errorMsg);
-            throw new CloudRuntimeException(errorMsg);
-        }
-        if (!(answer instanceof ListHostDeviceAnswer)) {
-            throw new CloudRuntimeException("Answer is not an instance of listHostDeviceAnswer");
-        }
-
-        ListHostDeviceAnswer pciAnswer = (ListHostDeviceAnswer) answer;
-        if (!pciAnswer.isSuccessMessage()) {
-            throw new IllegalArgumentException("Failed to list VM PCI objects.");
-        }
-
-        List<ListHostDevicesResponse> responses = new ArrayList<>();
-        ListResponse<ListHostDevicesResponse> listResponse = new ListResponse<>();
-
-        List<String> hostDevicesTexts = pciAnswer.getHostDevicesTexts();
-
-        List<String> hostDevicesNames = new ArrayList<>();
-        List<String> pciDescriptions = new ArrayList<>();
-
-        for (String hostDevicesText : hostDevicesTexts) {
-            String[] parts = hostDevicesText.split(": ", 2);
-            if (parts.length == 2) {
-                hostDevicesNames.add(parts[0].trim());
-                pciDescriptions.add(parts[1].trim());
-            } else {
-                logger.warn("Unexpected PCI info format: " + hostDevicesText);
-            }
-        }
-
-        ListHostDevicesResponse response = new ListHostDevicesResponse();
-        response.setHostDevicesNames(hostDevicesNames);
-        response.setHostDevicesTexts(pciDescriptions);
-        responses.add(response);
-
-        listResponse.setResponses(responses);
-        return listResponse;
-    }
-
-    @Override
     public String getConsoleAccessAddress(long vmId) {
         final VMInstanceVO vm = _vmInstanceDao.findById(vmId);
         if (vm != null) {
@@ -4923,7 +4865,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(AllocateVbmcToVMCmd.class);
         cmdList.add(RemoveVbmcToVMCmd.class);
         cmdList.add(ListHostDevicesCmd.class);
-
         cmdList.add(UpdateHostDevicesCmd.class);
         // cmdList.add(ListHostUsbDevicesCmd.class);
         // cmdList.add(ListHostLunDevicesCmd.class);
@@ -6495,7 +6436,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                         //     "License error for host " + host.getName(),
                         //     "License check failed: " + errorMessage
                         // );
-                    } else {
+        } else {
                         boolean isExpired = jsonNode.get("expiry_date").asBoolean();
                         boolean isIssued = jsonNode.get("issued_date").asBoolean();
                         String expiryDateStr = jsonNode.get("expired").asText();

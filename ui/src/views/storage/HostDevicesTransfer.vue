@@ -76,10 +76,25 @@ export default {
   created () {
     this.fetchVMs()
   },
+  watch: {
+    showAddModal: {
+      immediate: true,
+      handler (newVal) {
+        if (newVal) {
+          this.fetchVMs()
+        }
+      }
+    }
+  },
   methods: {
-    fetchVMs () {
+    refreshVMList () {
+      if (!this.resource || !this.resource.id) {
+        this.loading = false
+        return Promise.reject(new Error('Invalid resource'))
+      }
+
       this.loading = true
-      const params = { hostid: this.resource.id, details: 'min' }
+      const params = { hostid: this.resource.id, details: 'min', listall: true }
       const vmStates = ['Running']
 
       return Promise.all(vmStates.map(state => {
@@ -133,21 +148,35 @@ export default {
             return true
           })
         })
+      }).catch(error => {
+        this.$notifyError(error.message || 'Failed to fetch VMs')
+      }).finally(() => {
+        this.loading = false
       })
     },
+
+    fetchVMs () {
+      this.form.virtualmachineid = undefined
+      return this.refreshVMList()
+    },
+
     handleSubmit () {
+      if (!this.resource || !this.resource.id) {
+        this.$notifyError(this.$t('message.error.invalid.resource'))
+        return
+      }
+
       if (!this.form.virtualmachineid) {
         this.$notifyError(this.$t('message.error.select.vm'))
         return
       }
 
       this.loading = true
-      const vmId = this.form.virtualmachineid
       const hostDevicesName = this.resource.hostDevicesName
 
       api('listVirtualMachines', {
-        id: vmId,
-        details: 'min'
+        id: this.form.virtualmachineid,
+        details: 'all'
       }).then(response => {
         const vm = response?.listvirtualmachinesresponse?.virtualmachine?.[0]
         const details = vm?.details || {}
