@@ -19,37 +19,34 @@
 
 package com.cloud.agent.api;
 
-import java.util.Collections;
-import java.util.List;
-
-public class ListHostDeviceAnswer extends Answer {
+public class UpdateHostUsbDeviceAnswer extends Answer {
     private boolean successMessage;
-    private List<String> hostDevicesNames;
-    private List<String> hostDevicesText;
+    private String vmName;
+    private String xmlConfig;
+    private boolean isAttach;
 
-    public ListHostDeviceAnswer() {
+    public UpdateHostUsbDeviceAnswer() {
         super();
     }
 
-    public ListHostDeviceAnswer(boolean successMessage, List<String> hostDevicesNames, List<String> hostDevicesText) {
+    public UpdateHostUsbDeviceAnswer(boolean successMessage, String vmName, String xmlConfig, boolean isAttach) {
         super();
         this.successMessage = successMessage;
-        this.hostDevicesNames = hostDevicesNames;
-        this.hostDevicesText = hostDevicesText;
+        this.vmName = vmName;
+        this.xmlConfig = xmlConfig;
+        this.isAttach = isAttach;
     }
 
-    public List<String> getHostDevicesNames() {
-        if (hostDevicesText == null) {
-            return Collections.emptyList();
-        }
-        return hostDevicesNames;
+    public String getVmName() {
+        return vmName;
     }
 
-    public List<String> getHostDevicesTexts() {
-        if (hostDevicesText == null) {
-            return Collections.emptyList();
-        }
-        return hostDevicesText;
+    public String getXmlConfig() {
+        return xmlConfig;
+    }
+
+    public boolean getIsAttach() {
+        return isAttach;
     }
 
     public boolean isSuccessMessage() {
