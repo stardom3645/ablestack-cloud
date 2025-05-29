@@ -3383,6 +3383,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if(!isGuestS390x()) {
             guest.setBootOrder(GuestDef.BootOrder.CDROM);
         }
+        guest.setBootOrder(GuestDef.BootOrder.CDROM);
         return guest;
     }
 
