@@ -19,20 +19,19 @@
 
 package com.cloud.agent.api;
 
-import java.util.List;
+public class UpdateHostUsbDeviceCommand extends Command {
 
-public class ListHostDeviceCommand extends Command {
+    private String vmName;
+    private String xmlConfig;
+    private boolean isAttach;
 
-    private List<String> hostDevicesName;
-    private List<String> hostDevicesText;
-    private Long id;
-
-    public ListHostDeviceCommand() {
+    public UpdateHostUsbDeviceCommand() {
     }
 
-    public ListHostDeviceCommand(Long id) {
-        super();
-        this.id = id;
+    public UpdateHostUsbDeviceCommand(String vmName, String xmlConfig, boolean isAttach) {
+        this.vmName = vmName;
+        this.xmlConfig = xmlConfig;
+        this.isAttach = isAttach;
     }
 
     @Override
@@ -40,19 +39,27 @@ public class ListHostDeviceCommand extends Command {
         return false;
     }
 
-    public List<String> getHostDevicesName() {
-        return hostDevicesName;
+    public String getVmName() {
+        return vmName;
     }
 
-    public List<String> getHostDevicesText() {
-        return hostDevicesText;
+    public String getXmlConfig() {
+        return xmlConfig;
     }
 
-    public Long getId() {
-        return id;
+    public boolean getIsAttach() {
+        return isAttach;
     }
 
-    public void setHostDevicesName(List<String> hostDevicesName) {
-        this.hostDevicesName = hostDevicesName;
+    public void setVmName(String vmName) {
+        this.vmName = vmName;
+    }
+
+    public void setXmlConfig(String xmlConfig) {
+        this.xmlConfig = xmlConfig;
+    }
+
+    public void setIsAttach(boolean isAttach) {
+        this.isAttach = isAttach;
     }
 }
