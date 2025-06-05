@@ -469,7 +469,7 @@
         <span>  {{ getDuration(record.startdate, record.enddate) }} </span>
       </template>
       <template v-if="column.key === 'kvdoenable'">
-        <status :text="record.kvdoenable ? record.kvdoenable.toString() : 'false'" displayText/>
+        <status :text="record.kvdoenable ? 'enabled' : 'disabled'" displayText/>
       </template>
       <template v-if="column.key === 'usedfsbytes'">
         <span v-if="text">
