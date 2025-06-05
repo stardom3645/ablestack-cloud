@@ -148,8 +148,8 @@ export default {
           case 'backingup':
             state = this.$t('state.backingup')
             break
-          case 'deytroying':
-            state = this.$t('state.deytroying')
+          case 'destroying':
+            state = this.$t('state.destroying')
             break
         }
         return state.charAt(0).toUpperCase() + state.slice(1)
@@ -205,7 +205,7 @@ export default {
         case 'prepareformaintenance':
         case 'snapshotting':
         case 'backingup':
-        case 'deytroying':
+        case 'destroying':
           status = 'processing'
           break
         case 'allocated':
