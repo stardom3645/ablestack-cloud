@@ -147,6 +147,15 @@ export default {
           case 'destroying':
             state = this.$t('state.destroying')
             break
+          case 'scheduled':
+            state = this.$t('state.scheduled')
+            break
+          case 'started':
+            state = this.$t('state.started')
+            break
+          case 'completed':
+            state = this.$t('state.completed')
+            break
         }
         return state.charAt(0).toUpperCase() + state.slice(1)
       }
@@ -216,6 +225,7 @@ export default {
         case 'unsecure':
         case 'warning':
         case 'free':
+        case 'scheduled':
           status = 'warning'
           break
       }
@@ -224,6 +234,8 @@ export default {
     getStatusColor (state) {
       switch (state.toLowerCase()) {
         case 'scheduled':
+          return 'orange'
+        case 'started':
           return 'blue'
         case 'reserved':
           return 'orange'
