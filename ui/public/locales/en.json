@@ -4794,5 +4794,7 @@
 "state.snapshotting" : "Snapshotting",
 "state.backedup" : "Backed Up",
 "state.backingup" : "Backing Up",
-"state.deytroying" : "Deleting"
+"state.deytroying" : "Deleting",
+"state.scheduled" : "Scheduled",
+"state.started" : "Started"
 }
