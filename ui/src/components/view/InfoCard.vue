@@ -253,11 +253,16 @@
         <div class="resource-detail-item" v-if="resource.ostypename && resource.ostypeid">
           <div class="resource-detail-item__label">{{ $t('label.ostypename') }}</div>
           <div class="resource-detail-item__details">
-            <span v-if="resource.icon && resource.icon.base64image || images.template || images.iso">
-              <resource-icon :image="getImage(images.template || images.iso)" size="1x" style="margin-right: 5px"/>
+            <span v-if="images.guestoscategory">
+              <resource-icon :image="images.guestoscategory" size="1x" style="margin-right: 5px"/>
             </span>
             <os-logo v-else :osId="resource.ostypeid" :osName="resource.ostypename" size="lg" style="margin-left: -1px" />
-            <span style="margin-left: 8px">{{ resource.ostypename }}</span>
+            <span style="margin-left: 8px">
+              <router-link v-if="$router.resolve('/guestos/' + resource.ostypeid).matched[0].redirect !== '/exception/404'" :to="{ path: '/guestos/' + resource.ostypeid }">
+                {{ resource.ostypename }}
+              </router-link>
+              <span v-else>{{ resource.ostypename }}</span>
+            </span>
           </div>
         </div>
         <div class="resource-detail-item" v-if="resource.ipaddress">
@@ -1088,6 +1093,7 @@ import UploadResourceIcon from '@/components/view/UploadResourceIcon'
 import eventBus from '@/config/eventBus'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import ResourceLabel from '@/components/widgets/ResourceLabel'
+import ImageDeployInstanceButton from '@/components/view/ImageDeployInstanceButton.vue'
 
 export default {
   name: 'InfoCard',
@@ -1099,7 +1105,8 @@ export default {
     TooltipButton,
     UploadResourceIcon,
     ResourceIcon,
-    ResourceLabel
+    ResourceLabel,
+    ImageDeployInstanceButton
   },
   props: {
     resource: {
@@ -1151,7 +1158,8 @@ export default {
         network: ''
       },
       newResource: {},
-      validLinks: {}
+      validLinks: {},
+      osCategoryId: null
     }
   },
   watch: {
@@ -1175,9 +1183,6 @@ export default {
         }
         this.updateResourceAdditionalData()
       }
-    },
-    async templateIcon () {
-      this.getIcons()
     }
   },
   created () {
@@ -1207,22 +1212,31 @@ export default {
       }
       return [this.resource.keypairs.toString()]
     },
-    templateIcon () {
-      return this.resource.templateid
+    isResourceShowingParentResourceIcon () {
+      const resourcesShowParentResourceIcon = ['guestos']
+      const routeName = this.$route.path.split('/')?.[1] || null
+      if (!routeName) {
+        return false
+      }
+      return resourcesShowParentResourceIcon.includes(routeName)
     },
     resourceIcon () {
-      if (this.$showIcon()) {
-        if (this.resource?.icon?.base64image) {
-          return this.resource.icon.base64image
-        }
-        if (this.resource?.resourceIcon?.base64image) {
-          return this.resource.resourceIcon.base64image
-        }
+      if (!this.$showIcon() && !this.isResourceShowingParentResourceIcon) {
+        return null
       }
-      return null
+      if (this.resource?.icon?.base64image) {
+        return this.resource.icon.base64image
+      }
+      if (this.resource?.resourceIcon?.base64image) {
+        return this.resource.resourceIcon.base64image
+      }
+      return this.images.template || this.images.iso || this.images.guestoscategory || null
     },
     routeFromResourceType () {
       return this.$getRouteFromResourceType(this.resource.resourcetype)
+    },
+    isModernImageSelection () {
+      return this.$config.imageSelectionInterface === undefined || this.$config.imageSelectionInterface === 'modern'
     }
   },
   methods: {
@@ -1237,6 +1251,15 @@ export default {
           this.getTags()
         }
       }
+      const osId = this.resource.guestosid || this.resource.ostypeid
+      if (osId && 'listOsTypes' in this.$store.getters.apis) {
+        api('listOsTypes', { id: osId }).then(json => {
+          this.osCategoryId = json?.listostypesresponse?.ostype?.[0]?.oscategoryid || null
+          if (this.osCategoryId) {
+            this.fetchResourceIcon(this.osCategoryId, 'guestoscategory')
+          }
+        })
+      }
       this.getIcons()
     },
     showUploadModal (show) {
@@ -1248,47 +1271,37 @@ export default {
         this.showUpload = false
       }
     },
-    getImage (image) {
-      return (image || this.resource?.icon?.base64image)
-    },
-    async getIcons () {
-      this.images = {
-        zone: '',
-        template: '',
-        iso: '',
-        rbdimages: '',
-        domain: '',
-        account: '',
-        project: '',
-        vpc: '',
-        network: ''
-      }
+    getIcons () {
+      this.images = {}
       if (this.resource.templateid) {
-        await this.fetchResourceIcon(this.resource.templateid, 'template')
+        this.fetchResourceIcon(this.resource.templateid, 'template')
       }
       if (this.resource.isoid) {
-        await this.fetchResourceIcon(this.resource.isoid, 'iso')
+        this.fetchResourceIcon(this.resource.isoid, 'iso')
       }
       if (this.resource.volumeId) {
         await this.fetchResourceIcon(this.resource.volumeId, 'volume')
       }
       if (this.resource.zoneid) {
-        await this.fetchResourceIcon(this.resource.zoneid, 'zone')
+        this.fetchResourceIcon(this.resource.zoneid, 'zone')
       }
       if (this.resource.domainid) {
-        await this.fetchResourceIcon(this.resource.domainid, 'domain')
+        this.fetchResourceIcon(this.resource.domainid, 'domain')
       }
       if (this.resource.account) {
-        await this.fetchAccount()
+        this.fetchAccount()
       }
       if (this.resource.projectid) {
-        await this.fetchResourceIcon(this.resource.projectid, 'project')
+        this.fetchResourceIcon(this.resource.projectid, 'project')
       }
       if (this.resource.vpcid) {
-        await this.fetchResourceIcon(this.resource.vpcid, 'vpc')
+        this.fetchResourceIcon(this.resource.vpcid, 'vpc')
       }
       if (this.resource.networkid) {
-        await this.fetchResourceIcon(this.resource.networkid, 'network')
+        this.fetchResourceIcon(this.resource.networkid, 'network')
+      }
+      if (this.resource.oscategoryid) {
+        this.fetchResourceIcon(this.resource.oscategoryid, 'guestoscategory')
       }
     },
     fetchAccount () {
@@ -1313,19 +1326,14 @@ export default {
             resourcetype: type
           }).then(json => {
             const response = json.listresourceiconresponse.icon || []
-            if (response?.[0]) {
-              this.images[type] = response[0].base64image
-              resolve(this.images)
-            } else {
-              this.images[type] = ''
-              resolve(this.images)
-            }
+            this.images[type] = response?.[0]?.base64image || null
+            resolve(this.images)
           }).catch(error => {
             reject(error)
           })
         })
       } else {
-        this.images.type = ''
+        this.images.type = null
       }
     },
     setData () {
@@ -1458,7 +1466,6 @@ export default {
           query[item.param] = this.resource.id
         }
       }
-
       return query
     }
   }
