@@ -31,8 +31,8 @@
                     <edit-outlined class="upload-icon"/>
                   </div>
                   <slot name="avatar">
-                    <span v-if="(resource.icon && resource.icon.base64image || images.template || images.iso || resourceIcon) && !['router', 'systemvm', 'volume'].includes($route.path.split('/')[1])">
-                      <resource-icon :image="getImage(resource.icon && resource.icon.base64image || images.template || images.iso || resourceIcon)" size="4x" style="margin-right: 5px"/>
+                    <span v-if="resourceIcon && !['router', 'systemvm', 'volume'].includes($route.path.split('/')[1])">
+                      <resource-icon :image="resourceIcon" size="4x" style="margin-right: 5px"/>
                     </span>
                     <span v-else>
                       <os-logo v-if="resource.ostypeid || resource.ostypename || ['guestoscategory'].includes($route.path.split('/')[1])" :osId="resource.ostypeid" :osName="resource.ostypename || resource.name" size="3x" @update-osname="setResourceOsType"/>
@@ -110,76 +110,6 @@
                   </a-tooltip>
                 </div>
               </slot>
-            </div>
-            <slot name="name">
-              <div v-if="['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(resource.name)">{{ $t(resource.name.toLowerCase()) }}</div>
-              <div v-else-if="['quotasummary'].includes($route.path.split('/')[1]) && resource.account">
-                <h4 class="name">
-                  {{ resource.account }}
-                </h4>
-              </div>
-              <div v-else>
-                <h4 class="name">
-                  {{ name }}
-                </h4>
-              </div>
-            </slot>
-          </div>
-          <slot name="actions">
-            <div class="tags">
-              <a-tag v-if="resource.instancename">
-                {{ resource.instancename }}
-              </a-tag>
-              <a-tag v-if="resource.type">
-                <span v-if="['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(resource.type)">{{ $t(resource.type.toLowerCase()) }}</span>
-                <span v-else>
-                  {{ resource.type }}
-                </span>
-              </a-tag>
-              <a-tag v-if="resource.issourcenat">
-                {{ $t('label.issourcenat') }}
-              </a-tag>
-              <a-tag v-if="resource.broadcasturi">
-                {{ resource.broadcasturi }}
-              </a-tag>
-              <a-tag v-if="resource.arch">
-                {{ resource.arch }}
-              </a-tag>
-              <a-tag v-if="resource.hypervisor">
-                {{ resource.hypervisor }}
-              </a-tag>
-              <a-tag v-if="resource.haenable">
-                {{ $t('label.haenable') }}
-              </a-tag>
-              <a-tag v-if="resource.isdynamicallyscalable">
-                {{ $t('label.isdynamicallyscalable') }}
-              </a-tag>
-              <a-tag v-if="resource.scope">
-                {{ resource.scope }}
-              </a-tag>
-              <a-tag v-if="resource.version">
-                {{ resource.version }}
-              </a-tag>
-              <a-tag v-if="resource.internetprotocol && ['IPv6', 'DualStack'].includes(resource.internetprotocol)">
-                {{ resource.internetprotocol ? $t('label.ip.v4.v6') : resource.internetprotocol }}
-              </a-tag>
-              <a-tag v-if="resource.archived" :color="this.$config.theme['@warning-color']">
-                {{ $t('label.archived') }}
-              </a-tag>
-              <a-tag v-if="resource.leaseduration != undefined">
-                {{ $t('label.remainingdays') + ': ' + (resource.leaseduration > -1 ? resource.leaseduration + 'd' : 'Over') }}
-              </a-tag>
-              <a-tooltip placement="right" >
-                <template #title>
-                  <span>{{ $t('label.view.console') }}</span>
-                </template>
-                <console
-                  style="margin-top: -5px;"
-                  :resource="resource"
-                  size="default"
-                  v-if="resource.id"
-                />
-              </a-tooltip>
             </div>
           </slot>
         </div>
@@ -718,7 +648,7 @@
               <div class="resource-detail-item__label">{{ $t('label.vpcname') }}</div>
               <div class="resource-detail-item__details">
                 <span v-if="images.vpc">
-                  <resource-icon :image="getImage(images.vpc)" size="1x" style="margin-right: 5px"/>
+                  <resource-icon :image="images.vpc" size="1x" style="margin-right: 5px"/>
                 </span>
                 <deployment-unit-outlined v-else />
                 <router-link :to="{ path: '/vpc/' + resource.vpcid }">{{ resource.vpcname || resource.vpcid }}</router-link>
@@ -729,7 +659,7 @@
               <div class="resource-detail-item__label">{{ $t('label.aclid') }}</div>
               <div class="resource-detail-item__details">
                 <span v-if="images.acl">
-                  <resource-icon :image="getImage(images.acl)" size="1x" style="margin-right: 5px"/>
+                  <resource-icon :image="images.acl" size="1x" style="margin-right: 5px"/>
                 </span>
                 <deployment-unit-outlined v-else />
                 <router-link :to="{ path: '/acllist/' + resource.aclid }">{{ resource.aclname || resource.aclid }}</router-link>
@@ -750,7 +680,7 @@
             <div class="resource-detail-item" v-if="resource.templateid">
               <div class="resource-detail-item__label">{{ resource.templateformat === 'ISO'? $t('label.iso') : $t('label.templatename') }}</div>
               <div class="resource-detail-item__details">
-                <resource-icon v-if="resource.icon" :image="getImage(resource.icon.base64image)" size="1x" style="margin-right: 5px"/>
+                <resource-icon v-if="images.template || images.guestoscategory" :image="images.template || images.guestoscategory" size="1x" style="margin-right: 5px"/>
                 <SaveOutlined v-else />
                 <router-link :to="{ path: (resource.templateformat === 'ISO' ? '/iso/' : '/template/') + resource.templateid }">{{ resource.templatedisplaytext || resource.templatename || resource.templateid }} </router-link>
               </div>
@@ -758,7 +688,7 @@
             <div class="resource-detail-item" v-if="resource.isoid">
               <div class="resource-detail-item__label">{{ $t('label.isoname') }}</div>
               <div class="resource-detail-item__details">
-                <resource-icon v-if="resource.icon" :image="getImage(resource.icon.base64image)" size="1x" style="margin-right: 5px"/>
+                <resource-icon v-if="images.iso || (resource.isoid === resource.templateid && images.guestoscategory)" :image="images.iso || images.guestoscategory" size="1x" style="margin-right: 5px"/>
                 <UsbOutlined v-else />
                   <router-link :to="{ path: '/iso/' + resource.isoid }">{{ resource.isodisplaytext || resource.isoname || resource.isoid }} </router-link>
               </div>
@@ -849,7 +779,7 @@
               <div class="resource-detail-item__label">{{ $t('label.zone') }}</div>
               <div class="resource-detail-item__details">
                 <span v-if="images.zone">
-                  <resource-icon :image="getImage(images.zone)" size="1x" style="margin-right: 5px"/>
+                  <resource-icon :image="images.zone" size="1x" style="margin-right: 5px"/>
                 </span>
                 <global-outlined v-else />
                 <router-link v-if="!isStatic && $router.resolve('/zone/' + resource.zoneid).matched[0].redirect !== '/exception/404'" :to="{ path: '/zone/' + resource.zoneid }">{{ resource.zone || resource.zonename || resource.zoneid }}</router-link>
@@ -884,7 +814,7 @@
               <div class="resource-detail-item__label">{{ $t('label.account') }}</div>
               <div class="resource-detail-item__details">
                 <span v-if="images.account">
-                  <resource-icon :image="getImage(images.account)" size="1x" style="margin-right: 5px"/>
+                  <resource-icon :image="images.account" size="1x" style="margin-right: 5px"/>
                 </span>
                 <user-outlined v-else />
                 <router-link v-if="!isStatic && $store.getters.userInfo.roletype !== 'User'" :to="{ path: '/account', query: { name: resource.account, domainid: resource.domainid } }">{{ resource.account }}</router-link>
@@ -902,7 +832,7 @@
             <div class="resource-detail-item" v-if="resource.domainid">
               <div class="resource-detail-item__label">{{ $t('label.domain') }}</div>
               <div class="resource-detail-item__details">
-                <resource-icon v-if="images.domain" :image="getImage(images.domain)" size="1x" style="margin-right: 5px"/>
+                <resource-icon v-if="images.domain" :image="images.domain" size="1x" style="margin-right: 5px"/>
                 <block-outlined v-else />
                 <router-link v-if="!isStatic && $store.getters.userInfo.roletype !== 'User'" :to="{ path: '/domain/' + resource.domainid, query: { tab: 'details'}  }">{{ resource.domain || resource.domainid }}</router-link>
                 <span v-else>{{ resource.domain || resource.domainid }}</span>
@@ -981,6 +911,10 @@
                 </a-button>
               </router-link>
             </div>
+            <image-deploy-instance-button
+              v-if="'deployVirtualMachine' in $store.getters.apis && ['template', 'iso'].includes($route.meta.name)"
+              :resource="resource"
+              :osCategoryId="osCategoryId" />
           </div>
 
           <div class="account-center-tags" v-if="showKeys || resource.apikeyaccess">
@@ -1093,7 +1027,7 @@ import UploadResourceIcon from '@/components/view/UploadResourceIcon'
 import eventBus from '@/config/eventBus'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import ResourceLabel from '@/components/widgets/ResourceLabel'
-import ImageDeployInstanceButton from '@/components/view/ImageDeployInstanceButton.vue'
+import ImageDeployInstanceButton from '@/components/view/ImageDeployInstanceButton'
 
 export default {
   name: 'InfoCard',
@@ -1234,9 +1168,6 @@ export default {
     },
     routeFromResourceType () {
       return this.$getRouteFromResourceType(this.resource.resourcetype)
-    },
-    isModernImageSelection () {
-      return this.$config.imageSelectionInterface === undefined || this.$config.imageSelectionInterface === 'modern'
     }
   },
   methods: {
@@ -1251,6 +1182,10 @@ export default {
           this.getTags()
         }
       }
+      this.fetchOsCategoryAndIcon()
+      this.getIcons()
+    },
+    fetchOsCategoryAndIcon () {
       const osId = this.resource.guestosid || this.resource.ostypeid
       if (osId && 'listOsTypes' in this.$store.getters.apis) {
         api('listOsTypes', { id: osId }).then(json => {
@@ -1260,7 +1195,6 @@ export default {
           }
         })
       }
-      this.getIcons()
     },
     showUploadModal (show) {
       if (show) {
@@ -1449,9 +1383,6 @@ export default {
       } else {
         if (item.name === 'template') {
           query.templatefilter = 'self'
-          query.filter = 'self'
-        } else if (item.name === 'iso') {
-          query.isofilter = 'self'
           query.filter = 'self'
         }
 
