@@ -393,8 +393,6 @@ export default {
     }
   },
   created () {
-    console.log('items :>> ', this.items)
-    console.log('resource :>> ', this.resource)
     this.dataResource = this.resource
     this.dedicatedSectionActive = this.dedicatedRoutes.includes(this.$route.meta.name)
     if (['host'].includes(this.$route.meta.name)) {
