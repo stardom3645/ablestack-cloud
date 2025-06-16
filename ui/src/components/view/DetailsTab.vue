@@ -167,6 +167,13 @@
           <div v-else>{{ dataResource[item] }}</div>
         </div>
       </a-list-item>
+      <a-list-item v-else-if="$route.meta.name === 'cluster' && item === 'haenable'">
+        <div>
+          <strong>{{ $t('label.ha.enable') }}</strong>
+          <br/>
+          <div>{{ dataResource.resourcedetails.resourceHAEnabled }}</div>
+        </div>
+      </a-list-item>
       <a-list-item v-else-if="item === 'ip6address' && ipV6Address && ipV6Address.length > 0">
         <div>
           <strong>{{ $t('label.' + String(item).toLowerCase()) }}</strong>
@@ -386,6 +393,8 @@ export default {
     }
   },
   created () {
+    console.log('items :>> ', this.items)
+    console.log('resource :>> ', this.resource)
     this.dataResource = this.resource
     this.dedicatedSectionActive = this.dedicatedRoutes.includes(this.$route.meta.name)
     if (['host'].includes(this.$route.meta.name)) {
@@ -427,6 +436,7 @@ export default {
     fetchDetails () {
       let details = this.$route.meta.details
 
+      console.log('details :>> ', details)
       if (!details) {
         return
       }
