@@ -136,7 +136,7 @@
             <status class="status" :text="resource.resourcestate" displayText/>
           </div>
         </div>
-        <div class="resource-detail-item" v-if="$route.meta.name === 'cluster' && resource.resourcedetails">
+        <div class="resource-detail-item" v-if="['cluster', 'zone'].includes($route.meta.name) && resource.resourcedetails">
           <div class="resource-detail-item__label">{{ $t('label.haenable') }}</div>
           <div class="resource-detail-item__details">
             <status class="status" :text="resource.resourcedetails.resourceHAEnabled === 'true' ? 'enabled' : 'disabled'" displayText/>
