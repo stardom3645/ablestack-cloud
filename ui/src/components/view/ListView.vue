@@ -476,7 +476,7 @@
           {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
         </span>
       </template>
-      <template v-if="$route.meta.name === 'cluster' && column.key === 'haenable'">
+      <template v-if="['cluster', 'zone'].includes($route.meta.name) && column.key === 'haenable'">
         <status :text="record.resourcedetails.resourceHAEnabled === 'true' ? 'enabled' : 'disabled'" displayText/>
       </template>
       <template v-if="column.key === 'hastate'">
