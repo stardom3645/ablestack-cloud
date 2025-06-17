@@ -167,7 +167,7 @@
           <div v-else>{{ dataResource[item] }}</div>
         </div>
       </a-list-item>
-      <a-list-item v-else-if="$route.meta.name === 'cluster' && item === 'haenable'">
+      <a-list-item v-else-if="['cluster', 'zone'].includes($route.meta.name) && item === 'haenable'">
         <div>
           <strong>{{ $t('label.ha.enable') }}</strong>
           <br/>
