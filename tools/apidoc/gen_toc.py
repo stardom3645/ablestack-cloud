@@ -301,6 +301,8 @@ known_categories = {
     'listDomains.xml': 'Domain',
     'listDomainChildren.xml': 'Domain',
     'licenseCheck.xml': 'License',
+    'addNodesToKubernetesCluster': 'Kubernetes Service',
+    'removeNodesFromKubernetesCluster': 'Kubernetes Service',
     'configureStorageAccess': 'Storage Access Groups',
     'listStorageAccessGroups': 'Storage Access Groups'
 }
