@@ -19,18 +19,6 @@ package com.cloud.configuration;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.VlanVO;
-import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.cloud.exception.InvalidParameterValueException;
-import com.cloud.storage.StorageManager;
-import com.cloud.user.AccountManagerImpl;
-import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.net.NetUtils;
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.framework.config.ConfigDepot;
-import org.apache.cloudstack.framework.config.ConfigKey;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.DataCenterIpAddressDao;
 import com.cloud.dc.dao.DedicatedResourceDao;
@@ -57,10 +45,12 @@ import com.cloud.storage.StorageManager;
 import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
+import com.cloud.user.AccountManagerImpl;
 import com.cloud.user.User;
 import com.cloud.utils.Pair;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.db.SearchCriteria;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.dao.VMInstanceDao;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
@@ -69,6 +59,7 @@ import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.UpdateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.zone.DeleteZoneCmd;
 import org.apache.cloudstack.config.Configuration;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.ZoneScope;
 import org.apache.cloudstack.framework.config.ConfigDepot;
 import org.apache.cloudstack.framework.config.ConfigKey;
@@ -204,6 +195,7 @@ public class ConfigurationManagerImplTest {
         configurationManagerImplSpy.populateConfigValuesForValidationSet();
         configurationManagerImplSpy.weightBasedParametersForValidation();
         configurationManagerImplSpy.overProvisioningFactorsForValidation();
+        configurationManagerImplSpy.populateConfigKeysAllowedOnlyForDefaultAdmin();
         ReflectionTestUtils.setField(configurationManagerImplSpy, "templateZoneDao", vmTemplateZoneDao);
         ReflectionTestUtils.setField(configurationManagerImplSpy, "annotationDao", annotationDao);
 
@@ -895,6 +887,9 @@ public class ConfigurationManagerImplTest {
 
         Pair<Configuration, String> result = configurationManagerImplSpy.resetConfiguration(cmd);
         Assert.assertEquals(".85", result.second());
+    }
+
+    @Test
     public void testValidateConfigurationAllowedOnlyForDefaultAdmin_withAdminUser_shouldNotThrowException() {
         CallContext callContext = mock(CallContext.class);
         when(callContext.getCallingUserId()).thenReturn(User.UID_ADMIN);
@@ -910,7 +905,7 @@ public class ConfigurationManagerImplTest {
         when(callContext.getCallingUserId()).thenReturn(123L);
         try (MockedStatic<CallContext> ignored = Mockito.mockStatic(CallContext.class)) {
             when(CallContext.current()).thenReturn(callContext);
-            assertThrows(CloudRuntimeException.class, () ->
+            Assert.assertThrows(CloudRuntimeException.class, () ->
                     configurationManagerImplSpy.validateConfigurationAllowedOnlyForDefaultAdmin(AccountManagerImpl.allowOperationsOnUsersInSameAccount.key(), "Admin")
             );
         }

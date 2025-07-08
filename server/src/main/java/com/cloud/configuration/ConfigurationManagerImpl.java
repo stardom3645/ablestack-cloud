@@ -50,15 +50,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import com.cloud.resource.ResourceManager;
-
-import com.cloud.hypervisor.HypervisorGuru;
-import com.cloud.user.AccountManagerImpl;
-import com.cloud.utils.crypt.DBEncryptionUtil;
-import com.cloud.host.HostTagVO;
-import com.cloud.storage.StoragePoolTagVO;
-import com.cloud.storage.VolumeApiServiceImpl;
-import com.googlecode.ipv6.IPv6Address;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.affinity.AffinityGroup;
@@ -264,6 +255,7 @@ import com.cloud.org.Grouping;
 import com.cloud.org.Grouping.AllocationState;
 import com.cloud.projects.Project;
 import com.cloud.projects.ProjectManager;
+import com.cloud.resource.ResourceManager;
 import com.cloud.server.ConfigurationServer;
 import com.cloud.server.ManagementService;
 import com.cloud.service.ServiceOfferingDetailsVO;
@@ -287,6 +279,7 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountDetailVO;
 import com.cloud.user.AccountDetailsDao;
 import com.cloud.user.AccountManager;
+import com.cloud.user.AccountManagerImpl;
 import com.cloud.user.AccountVO;
 import com.cloud.user.ResourceLimitService;
 import com.cloud.user.User;
@@ -496,10 +489,10 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
     private long _defaultPageSize = Long.parseLong(Config.DefaultPageSize.getDefaultValue());
     private static final String DOMAIN_NAME_PATTERN = "^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{1,63}$";
-    private Set<String> configValuesForValidation = new HashSet<String>();
-    private Set<String> configKeysAllowedOnlyForDefaultAdmin = new HashSet<String>();
-    private Set<String> weightBasedParametersForValidation = new HashSet<String>();
-    private Set<String> overprovisioningFactorsForValidation = new HashSet<String>();
+    private Set<String> configValuesForValidation = new HashSet<>();
+    private Set<String> configKeysAllowedOnlyForDefaultAdmin = new HashSet<>();
+    private Set<String> weightBasedParametersForValidation = new HashSet<>();
+    private Set<String> overprovisioningFactorsForValidation = new HashSet<>();
 
     public static final ConfigKey<Boolean> SystemVMUseLocalStorage = new ConfigKey<Boolean>(Boolean.class, "system.vm.use.local.storage", "Advanced", "false",
             "Indicates whether to use local storage pools or shared storage pools for system VMs.", false, ConfigKey.Scope.Zone, null);
@@ -1331,6 +1324,33 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
 
         return validateValueRange(name, value, type, configuration);
+    }
+
+    protected void validateConfigurationAllowedOnlyForDefaultAdmin(String configName, String value) {
+        if (configKeysAllowedOnlyForDefaultAdmin.contains(configName)) {
+            final Long userId = CallContext.current().getCallingUserId();
+            if (userId != User.UID_ADMIN) {
+                throw new CloudRuntimeException("Only default admin is allowed to change this setting");
+            }
+
+            if (AccountManagerImpl.listOfRoleTypesAllowedForOperationsOfSameRoleType.key().equals(configName)) {
+                if (value != null && !value.isBlank()) {
+                    List<String> validRoleTypes = Arrays.stream(RoleType.values())
+                            .map(Enum::name)
+                            .collect(Collectors.toList());
+
+                    boolean allValid = Arrays.stream(value.split(","))
+                            .map(String::trim)
+                            .allMatch(validRoleTypes::contains);
+
+                    if (!allValid) {
+                        throw new CloudRuntimeException("Invalid role types provided in value");
+                    }
+                } else {
+                    throw new CloudRuntimeException("Value for role types must not be empty");
+                }
+            }
+        }
     }
 
     /**
@@ -3439,15 +3459,16 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     }
 
     protected ServiceOfferingVO createServiceOffering(final long userId, final boolean isSystem, final VirtualMachine.Type vmType,
-            final String name, final Integer cpu, final Integer ramSize, final Integer speed, final String displayText, final String provisioningType, final boolean localStorageRequired,
-            final boolean offerHA, final boolean limitResourceUse, final boolean volatileVm, String tags, final List<Long> domainIds, List<Long> zoneIds, final String hostTag,
-            final Integer networkRate, final String deploymentPlanner, final Map<String, String> details, Long rootDiskSizeInGiB, final Boolean isCustomizedIops, Long minIops, Long maxIops,
-            Long bytesReadRate, Long bytesReadRateMax, Long bytesReadRateMaxLength,
-            Long bytesWriteRate, Long bytesWriteRateMax, Long bytesWriteRateMaxLength,
-            Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
-            Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
-            final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID, final boolean dynamicScalingEnabled, final Long diskOfferingId,
-            final boolean diskOfferingStrictness, final boolean isCustomized, final boolean encryptRoot, final boolean shareable, final boolean kvdoEnable, final boolean purgeResources, Integer leaseDuration, VMLeaseManager.ExpiryAction leaseExpiryAction) {
+                                                      final String name, final Integer cpu, final Integer ramSize, final Integer speed, final String displayText, final String provisioningType, final boolean localStorageRequired,
+                                                      final boolean offerHA, final boolean limitResourceUse, final boolean volatileVm, String tags, final List<Long> domainIds, List<Long> zoneIds, final String hostTag,
+                                                      final Integer networkRate, final String deploymentPlanner, final Map<String, String> details, Long rootDiskSizeInGiB, final Boolean isCustomizedIops, Long minIops, Long maxIops,
+                                                      Long bytesReadRate, Long bytesReadRateMax, Long bytesReadRateMaxLength,
+                                                      Long bytesWriteRate, Long bytesWriteRateMax, Long bytesWriteRateMaxLength,
+                                                      Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
+                                                      Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
+                                                      final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID,
+                                                      final boolean dynamicScalingEnabled, final Long diskOfferingId, final boolean diskOfferingStrictness,
+                                                      final boolean isCustomized, final boolean encryptRoot, final boolean shareable, final boolean kvdoEnable, final boolean purgeResources, Integer leaseDuration, VMLeaseManager.ExpiryAction leaseExpiryAction) {
 
         // Filter child domains when both parent and child domains are present
         List<Long> filteredDomainIds = filterChildSubDomains(domainIds);
@@ -7321,7 +7342,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             final SearchCriteria<NetworkOfferingJoinVO> ssc = networkOfferingJoinDao.createSearchCriteria();
             ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -8283,7 +8304,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 BYTES_MAX_READ_LENGTH, BYTES_MAX_WRITE_LENGTH, ADD_HOST_ON_SERVICE_RESTART_KVM, SET_HOST_DOWN_TO_MAINTENANCE,
                 VM_SERVICE_OFFERING_MAX_CPU_CORES, VM_SERVICE_OFFERING_MAX_RAM_SIZE, MIGRATE_VM_ACROSS_CLUSTERS,
                 ENABLE_ACCOUNT_SETTINGS_FOR_DOMAIN, ENABLE_DOMAIN_SETTINGS_FOR_CHILD_DOMAIN,
-                ALLOW_DOMAIN_ADMINS_TO_CREATE_TAGGED_OFFERINGS, DELETE_QUERY_BATCH_SIZE, AllowNonRFC1918CompliantIPs, EventRecentMinutes
+                ALLOW_DOMAIN_ADMINS_TO_CREATE_TAGGED_OFFERINGS, DELETE_QUERY_BATCH_SIZE, AllowNonRFC1918CompliantIPs
         };
     }
 

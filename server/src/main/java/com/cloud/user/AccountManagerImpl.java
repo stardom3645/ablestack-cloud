@@ -397,8 +397,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             "Determines whether API (api-key/secret-key) access is allowed or not. Editable only by Root Admin.",
             true,
             ConfigKey.Scope.Domain);
-            
-    static ConfigKey<Boolean> userAllowMultipleAccounts = new ConfigKey<>("Advanced",
+
+            static ConfigKey<Boolean> userAllowMultipleAccounts = new ConfigKey<>("Advanced",
             Boolean.class,
             "user.allow.multiple.accounts",
             "false",
@@ -918,7 +918,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                     ComponentContext.getDelegateComponentOfType(KubernetesServiceHelper.class);
             kubernetesServiceHelper.cleanupForAccount(account);
         } catch (NoSuchBeanDefinitionException ignored) {
-            s_logger.debug("No KubernetesServiceHelper bean found");
+            logger.debug("No KubernetesServiceHelper bean found");
         }
     }
 
@@ -1580,7 +1580,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
     @Override
     public void verifyCallerPrivilegeForUserOrAccountOperations(Account userAccount) {
-        s_logger.debug(String.format("Verifying whether the caller has the correct privileges based on the user's role type and API permissions: %s", userAccount));
+        logger.debug(String.format("Verifying whether the caller has the correct privileges based on the user's role type and API permissions: %s", userAccount));
 
         if (!Account.Type.PROJECT.equals(userAccount.getType())) {
             checkCallerRoleTypeAllowedForUserOrAccountOperations(userAccount, null);
@@ -1589,7 +1589,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     }
 
     protected void verifyCallerPrivilegeForUserOrAccountOperations(User user) {
-        s_logger.debug(String.format("Verifying whether the caller has the correct privileges based on the user's role type and API permissions: %s", user));
+        logger.debug(String.format("Verifying whether the caller has the correct privileges based on the user's role type and API permissions: %s", user));
 
         Account userAccount = getAccount(user.getAccountId());
         if (!Account.Type.PROJECT.equals(userAccount.getType())) {
@@ -1611,13 +1611,13 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
         boolean isCallerSystemOrDefaultAdmin = callingAccount.getId() == Account.ACCOUNT_ID_SYSTEM || callingAccount.getId() == Account.ACCOUNT_ID_ADMIN;
         if (isCallerSystemOrDefaultAdmin) {
-            s_logger.trace(String.format("Admin account [%s, %s] performing this operation for user account [%s, %s] ", callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
+            logger.trace(String.format("Admin account [%s, %s] performing this operation for user account [%s, %s] ", callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
         } else if (callerRoleType.getId() < userAccountRoleType.getId()) {
-            s_logger.trace(String.format("The calling account [%s] has a higher role type than the user account [%s]",
+            logger.trace(String.format("The calling account [%s] has a higher role type than the user account [%s]",
                     callingAccount, userAccount));
         } else if (callerRoleType.getId() == userAccountRoleType.getId()) {
             if (callingAccount.getId() != userAccount.getId()) {
-                String allowedRoleTypes = listOfRoleTypesAllowedForOperationsOfSameRoleType.valueInDomain(callingAccount.getDomainId());
+                String allowedRoleTypes = listOfRoleTypesAllowedForOperationsOfSameRoleType.valueInScope(ConfigKey.Scope.Domain, callingAccount.getDomainId());
                 boolean updateAllowed = allowedRoleTypes != null &&
                         Arrays.stream(allowedRoleTypes.split(","))
                                 .map(String::trim)
@@ -1625,15 +1625,15 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 if (BooleanUtils.isFalse(updateAllowed)) {
                     String errMsg = String.format("The calling account [%s, %s] is not allowed to perform this operation on users from other accounts " +
                             "of the same role type within the domain", callingAccount.getName(), callingAccount.getUuid());
-                    s_logger.error(errMsg);
+                    logger.error(errMsg);
                     throw new PermissionDeniedException(errMsg);
                 }
             } else if ((callingAccount.getId() == userAccount.getId()) && user != null) {
-                Boolean allowOperationOnUsersinSameAccount = allowOperationsOnUsersInSameAccount.valueInDomain(callingAccount.getDomainId());
+                Boolean allowOperationOnUsersinSameAccount = allowOperationsOnUsersInSameAccount.valueInScope(ConfigKey.Scope.Domain, callingAccount.getDomainId());
                 User callingUser = CallContext.current().getCallingUser();
                 if (callingUser.getId() != user.getId() && BooleanUtils.isFalse(allowOperationOnUsersinSameAccount)) {
                     String errMsg = "The user operations are not allowed by the users in the same account";
-                    s_logger.error(errMsg);
+                    logger.error(errMsg);
                     throw new PermissionDeniedException(errMsg);
                 }
             }
@@ -1649,15 +1649,15 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         boolean isCallerRootAdmin = callingAccount.getId() == Account.ACCOUNT_ID_SYSTEM || isRootAdmin(callingAccount.getId());
 
         if (isCallerRootAdmin) {
-            s_logger.trace(String.format("Admin account [%s, %s] performing this operation for user account [%s, %s] ", callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
+            logger.trace(String.format("Admin account [%s, %s] performing this operation for user account [%s, %s] ", callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
         } else if (isRootAdmin(userAccount.getAccountId())) {
             String errMsg = String.format("Account [%s, %s] cannot perform this operation for user account [%s, %s] ", callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid());
-            s_logger.error(errMsg);
+            logger.error(errMsg);
             throw new PermissionDeniedException(errMsg);
         } else {
-            s_logger.debug(String.format("Checking calling account [%s, %s] permission to perform this operation for user account [%s, %s] ",  callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
+            logger.debug(String.format("Checking calling account [%s, %s] permission to perform this operation for user account [%s, %s] ",  callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
             checkRoleEscalation(callingAccount, userAccount);
-            s_logger.debug(String.format("Calling account [%s, %s] is allowed to perform this operation for user account [%s, %s] ",  callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
+            logger.debug(String.format("Calling account [%s, %s] is allowed to perform this operation for user account [%s, %s] ",  callingAccount.getName(), callingAccount.getUuid(), userAccount.getName(), userAccount.getUuid()));
         }
     }
 
@@ -2127,6 +2127,16 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         CallContext.current().putContextParameter(Account.class, account.getUuid());
 
         return deleteAccount(account, callerUserId, caller);
+    }
+
+    protected void checkIfAccountManagesProjects(long accountId) {
+        List<Long> managedProjectIds = _projectAccountDao.listAdministratedProjectIds(accountId);
+        if (!CollectionUtils.isEmpty(managedProjectIds)) {
+            throw new InvalidParameterValueException(String.format(
+                    "Unable to delete account [%s], because it manages the following project(s): %s. Please, remove the account from these projects or demote it to a regular project role first.",
+                    accountId, managedProjectIds
+            ));
+        }
     }
 
     protected boolean isDeleteNeeded(AccountVO account, long accountId, Account caller) {
@@ -2939,8 +2949,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
             validUserLastAuthTimeDurationInMs = System.currentTimeMillis() - authStartTimeInMs;
             // Here all is fine!
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug(String.format("User: %s in domain %d has successfully logged in, auth time duration - %d ms", username, domainId, validUserLastAuthTimeDurationInMs));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("User: %s in domain %d has successfully logged in, auth time duration - %d ms", username, domainId, validUserLastAuthTimeDurationInMs));
             }
 
             return user;
@@ -3091,14 +3101,14 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                             timestamp = Long.parseLong(timestampStr);
                             long currentTime = System.currentTimeMillis();
                             if (Math.abs(currentTime - timestamp) > tolerance) {
-                                if (s_logger.isDebugEnabled()) {
-                                    s_logger.debug("Expired timestamp passed in to login, current time = " + currentTime + ", timestamp = " + timestamp);
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Expired timestamp passed in to login, current time = " + currentTime + ", timestamp = " + timestamp);
                                 }
                                 return null;
                             }
                         } catch (NumberFormatException nfe) {
-                            if (s_logger.isDebugEnabled()) {
-                                s_logger.debug("Invalid timestamp passed in to login: " + timestampStr);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Invalid timestamp passed in to login: " + timestampStr);
                             }
                             return null;
                         }
@@ -3112,8 +3122,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             }
 
             if ((signature == null) || (timestamp == 0L)) {
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Missing parameters in login request, signature = " + signature + ", timestamp = " + timestamp);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Missing parameters in login request, signature = " + signature + ", timestamp = " + timestamp);
                 }
                 return null;
             }
@@ -3128,12 +3138,12 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             String computedSignature = new String(Base64.encodeBase64(encryptedBytes));
             boolean equalSig = ConstantTimeComparator.compareStrings(signature, computedSignature);
             if (!equalSig) {
-                s_logger.info("User signature: " + signature + " is not equaled to computed signature: " + computedSignature);
+                logger.info("User signature: " + signature + " is not equaled to computed signature: " + computedSignature);
             } else {
                 user = _userAccountDao.getUserAccount(username, domainId);
             }
         } catch (Exception ex) {
-            s_logger.error("Exception authenticating user", ex);
+            logger.error("Exception authenticating user", ex);
             return null;
         }
 
@@ -3904,7 +3914,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             if (userDetailVO != null && UserAccountVO.Setup2FAstatus.VERIFIED.name().equals(userDetailVO.getValue())) {
                 return user;
             }
-            s_logger.info(String.format("Clearing 2FA configurations for %s as it is still in setup on a new login request", user));
+            logger.info(String.format("Clearing 2FA configurations for %s as it is still in setup on a new login request", user));
             if (userDetailVO != null) {
                 _userDetailsDao.remove(userDetailVO.getId());
             }

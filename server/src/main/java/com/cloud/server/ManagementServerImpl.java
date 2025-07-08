@@ -862,7 +862,6 @@ import com.cloud.utils.net.MacAddress;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.security.CertificateHelper;
 import com.cloud.utils.nio.TrustAllManager;
-import com.cloud.utils.security.CertificateHelper;
 import com.cloud.utils.ssh.SSHKeysHelper;
 import com.cloud.vm.ConsoleProxyVO;
 import com.cloud.vm.DiskProfile;
@@ -889,9 +888,6 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
-import javax.naming.ConfigurationException;
-
-
 
 
 public class ManagementServerImpl extends ManagerBase implements ManagementServer, Configurable {

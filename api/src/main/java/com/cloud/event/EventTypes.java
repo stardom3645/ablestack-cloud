@@ -754,7 +754,7 @@ public class EventTypes {
     public static final String EVENT_SECURITY_CHECK = "SECURITY.CHECK";
     public static final String EVENT_INTEGRITY_VERIFICATION = "INTEGRITY.VERIFICATION";
     public static final String EVENT_LOG_AUTO_DELETED = "LOG.DELETED";
-    
+
     // Management Server
     public static final String EVENT_MS_MAINTENANCE_PREPARE = "MS.MAINTENANCE.PREPARE";
     public static final String EVENT_MS_MAINTENANCE_CANCEL = "MS.MAINTENANCE.CANCEL";
@@ -810,7 +810,7 @@ public class EventTypes {
 
     // DISASTER RECOVERY
     public static final String EVENT_DISASTER_RECOVERY_CLUSTER = "DISASTER.RECOVERY.CLUSTER";
-    
+
     // Resource Limit
     public static final String EVENT_RESOURCE_LIMIT_UPDATE = "RESOURCE.LIMIT.UPDATE";
 
@@ -1267,7 +1267,7 @@ public class EventTypes {
 
         //Security
         entityEventDetails.put(EVENT_SECURITY_CHECK, "Security");
-        
+
         entityEventDetails.put(EVENT_MS_MAINTENANCE_PREPARE, "ManagementServer");
         entityEventDetails.put(EVENT_MS_MAINTENANCE_CANCEL, "ManagementServer");
         entityEventDetails.put(EVENT_MS_SHUTDOWN_PREPARE, "ManagementServer");
@@ -1320,7 +1320,7 @@ public class EventTypes {
 
         // Disaster Recovery Cluster
         entityEventDetails.put(EVENT_DISASTER_RECOVERY_CLUSTER, "DisasterRecoveryCluster");
-        
+
         // VM Lease
         entityEventDetails.put(VM_LEASE_EXPIRED, VirtualMachine.class);
         entityEventDetails.put(VM_LEASE_EXPIRING, VirtualMachine.class);

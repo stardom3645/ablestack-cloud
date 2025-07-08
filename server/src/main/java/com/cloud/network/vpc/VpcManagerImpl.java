@@ -50,7 +50,6 @@ import com.cloud.dc.dao.ASNumberDao;
 import com.cloud.dc.Vlan;
 import com.cloud.network.dao.NsxProviderDao;
 import com.cloud.network.element.NsxProviderVO;
-import com.cloud.resourcelimit.CheckedReservation;
 import com.google.common.collect.Sets;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.alert.AlertService;
@@ -873,7 +872,7 @@ public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvis
             final SearchCriteria<VpcOfferingJoinVO> ssc = vpcOfferingJoinDao.createSearchCriteria();
             ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -3210,7 +3209,7 @@ public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvis
 
         logger.debug(String.format("Associating IP [%s] to VPC [%s]", ipToAssoc, vpc));
 
-        final boolean isSourceNatFinal = isSrcNatIpRequired(vpc.getVpcOfferingId()) && getExistingSourceNatInVpc(vpc.getAccountId(), vpcId) == null;
+        final boolean isSourceNatFinal = isSrcNatIpRequired(vpc.getVpcOfferingId()) && getExistingSourceNatInVpc(vpc.getAccountId(), vpcId, false) == null;
         try {
             IPAddressVO updatedIpAddress = Transaction.execute((TransactionCallbackWithException<IPAddressVO, CloudRuntimeException>) status -> {
                 final IPAddressVO ip = _ipAddressDao.findById(ipId);

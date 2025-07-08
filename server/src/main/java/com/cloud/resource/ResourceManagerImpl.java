@@ -316,6 +316,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     private AnnotationService annotationService;
     @Inject
     private VolumeDao volumeDao;
+    @Inject
+    private DiskOfferingDao diskOfferingDao;
 
     private final long _nodeId = ManagementServerNode.getManagementServerId();
 
@@ -817,7 +819,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             throw new InvalidParameterValueException(url + " is not a valid uri");
         }
 
-        final List<HostVO> hosts = new ArrayList<HostVO>();
+        final List<HostVO> hosts = new ArrayList<>();
         logger.info("Trying to add a new host at {} in data center {}", url, zone);
         boolean isHypervisorTypeSupported = false;
         for (final Discoverer discoverer : _discoverers) {
@@ -1106,7 +1108,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                     // don't allow to remove the cluster if it has non-removed storage
                     // pools
                     final List<StoragePoolVO> storagePools = _storagePoolDao.listPoolsByCluster(cmd.getId());
-                    if (storagePools.size() > 0) {
+                    if (!storagePools.isEmpty()) {
                         logger.debug("{} still has storage pools, can't remove", cluster);
                         throw new CloudRuntimeException(String.format("Cluster: %s cannot be removed. Cluster still has storage pools", cluster));
                     }
@@ -1263,7 +1265,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                         try {
                             Thread.currentThread().wait(5 * 1000);
                         } catch (final InterruptedException e) {
-                            s_logger.debug("thread unexpectedly interupted during wait, while updating cluster");
+                            logger.debug("thread unexpectedly interrupted during wait, while updating cluster");
                         }
                         hosts = listAllUpAndEnabledHosts(Host.Type.Routing, cluster.getId(), cluster.getPodId(), cluster.getDataCenterId());
                         for (final HostVO host : hosts) {
@@ -1483,7 +1485,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         ServiceOfferingVO offeringVO = serviceOfferingDao.findById(vm.getServiceOfferingId());
         final VirtualMachineProfile profile = new VirtualMachineProfileImpl(vm, null, offeringVO, null, null);
         plan.setMigrationPlan(true);
-        DeployDestination dest = getDeployDestination(vm, profile, plan);
+        DeployDestination dest = getDeployDestination(vm, profile, plan, host);
         Host destHost = dest.getHost();
 
         try {
@@ -1494,10 +1496,12 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
     }
 
-    private DeployDestination getDeployDestination(VMInstanceVO vm, VirtualMachineProfile profile, DataCenterDeployment plan) {
+    private DeployDestination getDeployDestination(VMInstanceVO vm, VirtualMachineProfile profile, DataCenterDeployment plan, HostVO hostToAvoid) {
         DeployDestination dest;
+        DeploymentPlanner.ExcludeList avoids = new DeploymentPlanner.ExcludeList();
+        avoids.addHost(hostToAvoid.getId());
         try {
-            dest = deploymentManager.planDeployment(profile, plan, new DeploymentPlanner.ExcludeList(), null);
+            dest = deploymentManager.planDeployment(profile, plan, avoids, null);
         } catch (InsufficientServerCapacityException e) {
             throw new CloudRuntimeException(String.format("Maintenance failed, could not find deployment destination for VM [id=%s, name=%s].", vm.getId(), vm.getInstanceName()),
                     e);
@@ -3292,7 +3296,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             }
 
             if (logger.isDebugEnabled()) {
-                new Request(-1l, -1l, cmds, true, false).logD("Startup request from directly connected host: ", true);
+                new Request(-1L, -1L, cmds, true, false).logD("Startup request from directly connected host: ", true);
             }
 
             if (old) {
@@ -3362,7 +3366,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             }
 
             if (logger.isDebugEnabled()) {
-                new Request(-1l, -1l, cmds, true, false).logD("Startup request from directly connected host: ", true);
+                new Request(-1L, -1L, cmds, true, false).logD("Startup request from directly connected host: ", true);
             }
 
             if (old) {

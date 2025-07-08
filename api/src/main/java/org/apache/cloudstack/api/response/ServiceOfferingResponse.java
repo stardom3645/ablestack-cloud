@@ -528,7 +528,7 @@ public class ServiceOfferingResponse extends BaseResponseWithAnnotations {
     public void setKvdoEnable(boolean kvdoEnable) {
         this.kvdoEnable = kvdoEnable;
     }
-    
+
     public Integer getLeaseDuration() {
         return leaseDuration;
     }

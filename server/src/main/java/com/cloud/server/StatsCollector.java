@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -266,10 +265,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     private static final String INFLUXDB_HOST_MEASUREMENT = "host_stats";
     private static final String INFLUXDB_VM_MEASUREMENT = "vm_stats";
 
-    private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-    private static final AtomicReference<CompletableFuture<?>> currentTask = new AtomicReference<>(null);
-    private static final AtomicBoolean isTaskCancelled = new AtomicBoolean(false);
-
     private static Boolean DELETE_EVENT_ACTIVE = false;
 
     public static final ConfigKey<Integer> MANAGEMENT_SERVER_STATUS_COLLECTION_INTERVAL = new ConfigKey<>("Advanced",
@@ -300,7 +295,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     protected static ConfigKey<Boolean> vmStatsIncrementMetrics = new ConfigKey<>("Advanced", Boolean.class, "vm.stats.increment.metrics", "false",
             "When set to 'true', VM metrics(NetworkReadKBs, NetworkWriteKBs, DiskWriteKBs, DiskReadKBs, DiskReadIOs and DiskWriteIOs) that are collected from the hypervisor are summed before being returned."
                     + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
-    protected static ConfigKey<Integer> vmStatsMaxRetentionTime = new ConfigKey<>("Advanced", Integer.class, "vm.stats.max.retention.time", "60",
+    protected static ConfigKey<Integer> vmStatsMaxRetentionTime = new ConfigKey<>("Advanced", Integer.class, "vm.stats.max.retention.time", "720",
             "The maximum time (in minutes) for keeping VM stats records in the database. The VM stats cleanup process will be disabled if this is set to 0 or less than 0.", true);
 
     protected static ConfigKey<Boolean> vmStatsCollectUserVMOnly = new ConfigKey<>("Advanced", Boolean.class, "vm.stats.user.vm.only", "false",
@@ -1298,7 +1293,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
      */
     protected boolean isUsageLocal() {
         boolean local = false;
-        String usageInstall = Script.runSimpleBashScript("systemctl status mold-usage | grep \"  Loaded:\"");
+        String usageInstall = Script.runSimpleBashScript("systemctl status cloudstack-usage | grep \"  Loaded:\"");
         logger.debug(String.format("usage install: %s", usageInstall));
 
         if (StringUtils.isNotBlank(usageInstall)) {
@@ -1410,8 +1405,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     Pair<Map<Long, VMInstanceVO>, Map<String, Long>> vmsAndMap = getVmMapForStatsForHost(host);
                     Map<Long, VMInstanceVO> vmMap = vmsAndMap.first();
                     try {
-                        Map<Long, ? extends VmStats> vmStatsById = virtualMachineManager.getVirtualMachineStatistics(host.getId(), host.getName(), vmMap);
-
+                        Map<Long, ? extends VmStats> vmStatsById = virtualMachineManager.getVirtualMachineStatistics(host, vmsAndMap.second());
                         if (MapUtils.isEmpty(vmStatsById)) {
                             continue;
                         }

@@ -1371,7 +1371,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
         ResizeVolumeCommand resizeCmd =
             new ResizeVolumeCommand(vol.getPath(), new StorageFilerTO(pool), oldSize, resizeParameter.newSize, resizeParameter.shrinkOk,
-                resizeParameter.instanceName, null);
+                resizeParameter.instanceName, null, vol.getKvdoEnable());
         CreateCmdResult result = new CreateCmdResult(null, null);
         try {
             ResizeVolumeAnswer answer = (ResizeVolumeAnswer) _storageMgr.sendToPool(pool, resizeParameter.hosts, resizeCmd);
@@ -1514,7 +1514,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
     @Override
     public Pair<Long, Long> getStorageStats(StoragePool storagePool) {
-        s_logger.debug(String.format("Requesting storage stats: %s", storagePool));
+        logger.debug(String.format("Requesting storage stats: %s", storagePool));
         return LinstorUtil.getStorageStats(storagePool.getHostAddress(), getRscGrp(storagePool));
     }
 
@@ -1529,7 +1529,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
      */
     private void fillVolumeStatsCache(DevelopersApi api) {
         try {
-            s_logger.trace("Start volume stats cache update");
+            logger.trace("Start volume stats cache update");
             List<ResourceWithVolumes> resources = api.viewResources(
                     Collections.emptyList(),
                     Collections.emptyList(),
@@ -1563,9 +1563,9 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
                 volumeStats.put(entry.getKey(), volStat);
             }
             volumeStatsLastUpdate = System.currentTimeMillis();
-            s_logger.trace("Done volume stats cache update: " + volumeStats.size());
+            logger.trace("Done volume stats cache update: {}", volumeStats.size());
         } catch (ApiException e) {
-            s_logger.error("Unable to fetch Linstor resources: " + e.getBestMessage());
+            logger.error("Unable to fetch Linstor resources: {}", e.getBestMessage());
         }
     }
 
@@ -1612,5 +1612,9 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
     @Override
     public void detachVolumeFromAllStorageNodes(Volume volume) {
+    }
+
+    @Override
+    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
     }
 }

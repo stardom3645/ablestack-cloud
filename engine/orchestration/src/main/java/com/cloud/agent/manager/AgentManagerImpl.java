@@ -271,9 +271,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
         final int agentTaskThreads = DirectAgentLoadSize.value();
 
-        _executor = new ThreadPoolExecutor(agentTaskThreads, agentTaskThreads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory("AgentTaskPool"));    _executor.allowCoreThreadTimeOut(true);
-
-        initConnectExecutor();
+        _executor = new ThreadPoolExecutor(agentTaskThreads, agentTaskThreads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory("AgentTaskPool"));
 
         maxConcurrentNewAgentConnections = RemoteAgentMaxConcurrentNewConnections.value();
 

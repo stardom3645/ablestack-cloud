@@ -367,7 +367,6 @@ import com.cloud.vm.dao.VMInstanceDao;
 
 @Component
 public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements QueryService, Configurable {
-    
 
     private static final String ID_FIELD = "id";
 
@@ -2551,7 +2550,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 sc.setParameters("mgmt_server_id", msHost.getMsid());
             }
         }
-        
+
         if (arch != null) {
             sc.setParameters("arch", arch);
         }
@@ -4905,7 +4904,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (kvdoEnable != null) {
             sc.addAnd("kvdoEnable", SearchCriteria.Op.EQ, kvdoEnable);
         }
-        
+
         if (osCategoryId != null) {
             List<Long> guestOsIds = guestOSDao.listIdsByCategoryId(osCategoryId);
             if (CollectionUtils.isNotEmpty(guestOsIds)) {
@@ -5306,7 +5305,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), cmd.getStoragePoolId(), cmd.getImageStoreId(),
                 hypervisorType, true, cmd.listInReadyState(), permittedAccounts, caller, listProjectResourcesCriteria,
                 tags, showRemovedISO, null, null, cmd.getShowUnique(), null, null,
-                cmd.getArch(), cmd.getOsCategoryId(), null);
+                cmd.getArch(), cmd.getOsCategoryId(), null, null);
     }
 
     @Override

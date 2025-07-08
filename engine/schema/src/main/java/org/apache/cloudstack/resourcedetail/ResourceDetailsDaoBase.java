@@ -86,8 +86,7 @@ public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends G
             sc.setParameters("value", value);
         }
 
-        List<R> results = search(sc, null);
-        return results;
+        return search(sc, null);
     }
 
     public Map<String, String> listDetailsKeyPairs(long resourceId) {
@@ -95,7 +94,7 @@ public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends G
         sc.setParameters("resourceId", resourceId);
 
         List<R> results = search(sc, null);
-        Map<String, String> details = new HashMap<String, String>(results.size());
+        Map<String, String> details = new HashMap<>(results.size());
         for (R result : results) {
             details.put(result.getName(), result.getValue());
         }
@@ -132,8 +131,7 @@ public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends G
         SearchCriteria<R> sc = AllFieldsSearch.create();
         sc.setParameters("resourceId", resourceId);
 
-        List<R> results = search(sc, null);
-        return results;
+        return search(sc, null);
     }
 
     public void removeDetails(long resourceId) {
@@ -195,7 +193,7 @@ public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends G
         sc.setParameters("display", forDisplay);
 
         List<R> results = search(sc, null);
-        Map<String, String> details = new HashMap<String, String>(results.size());
+        Map<String, String> details = new HashMap<>(results.size());
         for (R result : results) {
             details.put(result.getName(), result.getValue());
         }
@@ -207,8 +205,7 @@ public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends G
         sc.setParameters("resourceId", resourceId);
         sc.setParameters("display", forDisplay);
 
-        List<R> results = search(sc, null);
-        return results;
+        return search(sc, null);
     }
 
     @Override
@@ -240,7 +237,7 @@ public abstract class ResourceDetailsDaoBase<R extends ResourceDetail> extends G
         sc.setParameters("ids", ids.toArray());
         return batchExpunge(sc, batchSize);
     }
-    
+
     @Override
     public String getActualValue(ResourceDetail resourceDetail) {
         ConfigurationVO configurationVO = configDao.findByName(resourceDetail.getName());

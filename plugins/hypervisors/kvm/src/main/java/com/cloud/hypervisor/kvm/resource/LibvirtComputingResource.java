@@ -194,7 +194,6 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef.RngBackendModel;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SCSIDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SerialDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SoundDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TPMDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TpmDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
@@ -2914,9 +2913,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         Map<String, String> customParams = vmTO.getDetails();
         boolean isUefiEnabled = false;
         boolean isSecureBoot = false;
-        boolean isTpmEnabled = false;
         String bootMode = null;
-        String tpmversion = null;
 
         if (MapUtils.isNotEmpty(customParams) && customParams.containsKey(GuestDef.BootType.UEFI.toString())) {
             isUefiEnabled = true;
@@ -2928,19 +2925,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
 
             bootMode = customParams.get(GuestDef.BootType.UEFI.toString());
-        }
-        if (MapUtils.isNotEmpty(customParams) && (
-                customParams.containsKey(GuestDef.TpmVersion.V2_0.toString()) ||
-                customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())
-        )) {
-            isTpmEnabled = true;
-            LOGGER.debug(String.format("Enabled TPM for VM UUID [%s].", uuid));
-
-            if(customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())) {
-                tpmversion = customParams.get(GuestDef.TpmVersion.V2_0.toString());
-            }else if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())) {
-                tpmversion = customParams.get(GuestDef.TpmVersion.V1_2.toString());
-            }
         }
 
         Map<String, String> extraConfig = vmTO.getExtraConfig();
@@ -2981,23 +2965,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         vm.addComp(createTermPolicy());
         vm.addComp(createClockDef(vmTO));
+        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled));
 
-
-        boolean isTpmEnabled = false;
-        String tpmversion = "";
-        if(customParams.containsKey("tpmversion")) {
-            tpmversion = customParams.get("tpmversion");
-
-            if (tpmversion.equalsIgnoreCase("NONE")){
-                isTpmEnabled = false;
-            }else{
-                isTpmEnabled = true;
-            }
-        }else{
-            tpmversion = GuestDef.TpmVersion.NONE.toString();
-            isTpmEnabled = false;
-        }
-        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmversion));
         addExtraConfigsToVM(vmTO, vm, extraConfig);
     }
 
@@ -3010,17 +2979,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             addExtraConfigComponent(extraConfig, vm);
         }
     }
-    /**
-     * Adds TPM device component to VM
-     */
-    protected TPMDef createTpmDef(String tpmversion){
 
-        return new TPMDef(tpmversion);
-    }
     /**
      * Adds devices components to VM.
      */
-    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled, String tpmversion) {
+    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled) {
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(hypervisorPath);
         devices.setGuestType(guest.getGuestType());
@@ -3043,7 +3006,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             devices.addDevice(createTabletInputDef());
         }
         devices.addDevice(createSoundDef(vmTO));
-        
+
         TpmDef tpmDef = createTpmDef(vmTO);
         if (tpmDef != null) {
             devices.addDevice(tpmDef);
@@ -3051,9 +3014,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         if (isGuestAarch64()) {
             createArm64UsbDef(devices);
-        }
-        if (!tpmversion.equalsIgnoreCase("NONE") && isTpmEnabled) {
-            devices.addDevice(createTpmDef(tpmversion));
         }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
         if (busT == null) {
@@ -3370,14 +3330,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         customParams.forEach((strKey, strValue)->{
         });
-        if (MapUtils.isNotEmpty(customParams)) {
-            if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())){
-                guest.setTPMVersion(GuestDef.TpmVersion.V1_2);
-            }else if (customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())){
-
-                guest.setTPMVersion(GuestDef.TpmVersion.V2_0);
-            }
-        }
         guest.setUuid(uuid);
         guest.setBootOrder(GuestDef.BootOrder.HARDISK);
         if(!isGuestS390x()) {
@@ -5455,7 +5407,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         return NumberUtils.LONG_ZERO;
     }
-    
+
     public void removeCheckpointsOnVm(String vmName, String volumeUuid, List<String> checkpointPaths) {
         logger.debug("Removing checkpoints with paths [{}] of volume [{}] on VM [{}].", checkpointPaths, volumeUuid, vmName);
         String checkpointName;
@@ -6579,7 +6531,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         return uuid;
     }
-    
+
     @Override
     public void disconnected() {
         LOGGER.info("Detected agent disconnect event, running through " + _disconnectHooks.size() + " disconnect hooks");
@@ -6659,7 +6611,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public String getHypervisorPath() {
         return hypervisorPath;
     }
-    
+
     public String getGuestCpuArch() {
         return guestCpuArch;
     }

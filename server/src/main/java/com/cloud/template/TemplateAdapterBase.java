@@ -271,7 +271,8 @@ public abstract class TemplateAdapterBase extends AdapterBase implements Templat
         TemplateProfile profile = new TemplateProfile(id, userId, name, displayText, arch, bits, passwordEnabled, requiresHVM, url, isPublic, featured, isExtractable, imgfmt, guestOSId, zoneIdList,
             hypervisorType, templateOwner.getAccountName(), templateOwner.getDomainId(), templateOwner.getAccountId(), chksum, bootable, templateTag, details,
             sshkeyEnabled, null, isDynamicallyScalable, templateType, directDownload, kvdoEnable, deployAsIs);
-
+        profile.setForCks(forCks);
+        return profile;
     }
 
     @Override

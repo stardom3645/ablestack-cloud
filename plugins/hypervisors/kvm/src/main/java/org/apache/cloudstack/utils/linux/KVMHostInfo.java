@@ -185,7 +185,6 @@ public class KVMHostInfo {
             LOGGER.error(String.format("Unable to retrieve the CPU speed from file [%s]", cpuInfoFreqFile), e);
             return 0L;
         }
-        return 0L;
     }
 
     protected static long getCpuSpeedFromHostCapabilities(final String capabilities) {

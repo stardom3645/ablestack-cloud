@@ -16,22 +16,22 @@
 // under the License.
 package com.cloud.hypervisor.kvm.resource;
 
-import com.cloud.agent.properties.AgentProperties;
-import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.utils.qemu.QemuObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
-
+import com.cloud.agent.properties.AgentProperties;
+import com.cloud.agent.properties.AgentPropertiesFileHandler;
 
 public class LibvirtVMDef {
     protected static Logger LOGGER = LogManager.getLogger(LibvirtVMDef.class);
@@ -80,24 +80,6 @@ public class LibvirtVMDef {
             }
         }
 
-        enum TpmVersion {
-            V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
-
-            String _version;
-
-            TpmVersion(String version){
-                _version = version;
-            }
-            @Override
-            public String toString() {
-                if (_version.equals("V1_2"))
-                    return "1.2";
-                else if (_version.equals("V2_0"))
-                    return "2.0";
-                return "NONE";
-            }
-        }
-
         enum BootMode {
             LEGACY("LEGACY"), SECURE("SECURE");
 
@@ -131,8 +113,6 @@ public class LibvirtVMDef {
         private String _nvramTemplate;
         private boolean iothreads;
 
-        private TpmVersion _tpmversion;
-
         public static final String GUEST_LOADER_SECURE = "guest.loader.secure";
         public static final String GUEST_LOADER_LEGACY = "guest.loader.legacy";
         public static final String GUEST_NVRAM_PATH = "guest.nvram.path";
@@ -160,7 +140,7 @@ public class LibvirtVMDef {
 
         public String getProduct() {
             if (StringUtils.isEmpty(product)) {
-                return "ABLESTACK CELL Hypervisor";
+                return "CloudStack KVM Hypervisor";
             }
             return product;
         }
@@ -214,14 +194,6 @@ public class LibvirtVMDef {
 
         public void setBootMode(BootMode bootmode) {
             this._bootmode = bootmode;
-        }
-
-        public TpmVersion getTpmVersion() {
-            return this._tpmversion;
-        }
-
-        public void setTPMVersion(TpmVersion tpmversion) {
-            this._tpmversion = tpmversion;
         }
 
         public void setIothreads(boolean iothreads) {
@@ -1734,9 +1706,7 @@ public class LibvirtVMDef {
             if (StringUtils.isNotBlank(_userIp4Network) && _userIp4Prefix != null) {
                 netBuilder.append(String.format("<ip family='ipv4' address='%s' prefix='%s'/>\n", _userIp4Network, _userIp4Prefix));
             }
-            if (_filterrefFilter) {
-                netBuilder.append("<filterref filter='allow-all-traffic'/>");
-            }
+
             return netBuilder.toString();
         }
 
@@ -1941,13 +1911,12 @@ public class LibvirtVMDef {
         @Override
         public String toString() {
             StringBuilder videoBuilder = new StringBuilder();
-            if (_videoModel != null && !_videoModel.isEmpty()) {
+            if (_videoModel != null && !_videoModel.isEmpty()){
                 videoBuilder.append("<video>\n");
                 if (_videoRam != 0) {
-                    videoBuilder.append("<model type='").append(_videoModel)
-                                .append("' vram='").append(_videoRam).append("'/>\n");
+                    videoBuilder.append("<model type='" + _videoModel + "' vram='" + _videoRam + "'/>\n");
                 } else {
-                    videoBuilder.append("<model type='").append(_videoModel).append("'/>\n");
+                    videoBuilder.append("<model type='" + _videoModel + "'/>\n");
                 }
                 videoBuilder.append("</video>\n");
                 return videoBuilder.toString();
@@ -2220,25 +2189,6 @@ public class LibvirtVMDef {
         }
     }
 
-    public static class TPMDef {
-        private String version = "2.0";
-
-        public TPMDef(String version) {
-            this.version = version;
-        }
-
-        public TPMDef() {
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder tpmBuilder = new StringBuilder();
-            tpmBuilder.append("<tpm model='tpm-tis'>");
-            tpmBuilder.append(String.format("<backend type='emulator' version='%s'/>\n",this.version ) );
-            tpmBuilder.append("</tpm>\n");
-            return tpmBuilder.toString();
-        }
-    }
     public static class InputDef {
         private final String _type; /* tablet, mouse */
         private final String _bus; /* ps2, usb, xen */

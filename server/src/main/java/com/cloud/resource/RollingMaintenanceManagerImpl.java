@@ -38,7 +38,6 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -632,14 +631,14 @@ public class RollingMaintenanceManagerImpl extends ManagerBase implements Rollin
             Integer speed = cpuSpeedAndRamSize.second();
             Integer ramSize = cpuSpeedAndRamSize.third();
             if (ObjectUtils.anyNull(cpu, speed, ramSize)) {
-                logger.warn(String.format("Cannot fetch compute resources for the VM %s, skipping it from the capacity check", runningVM));
+                logger.warn("Cannot fetch compute resources for the VM {}, skipping it from the capacity check", runningVM);
                 continue;
             }
 
             ServiceOfferingVO serviceOffering = serviceOfferingDao.findById(runningVM.getServiceOfferingId());
             for (Host hostInCluster : hostsInCluster) {
                 if (!checkHostTags(hostTags, hostTagsDao.getHostTags(hostInCluster.getId()), serviceOffering.getHostTag())) {
-                    logger.warn(String.format("Host tags mismatch between %s and %s, skipping it from the capacity check", host, hostInCluster));
+                    logger.debug("Host tags mismatch between {} and {} Skipping it from the capacity check", host, hostInCluster);
                     continue;
                 }
                 DeployDestination deployDestination = new DeployDestination(null, null, null, host);
@@ -649,7 +648,7 @@ public class RollingMaintenanceManagerImpl extends ManagerBase implements Rollin
                     affinityChecks = affinityChecks && affinityProcessor.check(vmProfile, deployDestination);
                 }
                 if (!affinityChecks) {
-                    logger.warn(String.format("Affinity check failed between %s and %s, skipping it from the capacity check", host, hostInCluster));
+                    logger.debug("Affinity check failed between {} and {} Skipping it from the capacity check", host, hostInCluster);
                     continue;
                 }
                 boolean maxGuestLimit = capacityManager.checkIfHostReachMaxGuestLimit(host);

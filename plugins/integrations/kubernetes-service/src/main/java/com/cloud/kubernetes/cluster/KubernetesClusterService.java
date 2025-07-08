@@ -180,6 +180,6 @@ public interface KubernetesClusterService extends PluggableService, Configurable
     List<RemoveVirtualMachinesFromKubernetesClusterResponse> removeVmsFromCluster(RemoveVirtualMachinesFromKubernetesClusterCmd cmd);
 
     boolean isDirectAccess(Network network);
-    
+
     void cleanupForAccount(Account account);
 }

@@ -176,7 +176,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
         String encodedUsername = encodeUsername(username);
         String encodedPassword = encodeUsername(password);
         if (StringUtils.isNotBlank(path)) {
-            s_logger.info("VM path: " + path);
+            logger.debug("VM path: " + path);
             return String.format("vi://%s:%s@%s/%s/%s/%s",
                     encodedUsername, encodedPassword, vcenter, datacenter, path, vm);
         }

@@ -509,7 +509,6 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         }
 
         userVmResponse.setQemuAgentVersion(userVm.getQemuAgentVersion());
-        
         if (VMLeaseManager.InstanceLeaseEnabled.value() && userVm.getLeaseExpiryDate() != null &&
                 VMLeaseManager.LeaseActionExecution.PENDING.name().equals(userVm.getLeaseActionExecution())) {
 
@@ -808,7 +807,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         sc.setParameters("guestType", type);
         return listBy(sc);
     }
-    
+
     /**
      * This method fetches instances where
      * 1. lease has expired

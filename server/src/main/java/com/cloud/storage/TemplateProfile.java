@@ -99,7 +99,6 @@ public class TemplateProfile {
 
     public TemplateProfile(Long templateId, Long userId, String name, String displayText, CPU.CPUArch arch, Integer bits, Boolean passwordEnabled, Boolean requiresHvm, String url,
                            Boolean isPublic, Boolean featured, Boolean isExtractable, ImageFormat format, Long guestOsId, List<Long> zoneId,
-
                            HypervisorType hypervisorType, String accountName, Long domainId, Long accountId, String chksum, Boolean bootable, String templateTag, Map details,
                            Boolean sshKeyEnabled, Long imageStoreId, Boolean isDynamicallyScalable, TemplateType templateType, Boolean directDownload, Boolean kvdoEnable, Boolean deployAsIs) {
         this(templateId,

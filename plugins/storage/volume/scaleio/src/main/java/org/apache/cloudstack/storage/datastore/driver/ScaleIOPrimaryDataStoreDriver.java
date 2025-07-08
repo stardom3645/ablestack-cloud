@@ -1633,7 +1633,7 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     @Override
     public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
     }
-    
+
     public boolean canDisplayDetails() {
         return false;
     }

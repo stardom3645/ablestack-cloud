@@ -34,7 +34,6 @@ import org.apache.cloudstack.api.response.ManagementServerResponse;
 import org.apache.cloudstack.api.response.PodResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
-import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 import org.apache.commons.lang3.StringUtils;
 
 import com.cloud.cpu.CPU;
@@ -110,7 +109,7 @@ public class ListHostsCmd extends BaseListCmd {
 
     @Parameter(name = ApiConstants.MANAGEMENT_SERVER_ID, type = CommandType.UUID, entityType = ManagementServerResponse.class, description = "the id of the management server", since="4.21.0")
     private Long managementServerId;
-    
+
     @Parameter(name = ApiConstants.ARCH, type = CommandType.STRING, description = "CPU Arch of the host", since = "4.20.1")
     private String arch;
 
@@ -205,7 +204,8 @@ public class ListHostsCmd extends BaseListCmd {
 
     public Long getManagementServerId() {
         return managementServerId;
-        
+    }
+
     public CPU.CPUArch getArch() {
         return StringUtils.isBlank(arch) ? null : CPU.CPUArch.fromType(arch);
     }
@@ -244,13 +244,11 @@ public class ListHostsCmd extends BaseListCmd {
             List<HostResponse> hostResponses = new ArrayList<HostResponse>();
             for (Host host : result.first()) {
                 HostResponse hostResponse = _responseGenerator.createHostResponse(host, getDetails());
-                OutOfBandManagement hostOobmResponse = _responseGenerator.createHostOobmResponse(host);
                 Boolean suitableForMigration = false;
                 if (hostsWithCapacity.contains(host)) {
                     suitableForMigration = true;
                 }
                 hostResponse.setSuitableForMigration(suitableForMigration);
-                hostResponse.setOutOfBandManagementResponse(hostOobmResponse);
                 hostResponse.setObjectName("host");
                 hostResponses.add(hostResponse);
             }

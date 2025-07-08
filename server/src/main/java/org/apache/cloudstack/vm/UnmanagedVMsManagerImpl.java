@@ -538,7 +538,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         return nicIpAddresses;
     }
 
-    private StoragePool getStoragePool(final UnmanagedInstanceTO.Disk disk, final DataCenter zone, final Cluster cluster, String diskOfferingTags) {
+    private StoragePool getStoragePool(final UnmanagedInstanceTO.Disk disk, final DataCenter zone, final Cluster cluster, DiskOffering diskOffering) {
         StoragePool storagePool = null;
         final String dsHost = disk.getDatastoreHost();
         final String dsPath = disk.getDatastorePath();
@@ -550,7 +550,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             for (StoragePool pool : pools) {
                 if (pool.getDataCenterId() == zone.getId() &&
                         (pool.getClusterId() == null || pool.getClusterId().equals(cluster.getId())) &&
-                        volumeApiService.doesStoragePoolSupportDiskOfferingTags(pool, diskOfferingTags)) {
+                        volumeApiService.doesStoragePoolSupportDiskOffering(pool, diskOffering)) {
                     storagePool = pool;
                     break;
                 }
@@ -575,7 +575,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             for (StoragePool pool : pools) {
                 if (pool.getDataCenterId() == zone.getId() &&
                         (pool.getClusterId() == null || pool.getClusterId().equals(cluster.getId())) &&
-                        volumeApiService.doesTargetStorageSupportDiskOffering(pool, diskOfferingTags)) {
+                        volumeApiService.doesStoragePoolSupportDiskOffering(pool, diskOffering)) {
                     storagePool = pool;
                     break;
                 }
@@ -639,7 +639,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Size of disk offering(ID: %s) %dGB is found less than the size of disk(ID: %s) %dGB during VM import", diskOffering.getUuid(), (diskOffering.getDiskSize() / Resource.ResourceType.bytesToGiB), disk.getDiskId(), (disk.getCapacity() / (Resource.ResourceType.bytesToGiB))));
         }
         diskOffering = diskOffering != null ? diskOffering : diskOfferingDao.findById(serviceOffering.getDiskOfferingId());
-        StoragePool storagePool = getStoragePool(disk, zone, cluster, diskOffering != null ? diskOffering.getTags() : null);
+        StoragePool storagePool = getStoragePool(disk, zone, cluster, diskOffering);
         if (diskOffering != null && !migrateAllowed && !storagePoolSupportsDiskOffering(storagePool, diskOffering)) {
             throw new InvalidParameterValueException(String.format("Disk offering: %s is not compatible with storage pool: %s of unmanaged disk: %s", diskOffering.getUuid(), storagePool.getUuid(), disk.getDiskId()));
         }
@@ -876,7 +876,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             diskInfo.setDiskChain(new String[]{disk.getImagePath()});
             chainInfo = gson.toJson(diskInfo);
         }
-        StoragePool storagePool = getStoragePool(disk, zone, cluster, diskOffering != null ? diskOffering.getTags() : null);
+        StoragePool storagePool = getStoragePool(disk, zone, cluster, diskOffering);
         DiskProfile profile = volumeManager.importVolume(type, name, diskOffering, diskSize,
                 minIops, maxIops, vm.getDataCenterId(), vm.getHypervisorType(), vm, template, owner, deviceId, storagePool.getId(), path, chainInfo);
 
@@ -2065,9 +2065,10 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         List<StoragePoolVO> pools = new ArrayList<>();
         pools.addAll(primaryDataStoreDao.findClusterWideStoragePoolsByHypervisorAndPoolType(destinationCluster.getId(), Hypervisor.HypervisorType.KVM, Storage.StoragePoolType.NetworkFilesystem));
         pools.addAll(primaryDataStoreDao.findZoneWideStoragePoolsByHypervisorAndPoolType(destinationCluster.getDataCenterId(), Hypervisor.HypervisorType.KVM, Storage.StoragePoolType.NetworkFilesystem));
+        List<String> diskOfferingTags = new ArrayList<>();
         if (pools.isEmpty()) {
             String msg = String.format("Cannot find suitable storage pools in the cluster %s for the conversion", destinationCluster.getName());
-            LOGGER.error(msg);
+            logger.error(msg);
             throw new CloudRuntimeException(msg);
         }
 
@@ -2075,12 +2076,12 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getDiskOfferingId());
             if (diskOffering == null) {
                 String msg = String.format("Cannot find disk offering with ID %s that belongs to the service offering %s", serviceOffering.getDiskOfferingId(), serviceOffering.getName());
-                LOGGER.error(msg);
+                logger.error(msg);
                 throw new CloudRuntimeException(msg);
             }
             if (getStoragePoolWithTags(pools, diskOffering.getTags()) == null) {
                 String msg = String.format("Cannot find suitable storage pool for disk offering %s that belongs to the service offering %s", diskOffering.getName(), serviceOffering.getName());
-                LOGGER.error(msg);
+                logger.error(msg);
                 throw new CloudRuntimeException(msg);
             }
         }
@@ -2117,7 +2118,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         for (String tags : diskOfferingTags) {
             boolean tagsMatched = false;
             for (StoragePoolVO pool : pools) {
-                if (volumeApiService.doesTargetStorageSupportDiskOffering(pool, tags)) {
+                if (volumeApiService.doesStoragePoolSupportDiskOfferingTags(pool, tags)) {
                     poolsSupportingTags.add(pool);
                     tagsMatched = true;
                 }

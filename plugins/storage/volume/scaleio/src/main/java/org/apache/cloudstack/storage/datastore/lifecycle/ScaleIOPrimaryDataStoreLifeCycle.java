@@ -34,7 +34,6 @@ import javax.inject.Inject;
 import com.cloud.host.HostVO;
 import com.cloud.storage.dao.StoragePoolAndAccessGroupMapDao;
 import org.apache.cloudstack.api.ApiConstants;
-import com.cloud.utils.StringUtils;
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.HostScope;

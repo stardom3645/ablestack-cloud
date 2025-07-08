@@ -321,8 +321,6 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
     @Inject
     protected TemplateJoinDao templateJoinDao;
     @Inject
-    public AccountDao accountDao;
-    @Inject
     protected DedicatedResourceDao dedicatedResourceDao;
     @Inject
     protected AccountDao accountDao;
@@ -1830,7 +1828,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         }
         roleService.createRolePermission(role, new Rule("*"), RolePermissionEntity.Permission.DENY,
                 "Deny all");
-        LOGGER.debug(String.format("Created default role for Kubernetes service account in projects: %s", role));
+        logger.debug(String.format("Created default role for Kubernetes service account in projects: %s", role));
         return role;
     }
 
@@ -1838,7 +1836,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         List<Role> roles = roleService.findRolesByName(PROJECT_KUBEADMIN_ACCOUNT_ROLE_NAME);
         if (CollectionUtils.isNotEmpty(roles)) {
             Role role = roles.get(0);
-            LOGGER.debug(String.format("Found default role for Kubernetes service account in projects: %s", role));
+            logger.debug(String.format("Found default role for Kubernetes service account in projects: %s", role));
             return role;
         }
         return createProjectKubernetesAccountRole();
@@ -1855,7 +1853,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             projectManager.assignAccountToProject(project, userAccount.getAccountId(), ProjectAccount.Role.Regular,
                     userAccount.getId(), null);
             Account account = accountService.getAccount(userAccount.getAccountId());
-            LOGGER.debug(String.format("Created Kubernetes service account in project %s: %s", project, account));
+            logger.debug(String.format("Created Kubernetes service account in project %s: %s", project, account));
             return account;
         } finally {
             CallContext.unregister();
@@ -1868,7 +1866,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         List<AccountVO> accounts = accountDao.findAccountsByName(accountName);
         for (AccountVO account : accounts) {
             if (projectManager.canAccessProjectAccount(account, project.getProjectAccountId())) {
-                LOGGER.debug(String.format("Created Kubernetes service account in project %s: %s", project, account));
+                logger.debug(String.format("Created Kubernetes service account in project %s: %s", project, account));
                 return account;
             }
         }
@@ -2372,12 +2370,12 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         if (CollectionUtils.isEmpty(clusters)) {
             return;
         }
-        LOGGER.debug(String.format("Cleaning up %d Kubernetes cluster for %s", clusters.size(), account));
+        logger.debug(String.format("Cleaning up %d Kubernetes cluster for %s", clusters.size(), account));
         for (KubernetesClusterVO cluster : clusters) {
             try {
                 destroyKubernetesCluster(cluster, false);
             } catch (CloudRuntimeException e) {
-                LOGGER.warn(String.format("Failed to destroy Kubernetes cluster: %s during cleanup for %s",
+                logger.warn(String.format("Failed to destroy Kubernetes cluster: %s during cleanup for %s",
                         cluster.getName(), account), e);
             }
         }
