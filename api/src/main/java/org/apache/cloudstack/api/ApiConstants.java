@@ -1341,6 +1341,8 @@ public class ApiConstants {
             "however, the following formats are also accepted: \"yyyy-MM-dd HH:mm:ss\" (e.g.: \"2023-01-01 12:00:00\") and \"yyyy-MM-dd\" (e.g.: \"2023-01-01\" - if the time is not " +
             "added, it will be interpreted as \"23:59:59\"). If the recommended format is not used, the date will be considered in the server timezone.";
 
+    public static final String VMWARE_DC = "vmwaredc";
+
     public static final String DR_CLUSTER_TYPE = "drclustertype";
     public static final String DR_CLUSTER_URL = "drclusterurl";
     public static final String DR_CLUSTER_STATUS = "drclusterstatus";
@@ -1366,9 +1368,6 @@ public class ApiConstants {
     public static final String EXPIRY_DATE = "expirydate";
     public static final String LICENSE_CHECK = "licensecheck";
     public static final String HAS_LICENSE = "haslicense";
-
-    public static final String VMWARE_DC = "vmwaredc";
-
     public static final String ISSUED_DATE = "issueddate";
     public static final String XML_CONFIG = "xmlconfig";
     public static final String CURRENT_VM_ID = "currentvmid";

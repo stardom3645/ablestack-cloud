@@ -140,7 +140,7 @@ public class LibvirtVMDef {
 
         public String getProduct() {
             if (StringUtils.isEmpty(product)) {
-                return "CloudStack KVM Hypervisor";
+                return "ABLESTACK CELL Hypervisor";
             }
             return product;
         }
@@ -1706,7 +1706,9 @@ public class LibvirtVMDef {
             if (StringUtils.isNotBlank(_userIp4Network) && _userIp4Prefix != null) {
                 netBuilder.append(String.format("<ip family='ipv4' address='%s' prefix='%s'/>\n", _userIp4Network, _userIp4Prefix));
             }
-
+            if (_filterrefFilter) {
+                netBuilder.append("<filterref filter='allow-all-traffic'/>");
+            }
             return netBuilder.toString();
         }
 

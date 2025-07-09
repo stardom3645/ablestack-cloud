@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9851,6 +9850,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     "", true, 64, Account.ACCOUNT_ID_SYSTEM, "",
                     "Glue Image Default Template", false, 1, HypervisorType.KVM);
             template.setState(VirtualMachineTemplate.State.Inactive);
+            template.setDynamicallyScalable(true);
             template = _templateDao.persist(template);
             if (template == null) {
                 return null;

@@ -83,6 +83,9 @@ public interface SAML2AuthManager extends PluggableAPIAuthenticator, PluggableSe
     "When enabled SAML2 will validate that the SAML login was performed with a password.  If disabled, other forms of authentication are allowed (two-factor, certificate, etc) on the SAML Authentication Provider", true);
 
 
+    ConfigKey<String> SAMLFailedLoginRedirectUrl = new ConfigKey<String>("Advanced", String.class, "saml2.failed.login.redirect.url", "http://localhost:8080/client/#/user/login?ssoLogin=false",
+            "The URL to redirect the SAML2 login failed message.", true);
+
     SAMLProviderMetadata getSPMetadata();
     SAMLProviderMetadata getIdPMetadata(String entityId);
     Collection<SAMLProviderMetadata> getAllIdPMetadata();

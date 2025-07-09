@@ -544,7 +544,6 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         final String dsPath = disk.getDatastorePath();
         final String dsType = disk.getDatastoreType();
         final String dsName = disk.getDatastoreName();
-        logger.debug("### DataStore [Host:%s, Path:%s, Type:%s, Uuid:%s" ,dsHost, dsPath, dsType, dsName);
         if (dsType != null) {
             List<StoragePoolVO> pools = primaryDataStoreDao.listPoolByHostPath(dsHost, dsPath);
             for (StoragePool pool : pools) {
@@ -561,20 +560,8 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             List<StoragePoolVO> pools = primaryDataStoreDao.listPoolsByCluster(cluster.getId());
             pools.addAll(primaryDataStoreDao.listByDataCenterId(zone.getId()));
             for (StoragePool pool : pools) {
-                if (pool.getUuid().equals(dsName)) {
-                    StoragePoolVO spool = primaryDataStoreDao.findByUuid(dsName);
-                    if (spool != null) {
-                        storagePool = pool;
-                        break;
-                    }
-                }
-            }
-        }
-        if (storagePool == null) {
-            List<StoragePoolVO> pools = primaryDataStoreDao.listPoolByHostPath(dsHost, dsPath);
-            for (StoragePool pool : pools) {
-                if (pool.getDataCenterId() == zone.getId() &&
-                        (pool.getClusterId() == null || pool.getClusterId().equals(cluster.getId())) &&
+                String searchPoolParam = StringUtils.isNotBlank(dsPath) ? dsPath : dsName;
+                if (StringUtils.contains(pool.getPath(), searchPoolParam) &&
                         volumeApiService.doesStoragePoolSupportDiskOffering(pool, diskOffering)) {
                     storagePool = pool;
                     break;
