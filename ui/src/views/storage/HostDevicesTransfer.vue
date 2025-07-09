@@ -271,48 +271,6 @@ export default {
 
     generateXmlConfig (hostDeviceName) {
       const [pciAddress] = hostDeviceName.split(' ')
-    registerVMEventListener (vmId, hostDevicesName) {
-      const eventTypes = ['DestroyVM', 'ExpungeVM', 'UpdateVirtualMachine']
-
-      eventTypes.forEach(eventType => {
-        this.$store.dispatch('event/subscribe', {
-          eventType: eventType,
-          resourceId: vmId,
-          callback: async () => {
-            try {
-              if (eventType === 'UpdateVirtualMachine') {
-                // VM의 현재 상태 확인
-                const response = await api('listVirtualMachines', {
-                  id: vmId,
-                  details: 'all'
-                })
-
-                const vm = response?.listvirtualmachinesresponse?.virtualmachine?.[0]
-                const details = vm?.details || {}
-                const hasDeviceConfig = Object.values(details).some(value =>
-                  value.includes('<hostdev') && value.includes(hostDevicesName)
-                )
-                if (hasDeviceConfig) {
-                  return
-                }
-              }
-
-              // 디비에서 호스트 디바이스 할당 정보 삭제
-              await api('updateHostDevices', {
-                hostid: this.resource.id,
-                hostdevicesname: hostDevicesName,
-                virtualmachineid: vmId
-              })
-            } catch (error) {
-              console.error('Failed to delete host device allocation:', error)
-            }
-          }
-        })
-      })
-    },
-
-    generateXmlConfig (hostDeviceName) {
-      const [pciAddress] = hostDeviceName.split(' ')
       const [bus, slotFunction] = pciAddress.split(':')
       const [slot, func] = slotFunction.split('.')
 
