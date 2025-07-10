@@ -838,6 +838,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             newAgentConnectionsMonitor.shutdownNow();
             return true;
         }
+        initConnectExecutor();
 
         startDirectlyConnectedHosts(false);
 
