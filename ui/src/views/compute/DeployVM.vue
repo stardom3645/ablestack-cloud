@@ -141,7 +141,7 @@
                     </block-radio-group-select>
                   </div>
                 </template>
-              </a-step>                              
+              </a-step>
               <a-step
                 :title="$t('label.image')"
                 :status="zoneSelected ? 'process' : 'wait'">
@@ -1491,8 +1491,17 @@ export default {
         tabList = [{
           key: 'templateid',
           tab: this.$t('label.templates')
+        },
+        {
+          key: 'isoid',
+          tab: this.$t('label.isos')
+        },
+        {
+          key: 'volumeId',
+          tab: this.$t('label.glue.images')
         }]
       }
+      return tabList
     },
     queryGuestOsCategoryId () {
       return this.$route.query.oscategoryid || null

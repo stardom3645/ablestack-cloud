@@ -30,7 +30,7 @@
                       <a-menu-item>
                         <router-link :to="{ path: '/project/' + project.id }">
                           <project-outlined/>
-                            {{ $t('label.view') }} {{  $t('label.project') }}
+                            {{ this.$localStorage.get('LOCALE') == 'ko_KR'? $t('label.project') + ' ' + $t('label.view') : $t('label.view') + ' ' + $t('label.project') }}
                         </router-link>
                       </a-menu-item>
                       <a-menu-item v-if="showProject && ['Admin'].includes($store.getters.userInfo.roletype)">
@@ -350,7 +350,7 @@
         </a-timeline>
         <router-link :to="{ path: '/event' }">
           <a-button>
-            {{ $t('label.view') }} {{ $t('label.events') }}
+            {{ this.$localStorage.get('LOCALE') == 'ko_KR'? $t('label.events') + ' ' + $t('label.view') : $t('label.view') + ' ' + $t('label.events') }}
           </a-button>
         </router-link>
       </chart-card>
