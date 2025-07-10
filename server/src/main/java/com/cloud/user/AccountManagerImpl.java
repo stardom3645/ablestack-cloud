@@ -3130,8 +3130,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
             unsignedRequest = unsignedRequestBuffer.toString().toLowerCase().replaceAll("\\+", "%20");
 
-            Mac mac = Mac.getInstance("HmacSHA1");
-            SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA1");
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA256");
             mac.init(keySpec);
             mac.update(unsignedRequest.getBytes());
             byte[] encryptedBytes = mac.doFinal();
