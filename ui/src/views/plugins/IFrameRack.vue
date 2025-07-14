@@ -42,13 +42,12 @@ export default {
   },
   methods: {
     urlAction () {
-      const theme = this.$localStorage.get('DARK_MODE') ? '&theme=dark' : '&theme=light'
       const port = 7077
       const zoneId = this.resource.id
 
       api('listCapabilities').then(json => {
-        const host = json.listcapabilitiesresponse.capability.host || 'localhost'
-        this.uriInfo = `http://${host}:${port}/index.html?zone_id=${zoneId}&name=default${theme}`
+        const host = json.listcapabilitiesresponse.capability.host || []
+        this.uriInfo = `http://${host}:${port}/index.html?zone_id=${zoneId}`
         this.uriCreateOk = true
       }).catch(err => {
         console.error('capabilities API 실패:', err)
