@@ -115,6 +115,19 @@
           :virtualmachine="vm"
           :loading="loading"/>
       </a-tab-pane>
+      <a-tab-pane :tab="$t('label.listhostdevices')" key="pcidevices" v-if="shouldShowPciDevicesTab">
+        <div v-if="pciDevices.length > 0">
+          <a-table
+            :columns="pciColumns"
+            :dataSource="pciDevices"
+            :pagination="false"
+            :loading="loading">
+          </a-table>
+        </div>
+        <div v-else>
+          {{ $t('label.no.pci.devices') }}
+        </div>
+      </a-tab-pane>
       <a-tab-pane :tab="$t('label.settings')" key="settings">
         <DetailSettings :resource="dataResource" :loading="loading" />
       </a-tab-pane>
@@ -262,7 +275,21 @@ export default {
       editNicLinkStat: '',
       dataPreFill: {},
       securitygroupids: [],
-      securityGroupNetworkProviderUseThisVM: false
+      securityGroupNetworkProviderUseThisVM: false,
+      hasPciDevices: false,
+      pciDevices: [],
+      pciColumns: [
+        {
+          title: this.$t('label.name'),
+          dataIndex: 'hostDevicesName',
+          key: 'hostDevicesName'
+        },
+        {
+          title: this.$t('label.details'),
+          dataIndex: 'hostDevicesText',
+          key: 'hostDevicesText'
+        }
+      ]
     }
   },
   created () {
@@ -291,26 +318,18 @@ export default {
   },
   mounted () {
     this.setCurrentTab()
+    this.fetchPciDevices()
+  },
+  computed: {
+    shouldShowPciDevicesTab () {
+      return this.pciDevices.length > 0
+    }
   },
   methods: {
     setCurrentTab () {
       this.currentTab = this.$route.query.tab ? this.$route.query.tab : 'details'
     },
-    handleChangeTab (e) {
-      this.currentTab = e
-      const query = Object.assign({}, this.$route.query)
-      query.tab = e
-      history.pushState(
-        {},
-        null,
-        '#' + this.$route.path + '?' + Object.keys(query).map(key => {
-          return (
-            encodeURIComponent(key) + '=' + encodeURIComponent(query[key])
-          )
-        }).join('&')
-      )
-    },
-    fetchData () {
+    async fetchData () {
       this.annotations = []
       if (!this.vm || !this.vm.id) {
         return
@@ -339,6 +358,16 @@ export default {
           }
         }
       })
+
+      this.hasPciDevices = false
+      if (this.vm.details) {
+        for (const [key, value] of Object.entries(this.vm.details)) {
+          if (key.startsWith('extraconfig-') && (value.includes('<hostdev') || value.includes('pci'))) {
+            this.hasPciDevices = true
+            break
+          }
+        }
+      }
     },
     listDiskOfferings () {
       api('listDiskOfferings', {
@@ -390,6 +419,147 @@ export default {
     },
     removeMirror () {
       this.showRemoveMirrorVMModal = true
+    },
+    async handleChangeTab (activeKey) {
+      if (activeKey === 'pcidevices') {
+        await this.fetchPciDevices()
+        if (this.pciDevices.length === 0) {
+          this.currentTab = 'details'
+          return
+        }
+      }
+      if (this.currentTab !== activeKey) {
+        this.currentTab = activeKey
+      }
+    },
+    async fetchPciDevices () {
+      this.pciDevices = []
+      if (!this.vm.hostid) {
+        // VM이 정지된 상태에서도 PCI 디바이스 정보 표시
+        if (this.vm.details) {
+          const pciAddresses = []
+
+          for (const [key, value] of Object.entries(this.vm.details)) {
+            if (key.startsWith('extraconfig-') && value.includes('<hostdev')) {
+              const sourceMatch = value.match(/<source>\s*<address[^>]*domain='([^']*)'[^>]*bus='([^']*)'[^>]*slot='([^']*)'[^>]*function='([^']*)'[^>]*\/>\s*<\/source>/)
+              if (sourceMatch) {
+                const [, domain, bus, slot, function_] = sourceMatch
+
+                const domainHex = domain.replace('0x', '')
+                const busHex = bus.replace('0x', '')
+                const slotHex = slot.replace('0x', '')
+                const functionHex = function_.replace('0x', '')
+                const pciAddress = `${busHex.padStart(2, '0')}:${slotHex.padStart(2, '0')}.${functionHex}`
+                pciAddresses.push({
+                  key: key,
+                  pciAddress: pciAddress,
+                  domain: domainHex,
+                  bus: busHex,
+                  slot: slotHex,
+                  function: functionHex
+                })
+              } else {
+              }
+            }
+          }
+          if (pciAddresses.length > 0) {
+            try {
+              let hostId = this.vm.hostid || this.vm.lastHostId
+              if (!hostId) {
+                const zoneResponse = await api('listHosts', {
+                  zoneid: this.vm.zoneid,
+                  type: 'Routing',
+                  state: 'Up'
+                })
+
+                if (zoneResponse?.listhostsresponse?.host && zoneResponse.listhostsresponse.host.length > 0) {
+                  hostId = zoneResponse.listhostsresponse.host[0].id
+                }
+              }
+
+              if (!hostId) {
+                console.error('No hostId available for PCI device lookup')
+                pciAddresses.forEach(addr => {
+                  this.pciDevices.push({
+                    key: addr.key,
+                    hostDevicesName: `PCI Device at ${addr.pciAddress}`,
+                    hostDevicesText: `Domain: ${addr.domain}, Bus: ${addr.bus}, Slot: ${addr.slot}, Function: ${addr.function}`
+                  })
+                })
+                return
+              }
+
+              const response = await api('listHostDevices', {
+                id: hostId
+              })
+
+              const devices = response?.listhostdevicesresponse?.listhostdevices?.[0]
+              if (devices && devices.hostdevicesname && devices.hostdevicestext) {
+                for (let i = 0; i < devices.hostdevicesname.length; i++) {
+                  const deviceName = devices.hostdevicesname[i]
+                  const deviceText = devices.hostdevicestext[i]
+                  const pciMatch = deviceName.match(/^([0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F])/)
+                  if (pciMatch) {
+                    const devicePciAddress = pciMatch[1].toLowerCase()
+
+                    const matchingAddress = pciAddresses.find(addr => {
+                      const addrLower = addr.pciAddress.toLowerCase()
+                      return addrLower === devicePciAddress
+                    })
+                    if (matchingAddress) {
+                      console.log('Found matching device:', deviceName)
+                      this.pciDevices.push({
+                        key: matchingAddress.key,
+                        hostDevicesName: deviceName,
+                        hostDevicesText: deviceText
+                      })
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              pciAddresses.forEach(addr => {
+                this.pciDevices.push({
+                  key: addr.key,
+                  hostDevicesName: `PCI Device at ${addr.pciAddress}`,
+                  hostDevicesText: `Domain: ${addr.domain}, Bus: ${addr.bus}, Slot: ${addr.slot}, Function: ${addr.function}`
+                })
+              })
+            }
+          }
+        }
+        return
+      }
+
+      try {
+        const vmNumericId = this.vm.instancename.split('-')[2]
+        if (!vmNumericId) {
+          console.error('Failed to get VM numeric ID')
+          return
+        }
+
+        const response = await api('listHostDevices', {
+          id: this.vm.hostid
+        })
+
+        const devices = response?.listhostdevicesresponse?.listhostdevices?.[0]
+        if (devices && devices.vmallocations) {
+          Object.entries(devices.vmallocations).forEach(([deviceName, vmId]) => {
+            if (vmId === vmNumericId) {
+              const deviceIndex = devices.hostdevicesname.findIndex(name => name === deviceName)
+              if (deviceIndex !== -1) {
+                this.pciDevices.push({
+                  key: deviceName,
+                  hostDevicesName: devices.hostdevicesname[deviceIndex],
+                  hostDevicesText: devices.hostdevicestext[deviceIndex]
+                })
+              }
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching PCI devices:', error)
+      }
     }
   }
 }
