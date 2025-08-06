@@ -52,6 +52,9 @@ export default {
     name: 'outofbandmanagement',
     component: shallowRef(defineAsyncComponent(() => import('@/views/infra/OobmTab.vue')))
   }, {
+    name: 'hostredfishdata',
+    component: shallowRef(defineAsyncComponent(() => import('@/views/infra/HostRedfishTab.vue')))
+  }, {
     name: 'listhostdevices',
     component: shallowRef(defineAsyncComponent(() => import('@/views/infra/ListHostDevicesTab.vue')))
   }, {
