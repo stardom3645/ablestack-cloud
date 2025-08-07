@@ -91,7 +91,7 @@
         <div>
           <strong>{{ $t('label.powerstate') }}</strong>
           <div>
-            {{ host.outofbandmanagement.powerstate }}
+            {{ host.outofbandmanagement?.powerstate }}
           </div>
         </div>
       </a-list-item>
