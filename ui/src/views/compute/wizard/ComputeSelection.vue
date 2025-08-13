@@ -113,11 +113,19 @@ export default {
     },
     cpuSpeed: {
       type: Number,
-      default: 0
+      default: 1000
     },
     minCpu: {
       type: Number,
-      default: 0
+      default: 1
+    },
+    curCpu: {
+      type: Number,
+      default: 1
+    },
+    curMemory: {
+      type: Number,
+      default: 1
     },
     maxCpu: {
       type: Number,
@@ -125,11 +133,11 @@ export default {
     },
     minMemory: {
       type: Number,
-      default: 0
+      default: 512
     },
     maxMemory: {
       type: Number,
-      default: 256
+      default: 512
     },
     cpuNumberInputDecorator: {
       type: String,
@@ -204,8 +212,8 @@ export default {
   },
   methods: {
     fillValue () {
-      this.cpuNumberInputValue = this.minCpu
-      this.memoryInputValue = this.minMemory
+      this.cpuNumberInputValue = this.curCpu || this.minCpu
+      this.memoryInputValue = this.curMemory || this.minMemory
       this.cpuSpeedInputValue = this.cpuSpeed
 
       if (!this.preFillContent) {
