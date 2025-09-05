@@ -784,9 +784,9 @@ export default {
         encryptdisk: this.encryptdisk,
         kvdoenable: false,
         shareable: false,
-        networkrate: 10000,
         leaseduration: this.leaseduration,
-        leaseexpiryaction: this.leaseexpiryaction
+        leaseexpiryaction: this.leaseexpiryaction,
+        networkrate: '10000'
       })
       this.rules = reactive({
         name: [{ required: true, message: this.$t('message.error.required.input') }],
