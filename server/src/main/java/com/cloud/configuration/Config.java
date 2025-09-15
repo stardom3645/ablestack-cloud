@@ -1824,9 +1824,7 @@ DefaultMaxAccountProjects(
     // StatsCollector
     StatsOutPutGraphiteHost("Advanced", ManagementServer.class, String.class, "stats.output.uri", "", "URI to additionally send StatsCollector statistics to", null),
 
-    SSVMPSK("Hidden", ManagementServer.class, String.class, "upload.post.secret.key", "", "PSK with SSVM", null),
-
-    KvmSshPort("Advanced", ManagementServer.class, String.class, "kvm.ssh.port", "22", "Kvm Host agent port value", null);
+    SSVMPSK("Hidden", ManagementServer.class, String.class, "upload.post.secret.key", "", "PSK with SSVM", null);
 
     private final String _category;
     private final Class<?> _componentClass;
