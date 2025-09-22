@@ -109,10 +109,6 @@ public class StoragePoolResponse extends BaseResponseWithAnnotations {
     @Param(description = "the tags for the storage pool")
     private String tags;
 
-    @SerializedName(ApiConstants.STORAGE_ACCESS_GROUPS)
-    @Param(description = "the storage access groups for the storage pool", since = "4.21.0")
-    private String storageAccessGroups;
-
     @SerializedName(ApiConstants.NFS_MOUNT_OPTIONS)
     @Param(description = "the nfs mount options for the storage pool", since = "4.19.1")
     private String nfsMountOpts;
@@ -152,10 +148,6 @@ public class StoragePoolResponse extends BaseResponseWithAnnotations {
     @SerializedName(ApiConstants.MANAGED)
     @Param(description = "whether this pool is managed or not")
     private Boolean managed;
-
-    @SerializedName(ApiConstants.DETAILS)
-    @Param(description = "the storage pool details")
-    private Map<String, String> details;
 
     public Map<String, String> getCaps() {
         return caps;
@@ -348,14 +340,6 @@ public class StoragePoolResponse extends BaseResponseWithAnnotations {
         this.tags = tags;
     }
 
-    public String getStorageAccessGroups() {
-        return storageAccessGroups;
-    }
-
-    public void setStorageAccessGroups(String storageAccessGroups) {
-        this.storageAccessGroups = storageAccessGroups;
-    }
-
     public Boolean getIsTagARule() {
         return isTagARule;
     }
@@ -422,13 +406,5 @@ public class StoragePoolResponse extends BaseResponseWithAnnotations {
 
     public void setManaged(Boolean managed) {
         this.managed = managed;
-    }
-
-    public Map<String, String> getDetails() {
-        return details;
-    }
-
-    public void setDetails(Map<String, String> details) {
-        this.details = details;
     }
 }

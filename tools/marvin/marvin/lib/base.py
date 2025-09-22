@@ -527,8 +527,7 @@ class VirtualMachine:
                customcpuspeed=None, custommemory=None, rootdisksize=None,
                rootdiskcontroller=None, vpcid=None, macaddress=None, datadisktemplate_diskoffering_list={},
                properties=None, nicnetworklist=None, bootmode=None, boottype=None, dynamicscalingenabled=None,
-               userdataid=None, userdatadetails=None, extraconfig=None, size=None, overridediskofferingid=None,
-               leaseduration=None, leaseexpiryaction=None):
+               userdataid=None, userdatadetails=None, extraconfig=None, size=None, overridediskofferingid=None):
         """Create the instance"""
 
         cmd = deployVirtualMachine.deployVirtualMachineCmd()
@@ -691,12 +690,6 @@ class VirtualMachine:
 
         if extraconfig:
             cmd.extraconfig = extraconfig
-
-        if leaseduration:
-            cmd.leaseduration = leaseduration
-
-        if leaseexpiryaction:
-            cmd.leaseexpiryaction = leaseexpiryaction
 
         virtual_machine = apiclient.deployVirtualMachine(cmd, method=method)
 
@@ -4598,7 +4591,6 @@ class Project:
     def __init__(self, items):
         self.__dict__.update(items)
 
-
     @classmethod
     def create(cls, apiclient, services, account=None, domainid=None, userid=None, accountid=None):
         """Create project"""
@@ -6743,7 +6735,7 @@ class GuestOSCategory:
 class GuestOS:
     """Manage Guest OS"""
 
-    def __init__(self, items):
+    def __init__(self, items, services):
         self.__dict__.update(items)
 
     @classmethod
@@ -6758,7 +6750,7 @@ class GuestOS:
         if details is not None:
             cmd.details = details
 
-        return GuestOS(apiclient.addGuestOs(cmd).__dict__)
+        return (apiclient.addGuestOs(cmd))
 
     @classmethod
     def remove(cls, apiclient, id):
@@ -6795,13 +6787,10 @@ class GuestOS:
 
         return (apiclient.listOsTypes(cmd))
 
-    def delete(self, apiclient):
-        self.remove(apiclient, self.id)
-
 class GuestOsMapping:
     """Manage Guest OS Mappings"""
 
-    def __init__(self, items):
+    def __init__(self, items, services):
         self.__dict__.update(items)
 
     @classmethod
@@ -6819,7 +6808,7 @@ class GuestOsMapping:
         if forced is not None:
             cmd.forced = forced
 
-        return GuestOsMapping(apiclient.addGuestOsMapping(cmd).__dict__)
+        return (apiclient.addGuestOsMapping(cmd))
 
     @classmethod
     def remove(cls, apiclient, id):
@@ -6862,9 +6851,6 @@ class GuestOsMapping:
             cmd.hypervisorversion = hypervisorversion
 
         return (apiclient.listGuestOsMapping(cmd))
-
-    def delete(self, apiclient):
-        self.remove(apiclient, self.id)
 
 class VMSchedule:
 

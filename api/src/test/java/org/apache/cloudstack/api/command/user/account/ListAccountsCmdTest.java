@@ -18,7 +18,6 @@ package org.apache.cloudstack.api.command.user.account;
 
 import java.util.List;
 
-import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.response.AccountResponse;
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,7 +58,7 @@ public class ListAccountsCmdTest {
     }
 
     @Test
-    public void testUpdateAccountResponseNoAccounts() {
+    public void testUpdateDomainResponseNoDomains() {
         ListAccountsCmd cmd = new ListAccountsCmd();
         cmd._resourceLimitService = resourceLimitService;
         cmd.updateAccountResponse(null);
@@ -67,21 +66,11 @@ public class ListAccountsCmdTest {
     }
 
     @Test
-    public void testUpdateDomainResponseWithAccounts() {
+    public void testUpdateDomainResponseWithDomains() {
         ListAccountsCmd cmd = new ListAccountsCmd();
         cmd._resourceLimitService = resourceLimitService;
         ReflectionTestUtils.setField(cmd, "tag", "abc");
         cmd.updateAccountResponse(List.of(Mockito.mock(AccountResponse.class)));
         Mockito.verify(resourceLimitService, Mockito.times(1)).updateTaggedResourceLimitsAndCountsForAccounts(Mockito.any(), Mockito.any());
-    }
-
-    @Test
-    public void testUpdateDomainResponseWithAccountsMinDetails() {
-        ListAccountsCmd cmd = new ListAccountsCmd();
-        ReflectionTestUtils.setField(cmd, "viewDetails", List.of(ApiConstants.DomainDetails.min.toString()));
-        cmd._resourceLimitService = resourceLimitService;
-        ReflectionTestUtils.setField(cmd, "tag", "abc");
-        cmd.updateAccountResponse(List.of(Mockito.mock(AccountResponse.class)));
-        Mockito.verify(resourceLimitService, Mockito.never()).updateTaggedResourceLimitsAndCountsForAccounts(Mockito.any(), Mockito.any());
     }
 }

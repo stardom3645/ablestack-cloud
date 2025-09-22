@@ -26,13 +26,13 @@
             v-ctrl-enter="handleSubmit"
             @finish="handleSubmit">
       <div v-if="template && template.userdataid">
-        <a-typography-text>
+        <a-text type="primary">
             The template "{{ $t(this.template.name) }}" is linked to Userdata "{{ $t(this.template.userdataname) }}" with override policy "{{ $t(this.template.userdatapolicy) }}"
-        </a-typography-text><br/><br/>
+        </a-text><br/><br/>
         <div v-if="templateUserDataParams.length > 0 && !doUserdataOverride">
-          <a-typography-text v-if="this.template && this.template.userdataid && templateUserDataParams.length > 0">
+          <a-text type="primary" v-if="this.template && this.template.userdataid && templateUserDataParams.length > 0">
               Enter the values for the variables in userdata
-          </a-typography-text>
+          </a-text>
           <a-input-group>
             <a-table
               size="small"

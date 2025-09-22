@@ -17,15 +17,12 @@
 
 package org.apache.cloudstack.storage.datastore.api;
 
-import java.util.List;
-
 public class StoragePool {
     String id;
     String name;
     String mediaType;
     String protectionDomainId;
     String systemId;
-    List<String> mdmAddresses;
     StoragePoolStatistics statistics;
 
     public String getId() {
@@ -66,14 +63,6 @@ public class StoragePool {
 
     public void setSystemId(String systemId) {
         this.systemId = systemId;
-    }
-
-    public List<String> getMdmAddresses() {
-        return mdmAddresses;
-    }
-
-    public void setMdmAddresses(List<String> mdmAddresses) {
-        this.mdmAddresses = mdmAddresses;
     }
 
     public StoragePoolStatistics getStatistics() {

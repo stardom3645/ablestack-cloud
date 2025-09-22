@@ -151,12 +151,15 @@ export default {
       return this.prefillContent?.zoneSuperType === 'Edge' || false
     },
     steps () {
-      const steps = [{
-        title: 'label.cluster',
-        fromKey: 'clusterResource',
-        description: 'message.desc.cluster'
-      }]
+      const steps = []
       const hypervisor = this.prefillContent.hypervisor ? this.prefillContent.hypervisor : null
+      if (!this.isEdgeZone) {
+        steps.push({
+          title: 'label.cluster',
+          fromKey: 'clusterResource',
+          description: 'message.desc.cluster'
+        })
+      }
       if (hypervisor !== 'VMware') {
         steps.push({
           title: 'label.host',
@@ -187,8 +190,7 @@ export default {
           title: 'label.cluster.name',
           key: 'clusterName',
           placeHolder: 'message.error.cluster.name',
-          required: true,
-          defaultValue: this.isEdgeZone ? 'Cluster-' + (this.prefillContent?.name || 'Edge') : undefined
+          required: true
         },
         {
           title: 'label.arch',
@@ -477,7 +479,7 @@ export default {
           title: 'label.rados.monitor',
           key: 'primaryStorageRADOSMonitor',
           placeHolder: 'message.error.rados.monitor',
-          required: true,
+          required: false,
           display: {
             primaryStorageProtocol: ['rbd']
           }
@@ -486,14 +488,6 @@ export default {
           title: 'label.rados.pool',
           key: 'primaryStorageRADOSPool',
           placeHolder: 'message.error.rados.pool',
-          required: true,
-          display: {
-            primaryStorageProtocol: ['rbd']
-          }
-        },
-        {
-          title: 'label.data.pool',
-          key: 'primaryStorageDataPool',
           required: false,
           display: {
             primaryStorageProtocol: ['rbd']
@@ -503,7 +497,7 @@ export default {
           title: 'label.rados.user',
           key: 'primaryStorageRADOSUser',
           placeHolder: 'message.error.rados.user',
-          required: true,
+          required: false,
           display: {
             primaryStorageProtocol: ['rbd']
           }
@@ -512,7 +506,7 @@ export default {
           title: 'label.rados.secret',
           key: 'primaryStorageRADOSSecret',
           placeHolder: 'message.error.rados.secret',
-          required: true,
+          required: false,
           display: {
             primaryStorageProtocol: ['rbd']
           }

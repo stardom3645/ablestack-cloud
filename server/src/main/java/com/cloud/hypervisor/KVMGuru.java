@@ -128,7 +128,7 @@ public class KVMGuru extends HypervisorGuruBase implements HypervisorGuru {
      * @param vmProfile vm profile
      */
     protected void setVmQuotaPercentage(VirtualMachineTO to, VirtualMachineProfile vmProfile) {
-        if (to.isLimitCpuUse()) {
+        if (to.getLimitCpuUse()) {
             VirtualMachine vm = vmProfile.getVirtualMachine();
             HostVO host = hostDao.findById(vm.getHostId());
             if (host == null) {

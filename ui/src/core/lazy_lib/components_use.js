@@ -48,7 +48,6 @@ import {
   Divider,
   DatePicker,
   TimePicker,
-  Typography,
   Upload,
   Progress,
   Skeleton,
@@ -118,7 +117,6 @@ export default {
     app.use(Divider)
     app.use(DatePicker)
     app.use(TimePicker)
-    app.use(Typography)
     app.use(Upload)
     app.use(Progress)
     app.use(Skeleton)

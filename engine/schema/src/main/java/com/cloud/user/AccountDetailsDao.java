@@ -19,9 +19,8 @@ package com.cloud.user;
 import java.util.Map;
 
 import com.cloud.utils.db.GenericDao;
-import org.apache.cloudstack.resourcedetail.ResourceDetailsDao;
 
-public interface AccountDetailsDao extends GenericDao<AccountDetailVO, Long>, ResourceDetailsDao<AccountDetailVO> {
+public interface AccountDetailsDao extends GenericDao<AccountDetailVO, Long> {
     Map<String, String> findDetails(long accountId);
 
     void persist(long accountId, Map<String, String> details);
@@ -35,4 +34,6 @@ public interface AccountDetailsDao extends GenericDao<AccountDetailVO, Long>, Re
      * they will get created
      */
     void update(long accountId, Map<String, String> details);
+
+    String getActualValue(AccountDetailVO accountDetailVO);
 }

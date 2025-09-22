@@ -109,15 +109,10 @@ public class RegistryLifecycle implements BeanPostProcessor, SmartLifecycle, App
 
         while (iter.hasNext()) {
             Object next = iter.next();
-            try {
-                if (registry.register(next)) {
-                    logger.debug("Registered " + next);
-                } else {
-                    logger.warn("Bean registration failed for " + next.toString());
-                    iter.remove();
-                }
-            } catch (Throwable e) {
-                logger.warn("Bean registration attempt resulted in an exception for " + next.toString(), e);
+            if (registry.register(next)) {
+                logger.debug("Registered " + next);
+            } else {
+                iter.remove();
             }
         }
     }

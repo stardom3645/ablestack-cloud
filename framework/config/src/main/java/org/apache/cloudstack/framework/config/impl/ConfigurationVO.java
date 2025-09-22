@@ -17,7 +17,6 @@
 package org.apache.cloudstack.framework.config.impl;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -61,7 +60,7 @@ public class ConfigurationVO implements Configuration {
     private boolean dynamic;
 
     @Column(name = "scope")
-    private Integer scope;
+    private String scope;
 
     @Column(name = "updated")
     @Temporal(value = TemporalType.TIMESTAMP)
@@ -103,7 +102,6 @@ public class ConfigurationVO implements Configuration {
         this.name = name;
         this.description = description;
         this.parent = parentConfigName;
-        this.scope = 0;
         setValue(value);
         setDisplayText(displayText);
         setGroupId(groupId);
@@ -114,7 +112,7 @@ public class ConfigurationVO implements Configuration {
         this(key.category(), "DEFAULT", component, key.key(), key.defaultValue(), key.description(), key.displayText(), key.parent());
         defaultValue = key.defaultValue();
         dynamic = key.isDynamic();
-        scope = key.getScopeBitmask();
+        scope = key.scope() != null ? key.scope().toString() : null;
     }
 
     @Override
@@ -185,13 +183,8 @@ public class ConfigurationVO implements Configuration {
     }
 
     @Override
-    public int getScope() {
+    public String getScope() {
         return scope;
-    }
-
-    @Override
-    public List<ConfigKey.Scope> getScopes() {
-        return ConfigKey.Scope.decode(scope);
     }
 
     @Override
@@ -212,7 +205,7 @@ public class ConfigurationVO implements Configuration {
         this.defaultValue = defaultValue;
     }
 
-    public void setScope(int scope) {
+    public void setScope(String scope) {
         this.scope = scope;
     }
 

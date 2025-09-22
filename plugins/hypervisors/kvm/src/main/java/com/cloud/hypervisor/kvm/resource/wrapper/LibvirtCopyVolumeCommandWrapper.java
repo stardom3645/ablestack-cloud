@@ -23,7 +23,6 @@ import java.io.File;
 import java.util.Map;
 
 import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.Command;
 import com.cloud.agent.api.storage.CopyVolumeAnswer;
 import com.cloud.agent.api.storage.CopyVolumeCommand;
 import com.cloud.agent.api.to.DiskTO;
@@ -93,10 +92,7 @@ public final class LibvirtCopyVolumeCommandWrapper extends CommandWrapper<CopyVo
                 secondaryStoragePool.createFolder(volumeDestPath);
                 storagePoolMgr.deleteStoragePool(secondaryStoragePool.getType(), secondaryStoragePool.getUuid());
                 secondaryStoragePool = storagePoolMgr.getStoragePoolByURI(secondaryStorageUrl + volumeDestPath);
-
-                libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.PROCESSING_IN_BACKEND);
                 storagePoolMgr.copyPhysicalDisk(volume, destVolumeName, secondaryStoragePool, 0);
-                libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.COMPLETED);
 
                 return new CopyVolumeAnswer(command, true, null, null, volumeName);
             } else {
@@ -105,14 +101,11 @@ public final class LibvirtCopyVolumeCommandWrapper extends CommandWrapper<CopyVo
 
                 final KVMPhysicalDisk volume = secondaryStoragePool.getPhysicalDisk(command.getVolumePath() + ".qcow2");
 
-                libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.PROCESSING_IN_BACKEND);
                 storagePoolMgr.copyPhysicalDisk(volume, volumeName, primaryPool, 0);
-                libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.COMPLETED);
 
                 return new CopyVolumeAnswer(command, true, null, null, volumeName);
             }
         } catch (final CloudRuntimeException e) {
-            libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.FAILED);
             return new CopyVolumeAnswer(command, false, e.toString(), null, null);
         } finally {
             if (secondaryStoragePool != null) {
@@ -157,13 +150,10 @@ public final class LibvirtCopyVolumeCommandWrapper extends CommandWrapper<CopyVo
 
             KVMPhysicalDisk srcPhysicalDisk = storagePoolMgr.getPhysicalDisk(srcPrimaryDataStore.getPoolType(), srcPrimaryDataStore.getUuid(), srcPath);
 
-            libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.PROCESSING_IN_BACKEND);
             storagePoolMgr.copyPhysicalDisk(srcPhysicalDisk, destVolumeName, secondaryStoragePool, command.getWait() * 1000);
-            libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.COMPLETED);
 
             return new CopyVolumeAnswer(command, true, null, null, destVolumePath + destVolumeName);
         } catch (final CloudRuntimeException e) {
-            libvirtComputingResource.createOrUpdateLogFileForCommand(command, Command.State.FAILED);
             return new CopyVolumeAnswer(command, false, e.toString(), null, null);
         } finally {
             try {

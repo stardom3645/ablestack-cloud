@@ -34,9 +34,6 @@ public class ManagementServerHostPeerDaoImpl extends GenericDaoBase<ManagementSe
     private final SearchBuilder<ManagementServerHostPeerVO> FindForUpdateSearch;
     private final SearchBuilder<ManagementServerHostPeerVO> CountSearch;
     private final SearchBuilder<ManagementServerHostPeerVO> ActiveSearch;
-    private final SearchBuilder<ManagementServerHostPeerVO> FindByOwnerAndPeerMsSearch;
-    private final SearchBuilder<ManagementServerHostPeerVO> FindByPeerMsAndStateSearch;
-
 
     public ManagementServerHostPeerDaoImpl() {
         ClearPeerSearch = createSearchBuilder();
@@ -62,17 +59,6 @@ public class ManagementServerHostPeerDaoImpl extends GenericDaoBase<ManagementSe
         ActiveSearch.and("peerState", ActiveSearch.entity().getPeerState(), SearchCriteria.Op.EQ);
         ActiveSearch.and("lastUpdateTime", ActiveSearch.entity().getLastUpdateTime(), SearchCriteria.Op.GT);
         ActiveSearch.done();
-
-        FindByOwnerAndPeerMsSearch = createSearchBuilder();
-        FindByOwnerAndPeerMsSearch.and("ownerMshost", FindByOwnerAndPeerMsSearch.entity().getOwnerMshost(), SearchCriteria.Op.EQ);
-        FindByOwnerAndPeerMsSearch.and("peerMshost", FindByOwnerAndPeerMsSearch.entity().getPeerMshost(), SearchCriteria.Op.EQ);
-        FindByOwnerAndPeerMsSearch.and("peerState", FindByOwnerAndPeerMsSearch.entity().getPeerState(), SearchCriteria.Op.EQ);
-        FindByOwnerAndPeerMsSearch.done();
-
-        FindByPeerMsAndStateSearch = createSearchBuilder();
-        FindByPeerMsAndStateSearch.and("peerMshost", FindByPeerMsAndStateSearch.entity().getPeerMshost(), SearchCriteria.Op.EQ);
-        FindByPeerMsAndStateSearch.and("peerState", FindByPeerMsAndStateSearch.entity().getPeerState(), SearchCriteria.Op.EQ);
-        FindByPeerMsAndStateSearch.done();
     }
 
     @Override
@@ -121,7 +107,8 @@ public class ManagementServerHostPeerDaoImpl extends GenericDaoBase<ManagementSe
         sc.setParameters("peerRunid", runid);
         sc.setParameters("peerState", state);
 
-        return getCount(sc);
+        List<ManagementServerHostPeerVO> l = listBy(sc);
+        return l.size();
     }
 
     @Override
@@ -145,24 +132,5 @@ public class ManagementServerHostPeerDaoImpl extends GenericDaoBase<ManagementSe
         sc.setParameters("lastUpdateTime", cutTime);
 
         return listBy(sc).size() > 0;
-    }
-
-    @Override
-    public ManagementServerHostPeerVO findByOwnerAndPeerMsHost(long ownerMshost, long peerMshost, ManagementServerHost.State peerState) {
-        SearchCriteria<ManagementServerHostPeerVO> sc = FindByOwnerAndPeerMsSearch.create();
-        sc.setParameters("ownerMshost", ownerMshost);
-        sc.setParameters("peerMshost", peerMshost);
-        sc.setParameters("peerState", peerState);
-
-        return findOneBy(sc);
-    }
-
-    @Override
-    public ManagementServerHostPeerVO findByPeerMsAndState(long peerMshost, ManagementServerHost.State peerState) {
-        SearchCriteria<ManagementServerHostPeerVO> sc = FindByPeerMsAndStateSearch.create();
-        sc.setParameters("peerMshost", peerMshost);
-        sc.setParameters("peerState", peerState);
-
-        return findOneBy(sc);
     }
 }

@@ -102,11 +102,6 @@ public class GetUploadParamsForTemplateCmd extends AbstractGetUploadParamsCmd {
             description = "(VMware only) true if VM deployments should preserve all the configurations defined for this template", since = "4.15.1")
     private Boolean deployAsIs;
 
-    @Parameter(name=ApiConstants.FOR_CKS,
-            type = CommandType.BOOLEAN,
-            description = "if true, the templates would be available for deploying CKS clusters", since = "4.21.0")
-    protected Boolean forCks;
-
     public String getDisplayText() {
         return StringUtils.isBlank(displayText) ? getName() : displayText;
     }
@@ -178,10 +173,6 @@ public class GetUploadParamsForTemplateCmd extends AbstractGetUploadParamsCmd {
     public boolean isDeployAsIs() {
         return Hypervisor.HypervisorType.VMware.toString().equalsIgnoreCase(hypervisor) &&
                 Boolean.TRUE.equals(deployAsIs);
-    }
-
-    public boolean isForCks() {
-        return Boolean.TRUE.equals(forCks);
     }
 
     public CPU.CPUArch getArch() {

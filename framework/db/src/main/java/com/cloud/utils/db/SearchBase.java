@@ -36,8 +36,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import net.sf.cglib.proxy.Factory;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
-
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -124,7 +122,7 @@ public abstract class SearchBase<J extends SearchBase<?, T, K>, T, K> {
         if (_entity == null) {
             throw new RuntimeException("SearchBuilder cannot be modified once it has been setup");
         }
-        if (func.getCount() <= 1 && _specifiedAttrs.size() > 1) {
+        if (_specifiedAttrs.size() > 1) {
             throw new RuntimeException("You can't specify more than one field to search on");
         }
         if (func.getCount() != -1 && (func.getCount() != (params.length + 1))) {
@@ -152,7 +150,7 @@ public abstract class SearchBase<J extends SearchBase<?, T, K>, T, K> {
             }
         }
 
-        final Select select = new Select(func, _specifiedAttrs, declaredField, params);
+        final Select select = new Select(func, _specifiedAttrs.size() == 0 ? null : _specifiedAttrs.get(0), declaredField, params);
         _selects.add(select);
 
         _specifiedAttrs.clear();
@@ -187,7 +185,7 @@ public abstract class SearchBase<J extends SearchBase<?, T, K>, T, K> {
             } catch (final SecurityException e) {
             } catch (final NoSuchFieldException e) {
             }
-            _selects.add(new Select(Func.NATIVE, List.of(attr), field, null));
+            _selects.add(new Select(Func.NATIVE, attr, field, null));
         }
 
         _specifiedAttrs.clear();
@@ -486,9 +484,6 @@ public abstract class SearchBase<J extends SearchBase<?, T, K>, T, K> {
                     tableAlias = attr.table;
                 }
             }
-            if (op == Op.BINARY_OR) {
-                sql.append("(");
-            }
 
             sql.append(tableAlias).append(".").append(attr.columnName).append(op.toString());
             if (op == Op.IN && params.length == 1) {
@@ -533,18 +528,16 @@ public abstract class SearchBase<J extends SearchBase<?, T, K>, T, K> {
 
     protected static class Select {
         public Func func;
-        public List<Attribute> attributes = new ArrayList<>();
+        public Attribute attr;
         public Object[] params;
         public Field field;
 
         protected Select() {
         }
 
-        public Select(final Func func, final List<Attribute> attributes, final Field field, final Object[] params) {
+        public Select(final Func func, final Attribute attr, final Field field, final Object[] params) {
             this.func = func;
-            if (CollectionUtils.isNotEmpty(attributes)) {
-                this.attributes.addAll(attributes);
-            }
+            this.attr = attr;
             this.params = params;
             this.field = field;
         }

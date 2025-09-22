@@ -88,13 +88,6 @@ public interface HighAvailabilityManager extends Manager {
         HA;         // Restart a VM.
     }
 
-    enum ReasonType {
-        Unknown,
-        HostMaintenance,
-        HostDown,
-        HostDegraded;
-    }
-
     enum Step {
         Scheduled, Investigating, Fencing, Stopping, Restarting, Migrating, Cancelled, Done, Error,
     }
@@ -103,7 +96,7 @@ public interface HighAvailabilityManager extends Manager {
      * Investigate why a host has disconnected and migrate the VMs on it
      * if necessary.
      *
-     * @param hostId - the id of the host that has disconnected.
+     * @param host - the host that has disconnected.
      */
     Status investigate(long hostId);
 
@@ -120,19 +113,17 @@ public interface HighAvailabilityManager extends Manager {
      * @param investigate must be investigated before we do anything with this vm.
      */
     void scheduleRestart(VMInstanceVO vm, boolean investigate);
-    void scheduleRestart(VMInstanceVO vm, boolean investigate, ReasonType reasonType);
 
     void cancelDestroy(VMInstanceVO vm, Long hostId);
 
-    boolean scheduleDestroy(VMInstanceVO vm, long hostId, ReasonType reasonType);
+    boolean scheduleDestroy(VMInstanceVO vm, long hostId);
 
     /**
      * Schedule restarts for all vms running on the host.
      * @param host host.
-     * @param investigate whether to investigate
-     * @param reasonType reason for HA work
+     * @param investigate TODO
      */
-    void scheduleRestartForVmsOnHost(HostVO host, boolean investigate, ReasonType reasonType);
+    void scheduleRestartForVmsOnHost(HostVO host, boolean investigate);
 
     /**
      * Schedule the vm for migration.
@@ -141,7 +132,6 @@ public interface HighAvailabilityManager extends Manager {
      * @return true if schedule worked.
      */
     boolean scheduleMigration(VMInstanceVO vm);
-    boolean scheduleMigration(VMInstanceVO vm, ReasonType reasonType);
 
     List<VMInstanceVO> findTakenMigrationWork();
 
@@ -154,11 +144,10 @@ public interface HighAvailabilityManager extends Manager {
      * 3. Check if a VM has been stopped: WorkType.CheckStop
      *
      * @param vm virtual machine to stop.
-     * @param hostId the id of the host the virtual machine is on.
+     * @param host host the virtual machine is on.
      * @param type which type of stop is requested.
      */
     boolean scheduleStop(VMInstanceVO vm, long hostId, WorkType type);
-    boolean scheduleStop(VMInstanceVO vm, long hostId, WorkType type, ReasonType reasonType);
 
     void cancelScheduledMigrations(HostVO host);
 

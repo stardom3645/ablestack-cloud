@@ -29,7 +29,7 @@
     </parent>
     <dependencies>
         <dependency>
-            <groupId>com.citrix.hypervisor</groupId>
+            <groupId>net.java.dev.vcc.thirdparty</groupId>
             <artifactId>xen-api</artifactId>
             <version>${cs.xapi.version}</version>
         </dependency>

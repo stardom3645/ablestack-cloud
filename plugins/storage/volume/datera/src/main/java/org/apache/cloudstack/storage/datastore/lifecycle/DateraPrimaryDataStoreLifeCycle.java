@@ -25,6 +25,7 @@ import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -37,10 +38,8 @@ import com.cloud.storage.StoragePoolAutomation;
 import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.dao.SnapshotDetailsDao;
 import com.cloud.storage.dao.SnapshotDetailsVO;
-import com.cloud.storage.dao.StoragePoolAndAccessGroupMapDao;
 import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.utils.exception.CloudRuntimeException;
-import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.HostScope;
@@ -85,8 +84,6 @@ public class DateraPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLifeCyc
     private StoragePoolHostDao _storagePoolHostDao;
     @Inject
     private StoragePoolAutomation storagePoolAutomation;
-    @Inject
-    private StoragePoolAndAccessGroupMapDao storagePoolAndAccessGroupMapDao;
 
     @Override
     public DataStore initialize(Map<String, Object> dsInfos) {
@@ -100,7 +97,6 @@ public class DateraPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLifeCyc
         Long capacityBytes = (Long) dsInfos.get("capacityBytes");
         Long capacityIops = (Long) dsInfos.get("capacityIops");
         String tags = (String) dsInfos.get("tags");
-        String storageAccessGroups = (String)dsInfos.get(ApiConstants.STORAGE_ACCESS_GROUPS);
         boolean isTagARule = (Boolean)dsInfos.get("isTagARule");
         @SuppressWarnings("unchecked")
         Map<String, String> details = (Map<String, String>) dsInfos.get("details");
@@ -183,7 +179,6 @@ public class DateraPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLifeCyc
         parameters.setCapacityIops(capacityIops);
         parameters.setHypervisorType(HypervisorType.Any);
         parameters.setTags(tags);
-        parameters.setStorageAccessGroups(storageAccessGroups);
         parameters.setIsTagARule(isTagARule);
         parameters.setDetails(details);
 
@@ -248,13 +243,22 @@ public class DateraPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLifeCyc
     @Override
     public boolean attachCluster(DataStore datastore, ClusterScope scope) {
         PrimaryDataStoreInfo primaryDataStoreInfo = (PrimaryDataStoreInfo) datastore;
-        List<HostVO> hostsToConnect = _resourceMgr.getEligibleUpHostsInClusterForStorageConnection(primaryDataStoreInfo);
 
-        logger.debug(String.format("Attaching the pool to each of the hosts %s in the cluster: %s", hostsToConnect, primaryDataStoreInfo.getClusterId()));
+        // check if there is at least one host up in this cluster
+        List<HostVO> allHosts = _resourceMgr.listAllUpAndEnabledHosts(Host.Type.Routing,
+                primaryDataStoreInfo.getClusterId(), primaryDataStoreInfo.getPodId(),
+                primaryDataStoreInfo.getDataCenterId());
+
+        if (allHosts.isEmpty()) {
+            storagePoolDao.expunge(primaryDataStoreInfo.getId());
+
+            throw new CloudRuntimeException(
+                    "No host up to associate a storage pool with in cluster " + primaryDataStoreInfo.getClusterId());
+        }
 
         List<HostVO> poolHosts = new ArrayList<HostVO>();
 
-        for (HostVO host : hostsToConnect) {
+        for (HostVO host : allHosts) {
             try {
                 _storageMgr.connectHostToSharedPool(host, primaryDataStoreInfo.getId());
 
@@ -284,15 +288,19 @@ public class DateraPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLifeCyc
     public boolean attachZone(DataStore dataStore, ZoneScope scope, HypervisorType hypervisorType) {
         dataStoreHelper.attachZone(dataStore);
 
-        List<HostVO> hostsToConnect = new ArrayList<>();
-        HypervisorType[] hypervisorTypes = {HypervisorType.XenServer, HypervisorType.VMware, HypervisorType.KVM};
+        List<HostVO> xenServerHosts = _resourceMgr
+                .listAllUpAndEnabledHostsInOneZoneByHypervisor(HypervisorType.XenServer, scope.getScopeId());
+        List<HostVO> vmWareServerHosts = _resourceMgr
+                .listAllUpAndEnabledHostsInOneZoneByHypervisor(HypervisorType.VMware, scope.getScopeId());
+        List<HostVO> kvmHosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(HypervisorType.KVM,
+                scope.getScopeId());
+        List<HostVO> hosts = new ArrayList<HostVO>();
 
-        for (HypervisorType type : hypervisorTypes) {
-            hostsToConnect.addAll(_resourceMgr.getEligibleUpAndEnabledHostsInZoneForStorageConnection(dataStore, scope.getScopeId(), type));
-        }
+        hosts.addAll(xenServerHosts);
+        hosts.addAll(vmWareServerHosts);
+        hosts.addAll(kvmHosts);
 
-        logger.debug(String.format("In createPool. Attaching the pool to each of the hosts in %s.", hostsToConnect));
-        for (HostVO host : hostsToConnect) {
+        for (HostVO host : hosts) {
             try {
                 _storageMgr.connectHostToSharedPool(host, dataStore.getId());
             } catch (Exception e) {

@@ -75,7 +75,7 @@ public class BucketResponse extends BaseResponseWithTagInformation implements Co
     private String state;
 
     @SerializedName(ApiConstants.QUOTA)
-    @Param(description = "Bucket Quota in GiB")
+    @Param(description = "Bucket Quota in GB")
     private Integer quota;
 
     @SerializedName(ApiConstants.ENCRYPTION)

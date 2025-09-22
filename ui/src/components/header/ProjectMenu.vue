@@ -17,75 +17,112 @@
 
 <template>
   <span class="header-notice-opener">
-    <infinite-scroll-select
-      v-if="!isDisabled"
-      v-model:value="selectedProjectId"
+    <a-select
+      v-if="!isDisabled()"
       class="project-select"
-      api="listProjects"
-      :apiParams="projectsApiParams"
-      resourceType="project"
-      :defaultOption="defaultOption"
-      defaultIcon="project-outlined"
-      :pageSize="100"
-      @change-option="changeProject" />
+      :loading="loading"
+      v-model:value="projectSelected"
+      :filterOption="filterProject"
+      @change="changeProject"
+      @focus="fetchData"
+      showSearch>
+
+      <a-select-option
+        v-for="(project, index) in projects"
+        :key="index"
+        :label="project.displaytext || project.name">
+        <span>
+          <resource-icon v-if="project.icon && project.icon.base64image" :image="project.icon.base64image" size="1x" style="margin-right: 5px"/>
+          <project-outlined v-else style="margin-right: 5px" />
+          {{ project.displaytext || project.name }}
+        </span>
+      </a-select-option>
+    </a-select>
   </span>
 </template>
 
 <script>
-import InfiniteScrollSelect from '@/components/widgets/InfiniteScrollSelect'
+import store from '@/store'
+import { api } from '@/api'
+import _ from 'lodash'
+import ResourceIcon from '@/components/view/ResourceIcon'
 
 export default {
   name: 'ProjectMenu',
   components: {
-    InfiniteScrollSelect
+    ResourceIcon
   },
   data () {
     return {
-      selectedProjectId: null,
+      projects: [],
       loading: false
     }
   },
   created () {
-    this.selectedProjectId = this.$store.getters?.project?.id || this.defaultOption.id
-    this.$store.dispatch('ToggleTheme', this.selectedProjectId ? 'dark' : 'light')
+    this.fetchData()
   },
   computed: {
-    isDisabled () {
-      return !('listProjects' in this.$store.getters.apis)
-    },
-    defaultOption () {
-      return { id: 0, name: this.$t('label.default.view') }
-    },
-    projectsApiParams () {
-      return {
-        details: 'min',
-        listall: true
+    projectSelected () {
+      let projectIndex = 0
+      if (this.$store.getters?.project?.id) {
+        projectIndex = this.projects.findIndex(project => project.id === this.$store.getters.project.id)
+        this.$store.dispatch('ToggleTheme', projectIndex === undefined ? 'light' : 'dark')
       }
-    }
-  },
-  mounted () {
-    this.unwatchProject = this.$store.watch(
-      (state, getters) => getters.project?.id,
-      (newId) => {
-        this.selectedProjectId = newId
-      }
-    )
-  },
-  beforeUnmount () {
-    if (this.unwatchProject) {
-      this.unwatchProject()
+
+      return projectIndex
     }
   },
   methods: {
-    changeProject (project) {
+    fetchData () {
+      if (this.isDisabled()) {
+        return
+      }
+      var page = 1
+      const projects = []
+      const getNextPage = () => {
+        this.loading = true
+        api('listProjects', { listAll: true, page: page, pageSize: 500, details: 'min', showIcon: true }).then(json => {
+          if (json?.listprojectsresponse?.project) {
+            projects.push(...json.listprojectsresponse.project)
+          }
+          if (projects.length < json.listprojectsresponse.count) {
+            page++
+            getNextPage()
+          }
+        }).finally(() => {
+          this.loading = false
+          this.$store.commit('RELOAD_ALL_PROJECTS', projects)
+        })
+      }
+      getNextPage()
+    },
+    isDisabled () {
+      return !Object.prototype.hasOwnProperty.call(store.getters.apis, 'listProjects')
+    },
+    changeProject (index) {
+      const project = this.projects[index]
       this.$store.dispatch('ProjectView', project.id)
       this.$store.dispatch('SetProject', project)
-      this.$store.dispatch('ToggleTheme', project.id ? 'dark' : 'light')
+      this.$store.dispatch('ToggleTheme', project.id === undefined ? 'light' : 'dark')
       this.$message.success(`${this.$t('message.switch.to')} "${project.displaytext || project.name}"`)
       if (this.$route.name !== 'dashboard') {
         this.$router.push({ name: 'dashboard' })
       }
+    },
+    filterProject (input, option) {
+      return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
     }
+  },
+  mounted () {
+    this.$store.watch(
+      (state, getters) => getters.allProjects,
+      (newValue, oldValue) => {
+        if (oldValue !== newValue && newValue !== undefined) {
+          this.projects = _.orderBy(newValue, ['displaytext'], ['asc'])
+          this.projects.unshift({ name: this.$t('label.default.view') })
+        }
+      }
+    )
   }
 }
 </script>

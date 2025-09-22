@@ -166,6 +166,4 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
     List<VolumeVO> searchRemovedByVms(List<Long> vmIds, Long batchSize);
 
     VolumeVO findOneByIScsiName(String iScsiName);
-
-    VolumeVO findByLastIdAndState(long lastVolumeId, Volume.State...states);
 }

@@ -28,11 +28,12 @@ import org.apache.cloudstack.api.BaseResponseWithAssociatedNetwork;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.network.Network;
+import com.cloud.projects.ProjectAccount;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 @SuppressWarnings("unused")
-@EntityReference(value = {Network.class})
+@EntityReference(value = {Network.class, ProjectAccount.class})
 public class NetworkResponse extends BaseResponseWithAssociatedNetwork implements ControlledEntityResponse, SetResourceIconResponse {
 
     @SerializedName(ApiConstants.ID)
@@ -194,10 +195,6 @@ public class NetworkResponse extends BaseResponseWithAssociatedNetwork implement
     @SerializedName(ApiConstants.RESTART_REQUIRED)
     @Param(description = "true network requires restart")
     private Boolean restartRequired;
-
-    @SerializedName(ApiConstants.SPECIFY_VLAN)
-    @Param(description = "true if network supports specifying vlan, false otherwise")
-    private Boolean specifyVlan;
 
     @SerializedName(ApiConstants.SPECIFY_IP_RANGES)
     @Param(description = "true if network supports specifying ip ranges, false otherwise")
@@ -521,10 +518,6 @@ public class NetworkResponse extends BaseResponseWithAssociatedNetwork implement
 
     public void setRestartRequired(Boolean restartRequired) {
         this.restartRequired = restartRequired;
-    }
-
-    public void setSpecifyVlan(Boolean specifyVlan) {
-        this.specifyVlan = specifyVlan;
     }
 
     public void setSpecifyIpRanges(Boolean specifyIpRanges) {

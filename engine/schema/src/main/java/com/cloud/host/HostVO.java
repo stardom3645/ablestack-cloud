@@ -165,9 +165,6 @@ public class HostVO implements Host {
     @Column(name = "uuid")
     private String uuid;
 
-    @Column(name = "storage_access_groups")
-    String storageAccessGroups;
-
     // This is a delayed load value.  If the value is null,
     // then this field has not been loaded yet.
     // Call host dao to load it.
@@ -360,15 +357,6 @@ public class HostVO implements Host {
         return isTagARule;
     }
 
-    @Override
-    public String getStorageAccessGroups() {
-        return storageAccessGroups;
-    }
-
-    public void setStorageAccessGroups(String storageAccessGroups) {
-        this.storageAccessGroups = storageAccessGroups;
-    }
-
     public  HashMap<String, HashMap<String, VgpuTypesInfo>> getGpuGroupDetails() {
         return groupDetails;
     }
@@ -415,9 +403,6 @@ public class HostVO implements Host {
 
     @Column(name = "mgmt_server_id")
     private Long managementServerId;
-
-    @Column(name = "last_mgmt_server_id")
-    private Long lastManagementServerId;
 
     @Column(name = "dom0_memory")
     private long dom0MinMemory;
@@ -588,10 +573,6 @@ public class HostVO implements Host {
         this.managementServerId = managementServerId;
     }
 
-    public void setLastManagementServerId(Long lastManagementServerId) {
-        this.lastManagementServerId = lastManagementServerId;
-    }
-
     public void setMigrationIp(String migrationIp) {
         this.migrationIp = migrationIp;
     }
@@ -667,11 +648,6 @@ public class HostVO implements Host {
     @Override
     public Long getManagementServerId() {
         return managementServerId;
-    }
-
-    @Override
-    public Long getLastManagementServerId() {
-        return lastManagementServerId;
     }
 
     @Override

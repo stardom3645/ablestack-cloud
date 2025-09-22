@@ -198,8 +198,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                 String authnId = SAMLUtils.generateSecureRandomId();
                 samlAuthManager.saveToken(authnId, domainPath, idpMetadata.getEntityId());
                 logger.debug("Sending SAMLRequest id=" + authnId);
-
-                String redirectUrl = SAMLUtils.buildAuthnRequestUrl(authnId, spMetadata, idpMetadata, SAML2AuthManager.SAMLSignatureAlgorithm.value(), autoLoginValue, SAML2AuthManager.SAMLRequirePasswordLogin.value());
+                String redirectUrl = SAMLUtils.buildAuthnRequestUrl(authnId, spMetadata, idpMetadata, SAML2AuthManager.SAMLSignatureAlgorithm.value(), autoLoginValue);
                 resp.sendRedirect(redirectUrl);
                 return "";
             } if (params.containsKey("SAMLart")) {

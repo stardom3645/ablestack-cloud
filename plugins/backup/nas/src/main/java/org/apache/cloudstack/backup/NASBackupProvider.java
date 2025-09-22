@@ -17,6 +17,7 @@
 package org.apache.cloudstack.backup;
 
 import com.cloud.agent.AgentManager;
+import com.cloud.dc.dao.ClusterDao;
 import com.cloud.exception.AgentUnavailableException;
 import com.cloud.exception.OperationTimedoutException;
 import com.cloud.host.Host;
@@ -36,8 +37,8 @@ import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
-
 import org.apache.cloudstack.backup.dao.BackupDao;
+import org.apache.cloudstack.backup.dao.BackupOfferingDao;
 import org.apache.cloudstack.backup.dao.BackupRepositoryDao;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
@@ -46,7 +47,6 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
 import javax.inject.Inject;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -71,7 +71,13 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
     private BackupRepositoryDao backupRepositoryDao;
 
     @Inject
+    private BackupOfferingDao backupOfferingDao;
+
+    @Inject
     private HostDao hostDao;
+
+    @Inject
+    private ClusterDao clusterDao;
 
     @Inject
     private VolumeDao volumeDao;
@@ -102,7 +108,7 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
             // Try to find any Up host in the same cluster
             for (final Host hostInCluster : hostDao.findHypervisorHostInCluster(host.getClusterId())) {
                 if (hostInCluster.getStatus() == Status.Up) {
-                    LOG.debug("Found Host {} in cluster {}", hostInCluster, host.getClusterId());
+                    LOG.debug("Found Host {}", hostInCluster);
                     return hostInCluster;
                 }
             }
@@ -110,7 +116,7 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
         // Try to find any Host in the zone
         for (final HostVO hostInZone : hostDao.listByDataCenterIdAndHypervisorType(host.getDataCenterId(), Hypervisor.HypervisorType.KVM)) {
             if (hostInZone.getStatus() == Status.Up) {
-                LOG.debug("Found Host {} in zone {}", hostInZone, host.getDataCenterId());
+                LOG.debug("Found Host {}", hostInZone);
                 return hostInZone;
             }
         }
@@ -136,7 +142,7 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
     }
 
     @Override
-    public Pair<Boolean, Backup> takeBackup(final VirtualMachine vm) {
+    public boolean takeBackup(final VirtualMachine vm) {
         final Host host = getVMHypervisorHost(vm);
 
         final BackupRepository backupRepository = backupRepositoryDao.findByBackupOfferingId(vm.getBackupOfferingId());
@@ -160,7 +166,7 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
             command.setVolumePaths(volumePaths);
         }
 
-        BackupAnswer answer;
+        BackupAnswer answer = null;
         try {
             answer = (BackupAnswer) agentManager.send(host.getId(), command);
         } catch (AgentUnavailableException e) {
@@ -174,16 +180,12 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
             backupVO.setSize(answer.getSize());
             backupVO.setStatus(Backup.Status.BackedUp);
             backupVO.setBackedUpVolumes(BackupManagerImpl.createVolumeInfoFromVolumes(volumeDao.findByInstance(vm.getId())));
-            if (backupDao.update(backupVO.getId(), backupVO)) {
-                return new Pair<>(true, backupVO);
-            } else {
-                throw new CloudRuntimeException("Failed to update backup");
-            }
+            return backupDao.update(backupVO.getId(), backupVO);
         } else {
             backupVO.setStatus(Backup.Status.Failed);
             backupDao.remove(backupVO.getId());
-            return new Pair<>(false, null);
         }
+        return Objects.nonNull(answer) && answer.getResult();
     }
 
     private BackupVO createBackupObject(VirtualMachine vm, String backupPath) {
@@ -198,7 +200,7 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
                 virtualSize += volume.getSize();
             }
         }
-        backup.setProtectedSize(virtualSize);
+        backup.setProtectedSize(Long.valueOf(virtualSize));
         backup.setStatus(Backup.Status.BackingUp);
         backup.setBackupOfferingId(vm.getBackupOfferingId());
         backup.setAccountId(vm.getAccountId());
@@ -220,13 +222,12 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
         restoreCommand.setBackupPath(backup.getExternalId());
         restoreCommand.setBackupRepoType(backupRepository.getType());
         restoreCommand.setBackupRepoAddress(backupRepository.getAddress());
-        restoreCommand.setMountOptions(backupRepository.getMountOptions());
         restoreCommand.setVmName(vm.getName());
         restoreCommand.setVolumePaths(getVolumePaths(volumes));
         restoreCommand.setVmExists(vm.getRemoved() == null);
         restoreCommand.setVmState(vm.getState());
 
-        BackupAnswer answer;
+        BackupAnswer answer = null;
         try {
             answer = (BackupAnswer) agentManager.send(host.getId(), restoreCommand);
         } catch (AgentUnavailableException e) {
@@ -290,12 +291,11 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
         restoreCommand.setVmName(vmNameAndState.first());
         restoreCommand.setVolumePaths(Collections.singletonList(String.format("%s/%s", dataStore.getLocalPath(), volumeUUID)));
         restoreCommand.setDiskType(volume.getVolumeType().name().toLowerCase(Locale.ROOT));
-        restoreCommand.setMountOptions(backupRepository.getMountOptions());
         restoreCommand.setVmExists(null);
         restoreCommand.setVmState(vmNameAndState.second());
         restoreCommand.setRestoreVolumeUUID(volumeUuid);
 
-        BackupAnswer answer;
+        BackupAnswer answer = null;
         try {
             answer = (BackupAnswer) agentManager.send(hostVO.getId(), restoreCommand);
         } catch (AgentUnavailableException e) {
@@ -347,7 +347,7 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
         DeleteBackupCommand command = new DeleteBackupCommand(backup.getExternalId(), backupRepository.getType(),
                 backupRepository.getAddress(), backupRepository.getMountOptions());
 
-        BackupAnswer answer;
+        BackupAnswer answer = null;
         try {
             answer = (BackupAnswer) agentManager.send(host.getId(), command);
         } catch (AgentUnavailableException e) {
@@ -360,7 +360,6 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
             return backupDao.remove(backup.getId());
         }
 
-        logger.debug("There was an error removing the backup with id {}", backup.getId());
         return false;
     }
 
@@ -376,28 +375,14 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
             Long vmBackupSize = 0L;
             Long vmBackupProtectedSize = 0L;
             for (final Backup backup: backupDao.listByVmId(null, vm.getId())) {
-                if (Objects.nonNull(backup.getSize())) {
-                    vmBackupSize += backup.getSize();
-                }
-                if (Objects.nonNull(backup.getProtectedSize())) {
-                    vmBackupProtectedSize += backup.getProtectedSize();
-                }
+                vmBackupSize += backup.getSize();
+                vmBackupProtectedSize += backup.getProtectedSize();
             }
             Backup.Metric vmBackupMetric = new Backup.Metric(vmBackupSize,vmBackupProtectedSize);
             LOG.debug("Metrics for VM {} is [backup size: {}, data size: {}].", vm, vmBackupMetric.getBackupSize(), vmBackupMetric.getDataSize());
             metrics.put(vm, vmBackupMetric);
         }
         return metrics;
-    }
-
-    @Override
-    public List<Backup.RestorePoint> listRestorePoints(VirtualMachine vm) {
-        return null;
-    }
-
-    @Override
-    public Backup createNewBackupEntryForRestorePoint(Backup.RestorePoint restorePoint, VirtualMachine vm, Backup.Metric metric) {
-        return null;
     }
 
     @Override
@@ -413,6 +398,11 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
     @Override
     public boolean willDeleteBackupsOnOfferingRemoval() {
         return false;
+    }
+
+    @Override
+    public void syncBackups(VirtualMachine vm, Backup.Metric metric) {
+        // TODO: check and sum/return backups metrics on per VM basis
     }
 
     @Override

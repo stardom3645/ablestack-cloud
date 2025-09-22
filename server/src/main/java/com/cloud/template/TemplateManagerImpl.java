@@ -35,8 +35,6 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import com.cloud.cpu.CPU;
-import com.cloud.vm.VirtualMachine;
-import com.cloud.storage.snapshot.SnapshotManager;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
@@ -493,9 +491,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         String mode = cmd.getMode();
         Long eventId = cmd.getStartEventId();
 
-        String extractUrl = extract(account, templateId, url, zoneId, mode, eventId, true);
-        CallContext.current().setEventDetails(String.format("Download URL: %s, ISO ID: %s", extractUrl, _tmpltDao.findById(templateId).getUuid()));
-        return extractUrl;
+        return extract(account, templateId, url, zoneId, mode, eventId, true);
     }
 
     @Override
@@ -513,9 +509,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             throw new InvalidParameterValueException("unable to find template with id " + templateId);
         }
 
-        String extractUrl = extract(caller, templateId, url, zoneId, mode, eventId, false);
-        CallContext.current().setEventDetails(String.format("Download URL: %s, template ID: %s", extractUrl, template.getUuid()));
-        return extractUrl;
+        return extract(caller, templateId, url, zoneId, mode, eventId, false);
     }
 
     @Override
@@ -1149,33 +1143,35 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_ISO_DETACH, eventDescription = "detaching ISO", async = true)
-    public boolean detachIso(long vmId, Long isoParamId, Boolean... extraParams) {
+    public boolean detachIso(long vmId, boolean forced) {
         Account caller = CallContext.current().getCallingAccount();
         Long userId = CallContext.current().getCallingUserId();
 
-        boolean forced = extraParams != null && extraParams.length > 0 ? extraParams[0] : false;
-        boolean isVirtualRouter = extraParams != null && extraParams.length > 1 ? extraParams[1] : false;
-
         // Verify input parameters
-        VirtualMachine virtualMachine = !isVirtualRouter ? _userVmDao.findById(vmId) : _vmInstanceDao.findById(vmId);
-        if (virtualMachine == null || (isVirtualRouter && virtualMachine.getType() != VirtualMachine.Type.DomainRouter)) {
+        UserVmVO vmInstanceCheck = _userVmDao.findById(vmId);
+        if (vmInstanceCheck == null) {
+            throw new InvalidParameterValueException("Unable to find a virtual machine with id " + vmId);
+        }
+
+        UserVm userVM = _userVmDao.findById(vmId);
+        if (userVM == null) {
             throw new InvalidParameterValueException("Please specify a valid VM.");
         }
 
-        _accountMgr.checkAccess(caller, null, true, virtualMachine);
+        _accountMgr.checkAccess(caller, null, true, userVM);
 
-        Long isoId = !isVirtualRouter ? ((UserVm) virtualMachine).getIsoId() : isoParamId;
+        Long isoId = userVM.getIsoId();
         if (isoId == null) {
             throw new InvalidParameterValueException("The specified VM has no ISO attached to it.");
         }
-        CallContext.current().setEventDetails("Vm Id: " + virtualMachine.getUuid() + " ISO Id: " + isoId);
+        CallContext.current().setEventDetails("Vm Id: " + userVM.getUuid() + " ISO Id: " + isoId);
 
-        State vmState = virtualMachine.getState();
+        State vmState = userVM.getState();
         if (vmState != State.Running && vmState != State.Stopped) {
             throw new InvalidParameterValueException("Please specify a VM that is either Stopped or Running.");
         }
 
-        boolean result = attachISOToVM(vmId, userId, isoId, false, forced, isVirtualRouter); // attach=false
+        boolean result = attachISOToVM(vmId, userId, isoId, false, forced); // attach=false
         // => detach
         if (result) {
             return result;
@@ -1186,28 +1182,16 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_ISO_ATTACH, eventDescription = "attaching ISO", async = true)
-    public boolean attachIso(long isoId, long vmId, Boolean... extraParams) {
+    public boolean attachIso(long isoId, long vmId, boolean forced) {
         Account caller = CallContext.current().getCallingAccount();
         Long userId = CallContext.current().getCallingUserId();
 
-        boolean forced = extraParams != null && extraParams.length > 0 ? extraParams[0] : false;
-        boolean isVirtualRouter = extraParams != null && extraParams.length > 1 ? extraParams[1] : false;
-
         // Verify input parameters
-        VirtualMachine vm = _userVmDao.findById(vmId);
+        UserVmVO vm = _userVmDao.findById(vmId);
         if (vm == null) {
-            if (isVirtualRouter) {
-                vm = _vmInstanceDao.findById(vmId);
-                if (vm == null) {
-                    throw new InvalidParameterValueException("Unable to find a virtual machine with id " + vmId);
-                } else if (vm.getType() != VirtualMachine.Type.DomainRouter) {
-                    throw new InvalidParameterValueException("Unable to find a virtual router with id " + vmId);
-                }
-            } else {
-                throw new InvalidParameterValueException("Unable to find a virtual machine with id " + vmId);
-            }
+            throw new InvalidParameterValueException("Unable to find a virtual machine with id " + vmId);
         }
-        if (vm instanceof UserVm && UserVmManager.SHAREDFSVM.equals(((UserVm) vm).getUserVmType())) {
+        if (UserVmManager.SHAREDFSVM.equals(vm.getUserVmType())) {
             throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
 
@@ -1244,7 +1228,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         if (VMWARE_TOOLS_ISO.equals(iso.getUniqueName()) && vm.getHypervisorType() != Hypervisor.HypervisorType.VMware) {
             throw new InvalidParameterValueException("Cannot attach VMware tools drivers to incompatible hypervisor " + vm.getHypervisorType());
         }
-        boolean result = attachISOToVM(vmId, userId, isoId, true, forced, isVirtualRouter);
+        boolean result = attachISOToVM(vmId, userId, isoId, true, forced);
         if (result) {
             return result;
         } else {
@@ -1283,10 +1267,10 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         }
     }
 
-    private boolean attachISOToVM(long vmId, long isoId, boolean attach, boolean forced, boolean isVirtualRouter) {
-        VirtualMachine vm = !isVirtualRouter ? _userVmDao.findById(vmId) : _vmInstanceDao.findById(vmId);
+    private boolean attachISOToVM(long vmId, long isoId, boolean attach, boolean forced) {
+        UserVmVO vm = _userVmDao.findById(vmId);
 
-        if (vm == null || (isVirtualRouter && vm.getType() != VirtualMachine.Type.DomainRouter)) {
+        if (vm == null) {
             return false;
         } else if (vm.getState() != State.Running) {
             return true;
@@ -1325,16 +1309,16 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         return (a != null && a.getResult());
     }
 
-    private boolean attachISOToVM(long vmId, long userId, long isoId, boolean attach, boolean forced, boolean isVirtualRouter) {
+    private boolean attachISOToVM(long vmId, long userId, long isoId, boolean attach, boolean forced) {
         UserVmVO vm = _userVmDao.findById(vmId);
         VMTemplateVO iso = _tmpltDao.findById(isoId);
 
-        boolean success = attachISOToVM(vmId, isoId, attach, forced, isVirtualRouter);
-        if (success && attach && !isVirtualRouter) {
+        boolean success = attachISOToVM(vmId, isoId, attach, forced);
+        if (success && attach) {
             vm.setIsoId(iso.getId());
             _userVmDao.update(vmId, vm);
         }
-        if (success && !attach && !isVirtualRouter) {
+        if (success && !attach) {
             vm.setIsoId(null);
             _userVmDao.update(vmId, vm);
         }
@@ -1693,10 +1677,8 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             if (snapshotId != null) {
                 DataStoreRole dataStoreRole = snapshotHelper.getDataStoreRole(snapshot);
                 kvmSnapshotOnlyInPrimaryStorage = snapshotHelper.isKvmSnapshotOnlyInPrimaryStorage(snapshot, dataStoreRole);
+
                 snapInfo = _snapshotFactory.getSnapshotWithRoleAndZone(snapshotId, dataStoreRole, zoneId);
-
-                boolean kvmIncrementalSnapshot = SnapshotManager.kvmIncrementalSnapshot.valueIn(_hostDao.findClusterIdByVolumeInfo(snapInfo.getBaseVolume()));
-
                 if (dataStoreRole == DataStoreRole.Image || kvmSnapshotOnlyInPrimaryStorage) {
                     snapInfo = snapshotHelper.backupSnapshotToSecondaryStorageIfNotExists(snapInfo, dataStoreRole, snapshot, kvmSnapshotOnlyInPrimaryStorage);
                     _accountMgr.checkAccess(caller, null, true, snapInfo);
@@ -1705,9 +1687,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                     if (snapStore != null) {
                         store = snapStore; // pick snapshot image store to create template
                     }
-                }
-                if (kvmIncrementalSnapshot && DataStoreRole.Image.equals(dataStoreRole)) {
-                    snapInfo = snapshotHelper.convertSnapshotIfNeeded(snapInfo);
                 }
 
                 future = _tmpltSvr.createTemplateFromSnapshotAsync(snapInfo, tmplInfo, store);
@@ -2401,7 +2380,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         Map details = cmd.getDetails();
         Account account = CallContext.current().getCallingAccount();
         boolean cleanupDetails = cmd.isCleanupDetails();
-        Boolean forCks = cmd instanceof UpdateTemplateCmd ? ((UpdateTemplateCmd) cmd).getForCks() : null;
         CPU.CPUArch arch = cmd.getCPUArch();
 
         // verify that template exists
@@ -2451,7 +2429,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                   isRoutingTemplate == null &&
                   templateType == null &&
                   templateTag == null &&
-                  forCks == null &&
                   arch == null &&
                   (! cleanupDetails && details == null) //update details in every case except this one
                   );
@@ -2555,9 +2532,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         else if (details != null && !details.isEmpty()) {
             template.setDetails(details);
             _tmpltDao.saveDetails(template);
-        }
-        if (forCks != null) {
-            template.setForCks(forCks);
         }
 
         _tmpltDao.update(id, template);

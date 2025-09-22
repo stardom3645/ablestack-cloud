@@ -25,7 +25,6 @@ public class TransferAgentCommand extends Command {
     protected long agentId;
     protected long futureOwner;
     protected long currentOwner;
-    protected boolean isConnectionTransfer;
     Event event;
 
     protected TransferAgentCommand() {
@@ -36,11 +35,6 @@ public class TransferAgentCommand extends Command {
         this.currentOwner = currentOwner;
         this.futureOwner = futureOwner;
         this.event = event;
-    }
-
-    public TransferAgentCommand(long agentId, long currentOwner, long futureOwner, Event event, boolean isConnectionTransfer) {
-        this(agentId, currentOwner, futureOwner, event);
-        this.isConnectionTransfer = isConnectionTransfer;
     }
 
     public long getAgentId() {
@@ -57,10 +51,6 @@ public class TransferAgentCommand extends Command {
 
     public long getCurrentOwner() {
         return currentOwner;
-    }
-
-    public boolean isConnectionTransfer() {
-        return isConnectionTransfer;
     }
 
     @Override

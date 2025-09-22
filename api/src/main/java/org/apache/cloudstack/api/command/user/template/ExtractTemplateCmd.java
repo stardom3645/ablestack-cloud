@@ -101,15 +101,7 @@ public class ExtractTemplateCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        String templateId = this._uuidMgr.getUuid(VirtualMachineTemplate.class, getId());
-        String baseDescription = String.format("Extracting template: %s", templateId);
-
-        Long zoneId = getZoneId();
-        if (zoneId == null) {
-            return baseDescription;
-        }
-
-        return String.format("%s from zone: %s", baseDescription, this._uuidMgr.getUuid(DataCenter.class, zoneId));
+     return "extracting template: " + this._uuidMgr.getUuid(VirtualMachineTemplate.class, getId()) + ((getZoneId() != null) ? " from zone: " + this._uuidMgr.getUuid(DataCenter.class, getZoneId()) : "");
     }
 
     @Override

@@ -21,14 +21,12 @@ package org.apache.cloudstack.storage.volume;
 
 import com.cloud.agent.api.storage.DownloadAnswer;
 import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.hypervisor.Hypervisor;
 import com.cloud.storage.DataStoreRole;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.Storage;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.VolumeDao;
-import com.cloud.utils.Pair;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.NoTransitionException;
 import java.util.Arrays;
@@ -40,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import junit.framework.TestCase;
-import org.apache.cloudstack.engine.orchestration.service.VolumeOrchestrationService;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine;
 import org.apache.cloudstack.storage.command.CopyCmdAnswer;
@@ -85,9 +82,6 @@ public class VolumeObjectTest extends TestCase{
     @Mock
     ObjectInDataStoreManager objectInDataStoreManagerMock;
 
-    @Mock
-    VolumeOrchestrationService orchestrationServiceMock;
-
     Set<Function<DiskOfferingVO, Long>> diskOfferingVoMethodsWithLongReturn = new HashSet<>();
 
     List<ObjectInDataStoreStateMachine.Event> objectInDataStoreStateMachineEvents = Arrays.asList(ObjectInDataStoreStateMachine.Event.values());
@@ -96,9 +90,6 @@ public class VolumeObjectTest extends TestCase{
 
     @Before
     public void setup(){
-        volumeObjectSpy.orchestrationService = orchestrationServiceMock;
-        Mockito.doReturn(new Pair<>(List.of(), Set.of())).when(orchestrationServiceMock).getVolumeCheckpointPathsAndImageStoreUrls(Mockito.anyLong(), Mockito.any());
-        Mockito.doReturn(Hypervisor.HypervisorType.KVM).when(volumeObjectSpy).getHypervisorType();
         volumeObjectSpy.configure(dataStoreMock, volumeVoMock);
         volumeObjectSpy.volumeStoreDao = volumeDataStoreDaoMock;
         volumeObjectSpy.volumeDao = volumeDaoMock;
@@ -371,8 +362,7 @@ public class VolumeObjectTest extends TestCase{
         volumeObjectTo.setFormat(null);
 
         volumeObjectSpy.setVolumeFormat(volumeObjectTo, false, volumeVoMock);
-
-        Mockito.verify(volumeVoMock, Mockito.never()).setFormat(Mockito.any());
+        Mockito.verifyNoInteractions(volumeVoMock);
     }
 
     @Test
@@ -381,8 +371,7 @@ public class VolumeObjectTest extends TestCase{
         volumeObjectTo.setFormat(null);
 
         volumeObjectSpy.setVolumeFormat(volumeObjectTo, true, volumeVoMock);
-
-        Mockito.verify(volumeVoMock, Mockito.never()).setFormat(Mockito.any());
+        Mockito.verifyNoInteractions(volumeVoMock);
     }
 
     @Test
@@ -396,7 +385,7 @@ public class VolumeObjectTest extends TestCase{
             volumeObjectSpy.setVolumeFormat(volumeObjectTo, false, volumeVoMock);
         });
 
-        Mockito.verify(volumeVoMock, Mockito.never()).setFormat(Mockito.any());
+        Mockito.verifyNoInteractions(volumeVoMock);
     }
 
     @Test

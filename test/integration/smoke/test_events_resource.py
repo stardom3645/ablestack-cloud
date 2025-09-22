@@ -20,6 +20,10 @@ import json
 import os
 import tempfile
 import time
+import unittest
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from datetime import datetime
 
@@ -161,7 +165,6 @@ class TestEventsResource(cloudstackTestCase):
         self.cleanup.remove(volume)
         ts = str(time.time())
         virtual_machine.update(self.apiclient, displayname=ts)
-        virtual_machine.start(self.apiclient)
         virtual_machine.delete(self.apiclient)
         self.cleanup.remove(virtual_machine)
         account_network.update(self.apiclient, name=account_network.name + ts)

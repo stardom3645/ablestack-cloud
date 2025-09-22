@@ -42,7 +42,7 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item name="quota" ref="quota" :label="$t('label.quotagib')">
+        <a-form-item name="quota" ref="quota" :label="$t('label.quotagb')">
           <a-input
             v-model:value="form.quota"
             :placeholder="$t('label.quota')"/>
@@ -125,8 +125,7 @@ export default {
       })
       this.rules = reactive({
         name: [{ required: true, message: this.$t('label.required') }],
-        objectstore: [{ required: true, message: this.$t('label.required') }],
-        quota: [{ required: true, message: this.$t('label.required') }]
+        objectstore: [{ required: true, message: this.$t('label.required') }]
       })
     },
     fetchData () {

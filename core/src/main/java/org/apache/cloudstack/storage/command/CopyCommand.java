@@ -93,9 +93,4 @@ public class CopyCommand extends StorageSubSystemCommand {
     public void setExecuteInSequence(final boolean inSeq) {
         executeInSequence = inSeq;
     }
-
-    @Override
-    public boolean isReconcile() {
-        return true;
-    }
 }

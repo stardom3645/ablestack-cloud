@@ -109,7 +109,7 @@ public class AgentRoutingResource extends AgentStorageResource {
     public PingCommand getCurrentStatus(long id) {
         TransactionLegacy txn = TransactionLegacy.open(TransactionLegacy.SIMULATOR_DB);
         try {
-            MockConfigurationVO config = null;
+            MockConfigurationVO config = _simMgr.getMockConfigurationDao().findByNameBottomUP(agentHost.getDataCenterId(), agentHost.getPodId(), agentHost.getClusterId(), agentHost.getId(), "PingCommand");
             if (config != null) {
                 Map<String, String> configParameters = config.getParameters();
                 for (Map.Entry<String, String> entry : configParameters.entrySet()) {
@@ -122,7 +122,7 @@ public class AgentRoutingResource extends AgentStorageResource {
                 }
             }
 
-            config = null;
+            config = _simMgr.getMockConfigurationDao().findByNameBottomUP(agentHost.getDataCenterId(), agentHost.getPodId(), agentHost.getClusterId(), agentHost.getId(), "PingRoutingWithNwGroupsCommand");
             if (config != null) {
                 String message = config.getJsonResponse();
                 if (message != null) {
@@ -177,7 +177,6 @@ public class AgentRoutingResource extends AgentStorageResource {
         StartupRoutingCommand cmd =
             new StartupRoutingCommand((Integer)info.get(0), (Long)info.get(1), (Long)info.get(2), (Long)info.get(4), (String)info.get(3), HypervisorType.Simulator,
                 RouterPrivateIpStrategy.HostLocal);
-        cmd.setCpuArch((String)info.get(5));
 
         Map<String, String> hostDetails = new HashMap<String, String>();
         hostDetails.put(RouterPrivateIpStrategy.class.getCanonicalName(), RouterPrivateIpStrategy.DcGlobal.toString());
@@ -275,14 +274,12 @@ public class AgentRoutingResource extends AgentStorageResource {
         long cpus = agentHost.getCpuCount();
         long ram = agentHost.getMemorySize();
         long dom0Ram = agentHost.getMemorySize() / 10;
-        String arch = agentHost.getArch();
 
         info.add((int)cpus);
         info.add(speed);
         info.add(ram);
         info.add(agentHost.getCapabilities());
         info.add(dom0Ram);
-        info.add(arch);
 
         return info;
     }

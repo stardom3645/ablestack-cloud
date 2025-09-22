@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.vm.dao;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +81,7 @@ public interface VMInstanceDao extends GenericDao<VMInstanceVO, Long>, StateDao<
 
     List<VMInstanceVO> listByHostAndState(long hostId, State... states);
 
-    int countByTypes(VirtualMachine.Type... types);
+    List<VMInstanceVO> listByTypes(VirtualMachine.Type... types);
 
     VMInstanceVO findByIdTypes(long id, VirtualMachine.Type... types);
 
@@ -145,20 +144,13 @@ public interface VMInstanceDao extends GenericDao<VMInstanceVO, Long>, StateDao<
      */
     List<String> listDistinctHostNames(long networkId, VirtualMachine.Type... types);
 
-    List<VMInstanceVO> findByHostInStatesExcluding(Long hostId, Collection<Long> excludingIds, State... states);
-
     List<VMInstanceVO> findByHostInStates(Long hostId, State... states);
 
     List<VMInstanceVO> listStartingWithNoHostId();
 
     boolean updatePowerState(long instanceId, long powerHostId, VirtualMachine.PowerState powerState, Date wisdomEra);
 
-    Map<Long, VirtualMachine.PowerState> updatePowerState(Map<Long, VirtualMachine.PowerState> instancePowerStates,
-              long powerHostId, Date wisdomEra);
-
     void resetVmPowerStateTracking(long instanceId);
-
-    void resetVmPowerStateTracking(List<Long> instanceId);
 
     void resetHostPowerStateTracking(long hostId);
 
@@ -166,7 +158,7 @@ public interface VMInstanceDao extends GenericDao<VMInstanceVO, Long>, StateDao<
 
     VMInstanceVO findVMByHostNameInZone(String hostName, long zoneId);
 
-    boolean isPowerStateUpToDate(VMInstanceVO instance);
+    boolean isPowerStateUpToDate(long instanceId);
 
     List<VMInstanceVO> listNonMigratingVmsByHostEqualsLastHost(long hostId);
 
@@ -178,13 +170,4 @@ public interface VMInstanceDao extends GenericDao<VMInstanceVO, Long>, StateDao<
              List<Long> skippedVmIds);
 
     Pair<List<VMInstanceVO>, Integer> listByVmsNotInClusterUsingPool(long clusterId, long poolId);
-
-    List<VMInstanceVO> listIdServiceOfferingForUpVmsByHostId(Long hostId);
-
-    List<VMInstanceVO> listIdServiceOfferingForVmsMigratingFromHost(Long hostId);
-
-    Map<String, Long> getNameIdMapForVmInstanceNames(Collection<String> names);
-
-    Map<String, Long> getNameIdMapForVmIds(Collection<Long> ids);
-
 }

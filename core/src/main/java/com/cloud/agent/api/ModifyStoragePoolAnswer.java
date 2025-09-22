@@ -46,10 +46,6 @@ public class ModifyStoragePoolAnswer extends Answer {
         templateInfo = tInfo;
     }
 
-    public ModifyStoragePoolAnswer(ModifyStoragePoolCommand cmd, boolean success, String details) {
-        super(cmd, success, details);
-    }
-
     public void setPoolInfo(StoragePoolInfo poolInfo) {
         this.poolInfo = poolInfo;
     }

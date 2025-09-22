@@ -21,15 +21,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.commons.collections.CollectionUtils;
 
 import com.cloud.configuration.Config;
 import com.cloud.exception.InsufficientServerCapacityException;
+import com.cloud.host.HostVO;
 import com.cloud.resource.ResourceManager;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
@@ -39,6 +38,7 @@ import com.cloud.utils.DateUtil;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachineProfile;
+import org.springframework.util.CollectionUtils;
 
 public class ImplicitDedicationPlanner extends FirstFitPlanner implements DeploymentClusterPlanner {
 
@@ -73,11 +73,12 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
         boolean preferred = isServiceOfferingUsingPlannerInPreferredMode(vmProfile.getServiceOfferingId());
 
         // Get the list of all the hosts in the given clusters
-        List<Long> allHosts = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(clusterList)) {
-            allHosts = clusterList.stream()
-                    .flatMap(cluster -> hostDao.listIdsByClusterId(cluster).stream())
-                    .collect(Collectors.toList());
+        List<Long> allHosts = new ArrayList<Long>();
+        for (Long cluster : clusterList) {
+            List<HostVO> hostsInCluster = resourceMgr.listAllHostsInCluster(cluster);
+            for (HostVO hostVO : hostsInCluster) {
+                allHosts.add(hostVO.getId());
+            }
         }
 
         // Go over all the hosts in the cluster and get a list of
@@ -223,15 +224,20 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
     }
 
     private List<Long> getUpdatedClusterList(List<Long> clusterList, Set<Long> hostsSet) {
-        if (CollectionUtils.isEmpty(clusterList)) {
-            return new ArrayList<>();
+        List<Long> updatedClusterList = new ArrayList<Long>();
+        for (Long cluster : clusterList) {
+            List<HostVO> hosts = resourceMgr.listAllHostsInCluster(cluster);
+            Set<Long> hostsInClusterSet = new HashSet<Long>();
+            for (HostVO host : hosts) {
+                hostsInClusterSet.add(host.getId());
+            }
+
+            if (!hostsSet.containsAll(hostsInClusterSet)) {
+                updatedClusterList.add(cluster);
+            }
         }
-        return clusterList.stream()
-                .filter(cluster -> {
-                    Set<Long> hostsInClusterSet = new HashSet<>(hostDao.listIdsByClusterId(cluster));
-                    return !hostsSet.containsAll(hostsInClusterSet);
-                })
-                .collect(Collectors.toList());
+
+        return updatedClusterList;
     }
 
     @Override
@@ -251,11 +257,15 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
             Account account = vmProfile.getOwner();
 
             // Get the list of all the hosts in the given clusters
-            List<Long> allHosts = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(clusterList)) {
-                allHosts = clusterList.stream()
-                        .flatMap(cluster -> hostDao.listIdsByClusterId(cluster).stream())
-                        .collect(Collectors.toList());
+            List<Long> allHosts = new ArrayList<Long>();
+            if (!CollectionUtils.isEmpty(clusterList)) {
+                for (Long cluster : clusterList) {
+                    List<HostVO> hostsInCluster = resourceMgr.listAllHostsInCluster(cluster);
+                    for (HostVO hostVO : hostsInCluster) {
+
+                        allHosts.add(hostVO.getId());
+                    }
+                }
             }
             // Go over all the hosts in the cluster and get a list of
             // 1. All empty hosts, not running any vms.

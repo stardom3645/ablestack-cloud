@@ -49,12 +49,8 @@ public class GenericPresetVariable {
         fieldNamesToIncludeInToString.add("name");
     }
 
-    /***
-     * Converts the preset variable into a valid JSON object that will be injected into the JS interpreter.
-     * This method should not be overridden or changed.
-     */
     @Override
-    public final String toString() {
+    public String toString() {
         return ReflectionToStringBuilderUtils.reflectOnlySelectedFields(this, fieldNamesToIncludeInToString.toArray(new String[0]));
     }
 }

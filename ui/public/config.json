@@ -96,8 +96,5 @@
   "basicZoneEnabled": true,
   "multipleServer": false,
   "allowSettingTheme": true,
-  "imageSelectionInterface": "modern",
-  "showUserCategoryForModernImageSelection": true,
-  "showAllCategoryForModernImageSelection": false,
   "docHelpMappings": {}
 }

@@ -25,6 +25,7 @@ import com.cloud.network.vpc.Vpc;
 import com.cloud.network.vpc.VpcService;
 import com.cloud.user.AccountService;
 import com.cloud.utils.db.EntityManager;
+import junit.framework.TestCase;
 import org.apache.cloudstack.api.ResponseGenerator;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.response.VpcResponse;
@@ -38,7 +39,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CreateVPCCmdTest {
+public class CreateVPCCmdTest extends TestCase {
 
     @Mock
     public VpcService _vpcService;
@@ -46,13 +47,9 @@ public class CreateVPCCmdTest {
     public EntityManager _entityMgr;
     @Mock
     public AccountService _accountService;
-    @Mock
-    private ResponseGenerator _responseGenerator;
-    @Mock
-    private Object job;
-
+    private ResponseGenerator responseGenerator;
     @InjectMocks
-    CreateVPCCmd cmd;
+    CreateVPCCmd cmd = new CreateVPCCmd();
 
     @Test
     public void testGetAccountName() {
@@ -188,9 +185,11 @@ public class CreateVPCCmdTest {
         VpcResponse response = Mockito.mock(VpcResponse.class);
 
         ReflectionTestUtils.setField(cmd, "id", 1L);
+        responseGenerator = Mockito.mock(ResponseGenerator.class);
         Mockito.doNothing().when(_vpcService).startVpc(cmd);
         Mockito.when(_entityMgr.findById(Mockito.eq(Vpc.class), Mockito.any(Long.class))).thenReturn(vpc);
-        Mockito.when(_responseGenerator.createVpcResponse(ResponseObject.ResponseView.Restricted, vpc)).thenReturn(response);
+        cmd._responseGenerator = responseGenerator;
+        Mockito.when(responseGenerator.createVpcResponse(ResponseObject.ResponseView.Restricted, vpc)).thenReturn(response);
         cmd.execute();
         Mockito.verify(_vpcService, Mockito.times(1)).startVpc(cmd);
     }

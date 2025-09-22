@@ -421,7 +421,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     public long countFreeIpsInVlan(long vlanDbId) {
         SearchCriteria<IPAddressVO> sc = VlanDbIdSearchUnallocated.create();
         sc.setParameters("vlanDbId", vlanDbId);
-        return getCount(sc);
+        return listBy(sc).size();
     }
 
     @Override

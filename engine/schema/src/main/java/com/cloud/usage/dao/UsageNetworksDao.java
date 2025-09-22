@@ -28,6 +28,4 @@ public interface UsageNetworksDao extends GenericDao<UsageNetworksVO, Long> {
     void remove(long networkId, Date removed);
 
     List<UsageNetworksVO> getUsageRecords(Long accountId, Date startDate, Date endDate);
-
-    List<UsageNetworksVO> listAll(long networkId);
 }

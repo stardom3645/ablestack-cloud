@@ -21,8 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
-import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStoreInfo;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 
@@ -30,7 +28,6 @@ import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.agent.api.VgpuTypesInfo;
 import com.cloud.agent.api.to.GPUDeviceTO;
-import com.cloud.cpu.CPU;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.dc.PodCluster;
@@ -69,17 +66,6 @@ public interface ResourceManager extends ResourceService, Configurable {
                     + "To force-stop VMs, choose 'ForceStop' strategy",
             true, ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select, "Error,Migration,ForceStop");
 
-    ConfigKey<String> SystemVmPreferredArchitecture = new ConfigKey<>(
-            String.class,
-            "system.vm.preferred.architecture",
-            "Advanced",
-            CPU.CPUArch.getDefault().getType(),
-            "Preferred architecture for the system VMs including virtual routers",
-            true,
-            ConfigKey.Scope.Zone, null, null, null, null, null,
-            ConfigKey.Kind.Select,
-            "," + CPU.CPUArch.getTypesAsCSV());
-
     /**
      * Register a listener for different types of resource life cycle events.
      * There can only be one type of listener per type of host.
@@ -103,8 +89,6 @@ public interface ResourceManager extends ResourceService, Configurable {
     public void unregisterResourceStateAdapter(String name);
 
     public Host createHostAndAgent(Long hostId, ServerResource resource, Map<String, String> details, boolean old, List<String> hostTags, boolean forRebalance);
-
-    public Host createHostAndAgent(Long hostId, ServerResource resource, Map<String, String> details, boolean old, List<String> hostTags, boolean forRebalance, boolean isTransferredConnection);
 
     public Host addHost(long zoneId, ServerResource resource, Type hostType, Map<String, String> hostDetails);
 
@@ -161,13 +145,13 @@ public interface ResourceManager extends ResourceService, Configurable {
 
     public List<HostVO> listAllHostsInOneZoneNotInClusterByHypervisors(List<HypervisorType> types, long dcId, long clusterId);
 
-    public List<HypervisorType> listAvailHypervisorInZone(Long zoneId);
+    public List<HypervisorType> listAvailHypervisorInZone(Long hostId, Long zoneId);
 
     public HostVO findHostByGuid(String guid);
 
     public HostVO findHostByName(String name);
 
-    HostStats getHostStatistics(Host host);
+    HostStats getHostStatistics(long hostId);
 
     Long getGuestOSCategoryId(long hostId);
 
@@ -245,12 +229,4 @@ public interface ResourceManager extends ResourceService, Configurable {
     HostVO findOneRandomRunningHostByHypervisor(HypervisorType type, Long dcId);
 
     boolean cancelMaintenance(final long hostId);
-
-    void updateStoragePoolConnectionsOnHosts(Long poolId, List<String> storageAccessGroups);
-
-    List<HostVO> getEligibleUpHostsInClusterForStorageConnection(PrimaryDataStoreInfo primaryStore);
-
-    List<HostVO> getEligibleUpAndEnabledHostsInClusterForStorageConnection(PrimaryDataStoreInfo primaryStore);
-
-    List<HostVO> getEligibleUpAndEnabledHostsInZoneForStorageConnection(DataStore dataStore, long zoneId, HypervisorType hypervisorType);
 }

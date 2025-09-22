@@ -17,8 +17,6 @@
 package com.cloud.utils.db;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -57,10 +55,6 @@ public interface GenericDao<T, ID extends Serializable> {
 
     // Finds one unique VO using uuid
     T findByUuid(String uuid);
-
-    default List<T> listByUuids(Collection<String> uuids) {
-        return new ArrayList<>();
-    }
 
     // Finds one unique VO using uuid including removed entities
     T findByUuidIncludingRemoved(String uuid);
@@ -153,11 +147,6 @@ public interface GenericDao<T, ID extends Serializable> {
      * @return list of entity beans.
      */
     List<T> listAll(Filter filter);
-
-    /**
-     * Look IDs for all active rows.
-     */
-    List<ID> listAllIds();
 
     /**
      * Search for the entity beans

@@ -18,16 +18,12 @@ package org.apache.cloudstack.storage.allocator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.cloud.utils.Pair;
 import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -49,7 +45,7 @@ public class ZoneWideStoragePoolAllocator extends AbstractStoragePoolAllocator {
     @Inject
     private DataStoreManager dataStoreMgr;
     @Inject
-    protected CapacityDao capacityDao;
+    private CapacityDao capacityDao;
 
     @Override
     protected List<StoragePool> select(DiskProfile dskCh, VirtualMachineProfile vmProfile, DeploymentPlan plan, ExcludeList avoid, int returnUpTo, boolean bypassStorageTypeCheck, String keyword) {
@@ -96,7 +92,7 @@ public class ZoneWideStoragePoolAllocator extends AbstractStoragePoolAllocator {
             }
             StoragePool storagePool = (StoragePool)this.dataStoreMgr.getPrimaryDataStore(storage.getId());
             if (filter(avoid, storagePool, dskCh, plan)) {
-                logger.debug("Found suitable zone wide storage pool [{}] to allocate disk [{}] to it, adding to list.", storagePool, dskCh);
+                logger.debug(String.format("Found suitable local storage pool [%s] to allocate disk [%s] to it, adding to list.", storagePool, dskCh));
                 suitablePools.add(storagePool);
             } else {
                 if (canAddStoragePoolToAvoidSet(storage)) {
@@ -126,16 +122,9 @@ public class ZoneWideStoragePoolAllocator extends AbstractStoragePoolAllocator {
             return null;
         }
 
-        Pair<List<Long>, Map<Long, Double>> result = capacityDao.orderHostsByFreeCapacity(zoneId, null, capacityType);
-        List<Long> poolIdsByCapacity = result.first();
-        Map<Long, String> sortedHostByCapacity = result.second().entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> decimalFormat.format(entry.getValue() * 100) + "%",
-                        (e1, e2) -> e1, LinkedHashMap::new));
+        List<Long> poolIdsByCapacity = capacityDao.orderHostsByFreeCapacity(zoneId, null, capacityType);
         if (logger.isDebugEnabled()) {
-            logger.debug("List of zone-wide storage pools: [{}] in descending order of free capacity (percentage): {}",
-                    poolIdsByCapacity, sortedHostByCapacity);
+            logger.debug("List of zone-wide storage pools in descending order of free capacity: "+ poolIdsByCapacity);
         }
 
       //now filter the given list of Pools by this ordered list

@@ -23,8 +23,6 @@ public interface MockHost {
 
     public long getMemorySize();
 
-    String getArch();
-
     public String getCapabilities();
 
     public long getId();

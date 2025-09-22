@@ -29,5 +29,4 @@ public interface UserData extends ControlledEntity, InternalIdentity, Identity {
     String getUserData();
 
     String getParams();
-    boolean isForCks();
 }

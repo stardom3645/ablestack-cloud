@@ -47,14 +47,19 @@ class TestGuestOS(cloudstackTestCase):
 
         cls.hypervisor = cls.get_hypervisor_type()
 
+    @classmethod
     def setUp(self):
         self.apiclient = self.testClient.getApiClient()
 
         #build cleanup list
         self.cleanup = []
 
+    @classmethod
     def tearDown(self):
-        super(TestGuestOS, self).tearDown()
+        try:
+            cleanup_resources(self.apiclient, self.cleanup)
+        except Exception as e:
+            self.debug("Warning! Exception in tearDown: %s" % e)
 
     @classmethod
     def get_hypervisor_type(cls):
@@ -90,7 +95,6 @@ class TestGuestOS(cloudstackTestCase):
             osdisplayname="testCentOS",
             oscategoryid=os_category.id
         )
-        self.cleanup.append(self.guestos1)
         list_guestos = GuestOS.list(self.apiclient, id=self.guestos1.id, listall=True)
         self.assertNotEqual(
             len(list_guestos),
@@ -108,7 +112,6 @@ class TestGuestOS(cloudstackTestCase):
             self.apiclient,
             id=self.guestos1.id
         )
-        self.cleanup.remove(self.guestos1)
 
     @attr(tags=['advanced', 'simulator', 'basic', 'sg'], required_hardware=False)
     def test_CRUD_operations_guest_OS_mapping(self):
@@ -124,7 +127,6 @@ class TestGuestOS(cloudstackTestCase):
             osdisplayname="testCentOS",
             oscategoryid=os_category.id
         )
-        self.cleanup.append(self.guestos1)
 
         if self.hypervisor.hypervisor.lower() not in ["xenserver", "vmware"]:
             raise unittest.SkipTest("OS name check with hypervisor is supported only on XenServer and VMware")
@@ -136,7 +138,6 @@ class TestGuestOS(cloudstackTestCase):
             hypervisorversion=self.hypervisor.hypervisorversion,
             osnameforhypervisor="testOSMappingName"
         )
-        self.cleanup.append(self.guestosmapping1)
 
         list_guestos_mapping = GuestOsMapping.list(self.apiclient, id=self.guestosmapping1.id, listall=True)
         self.assertNotEqual(
@@ -155,13 +156,11 @@ class TestGuestOS(cloudstackTestCase):
             self.apiclient,
             id=self.guestosmapping1.id
         )
-        self.cleanup.remove(self.guestosmapping1)
 
         GuestOS.remove(
             self.apiclient,
             id=self.guestos1.id
         )
-        self.cleanup.remove(self.guestos1)
 
     @attr(tags=['advanced', 'simulator', 'basic', 'sg'], required_hardware=False)
     def test_guest_OS_mapping_check_with_hypervisor(self):
@@ -177,16 +176,12 @@ class TestGuestOS(cloudstackTestCase):
             osdisplayname="testOSname1",
             oscategoryid=os_category.id
         )
-        self.cleanup.append(self.guestos1)
 
         if self.hypervisor.hypervisor.lower() not in ["xenserver", "vmware"]:
             raise unittest.SkipTest("OS name check with hypervisor is supported only on XenServer and VMware")
 
         if self.hypervisor.hypervisor.lower() == "xenserver":
-            if tuple(map(int, self.hypervisor.hypervisorversion.split("."))) >= (8, 3, 0):
-                testosname = "Debian Bookworm 12"
-            else:
-                testosname = "Debian Jessie 8.0"
+            testosname="Debian Jessie 8.0"
         else:
             testosname="debian4_64Guest"
 
@@ -198,7 +193,6 @@ class TestGuestOS(cloudstackTestCase):
             osnameforhypervisor=testosname,
             osmappingcheckenabled=True
         )
-        self.cleanup.append(self.guestosmapping1)
 
         list_guestos_mapping = GuestOsMapping.list(self.apiclient, id=self.guestosmapping1.id, listall=True)
         self.assertNotEqual(
@@ -217,13 +211,11 @@ class TestGuestOS(cloudstackTestCase):
             self.apiclient,
             id=self.guestosmapping1.id
         )
-        self.cleanup.remove(self.guestosmapping1)
 
         GuestOS.remove(
             self.apiclient,
             id=self.guestos1.id
         )
-        self.cleanup.remove(self.guestos1)
 
     @attr(tags=['advanced', 'simulator', 'basic', 'sg'], required_hardware=False)
     def test_guest_OS_mapping_check_with_hypervisor_failure(self):
@@ -239,7 +231,6 @@ class TestGuestOS(cloudstackTestCase):
             osdisplayname="testOSname2",
             oscategoryid=os_category.id
         )
-        self.cleanup.append(self.guestos1)
 
         if self.hypervisor.hypervisor.lower() not in ["xenserver", "vmware"]:
             raise unittest.SkipTest("OS name check with hypervisor is supported only on XenServer and VMware")
@@ -255,12 +246,10 @@ class TestGuestOS(cloudstackTestCase):
                 osnameforhypervisor=testosname,
                 osmappingcheckenabled=True
             )
-            self.cleanup.append(self.guestosmapping1)
             GuestOsMapping.remove(
                 self.apiclient,
                 id=self.guestosmapping1.id
             )
-            self.cleanup.remove(self.guestosmapping1)
             self.fail("Since os mapping name is wrong, this API should fail")
         except CloudstackAPIException as e:
             self.debug("Addition guest OS mapping failed as expected %s " % e)
@@ -268,5 +257,4 @@ class TestGuestOS(cloudstackTestCase):
             self.apiclient,
             id=self.guestos1.id
         )
-        self.cleanup.remove(self.guestos1)
         return

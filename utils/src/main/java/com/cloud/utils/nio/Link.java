@@ -48,9 +48,8 @@ import javax.net.ssl.TrustManagerFactory;
 import org.apache.cloudstack.framework.ca.CAService;
 import org.apache.cloudstack.utils.security.KeyStoreUtils;
 import org.apache.cloudstack.utils.security.SSLUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -593,10 +592,6 @@ public class Link {
     }
 
     public static boolean doHandshake(final SocketChannel socketChannel, final SSLEngine sslEngine) throws IOException {
-        return doHandshake(socketChannel, sslEngine, null);
-    }
-
-    public static boolean doHandshake(final SocketChannel socketChannel, final SSLEngine sslEngine, Integer timeout) throws IOException {
         if (socketChannel == null || sslEngine == null) {
             return false;
         }
@@ -611,15 +606,12 @@ public class Link {
         final long startTimeMills = System.currentTimeMillis();
 
         HandshakeStatus handshakeStatus = sslEngine.getHandshakeStatus();
-        long timeoutMillis = ObjectUtils.defaultIfNull(timeout, 30) * 1000L;
         while (handshakeStatus != SSLEngineResult.HandshakeStatus.FINISHED
                 && handshakeStatus != SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
             final long timeTaken = System.currentTimeMillis() - startTimeMills;
-
-            if (timeTaken > timeoutMillis) {
-                LOGGER.warn("SSL Handshake has taken more than {} ms to connect to: {}" +
-                        " while status: {}. Please investigate this connection.", timeoutMillis, socketChannel.getRemoteAddress(),
-                        handshakeStatus);
+            if (timeTaken > 30000L) {
+                LOGGER.warn("SSL Handshake has taken more than 30s to connect to: " + socketChannel.getRemoteAddress() +
+                        ". Please investigate this connection.");
                 return false;
             }
             switch (handshakeStatus) {

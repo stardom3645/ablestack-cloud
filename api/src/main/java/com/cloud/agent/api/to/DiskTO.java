@@ -46,7 +46,7 @@ public class DiskTO {
     private Long diskSeq;
     private String path;
     private Volume.Type type;
-    private Map<String, String> details;
+    private Map<String, String> _details;
 
     public DiskTO() {
 
@@ -92,10 +92,10 @@ public class DiskTO {
     }
 
     public void setDetails(Map<String, String> details) {
-        this.details = details;
+        _details = details;
     }
 
     public Map<String, String> getDetails() {
-        return details;
+        return _details;
     }
 }

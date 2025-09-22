@@ -64,5 +64,4 @@ public interface StoragePoolAllocator extends Adapter {
     static int RETURN_UPTO_ALL = -1;
 
     List<StoragePool> reorderPools(List<StoragePool> pools, VirtualMachineProfile vmProfile, DeploymentPlan plan, DiskProfile dskCh);
-
 }

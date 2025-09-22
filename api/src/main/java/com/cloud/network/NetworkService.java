@@ -268,6 +268,4 @@ public interface NetworkService {
     InternalLoadBalancerElementService getInternalLoadBalancerElementByNetworkServiceProviderId(long networkProviderId);
     InternalLoadBalancerElementService getInternalLoadBalancerElementById(long providerId);
     List<InternalLoadBalancerElementService> getInternalLoadBalancerElements();
-
-    boolean handleCksIsoOnNetworkVirtualRouter(Long virtualRouterId, boolean mount) throws ResourceUnavailableException;
 }

@@ -39,7 +39,6 @@ import com.cloud.storage.Storage;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
 import com.cloud.storage.StoragePoolAutomation;
-import com.cloud.storage.dao.StoragePoolAndAccessGroupMapDao;
 import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
@@ -68,8 +67,6 @@ public class LinstorPrimaryDataStoreLifeCycleImpl extends BasePrimaryDataStoreLi
     private StoragePoolAutomation storagePoolAutomation;
     @Inject
     private CapacityManager _capacityMgr;
-    @Inject
-    private StoragePoolAndAccessGroupMapDao storagePoolAndAccessGroupMapDao;
     @Inject
     AgentManager _agentMgr;
 
@@ -207,12 +204,20 @@ public class LinstorPrimaryDataStoreLifeCycleImpl extends BasePrimaryDataStoreLi
             throw new CloudRuntimeException(hypervisorType + " is not a supported hypervisor type.");
         }
 
-        PrimaryDataStoreInfo primarystore = (PrimaryDataStoreInfo) dataStore;
-        List<HostVO> hostsToConnect = resourceMgr.getEligibleUpAndEnabledHostsInClusterForStorageConnection(primarystore);
-        logger.debug(String.format("Attaching the pool to each of the hosts %s in the cluster: %s", hostsToConnect, primarystore.getClusterId()));
+        // check if there is at least one host up in this cluster
+        List<HostVO> allHosts = resourceMgr.listAllUpAndEnabledHosts(Host.Type.Routing,
+            primaryDataStoreInfo.getClusterId(), primaryDataStoreInfo.getPodId(),
+            primaryDataStoreInfo.getDataCenterId());
+
+        if (allHosts.isEmpty()) {
+            _primaryDataStoreDao.expunge(primaryDataStoreInfo.getId());
+
+            throw new CloudRuntimeException(
+                "No host up to associate a storage pool with in cluster " + primaryDataStoreInfo.getClusterId());
+        }
 
         List<HostVO> poolHosts = new ArrayList<>();
-        for (HostVO host : hostsToConnect) {
+        for (HostVO host : allHosts) {
             try {
                 createStoragePool(host, primaryDataStoreInfo);
 
@@ -244,11 +249,10 @@ public class LinstorPrimaryDataStoreLifeCycleImpl extends BasePrimaryDataStoreLi
             throw new CloudRuntimeException(hypervisorType + " is not a supported hypervisor type.");
         }
 
-        List<HostVO> hostsToConnect = resourceMgr.getEligibleUpAndEnabledHostsInZoneForStorageConnection(dataStore, scope.getScopeId(), hypervisorType);
+        List<HostVO> hosts = resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(hypervisorType,
+            scope.getScopeId());
 
-        logger.debug(String.format("In createPool. Attaching the pool to each of the hosts in %s.", hostsToConnect));
-
-        for (HostVO host : hostsToConnect) {
+        for (HostVO host : hosts) {
             try {
                 _storageMgr.connectHostToSharedPool(host, dataStore.getId());
             } catch (Exception e) {
@@ -282,10 +286,7 @@ public class LinstorPrimaryDataStoreLifeCycleImpl extends BasePrimaryDataStoreLi
 
     @Override
     public boolean deleteDataStore(DataStore store) {
-        if (cleanupDatastore(store)) {
-            return dataStoreHelper.deletePrimaryDataStore(store);
-        }
-        return false;
+        return dataStoreHelper.deletePrimaryDataStore(store);
     }
 
     /* (non-Javadoc)

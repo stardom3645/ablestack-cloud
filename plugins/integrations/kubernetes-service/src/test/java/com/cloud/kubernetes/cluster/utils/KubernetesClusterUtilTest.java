@@ -27,14 +27,14 @@ public class KubernetesClusterUtilTest {
 
     private void executeThrowAndTestVersionMatch() {
         Pair<Boolean, String> resultPair = null;
-        Pair<Boolean, String> result = KubernetesClusterUtil.clusterNodeVersionMatches(resultPair, "1.24.0");
-        Assert.assertFalse(result.first());
+        boolean result = KubernetesClusterUtil.clusterNodeVersionMatches(resultPair, "1.24.0");
+        Assert.assertFalse(result);
     }
 
     private void executeAndTestVersionMatch(boolean status, String response, boolean expectedResult) {
         Pair<Boolean, String> resultPair = new Pair<>(status, response);
-        Pair<Boolean, String> result = KubernetesClusterUtil.clusterNodeVersionMatches(resultPair, "1.24.0");
-        Assert.assertEquals(expectedResult, result.first());
+        boolean result = KubernetesClusterUtil.clusterNodeVersionMatches(resultPair, "1.24.0");
+        Assert.assertEquals(expectedResult, result);
     }
 
     @Test

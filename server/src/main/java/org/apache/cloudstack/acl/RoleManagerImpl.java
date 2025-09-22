@@ -594,7 +594,7 @@ public class RoleManagerImpl extends ManagerBase implements RoleService, Configu
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {EnableDynamicApiChecker, DynamicApiCheckerCachePeriod};
+        return new ConfigKey<?>[] {RoleService.EnableDynamicApiChecker};
     }
 
     @Override

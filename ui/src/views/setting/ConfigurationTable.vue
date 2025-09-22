@@ -37,7 +37,6 @@
       </template>
     </a-table>
     <a-pagination
-      v-if="this.$route.meta.name === 'globalsetting'"
       class="config-row-element"
       style="margin-top: 10px"
       size="small"

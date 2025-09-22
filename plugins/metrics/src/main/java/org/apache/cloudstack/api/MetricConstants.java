@@ -20,8 +20,6 @@ package org.apache.cloudstack.api;
  * metric local api constants
  */
 public interface MetricConstants {
-    String LAST_AGENTS = "lastagents";
-    String AGENTS = "agents";
     String AGENT_COUNT = "agentcount";
     String AVAILABLE_PROCESSORS = "availableprocessors";
     String CONNECTIONS = "connections";

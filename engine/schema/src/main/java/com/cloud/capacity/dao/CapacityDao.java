@@ -28,8 +28,6 @@ import com.cloud.utils.db.GenericDao;
 public interface CapacityDao extends GenericDao<CapacityVO, Long> {
     CapacityVO findByHostIdType(Long hostId, short capacityType);
 
-    List<CapacityVO> listByHostIdTypes(Long hostId, List<Short> capacityTypes);
-
     List<Long> listClustersInZoneOrPodByHostCapacities(long id, long vmId, int requiredCpu, long requiredRam, short capacityTypeForOrdering, boolean isZone);
 
     List<Long> listHostsWithEnoughCapacity(int requiredCpu, long requiredRam, Long clusterId, String hostType);
@@ -64,5 +62,5 @@ public interface CapacityDao extends GenericDao<CapacityVO, Long> {
 
     float findClusterConsumption(Long clusterId, short capacityType, long computeRequested);
 
-    Pair<List<Long>, Map<Long, Double>> orderHostsByFreeCapacity(Long zoneId, Long clusterId, short capacityType);
+    List<Long> orderHostsByFreeCapacity(Long zoneId, Long clusterId, short capacityType);
 }

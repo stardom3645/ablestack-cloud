@@ -34,7 +34,6 @@ import java.util.Map;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.cloudstack.storage.datastore.api.StorageConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.ServerApiException;
@@ -1125,15 +1124,6 @@ public class ScaleIOGatewayClientImpl implements ScaleIOGatewayClient {
         }
 
         return false;
-    }
-
-    @Override
-    public List<String> getMdmAddresses() {
-        StorageConfiguration storageConfiguration = get("/Configuration", StorageConfiguration.class);
-        if (storageConfiguration != null && storageConfiguration.getMdmAddresses().length > 0) {
-            return Arrays.asList(storageConfiguration.getMdmAddresses());
-        }
-        return new ArrayList<>();
     }
 
     private String getConnectionManagerStats() {

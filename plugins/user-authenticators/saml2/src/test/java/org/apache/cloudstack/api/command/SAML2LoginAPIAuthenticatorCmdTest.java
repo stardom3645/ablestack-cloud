@@ -111,9 +111,6 @@ public class SAML2LoginAPIAuthenticatorCmdTest {
     @Mock
     HttpServletRequest req;
 
-    @Mock
-    Object _responseObject;
-
     @Spy
     @InjectMocks
     private SAML2LoginAPIAuthenticatorCmd cmdSpy;

@@ -31,8 +31,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import com.cloud.kubernetes.cluster.KubernetesClusterVmMapVO;
-import com.cloud.kubernetes.cluster.dao.KubernetesClusterVmMapDao;
 import org.apache.cloudstack.utils.security.SSLUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -195,7 +193,7 @@ public class KubernetesClusterUtil {
         while (System.currentTimeMillis() < timeoutTime) {
             try {
                 Pair<Boolean, String> result = SshHelper.sshExecute(ipAddress, port, user,
-                        sshKeyFile, null, "sudo cat /etc/kubernetes/user.conf 2>/dev/null || sudo cat /etc/kubernetes/admin.conf",
+                        sshKeyFile, null, "sudo cat /etc/kubernetes/admin.conf",
                         10000, 10000, 10000);
 
                 if (result.first() && StringUtils.isNotEmpty(result.second())) {
@@ -217,10 +215,10 @@ public class KubernetesClusterUtil {
                                                           final int port, final String user, final File sshKeyFile) throws Exception {
         Pair<Boolean, String> result = SshHelper.sshExecute(ipAddress, port,
                 user, sshKeyFile, null,
-                "sudo /opt/bin/kubectl get nodes | grep -w 'Ready' | wc -l",
+                "sudo /opt/bin/kubectl get nodes | awk '{if ($2 == \"Ready\") print $1}' | wc -l",
                 10000, 10000, 20000);
-        if (Boolean.TRUE.equals(result.first())) {
-            return Integer.parseInt(result.second().trim().replace("\"", "")) + kubernetesCluster.getEtcdNodeCount().intValue();
+        if (result.first()) {
+            return Integer.parseInt(result.second().trim().replace("\"", ""));
         } else {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("Failed to retrieve ready nodes for Kubernetes cluster %s. Output: %s", kubernetesCluster, result.second()));
@@ -333,7 +331,7 @@ public class KubernetesClusterUtil {
                                                     final String ipAddress, final int port,
                                                     final String user, final File sshKeyFile,
                                                     final String hostName,
-                                                    final long timeoutTime, final long waitDuration, final long vmId, KubernetesClusterVmMapDao vmMapDao) {
+                                                    final long timeoutTime, final long waitDuration) {
         int retry = 10;
         while (System.currentTimeMillis() < timeoutTime && retry-- > 0) {
             if (LOGGER.isDebugEnabled()) {
@@ -345,13 +343,7 @@ public class KubernetesClusterUtil {
                         user, sshKeyFile, null,
                         String.format(CLUSTER_NODE_VERSION_COMMAND, hostName.toLowerCase()),
                         10000, 10000, 20000);
-                Pair<Boolean, String> clusterVersionMatchesAndValue = clusterNodeVersionMatches(result, version);
-                if (Boolean.TRUE.equals(clusterVersionMatchesAndValue.first())) {
-                    KubernetesClusterVmMapVO vmMapVO = vmMapDao.getClusterMapFromVmId(vmId);
-                    String newNodeVersion = clusterVersionMatchesAndValue.second();
-                    LOGGER.debug(String.format("Updating node %s Kubernetes version to %s", hostName, newNodeVersion));
-                    vmMapVO.setNodeVersion(newNodeVersion);
-                    vmMapDao.update(vmMapVO.getId(), vmMapVO);
+                if (clusterNodeVersionMatches(result, version)) {
                     return true;
                 }
             } catch (Exception e) {
@@ -368,11 +360,11 @@ public class KubernetesClusterUtil {
         return false;
     }
 
-    protected static Pair<Boolean, String> clusterNodeVersionMatches(final Pair<Boolean, String> result, final String version) {
+    protected static boolean clusterNodeVersionMatches(final Pair<Boolean, String> result, final String version) {
         if (result == null || Boolean.FALSE.equals(result.first()) || StringUtils.isBlank(result.second())) {
-            return new Pair<>(false, null);
+            return false;
         }
         String response = result.second();
-        return new Pair<>(response.contains(String.format("v%s", version)), response);
+        return response.contains(String.format("v%s", version));
     }
 }

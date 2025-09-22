@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.storage;
 
-import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -25,8 +24,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
-import com.cloud.utils.db.GenericDao;
 
 @Entity
 @Table(name = "guest_os_category")
@@ -41,26 +38,6 @@ public class GuestOSCategoryVO implements GuestOsCategory {
 
     @Column(name = "uuid")
     String uuid = UUID.randomUUID().toString();
-
-    @Column(name = "featured")
-    boolean featured;
-
-    @Column(name = "sort_key")
-    private int sortKey;
-
-    @Column(name = GenericDao.CREATED_COLUMN)
-    private Date created;
-
-    @Column(name = GenericDao.REMOVED_COLUMN)
-    private Date removed;
-
-    public GuestOSCategoryVO() {
-    }
-
-    public GuestOSCategoryVO(String name, boolean featured) {
-        this.name = name;
-        this.featured = featured;
-    }
 
     @Override
     public long getId() {
@@ -82,25 +59,7 @@ public class GuestOSCategoryVO implements GuestOsCategory {
         return this.uuid;
     }
 
-    @Override
-    public boolean isFeatured() {
-        return featured;
-    }
-
-    public void setFeatured(Boolean featured) {
-        this.featured = featured;
-    }
-
-    public void setSortKey(int key) {
-        sortKey = key;
-    }
-
-    public int getSortKey() {
-        return sortKey;
-    }
-
-    @Override
-    public Date getCreated() {
-        return created;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 }

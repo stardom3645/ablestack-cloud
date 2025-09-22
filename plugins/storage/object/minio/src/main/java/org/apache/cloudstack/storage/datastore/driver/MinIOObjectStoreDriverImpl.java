@@ -29,7 +29,10 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
 
+import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
+import org.apache.cloudstack.framework.async.AsyncCompletionCallback;
+import org.apache.cloudstack.storage.command.CommandResult;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreVO;
@@ -441,4 +444,7 @@ public class MinIOObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
         return minioAdminClient;
     }
 
+    @Override
+    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
+    }
 }

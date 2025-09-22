@@ -71,14 +71,6 @@
           </div>
         </div>
       </a-list-item>
-      <a-list-item v-if="host.storageaccessgroups">
-        <div>
-          <strong>{{ $t('label.storageaccessgroups') }}</strong>
-          <div>
-            {{ host.storageaccessgroups }}
-          </div>
-        </div>
-      </a-list-item>
       <a-list-item v-if="host.oscategoryid">
         <div>
           <strong>{{ $t('label.oscategoryid') }}</strong>
@@ -95,48 +87,14 @@
           </div>
         </div>
       </a-list-item>
-      <span v-if="host?.outofbandmanagement?.enabled">
-        <a-list-item>
+      <a-list-item v-if="host.outofbandmanagement">
+        <div>
+          <strong>{{ $t('label.powerstate') }}</strong>
           <div>
-            <strong>{{ $t('label.oobm.username') }}</strong>
-            <div>
-              {{ host.outofbandmanagement.username }}
-            </div>
+            {{ host.outofbandmanagement?.powerstate }}
           </div>
-        </a-list-item>
-        <a-list-item>
-          <div>
-            <strong>{{ $t('label.oobm.powerstate') }}</strong>
-            <div>
-              {{ host.outofbandmanagement.powerstate }}
-            </div>
-          </div>
-        </a-list-item>
-        <a-list-item>
-          <div>
-            <strong>{{ $t('label.oobm.driver') }}</strong>
-            <div>
-              {{ host.outofbandmanagement.driver }}
-            </div>
-          </div>
-        </a-list-item>
-        <a-list-item>
-          <div>
-            <strong>{{ $t('label.oobm.address') }}</strong>
-            <div>
-              {{ host.outofbandmanagement.address }}
-            </div>
-          </div>
-        </a-list-item>
-        <a-list-item>
-          <div>
-            <strong>{{ $t('label.oobm.port') }}</strong>
-            <div>
-              {{ host.outofbandmanagement.port }}
-            </div>
-          </div>
-        </a-list-item>
-      </span>
+        </div>
+      </a-list-item>
       <a-list-item v-if="host.hostha">
         <div>
           <strong>{{ $t('label.haenable') }}</strong>

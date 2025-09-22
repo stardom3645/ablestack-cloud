@@ -41,7 +41,6 @@ import java.util.concurrent.Executors;
 
 import javax.naming.ConfigurationException;
 
-import com.cloud.agent.api.ConvertSnapshotCommand;
 import org.apache.cloudstack.storage.NfsMountManagerImpl.PathParser;
 import org.apache.cloudstack.storage.command.DownloadCommand;
 import org.apache.cloudstack.storage.command.DownloadCommand.ResourceType;
@@ -408,7 +407,6 @@ public class DownloadManagerImpl extends ManagerBase implements DownloadManager 
         }
         String[] items = uri.getPath().split("/");
         name = items[items.length - 1];
-        name = name.replace(ConvertSnapshotCommand.TEMP_SNAPSHOT_NAME, "");
         if (items.length < 2) {
             return name;
         }

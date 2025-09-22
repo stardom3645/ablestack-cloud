@@ -26,7 +26,7 @@ export default {
   permission: ['listPods'],
   searchFilters: ['name', 'zoneid'],
   columns: ['name', 'allocationstate', 'gateway', 'netmask', 'zonename'],
-  details: ['name', 'id', 'allocationstate', 'netmask', 'gateway', 'zonename', 'storageaccessgroups', 'zonestorageaccessgroups'],
+  details: ['name', 'id', 'allocationstate', 'netmask', 'gateway', 'zonename'],
   related: [{
     name: 'cluster',
     title: 'label.clusters',
@@ -71,8 +71,7 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit',
       dataView: true,
-      popup: true,
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/PodUpdate.vue')))
+      args: ['name', 'netmask', 'gateway']
     },
     {
       api: 'updatePod',

@@ -66,7 +66,7 @@ public final class CitrixDeleteVMSnapshotCommandWrapper extends CommandWrapper<D
             if (command.getTarget().getType() == VMSnapshot.Type.DiskAndMemory) {
                 vdiList.add(snapshot.getSuspendVDI(conn));
             }
-            citrixResourceBase.destroyVm(snapshot, conn, true);
+            snapshot.destroy(conn);
             for (final VDI vdi : vdiList) {
                 vdi.destroy(conn);
             }

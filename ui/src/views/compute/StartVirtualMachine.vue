@@ -243,7 +243,7 @@ export default {
           id: this.resource.id
         }
         for (const key in values) {
-          if (values[key] || values[key] === false) {
+          if (values[key]) {
             params[key] = values[key]
           }
         }

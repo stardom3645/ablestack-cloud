@@ -157,10 +157,7 @@ public class ListAccountsCmd extends BaseListDomainResourcesCmd implements UserC
         if (CollectionUtils.isEmpty(response)) {
             return;
         }
-        EnumSet<DomainDetails> details = getDetails();
-        if (details.contains(DomainDetails.all) || details.contains(DomainDetails.resource)) {
-            _resourceLimitService.updateTaggedResourceLimitsAndCountsForAccounts(response, getTag());
-        }
+        _resourceLimitService.updateTaggedResourceLimitsAndCountsForAccounts(response, getTag());
         if (!getShowIcon()) {
             return;
         }

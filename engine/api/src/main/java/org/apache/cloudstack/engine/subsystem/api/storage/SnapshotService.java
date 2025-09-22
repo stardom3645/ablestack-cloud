@@ -25,11 +25,7 @@ import com.cloud.storage.Snapshot.Event;
 public interface SnapshotService {
     SnapshotResult takeSnapshot(SnapshotInfo snapshot);
 
-    DataStore findSnapshotImageStore(SnapshotInfo snapshot);
-
     SnapshotInfo backupSnapshot(SnapshotInfo snapshot);
-
-    SnapshotInfo convertSnapshot(SnapshotInfo snapshotInfo);
 
     boolean deleteSnapshot(SnapshotInfo snapshot);
 

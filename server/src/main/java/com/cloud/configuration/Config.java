@@ -19,6 +19,7 @@ package com.cloud.configuration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.engine.subsystem.api.storage.StoragePoolAllocator;
@@ -520,7 +521,8 @@ public enum Config {
             "300",
             "The time interval in seconds when the management server polls for snapshots to be scheduled.",
             null),
-    KVMSnapshotEnabled("Hidden", SnapshotManager.class, Boolean.class, "kvm.snapshot.enabled", "false", "Whether volume snapshot is enabled on running instances on a KVM host", null),
+    SnapshotDeltaMax("Snapshots", SnapshotManager.class, Integer.class, "snapshot.delta.max", "16", "max delta snapshots between two full snapshots.", null),
+    KVMSnapshotEnabled("Snapshots", SnapshotManager.class, Boolean.class, "kvm.snapshot.enabled", "true", "whether snapshot is enabled for KVM hosts", null),
 
     // Advanced
     EventPurgeInterval(
@@ -688,8 +690,8 @@ public enum Config {
             ManagementServer.class,
             String.class,
             "hypervisor.list",
-            HypervisorType.KVM + "," + HypervisorType.VMware + "," + HypervisorType.XenServer + "," + HypervisorType.Hyperv + "," +
-                    HypervisorType.BareMetal + "," + HypervisorType.Ovm + "," + HypervisorType.LXC + "," + HypervisorType.Ovm3,
+            HypervisorType.Hyperv + "," + HypervisorType.KVM + "," + HypervisorType.XenServer + "," + HypervisorType.VMware + "," + HypervisorType.BareMetal + "," +
+                    HypervisorType.Ovm + "," + HypervisorType.LXC + "," + HypervisorType.Ovm3,
                     "The list of hypervisors that this deployment will use.",
             "hypervisorList",
             ConfigKey.Kind.CSV,
@@ -1388,7 +1390,7 @@ public enum Config {
             "200",
             "The default maximum primary storage space (in GiB) that can be used for an account",
             null),
-    DefaultMaxAccountProjects(
+DefaultMaxAccountProjects(
                 "Account Defaults",
                 ManagementServer.class,
                 Long.class,
@@ -1831,25 +1833,26 @@ public enum Config {
     private final String _defaultValue;
     private final String _description;
     private final String _range;
-    private final int _scope; // Parameter can be at different levels (Zone/cluster/pool/account), by default every parameter is at global
+    private final String _scope; // Parameter can be at different levels (Zone/cluster/pool/account), by default every parameter is at global
     private final ConfigKey.Kind _kind;
     private final String _options;
 
-    private static final HashMap<Integer, List<Config>> s_scopeLevelConfigsMap = new HashMap<>();
+    private static final HashMap<String, List<Config>> s_scopeLevelConfigsMap = new HashMap<String, List<Config>>();
     static {
-        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Zone.getBitValue(), new ArrayList<Config>());
-        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Cluster.getBitValue(), new ArrayList<Config>());
-        s_scopeLevelConfigsMap.put(ConfigKey.Scope.StoragePool.getBitValue(), new ArrayList<Config>());
-        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Account.getBitValue(), new ArrayList<Config>());
-        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Global.getBitValue(), new ArrayList<Config>());
+        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Zone.toString(), new ArrayList<Config>());
+        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Cluster.toString(), new ArrayList<Config>());
+        s_scopeLevelConfigsMap.put(ConfigKey.Scope.StoragePool.toString(), new ArrayList<Config>());
+        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Account.toString(), new ArrayList<Config>());
+        s_scopeLevelConfigsMap.put(ConfigKey.Scope.Global.toString(), new ArrayList<Config>());
 
         for (Config c : Config.values()) {
             //Creating group of parameters per each level (zone/cluster/pool/account)
-            List<ConfigKey.Scope> scopes = ConfigKey.Scope.decode(c.getScope());
-            for (ConfigKey.Scope scope : scopes) {
-                List<Config> currentConfigs = s_scopeLevelConfigsMap.get(scope.getBitValue());
+            StringTokenizer tokens = new StringTokenizer(c.getScope(), ",");
+            while (tokens.hasMoreTokens()) {
+                String scope = tokens.nextToken().trim();
+                List<Config> currentConfigs = s_scopeLevelConfigsMap.get(scope);
                 currentConfigs.add(c);
-                s_scopeLevelConfigsMap.put(scope.getBitValue(), currentConfigs);
+                s_scopeLevelConfigsMap.put(scope, currentConfigs);
             }
         }
     }
@@ -1893,7 +1896,7 @@ public enum Config {
         _defaultValue = defaultValue;
         _description = description;
         _range = range;
-        _scope = ConfigKey.Scope.Global.getBitValue();
+        _scope = ConfigKey.Scope.Global.toString();
         _kind = kind;
         _options = options;
     }
@@ -1918,7 +1921,7 @@ public enum Config {
         return _type;
     }
 
-    public int getScope() {
+    public String getScope() {
         return _scope;
     }
 

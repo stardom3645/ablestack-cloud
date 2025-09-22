@@ -26,8 +26,6 @@ import java.util.StringTokenizer;
 
 import javax.inject.Inject;
 
-import com.cloud.host.Host;
-import com.cloud.storage.dao.StoragePoolAndAccessGroupMapDao;
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.HostScope;
@@ -52,6 +50,7 @@ import com.cloud.agent.api.DeleteStoragePoolCommand;
 import com.cloud.agent.api.StoragePoolInfo;
 import com.cloud.capacity.CapacityManager;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -91,8 +90,6 @@ public class ElastistorPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLif
     DataCenterDao _zoneDao;
     @Inject
     CapacityManager _capacityMgr;
-    @Inject
-    private StoragePoolAndAccessGroupMapDao storagePoolAndAccessGroupMapDao;
 
     @Override
     public DataStore initialize(Map<String, Object> dsInfos) {
@@ -359,13 +356,17 @@ public class ElastistorPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLif
         StoragePoolVO dataStoreVO = _storagePoolDao.findById(store.getId());
 
         PrimaryDataStoreInfo primarystore = (PrimaryDataStoreInfo) store;
-        List<HostVO> hostsToConnect = _resourceMgr.getEligibleUpHostsInClusterForStorageConnection(primarystore);
-        logger.debug(String.format("Attaching the pool to each of the hosts %s in the cluster: %s", hostsToConnect, primarystore.getClusterId()));
+        // Check if there is host up in this cluster
+        List<HostVO> allHosts = _resourceMgr.listAllUpHosts(Host.Type.Routing, primarystore.getClusterId(), primarystore.getPodId(), primarystore.getDataCenterId());
+        if (allHosts.isEmpty()) {
+            primaryDataStoreDao.expunge(primarystore.getId());
+            throw new CloudRuntimeException("No host up to associate a storage pool with in cluster " + primarystore.getClusterId());
+        }
 
         if (!dataStoreVO.isManaged()) {
             boolean success = false;
-            for (HostVO h : hostsToConnect) {
-                success = createStoragePool(h, primarystore);
+            for (HostVO host : allHosts) {
+                success = createStoragePool(host, primarystore);
                 if (success) {
                     break;
                 }
@@ -374,7 +375,7 @@ public class ElastistorPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLif
 
         logger.debug("In createPool Adding the pool to each of the hosts");
         List<HostVO> poolHosts = new ArrayList<HostVO>();
-        for (HostVO h : hostsToConnect) {
+        for (HostVO h : allHosts) {
             try {
                 storageMgr.connectHostToSharedPool(h, primarystore.getId());
                 poolHosts.add(h);
@@ -427,11 +428,10 @@ public class ElastistorPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLif
 
     @Override
     public boolean attachZone(DataStore dataStore, ZoneScope scope, HypervisorType hypervisorType) {
-        List<HostVO> hostsToConnect = _resourceMgr.getEligibleUpAndEnabledHostsInZoneForStorageConnection(dataStore, scope.getScopeId(), hypervisorType);
-
-        logger.debug(String.format("In createPool. Attaching the pool to each of the hosts in %s.", hostsToConnect));
+        List<HostVO> hosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(hypervisorType, scope.getScopeId());
+        logger.debug("In createPool. Attaching the pool to each of the hosts.");
         List<HostVO> poolHosts = new ArrayList<HostVO>();
-        for (HostVO host : hostsToConnect) {
+        for (HostVO host : hosts) {
             try {
                 storageMgr.connectHostToSharedPool(host, dataStore.getId());
                 poolHosts.add(host);

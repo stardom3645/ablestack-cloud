@@ -24,7 +24,7 @@
       layout="vertical"
       @finish="handleSubmit"
     >
-      <a-form-item name="quota" ref="quota" :label="$t('label.quotagib')">
+      <a-form-item name="quota" ref="quota" :label="$t('label.quotagb')">
         <a-input
           v-model:value="form.quota"
           :placeholder="$t('label.quota')"/>
