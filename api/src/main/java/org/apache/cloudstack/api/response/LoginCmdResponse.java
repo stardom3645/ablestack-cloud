@@ -238,6 +238,7 @@ public class LoginCmdResponse extends AuthenticationCmdResponse {
 
     public void setManagementServerId(String managementServerId) {
         this.managementServerId = managementServerId;
+    }
 
     public String getExternalEntity() {
         return externalEntity;
