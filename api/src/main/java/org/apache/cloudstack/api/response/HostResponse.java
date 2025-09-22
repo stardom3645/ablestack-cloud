@@ -322,6 +322,18 @@ public class HostResponse extends BaseResponseWithAnnotations {
     @Param(description = "comma-separated list of storage access groups on the zone", since = "4.21.0")
     private String zoneStorageAccessGroups;
 
+    @SerializedName(ApiConstants.MIGRATION_IP)
+    @Param(description = "Live Migration Ip of the host", since = "4.21")
+    private String migrationIp;
+
+    public String getMigrationIp() {
+        return migrationIp;
+    }
+
+    public void setMigrationIp(String migrationIp) {
+        this.migrationIp = migrationIp;
+    }
+
     @Override
     public String getObjectId() {
         return this.getId();
