@@ -19,25 +19,18 @@
 
 package com.cloud.agent.api;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class PingAnswer extends Answer {
     private PingCommand _command = null;
 
     private boolean sendStartup = false;
-    private List<String> avoidMsList;
-
-    private List<String> reconcileCommands = new ArrayList<>();
 
     protected PingAnswer() {
     }
 
-    public PingAnswer(PingCommand cmd, List<String> avoidMsList, boolean sendStartup) {
+    public PingAnswer(PingCommand cmd, boolean sendStartup) {
         super(cmd);
         _command = cmd;
         this.sendStartup = sendStartup;
-        this.avoidMsList = avoidMsList;
     }
 
     public PingCommand getCommand() {
@@ -50,21 +43,5 @@ public class PingAnswer extends Answer {
 
     public void setSendStartup(boolean sendStartup) {
         this.sendStartup = sendStartup;
-    }
-
-    public List<String> getReconcileCommands() {
-        return reconcileCommands;
-    }
-
-    public void setReconcileCommands(List<String> reconcileCommands) {
-        this.reconcileCommands = reconcileCommands;
-    }
-
-    public void addReconcileCommand(String reconcileCommand) {
-        this.reconcileCommands.add(reconcileCommand);
-    }
-
-    public List<String> getAvoidMsList() {
-        return avoidMsList;
     }
 }

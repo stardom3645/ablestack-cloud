@@ -17,8 +17,6 @@
 
 %define __os_install_post %{nil}
 %global debug_package %{nil}
-%global __requires_exclude libc\\.so\\..*
-%define _binaries_in_noarch_packages_terminate_build   0
 
 # DISABLE the post-percentinstall java repacking and line number stripping
 # we need to find a way to just disable the java repacking and line number stripping, but not the autodeps
@@ -40,7 +38,6 @@ Group:     System Environment/Libraries
 # FIXME do groups for every single one of the subpackages
 Source0:   %{name}-%{_maventag}.tgz
 BuildRoot: %{_tmppath}/%{name}-%{_maventag}-%{release}-build
-BuildArch: noarch
 
 BuildRequires: java-11-openjdk-devel
 BuildRequires: ws-commons-util
@@ -124,14 +121,13 @@ Requires: iproute
 Requires: ipset
 Requires: perl
 Requires: rsync
-Requires: cifs-utils
 Requires: (python3-libvirt or python3-libvirt-python)
 Requires: (qemu-img or qemu-tools)
 Requires: qemu-kvm
 Requires: cryptsetup
 Requires: rng-tools
 Requires: (libgcrypt > 1.8.3 or libgcrypt20)
-Requires: (selinux-tools if selinux-tools)
+Requires: (selinux-tools if qemu-tools)
 Requires: sysstat
 Provides: cloud-agent
 Group: System Environment/Libraries
@@ -268,7 +264,6 @@ cp -r plugins/network-elements/cisco-vnmc/src/main/scripts/network/cisco/* ${RPM
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/lib
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/setup
-mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/cks/conf
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/log/%{name}/management
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/management
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/systemd/system/%{name}-management.service.d
@@ -293,7 +288,7 @@ wget https://github.com/apache/cloudstack-cloudmonkey/releases/download/6.3.0/cm
 chmod +x ${RPM_BUILD_ROOT}%{_bindir}/cmk
 
 cp -r client/target/utilities/scripts/db/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/setup
-cp -r plugins/integrations/kubernetes-service/src/main/resources/conf/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/cks/conf
+
 cp -r client/target/cloud-client-ui-%{_maventag}.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/
 cp -r client/target/classes/META-INF/webapp ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/webapp
 cp ui/dist/config.json ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/management/
@@ -327,11 +322,6 @@ install -D server/target/conf/cloudstack-sudoers ${RPM_BUILD_ROOT}%{_sysconfdir}
 touch ${RPM_BUILD_ROOT}%{_localstatedir}/run/%{name}-management.pid
 #install -D server/target/conf/cloudstack-catalina.logrotate ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}-catalina
 install -D server/target/conf/cloudstack-management.logrotate ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}-management
-
-install -D plugins/integrations/kubernetes-service/src/main/resources/conf/etcd-node.yml ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/cks/conf/etcd-node.yml
-install -D plugins/integrations/kubernetes-service/src/main/resources/conf/k8s-control-node.yml ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/cks/conf/k8s-control-node.yml
-install -D plugins/integrations/kubernetes-service/src/main/resources/conf/k8s-control-node-add.yml ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/cks/conf/k8s-control-node-add.yml
-install -D plugins/integrations/kubernetes-service/src/main/resources/conf/k8s-node.yml ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/cks/conf/k8s-node.yml
 
 # SystemVM template
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/templates/systemvm
@@ -495,8 +485,6 @@ if [ -f %{_sysconfdir}/sysconfig/%{name}-management ] ; then
 fi
 
 chown -R cloud:cloud /var/log/cloudstack/management
-chown -R cloud:cloud /usr/share/cloudstack-management/templates
-find /usr/share/cloudstack-management/templates -type d -exec chmod 0770 {} \;
 
 systemctl daemon-reload
 
@@ -635,14 +623,10 @@ pip3 install --upgrade urllib3
 %attr(0755,root,root) %{_bindir}/%{name}-sysvmadm
 %attr(0755,root,root) %{_bindir}/%{name}-setup-encryption
 %attr(0755,root,root) %{_bindir}/cmk
-%{_datadir}/%{name}-management/cks/conf/*.yml
 %{_datadir}/%{name}-management/setup/*.sql
 %{_datadir}/%{name}-management/setup/*.sh
 %{_datadir}/%{name}-management/setup/server-setup.xml
 %{_datadir}/%{name}-management/webapp/*
-%dir %attr(0770, cloud, cloud) %{_datadir}/%{name}-management/templates
-%dir %attr(0770, cloud, cloud) %{_datadir}/%{name}-management/templates/systemvm
-%attr(0644, cloud, cloud) %{_datadir}/%{name}-management/templates/systemvm/*
 %attr(0755,root,root) %{_bindir}/%{name}-external-ipallocator.py
 %attr(0755,root,root) %{_initrddir}/%{name}-ipallocator
 %dir %attr(0770,root,root) %{_localstatedir}/log/%{name}/ipallocator

@@ -156,10 +156,6 @@ export default {
     },
     fetchResourceIcon (id) {
       return new Promise((resolve, reject) => {
-        if (this.$store.getters.avatar) {
-          this.image = this.$store.getters.avatar
-          resolve(this.image)
-        }
         api('listUsers', {
           id: id,
           showicon: true
@@ -167,7 +163,6 @@ export default {
           const response = json.listusersresponse.user || []
           if (response?.[0]) {
             this.image = response[0]?.icon?.base64image || ''
-            this.$store.commit('SET_AVATAR', this.image)
             resolve(this.image)
           }
         }).catch(error => {

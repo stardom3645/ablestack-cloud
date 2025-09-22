@@ -44,10 +44,6 @@ export default {
     styles: {
       type: Object,
       default: () => {}
-    },
-    vmState: {
-      type: Boolean,
-      default: false
     }
   },
   methods: {
@@ -207,7 +203,6 @@ export default {
         case 'success':
         case 'poweron':
         case 'syncing':
-        case 'primary':
         case 'ok':
         case 'redundant':
         case 'goodinuse':
@@ -253,7 +248,6 @@ export default {
         case 'pending':
         case 'unsecure':
         case 'warning':
-        case 'backup':
         case 'free':
         case 'scheduled':
         case 'notredundant':
@@ -284,11 +278,7 @@ export default {
       } else if (this.$route.path === '/vm' || this.$route.path.includes('/vm/')) {
         result = this.$t('message.vm.state.' + state.toLowerCase())
       } else if (this.$route.path === '/volume' || this.$route.path.includes('/volume/')) {
-        if (this.vmState) {
-          result = this.$t('message.vm.state.' + state.toLowerCase())
-        } else {
-          result = this.$t('message.volume.state.' + state.toLowerCase())
-        }
+        result = this.$t('message.volume.state.' + state.toLowerCase())
       } else if (this.$route.path === '/guestnetwork' || this.$route.path.includes('/guestnetwork/')) {
         result = this.$t('message.guestnetwork.state.' + state.toLowerCase())
       } else if (this.$route.path === '/publicip' || this.$route.path.includes('/publicip/')) {

@@ -114,9 +114,6 @@ class CsConfig(object):
     def expose_dns(self):
         return self.cmdline().idata().get('exposedns', 'false') == 'true'
 
-    def use_router_ip_as_resolver(self):
-        return self.cl.get_use_router_ip_as_resolver()
-
     def get_dns(self):
         conf = self.cmdline().idata()
         dns = []
@@ -126,10 +123,9 @@ class CsConfig(object):
             else:
                 dns.append(self.address().get_guest_ip())
 
-        if 'userouteripresolver' not in conf:
-            for name in ('dns1', 'dns2'):
-                if name in conf:
-                    dns.append(conf[name])
+        for name in ('dns1', 'dns2'):
+            if name in conf:
+                dns.append(conf[name])
         return dns
 
     def get_format(self):

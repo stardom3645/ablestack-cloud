@@ -20,9 +20,8 @@ import java.util.Map;
 
 import com.cloud.domain.DomainDetailVO;
 import com.cloud.utils.db.GenericDao;
-import org.apache.cloudstack.resourcedetail.ResourceDetailsDao;
 
-public interface DomainDetailsDao extends GenericDao<DomainDetailVO, Long>, ResourceDetailsDao<DomainDetailVO> {
+public interface DomainDetailsDao extends GenericDao<DomainDetailVO, Long> {
     Map<String, String> findDetails(long domainId);
 
     void persist(long domainId, Map<String, String> details);
@@ -32,4 +31,6 @@ public interface DomainDetailsDao extends GenericDao<DomainDetailVO, Long>, Reso
     void deleteDetails(long domainId);
 
     void update(long domainId, Map<String, String> details);
+
+    String getActualValue(DomainDetailVO domainDetailVO);
 }

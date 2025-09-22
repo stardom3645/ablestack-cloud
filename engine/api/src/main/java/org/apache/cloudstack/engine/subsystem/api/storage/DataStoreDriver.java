@@ -48,7 +48,4 @@ public interface DataStoreDriver {
 
     void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CommandResult> callback);
 
-    default boolean canDisplayDetails() {
-        return true;
-    }
 }

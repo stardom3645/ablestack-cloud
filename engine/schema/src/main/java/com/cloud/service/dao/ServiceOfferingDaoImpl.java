@@ -34,7 +34,6 @@ import com.cloud.service.ServiceOfferingVO;
 import com.cloud.storage.Storage.ProvisioningType;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -294,9 +293,8 @@ public class ServiceOfferingDaoImpl extends GenericDaoBase<ServiceOfferingVO, Lo
     }
 
     @Override
-    public List<Long> listIdsByHostTag(String tag) {
-        GenericSearchBuilder<ServiceOfferingVO, Long> sb = createSearchBuilder(Long.class);
-        sb.selectFields(sb.entity().getId());
+    public List<ServiceOfferingVO> listByHostTag(String tag) {
+        SearchBuilder<ServiceOfferingVO> sb = createSearchBuilder();
         sb.and("tagNotNull", sb.entity().getHostTag(), SearchCriteria.Op.NNULL);
         sb.and().op("tagEq", sb.entity().getHostTag(), SearchCriteria.Op.EQ);
         sb.or("tagStartLike", sb.entity().getHostTag(), SearchCriteria.Op.LIKE);
@@ -304,12 +302,11 @@ public class ServiceOfferingDaoImpl extends GenericDaoBase<ServiceOfferingVO, Lo
         sb.or("tagEndLike", sb.entity().getHostTag(), SearchCriteria.Op.LIKE);
         sb.cp();
         sb.done();
-        SearchCriteria<Long> sc = sb.create();
-
+        SearchCriteria<ServiceOfferingVO> sc = sb.create();
         sc.setParameters("tagEq", tag);
         sc.setParameters("tagStartLike", tag + ",%");
         sc.setParameters("tagMidLike", "%," + tag + ",%");
         sc.setParameters("tagEndLike",   "%," + tag);
-        return customSearch(sc, null);
+        return listBy(sc);
     }
 }

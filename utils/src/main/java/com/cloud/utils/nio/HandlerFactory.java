@@ -19,19 +19,10 @@
 
 package com.cloud.utils.nio;
 
-import java.net.SocketAddress;
-
 /**
  * WorkerFactory creates and selects workers.
  */
 public interface HandlerFactory {
-    Task create(Task.Type type, Link link, byte[] data);
-    default int getMaxConcurrentNewConnectionsCount() {
-        return 0;
-    }
-    default int getNewConnectionsCount() {
-        return 0;
-    }
-    default void registerNewConnection(SocketAddress address) {}
-    default void unregisterNewConnection(SocketAddress address) {}
+    public Task create(Task.Type type, Link link, byte[] data);
+
 }

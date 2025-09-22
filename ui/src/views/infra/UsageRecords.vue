@@ -708,7 +708,6 @@ export default {
             title = this.$t('label.view')
             break
           case 'virtualmachinename':
-            title = this.$t('label.virtualmachinename')
             dataIndex = 'name'
             break
           default:

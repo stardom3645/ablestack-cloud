@@ -30,7 +30,7 @@
                       <a-menu-item>
                         <router-link :to="{ path: '/project/' + project.id }">
                           <project-outlined/>
-                            {{ this.$localStorage.get('LOCALE') == 'ko_KR'? $t('label.project') + ' ' + $t('label.view') : $t('label.view') + ' ' + $t('label.project') }}
+                            {{ $t('label.view') }} {{  $t('label.project') }}
                         </router-link>
                       </a-menu-item>
                       <a-menu-item v-if="showProject && ['Admin'].includes($store.getters.userInfo.roletype)">
@@ -59,18 +59,6 @@
                 :value-style="{ color: $config.theme['@primary-color'] }">
                 <template #prefix>
                   <cloud-server-outlined/>&nbsp;
-                </template>
-              </a-statistic>
-            </router-link>
-          </a-col>
-          <a-col :span="12" v-if="'listVirtualMachines' in $store.getters.apis && isLeaseFeatureEnabled">
-            <router-link :to="{ path: '/vm', query: { leased: true } }">
-              <a-statistic
-                :title="$t('label.leasedinstances')"
-                :value="data.leasedinstances"
-                :value-style="{ color: $config.theme['@primary-color'] }">
-                <template #prefix>
-                  <field-time-outlined/>&nbsp;
                 </template>
               </a-statistic>
             </router-link>
@@ -215,7 +203,7 @@
             status="active"
             :percent="parseFloat(getPercentUsed(entity[usageType + 'total'], entity[usageType + 'limit']))"
             :format="p => entity[usageType + 'limit'] !== '-1' && entity[usageType + 'limit'] !== 'Unlimited' ? p.toFixed(0) + '%' : ''"
-            :stroke-color="getStrokeColor(entity[usageType + 'available'])"
+            stroke-color="#52c41a"
             size="small"
             />
             <br/>
@@ -228,7 +216,7 @@
       </chart-card>
     </a-col>
     <a-col :xs="{ span: 24 }" :lg="{ span: 12 }" :xl="{ span: 8 }" :xxl="{ span: 8 }">
-      <chart-card :loading="loading" class="dashboard-storage">
+      <chart-card :loading="loading" class="dashboard-card">
         <template #title>
           <div class="center">
             <h3><hdd-outlined /> {{ $t('label.storage') }}</h3>
@@ -236,7 +224,7 @@
         </template>
         <a-divider style="margin: 6px 0px; border-width: 0px"/>
         <div
-          v-for="usageType in ['volume', 'snapshot', 'template', 'primarystorage', 'secondarystorage', 'backup', 'backupstorage', 'bucket', 'objectstorage']"
+          v-for="usageType in ['volume', 'snapshot', 'template', 'primarystorage', 'secondarystorage']"
           :key="usageType">
           <div>
             <div>
@@ -251,7 +239,7 @@
             status="active"
             :percent="parseFloat(getPercentUsed(entity[usageType + 'total'], entity[usageType + 'limit']))"
             :format="p => entity[usageType + 'limit'] !== '-1' && entity[usageType + 'limit'] !== 'Unlimited' ? p.toFixed(0) + '%' : ''"
-            :stroke-color="getStrokeColor(entity[usageType + 'available'])"
+            stroke-color="#52c41a"
             size="small"
             />
             <br/>
@@ -287,7 +275,7 @@
             status="active"
             :percent="parseFloat(getPercentUsed(entity[usageType + 'total'], entity[usageType + 'limit']))"
             :format="p => entity[usageType + 'limit'] !== '-1' && entity[usageType + 'limit'] !== 'Unlimited' ? p.toFixed(0) + '%' : ''"
-            :stroke-color="getStrokeColor(entity[usageType + 'available'])"
+            stroke-color="#52c41a"
             size="small"
             />
             <br/>
@@ -350,7 +338,7 @@
         </a-timeline>
         <router-link :to="{ path: '/event' }">
           <a-button>
-            {{ this.$localStorage.get('LOCALE') == 'ko_KR'? $t('label.events') + ' ' + $t('label.view') : $t('label.view') + ' ' + $t('label.events') }}
+            {{ $t('label.view') }} {{ $t('label.events') }}
           </a-button>
         </router-link>
       </chart-card>
@@ -405,10 +393,8 @@ export default {
         networks: 0,
         vpcs: 0,
         ips: 0,
-        templates: 0,
-        leasedinstances: 0
-      },
-      isLeaseFeatureEnabled: this.$store.getters.features.instanceleaseenabled
+        templates: 0
+      }
     }
   },
   computed: {
@@ -455,9 +441,6 @@ export default {
     }
   },
   methods: {
-    getStrokeColor (available) {
-      return available <= 0 ? '#ff4d4f' : '#52c41a'
-    },
     fetchData () {
       if (store.getters.project.id) {
         this.listProject()
@@ -477,13 +460,9 @@ export default {
     },
     listProject () {
       this.loading = true
-      const params = {
-        id: store.getters.project.id,
-        listall: true
-      }
-      api('listProjects', params).then(json => {
+      api('listProjects', { id: store.getters.project.id }).then(json => {
         this.loading = false
-        if (json?.listprojectsresponse?.project) {
+        if (json && json.listprojectsresponse && json.listprojectsresponse.project) {
           this.project = json.listprojectsresponse.project[0]
         }
       })
@@ -570,15 +549,6 @@ export default {
         this.loading = false
         this.data.stopped = json?.listvirtualmachinesresponse?.count
       })
-      if (this.isLeaseFeatureEnabled) {
-        api('listVirtualMachines', { leased: true, listall: true, details: 'min', page: 1, pagesize: 1 }).then(json => {
-          this.loading = false
-          this.data.leasedinstances = json?.listvirtualmachinesresponse?.count
-          if (!this.data.leasedinstances) {
-            this.data.leasedinstances = 0
-          }
-        })
-      }
     },
     listEvents () {
       if (!('listEvents' in this.$store.getters.apis)) {
@@ -610,14 +580,6 @@ export default {
           return 'label.primary.storage'
         case 'secondarystorage':
           return 'label.secondary.storage'
-        case 'backup':
-          return 'label.backup'
-        case 'backupstorage':
-          return 'label.backup.storage'
-        case 'bucket':
-          return 'label.buckets'
-        case 'objectstorage':
-          return 'label.object.storage'
         case 'ip':
           return 'label.public.ips'
       }
@@ -630,10 +592,6 @@ export default {
         case 'primarystorage':
           return parseFloat(value).toFixed(2) + ' GiB'
         case 'secondarystorage':
-          return parseFloat(value).toFixed(2) + ' GiB'
-        case 'backupstorage':
-          return parseFloat(value).toFixed(2) + ' GiB'
-        case 'objectstorage':
           return parseFloat(value).toFixed(2) + ' GiB'
       }
       return value
@@ -679,13 +637,6 @@ export default {
   .dashboard-card {
     width: 100%;
     min-height: 420px;
-  }
-
-  .dashboard-storage {
-    width: 100%;
-    overflow-x:hidden;
-    overflow-y: scroll;
-    max-height: 420px;
   }
 
   .dashboard-event {

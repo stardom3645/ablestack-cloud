@@ -41,10 +41,7 @@ public class UpdateNetworkCmdTest {
     NetworkService networkService;
     @Mock
     public EntityManager _entityMgr;
-    @Mock
-    private ResponseGenerator _responseGenerator;
-    @Mock
-    private Object job;
+    private ResponseGenerator responseGenerator;
     @InjectMocks
     UpdateNetworkCmd cmd = new UpdateNetworkCmd();
 
@@ -179,13 +176,15 @@ public class UpdateNetworkCmdTest {
         ReflectionTestUtils.setField(cmd, "id", networkId);
         ReflectionTestUtils.setField(cmd, "publicMtu", publicmtu);
         Network network = Mockito.mock(Network.class);
+        responseGenerator = Mockito.mock(ResponseGenerator.class);
         NetworkResponse response = Mockito.mock(NetworkResponse.class);
         response.setPublicMtu(publicmtu);
         Mockito.when(networkService.getNetwork(networkId)).thenReturn(network);
         Mockito.when(networkService.updateGuestNetwork(cmd)).thenReturn(network);
-        Mockito.when(_responseGenerator.createNetworkResponse(ResponseObject.ResponseView.Restricted, network)).thenReturn(response);
+        cmd._responseGenerator = responseGenerator;
+        Mockito.when(responseGenerator.createNetworkResponse(ResponseObject.ResponseView.Restricted, network)).thenReturn(response);
         cmd.execute();
-        Mockito.verify(_responseGenerator).createNetworkResponse(Mockito.any(ResponseObject.ResponseView.class), Mockito.any(Network.class));
+        Mockito.verify(responseGenerator).createNetworkResponse(Mockito.any(ResponseObject.ResponseView.class), Mockito.any(Network.class));
         NetworkResponse actualResponse = (NetworkResponse) cmd.getResponseObject();
 
         Assert.assertEquals(response, actualResponse);

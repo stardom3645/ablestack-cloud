@@ -944,12 +944,8 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel, Confi
 
     @Override
     public UserDataServiceProvider getUserDataUpdateProvider(Network network) {
-        if (network == null) {
-            logger.warn("No network details, can't fetch user data provider");
-            return null;
-        }
-
         String userDataProvider = _ntwkSrvcDao.getProviderForServiceInNetwork(network.getId(), Service.UserData);
+
         if (userDataProvider == null) {
             logger.debug("Network " + network + " doesn't support service " + Service.UserData.getName());
             return null;

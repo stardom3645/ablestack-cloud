@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -81,18 +80,6 @@ public class HttpTemplateDownloader extends ManagedContextRunnable implements Te
     private ResourceType resourceType = ResourceType.TEMPLATE;
     private final HttpMethodRetryHandler myretryhandler;
     private boolean followRedirects = false;
-    private boolean isChunkedTransfer;
-
-    protected static final List<String> CUSTOM_HEADERS_FOR_CHUNKED_TRANSFER_SIZE = Arrays.asList(
-            "x-goog-stored-content-length",
-            "x-goog-meta-size",
-            "x-amz-meta-size",
-            "x-amz-meta-content-length",
-            "x-object-meta-size",
-            "x-original-content-length",
-            "x-oss-meta-content-length",
-            "x-file-size");
-    private static final long MIN_FORMAT_VERIFICATION_SIZE = 1024 * 1024;
 
     public HttpTemplateDownloader(StorageLayer storageLayer, String downloadUrl, String toDir, DownloadCompleteCallback callback, long maxTemplateSizeInBytes,
             String user, String password, Proxy proxy, ResourceType resourceType) {
@@ -218,11 +205,13 @@ public class HttpTemplateDownloader extends ManagedContextRunnable implements Te
                  RandomAccessFile out = new RandomAccessFile(file, "rw");
             ) {
                 out.seek(localFileSize);
-                logger.info("Starting download from {} to {} remoteSize={} , max size={}",downloadUrl, toFile,
-                        toHumanReadableSize(remoteSize), toHumanReadableSize(maxTemplateSizeInBytes));
-                boolean eof = copyBytes(file, in, out);
+
+                logger.info("Starting download from " + downloadUrl + " to " + toFile + " remoteSize=" + toHumanReadableSize(remoteSize) + " , max size=" + toHumanReadableSize(maxTemplateSizeInBytes));
+
+                if (copyBytes(file, in, out)) return 0;
+
                 Date finish = new Date();
-                checkDownloadCompletion(eof);
+                checkDowloadCompletion();
                 downloadTime += finish.getTime() - start.getTime();
             } finally { /* in.close() and out.close() */ }
             return totalBytes;
@@ -248,31 +237,27 @@ public class HttpTemplateDownloader extends ManagedContextRunnable implements Te
     }
 
     private boolean copyBytes(File file, InputStream in, RandomAccessFile out) throws IOException {
-        byte[] buffer = new byte[CHUNK_SIZE];
+        int bytes;
+        byte[] block = new byte[CHUNK_SIZE];
         long offset = 0;
+        boolean done = false;
         VerifyFormat verifyFormat = new VerifyFormat(file);
         status = Status.IN_PROGRESS;
-        while (status != Status.ABORTED) {
-            int bytesRead = in.read(buffer, 0, CHUNK_SIZE);
-            if (bytesRead == -1) {
-                logger.debug("Reached EOF on input stream");
-                break;
-            }
-            offset = writeBlock(bytesRead, out, buffer, offset);
-            if (!ResourceType.SNAPSHOT.equals(resourceType)
-                    && !verifyFormat.isVerifiedFormat()
-                    && (offset >= MIN_FORMAT_VERIFICATION_SIZE || offset >= remoteSize)) {
-                verifyFormat.invoke();
-            }
-            if (offset >= remoteSize) {
-                logger.debug("Reached expected remote size limit: {} bytes", remoteSize);
-                break;
+        while (!done && status != Status.ABORTED && offset <= remoteSize) {
+            if ((bytes = in.read(block, 0, CHUNK_SIZE)) > -1) {
+                offset = writeBlock(bytes, out, block, offset);
+                if (!ResourceType.SNAPSHOT.equals(resourceType) &&
+                        !verifyFormat.isVerifiedFormat() &&
+                        (offset >= 1048576 || offset >= remoteSize)) { //let's check format after we get 1MB or full file
+                    verifyFormat.invoke();
+                }
+            } else {
+                done = true;
             }
         }
         out.getFD().sync();
-        return !Status.ABORTED.equals(status);
+        return false;
     }
-
 
     private long writeBlock(int bytes, RandomAccessFile out, byte[] block, long offset) throws IOException {
         out.write(block, 0, bytes);
@@ -282,13 +267,11 @@ public class HttpTemplateDownloader extends ManagedContextRunnable implements Te
         return offset;
     }
 
-    private void checkDownloadCompletion(boolean eof) {
+    private void checkDowloadCompletion() {
         String downloaded = "(incomplete download)";
-        if (eof && ((totalBytes >= remoteSize) || (isChunkedTransfer && remoteSize == maxTemplateSizeInBytes))) {
+        if (totalBytes >= remoteSize) {
             status = Status.DOWNLOAD_FINISHED;
-            downloaded = "(download complete remote=" +
-                    (remoteSize == maxTemplateSizeInBytes ? toHumanReadableSize(remoteSize) : "unknown") +
-                    " bytes)";
+            downloaded = "(download complete remote=" + toHumanReadableSize(remoteSize) + " bytes)";
         }
         errorString = "Downloaded " + toHumanReadableSize(totalBytes) + " bytes " + downloaded;
     }
@@ -310,42 +293,18 @@ public class HttpTemplateDownloader extends ManagedContextRunnable implements Te
         }
     }
 
-    protected long getRemoteSizeForChunkedTransfer() {
-        for (String headerKey : CUSTOM_HEADERS_FOR_CHUNKED_TRANSFER_SIZE) {
-            Header header = request.getResponseHeader(headerKey);
-            if (header == null) {
-                continue;
-            }
-            try {
-                return Long.parseLong(header.getValue());
-            } catch (NumberFormatException ignored) {}
-        }
-        Header contentRangeHeader = request.getResponseHeader("Content-Range");
-        if (contentRangeHeader != null) {
-            String contentRange = contentRangeHeader.getValue();
-            if (contentRange != null && contentRange.contains("/")) {
-                String totalSize = contentRange.substring(contentRange.indexOf('/') + 1).trim();
-                return Long.parseLong(totalSize);
-            }
-        }
-        return 0;
-    }
-
     private boolean tryAndGetRemoteSize() {
         Header contentLengthHeader = request.getResponseHeader("content-length");
-        isChunkedTransfer = false;
+        boolean chunked = false;
         long reportedRemoteSize = 0;
         if (contentLengthHeader == null) {
             Header chunkedHeader = request.getResponseHeader("Transfer-Encoding");
-            if (chunkedHeader != null && "chunked".equalsIgnoreCase(chunkedHeader.getValue())) {
-                isChunkedTransfer = true;
-                reportedRemoteSize = getRemoteSizeForChunkedTransfer();
-                logger.debug("{} is using chunked transfer encoding, possible remote size: {}", downloadUrl,
-                        reportedRemoteSize);
-            } else {
+            if (chunkedHeader == null || !"chunked".equalsIgnoreCase(chunkedHeader.getValue())) {
                 status = Status.UNRECOVERABLE_ERROR;
                 errorString = " Failed to receive length of download ";
                 return false;
+            } else if ("chunked".equalsIgnoreCase(chunkedHeader.getValue())) {
+                chunked = true;
             }
         } else {
             reportedRemoteSize = Long.parseLong(contentLengthHeader.getValue());
@@ -357,11 +316,9 @@ public class HttpTemplateDownloader extends ManagedContextRunnable implements Te
                 return false;
             }
         }
+
         if (remoteSize == 0) {
             remoteSize = reportedRemoteSize;
-            if (remoteSize != 0) {
-                logger.debug("Remote size for {} found to be {}", downloadUrl, toHumanReadableSize(remoteSize));
-            }
         }
         return true;
     }

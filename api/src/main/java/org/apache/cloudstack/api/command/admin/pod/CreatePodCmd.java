@@ -30,8 +30,6 @@ import org.apache.cloudstack.api.response.ZoneResponse;
 import com.cloud.dc.Pod;
 import com.cloud.user.Account;
 
-import java.util.List;
-
 @APICommand(name = "createPod", description = "Creates a new Pod.", responseObject = PodResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreatePodCmd extends BaseCmd {
@@ -65,12 +63,6 @@ public class CreatePodCmd extends BaseCmd {
     @Parameter(name = ApiConstants.ALLOCATION_STATE, type = CommandType.STRING, description = "Allocation state of this Pod for allocation of new resources")
     private String allocationState;
 
-    @Parameter(name = ApiConstants.STORAGE_ACCESS_GROUPS,
-            type = CommandType.LIST, collectionType = CommandType.STRING,
-            description = "comma separated list of storage access groups for the hosts in the pod",
-            since = "4.21.0")
-    private List<String> storageAccessGroups;
-
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -103,10 +95,6 @@ public class CreatePodCmd extends BaseCmd {
         return allocationState;
     }
 
-    public List<String> getStorageAccessGroups() {
-        return storageAccessGroups;
-    }
-
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -123,7 +111,7 @@ public class CreatePodCmd extends BaseCmd {
 
     @Override
     public void execute() {
-        Pod result = _configService.createPod(getZoneId(), getPodName(), getStartIp(), getEndIp(), getGateway(), getNetmask(), getAllocationState(), getStorageAccessGroups());
+        Pod result = _configService.createPod(getZoneId(), getPodName(), getStartIp(), getEndIp(), getGateway(), getNetmask(), getAllocationState());
         if (result != null) {
             PodResponse response = _responseGenerator.createPodResponse(result, false);
             response.setResponseName(getCommandName());

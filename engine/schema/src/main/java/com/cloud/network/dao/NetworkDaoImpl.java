@@ -415,7 +415,8 @@ public class NetworkDaoImpl extends GenericDaoBase<NetworkVO, Long>implements Ne
         sc.setParameters("broadcastUri", broadcastURI);
         sc.setParameters("guestType", guestTypes);
         sc.setJoinParameters("persistent", "persistent", isPersistent);
-        return getCount(sc);
+        List<NetworkVO> persistentNetworks = search(sc, null);
+        return persistentNetworks.size();
     }
 
     @Override

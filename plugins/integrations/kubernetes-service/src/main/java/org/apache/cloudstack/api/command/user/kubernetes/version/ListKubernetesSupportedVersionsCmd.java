@@ -66,11 +66,6 @@ public class ListKubernetesSupportedVersionsCmd extends BaseListCmd {
             description = "the ID of the minimum Kubernetes supported version")
     private Long minimumKubernetesVersionId;
 
-    @Parameter(name = ApiConstants.ARCH, type = CommandType.STRING,
-            description = "the CPU arch of the binaries ISO. Valid options are: x86_64, aarch64",
-            since = "4.20")
-    private String arch;
-
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -88,10 +83,6 @@ public class ListKubernetesSupportedVersionsCmd extends BaseListCmd {
             throw new IllegalArgumentException("Invalid version format");
         }
         return minimumSemanticVersion;
-    }
-
-    public String getArch() {
-        return arch;
     }
 
     public Long getMinimumKubernetesVersionId() {

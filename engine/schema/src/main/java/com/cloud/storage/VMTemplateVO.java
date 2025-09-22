@@ -165,9 +165,6 @@ public class VMTemplateVO implements VirtualMachineTemplate {
     @Column(name = "deploy_as_is")
     private boolean deployAsIs;
 
-    @Column(name = "for_cks")
-    private boolean forCks;
-
     @Column(name = "user_data_id")
     private Long userDataId;
 
@@ -681,14 +678,6 @@ public class VMTemplateVO implements VirtualMachineTemplate {
 
     public void setDeployAsIs(boolean deployAsIs) {
         this.deployAsIs = deployAsIs;
-    }
-
-    public boolean isForCks() {
-        return forCks;
-    }
-
-    public void setForCks(boolean forCks) {
-        this.forCks = forCks;
     }
 
     @Override

@@ -54,7 +54,7 @@ public final class XenServer56FenceCommandWrapper extends CommandWrapper<FenceCo
             for (final VM vm : vms) {
                 logger.info("Fence command for VM " + command.getVmName());
                 vm.powerStateReset(conn);
-                xenServer56.destroyVm(vm, conn);
+                vm.destroy(conn);
             }
             return new FenceAnswer(command);
         } catch (final XmlRpcException e) {

@@ -16,9 +16,7 @@
 // under the License.
 package com.cloud.server;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public interface ResourceIconManager {
 
@@ -27,8 +25,4 @@ public interface ResourceIconManager {
     boolean deleteResourceIcon(List<String> resourceIds, ResourceTag.ResourceObjectType resourceType);
 
     ResourceIcon getByResourceTypeAndUuid(ResourceTag.ResourceObjectType type, String resourceId);
-
-    Map<Long, ResourceIcon> getByResourceTypeAndIds(ResourceTag.ResourceObjectType type, Collection<Long> resourceIds);
-
-    Map<String, ResourceIcon> getByResourceTypeAndUuids(ResourceTag.ResourceObjectType type, Collection<String> resourceUuids);
 }

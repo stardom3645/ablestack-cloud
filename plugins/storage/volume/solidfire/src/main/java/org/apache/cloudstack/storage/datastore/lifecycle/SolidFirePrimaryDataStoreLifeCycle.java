@@ -25,7 +25,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import com.cloud.storage.dao.StoragePoolAndAccessGroupMapDao;
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.HostScope;
@@ -44,6 +43,7 @@ import com.cloud.capacity.CapacityManager;
 import com.cloud.dc.ClusterVO;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.ResourceManager;
@@ -74,8 +74,6 @@ public class SolidFirePrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLife
     @Inject private StoragePoolAutomation _storagePoolAutomation;
     @Inject private StoragePoolDetailsDao _storagePoolDetailsDao;
     @Inject private VMTemplatePoolDao _tmpltPoolDao;
-    @Inject
-    private StoragePoolAndAccessGroupMapDao storagePoolAndAccessGroupMapDao;
 
     // invoked to add primary storage that is based on the SolidFire plug-in
     @Override
@@ -237,10 +235,11 @@ public class SolidFirePrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLife
     @Override
     public boolean attachCluster(DataStore dataStore, ClusterScope scope) {
         PrimaryDataStoreInfo primarystore = (PrimaryDataStoreInfo)dataStore;
-        List<HostVO> hostsToConnect = _resourceMgr.getEligibleUpAndEnabledHostsInClusterForStorageConnection(primarystore);
 
-        logger.debug(String.format("Attaching the pool to each of the hosts %s in the cluster: %s", hostsToConnect, primarystore.getClusterId()));
-        for (HostVO host : hostsToConnect) {
+        List<HostVO> hosts =
+                _resourceMgr.listAllUpAndEnabledHosts(Host.Type.Routing, primarystore.getClusterId(), primarystore.getPodId(), primarystore.getDataCenterId());
+
+        for (HostVO host : hosts) {
             try {
                 _storageMgr.connectHostToSharedPool(host, dataStore.getId());
             } catch (Exception e) {
@@ -255,15 +254,16 @@ public class SolidFirePrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLife
 
     @Override
     public boolean attachZone(DataStore dataStore, ZoneScope scope, HypervisorType hypervisorType) {
-        List<HostVO> hostsToConnect = new ArrayList<>();
-        HypervisorType[] hypervisorTypes = {HypervisorType.XenServer, HypervisorType.VMware, HypervisorType.KVM};
+        List<HostVO> xenServerHosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(HypervisorType.XenServer, scope.getScopeId());
+        List<HostVO> vmWareServerHosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(HypervisorType.VMware, scope.getScopeId());
+        List<HostVO> kvmHosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(HypervisorType.KVM, scope.getScopeId());
+        List<HostVO> hosts = new ArrayList<>();
 
-        for (HypervisorType type : hypervisorTypes) {
-            hostsToConnect.addAll(_resourceMgr.getEligibleUpAndEnabledHostsInZoneForStorageConnection(dataStore, scope.getScopeId(), type));
-        }
+        hosts.addAll(xenServerHosts);
+        hosts.addAll(vmWareServerHosts);
+        hosts.addAll(kvmHosts);
 
-        logger.debug(String.format("In createPool. Attaching the pool to each of the hosts in %s.", hostsToConnect));
-        for (HostVO host : hostsToConnect) {
+        for (HostVO host : hosts) {
             try {
                 _storageMgr.connectHostToSharedPool(host, dataStore.getId());
             } catch (Exception e) {

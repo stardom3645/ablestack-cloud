@@ -43,9 +43,7 @@ public interface FirewallRulesDao extends GenericDao<FirewallRuleVO, Long> {
 
     List<FirewallRuleVO> listStaticNatByVmId(long vmId);
 
-    List<FirewallRuleVO> listByIpPurposePortsProtocolAndNotRevoked(long ipAddressId, Integer startPort, Integer endPort, String protocol, FirewallRule.Purpose purpose);
-
-    List<FirewallRuleVO> listByIpPurposeProtocolAndNotRevoked(long ipAddressId, FirewallRule.Purpose purpose, String protocol);
+    List<FirewallRuleVO> listByIpPurposeAndProtocolAndNotRevoked(long ipAddressId, Integer startPort, Integer endPort, String protocol, FirewallRule.Purpose purpose);
 
     FirewallRuleVO findByRelatedId(long ruleId);
 
@@ -74,8 +72,6 @@ public interface FirewallRulesDao extends GenericDao<FirewallRuleVO, Long> {
     void loadSourceCidrs(FirewallRuleVO rule);
 
     void loadDestinationCidrs(FirewallRuleVO rule);
-
-    FirewallRuleVO findByNetworkIdAndPorts(long networkId, int startPort, int endPort);
 
     List<FirewallRuleVO> listRoutingIngressFirewallRules(long networkId);
 }

@@ -219,17 +219,17 @@ public class StorPoolHelper {
     }
 
     public static Long findClusterIdByGlobalId(String globalId, ClusterDao clusterDao) {
-        List<Long> clusterIds = clusterDao.listAllIds();
-        if (clusterIds.size() == 1) {
+        List<ClusterVO> clusterVo = clusterDao.listAll();
+        if (clusterVo.size() == 1) {
             StorPoolUtil.spLog("There is only one cluster, sending backup to secondary command");
             return null;
         }
-        for (Long clusterId : clusterIds) {
-            if (globalId != null && StorPoolConfigurationManager.StorPoolClusterId.valueIn(clusterId) != null
-                    && globalId.contains(StorPoolConfigurationManager.StorPoolClusterId.valueIn(clusterId))) {
-                StorPoolUtil.spLog("Found cluster with id=%s for object with globalId=%s", clusterId,
+        for (ClusterVO clusterVO2 : clusterVo) {
+            if (globalId != null && StorPoolConfigurationManager.StorPoolClusterId.valueIn(clusterVO2.getId()) != null
+                    && globalId.contains(StorPoolConfigurationManager.StorPoolClusterId.valueIn(clusterVO2.getId()).toString())) {
+                StorPoolUtil.spLog("Found cluster with id=%s for object with globalId=%s", clusterVO2.getId(),
                         globalId);
-                return clusterId;
+                return clusterVO2.getId();
             }
         }
         throw new CloudRuntimeException(

@@ -22,7 +22,6 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.cloud.hypervisor.Hypervisor;
 import com.cloud.utils.nio.Link;
 
 public class ConnectedAgentAttacheTest {
@@ -32,8 +31,8 @@ public class ConnectedAgentAttacheTest {
 
         Link link = mock(Link.class);
 
-        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 0, "uuid", null, Hypervisor.HypervisorType.KVM, link, false);
-        ConnectedAgentAttache agentAttache2 = new ConnectedAgentAttache(null, 0, "uuid", null, Hypervisor.HypervisorType.KVM,link, false);
+        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 0, "uuid", null, link, false);
+        ConnectedAgentAttache agentAttache2 = new ConnectedAgentAttache(null, 0, "uuid", null, link, false);
 
         assertTrue(agentAttache1.equals(agentAttache2));
     }
@@ -43,7 +42,7 @@ public class ConnectedAgentAttacheTest {
 
         Link link = mock(Link.class);
 
-        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 0, "uuid", null, Hypervisor.HypervisorType.KVM, link, false);
+        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 0, "uuid", null, link, false);
 
         assertFalse(agentAttache1.equals(null));
     }
@@ -54,8 +53,8 @@ public class ConnectedAgentAttacheTest {
         Link link1 = mock(Link.class);
         Link link2 = mock(Link.class);
 
-        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 0, "uuid", null, Hypervisor.HypervisorType.KVM, link1, false);
-        ConnectedAgentAttache agentAttache2 = new ConnectedAgentAttache(null, 0, "uuid", null, Hypervisor.HypervisorType.KVM, link2, false);
+        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 0, "uuid", null, link1, false);
+        ConnectedAgentAttache agentAttache2 = new ConnectedAgentAttache(null, 0, "uuid", null, link2, false);
 
         assertFalse(agentAttache1.equals(agentAttache2));
     }
@@ -65,8 +64,8 @@ public class ConnectedAgentAttacheTest {
 
         Link link1 = mock(Link.class);
 
-        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 1, "uuid", null, Hypervisor.HypervisorType.KVM, link1, false);
-        ConnectedAgentAttache agentAttache2 = new ConnectedAgentAttache(null, 2, "uuid", null, Hypervisor.HypervisorType.KVM, link1, false);
+        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 1, "uuid", null, link1, false);
+        ConnectedAgentAttache agentAttache2 = new ConnectedAgentAttache(null, 2, "uuid", null, link1, false);
 
         assertFalse(agentAttache1.equals(agentAttache2));
     }
@@ -76,7 +75,7 @@ public class ConnectedAgentAttacheTest {
 
         Link link1 = mock(Link.class);
 
-        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 1, "uuid", null, Hypervisor.HypervisorType.KVM, link1, false);
+        ConnectedAgentAttache agentAttache1 = new ConnectedAgentAttache(null, 1, "uuid", null, link1, false);
 
         assertFalse(agentAttache1.equals("abc"));
     }

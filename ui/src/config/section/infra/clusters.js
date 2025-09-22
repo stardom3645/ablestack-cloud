@@ -24,10 +24,10 @@ export default {
   icon: 'cluster-outlined',
   docHelp: 'conceptsandterminology/concepts.html#about-clusters',
   permission: ['listClustersMetrics'],
-  searchFilters: ['name', 'zoneid', 'podid', 'arch', 'hypervisor'],
+  searchFilters: ['name', 'zoneid', 'podid', 'hypervisor'],
   columns: () => {
-    const fields = ['name', 'state', 'allocationstate', 'clustertype', 'arch', 'hypervisortype', 'hosts', 'haenable']
-    const metricsFields = ['state', 'hosts', 'cpuused', 'cpumaxdeviation', 'cpuallocated', 'cputotal', 'memoryused', 'memorymaxdeviation', 'memoryallocated', 'memorytotal', 'drsimbalance']
+    const fields = ['name', 'state', 'allocationstate', 'clustertype', 'hypervisortype', 'hosts', 'haenable']
+    const metricsFields = ['cpuused', 'cpumaxdeviation', 'cpuallocated', 'cputotal', 'memoryused', 'memorymaxdeviation', 'memoryallocated', 'memorytotal', 'drsimbalance']
     if (store.getters.metrics) {
       fields.push(...metricsFields)
     }
@@ -35,7 +35,7 @@ export default {
     fields.push('zonename')
     return fields
   },
-  details: ['name', 'id', 'allocationstate', 'clustertype', 'managedstate', 'arch', 'hypervisortype', 'podname', 'zonename', 'drsimbalance', 'storageaccessgroups', 'podstorageaccessgroups', 'zonestorageaccessgroups', 'haenable'],
+  details: ['name', 'id', 'allocationstate', 'clustertype', 'managedstate', 'arch', 'hypervisortype', 'podname', 'zonename', 'drsimbalance', 'haenable'],
   related: [{
     name: 'host',
     title: 'label.hosts',
@@ -76,7 +76,7 @@ export default {
       api: 'addCluster',
       icon: 'plus-outlined',
       label: 'label.add.cluster',
-      docHelp: 'installguide/configuration.html#adding-a-cluster',
+      docHelp: 'adminguide/installguide/configuration.html#adding-a-cluster',
       listView: true,
       popup: true,
       component: shallowRef(defineAsyncComponent(() => import('@/views/infra/ClusterAdd.vue')))
@@ -86,15 +86,19 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit',
       dataView: true,
-      popup: true,
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/ClusterUpdate.vue')))
+      args: ['clustername', 'arch'],
+      mapping: {
+        arch: {
+          options: ['x86_64', 'aarch64']
+        }
+      }
     },
     {
       api: 'updateCluster',
       icon: 'play-circle-outlined',
       label: 'label.action.enable.cluster',
       message: 'message.action.enable.cluster',
-      docHelp: 'adminguide/hosts.html#disabling-and-enabling-zones-pods-and-clusters',
+      docHelp: 'adminguide/installguide/hosts.html#disabling-and-enabling-zones-pods-and-clusters',
       dataView: true,
       defaultArgs: { allocationstate: 'Enabled' },
       show: (record) => { return record.allocationstate === 'Disabled' }
@@ -104,7 +108,7 @@ export default {
       icon: 'pause-circle-outlined',
       label: 'label.action.disable.cluster',
       message: 'message.action.disable.cluster',
-      docHelp: 'adminguide/hosts.html#disabling-and-enabling-zones-pods-and-clusters',
+      docHelp: 'adminguide/installguide/hosts.html#disabling-and-enabling-zones-pods-and-clusters',
       dataView: true,
       defaultArgs: { allocationstate: 'Disabled' },
       show: (record) => { return record.allocationstate === 'Enabled' }

@@ -39,8 +39,8 @@
       :rowExpandable="(record) => record.downloaddetails.length > 0">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'zonename'">
-          <span v-if="record.zoneicon && record.zoneicon.base64image">
-            <resource-icon :image="record.zoneicon.base64image" size="2x" style="margin-right: 5px"/>
+          <span v-if="fetchZoneIcon(record.zoneid)">
+            <resource-icon :image="zoneIcon" size="1x" style="margin-right: 5px"/>
           </span>
           <global-outlined v-else style="margin-right: 5px" />
           <span> {{ record.zonename }} </span>
@@ -49,43 +49,31 @@
           <span v-if="record.isready">{{ $t('label.yes') }}</span>
           <span v-else>{{ $t('label.no') }}</span>
         </template>
-        <template v-else-if="column.key === 'created'">
-          <span v-if="record.created">{{ $toLocaleDate(record.created) }}</span>
-        </template>
         <template v-if="column.key === 'actions'">
-          <span style="margin-right: 5px" v-if="'deployVirtualMachine' in $store.getters.apis">
+          <span style="margin-right: 5px">
             <tooltip-button
-              :disabled="!record.isready"
-              :title="$t('label.vm.add')"
-              icon="rocket-outlined"
-              @onClick="onAddInstance(record)"/>
+              :tooltip="$t('label.action.copy.iso')"
+              :disabled="!('copyIso' in $store.getters.apis && record.isready)"
+              icon="copy-outlined"
+              :loading="copyLoading"
+              @click="showCopyIso(record)" />
           </span>
-          <span v-if="isActionsOnIsoPermitted">
-            <span style="margin-right: 5px">
+          <span style="margin-right: 5px">
+            <a-popconfirm
+              v-if="'deleteIso' in $store.getters.apis"
+              placement="topRight"
+              :title="$t('message.action.delete.iso')"
+              :ok-text="$t('label.yes')"
+              :cancel-text="$t('label.no')"
+              :loading="deleteLoading"
+              @confirm="deleteIso(record)"
+            >
               <tooltip-button
-                :tooltip="$t('label.action.copy.iso')"
-                :disabled="!('copyIso' in $store.getters.apis && record.isready)"
-                icon="copy-outlined"
-                :loading="copyLoading"
-                @click="showCopyIso(record)" />
-            </span>
-            <span style="margin-right: 5px">
-              <a-popconfirm
-                v-if="'deleteIso' in $store.getters.apis"
-                placement="topRight"
-                :title="$t('message.action.delete.iso')"
-                :ok-text="$t('label.yes')"
-                :cancel-text="$t('label.no')"
-                :loading="deleteLoading"
-                @confirm="deleteIso(record)"
-              >
-                <tooltip-button
-                  :tooltip="$t('label.action.delete.iso')"
-                  type="primary"
-                  :danger="true"
-                  icon="delete-outlined" />
-              </a-popconfirm>
-            </span>
+                :tooltip="$t('label.action.delete.iso')"
+                type="primary"
+                :danger="true"
+                icon="delete-outlined" />
+            </a-popconfirm>
           </span>
         </template>
       </template>
@@ -172,7 +160,7 @@
               }"
               :loading="zoneLoading"
               v-focus="true">
-              <a-select-option v-for="zone in copyZones" :key="zone.id" :label="zone.name">
+              <a-select-option v-for="zone in zones" :key="zone.id" :label="zone.name">
                 <div>
                   <span v-if="zone.icon && zone.icon.base64image">
                     <resource-icon :image="zone.icon.base64image" size="1x" style="margin-right: 5px"/>
@@ -247,7 +235,6 @@ export default {
       showCopyActionForm: false,
       currentRecord: {},
       zones: [],
-      copyZones: [],
       zoneLoading: false,
       copyLoading: false,
       deleteLoading: false,
@@ -277,11 +264,6 @@ export default {
         dataIndex: 'zonename'
       },
       {
-        key: 'created',
-        title: this.$t('label.created'),
-        dataIndex: 'created'
-      },
-      {
         title: this.$t('label.status'),
         dataIndex: 'status'
       },
@@ -289,13 +271,6 @@ export default {
         key: 'isready',
         title: this.$t('label.isready'),
         dataIndex: 'isready'
-      },
-      {
-        key: 'actions',
-        title: '',
-        dataIndex: 'actions',
-        fixed: 'right',
-        width: 130
       }
     ]
     this.storagePoolInnerColumns = [
@@ -330,6 +305,15 @@ export default {
         dataIndex: 'downloadState'
       }
     ]
+    if (this.isActionPermitted()) {
+      this.columns.push({
+        key: 'actions',
+        title: '',
+        dataIndex: 'actions',
+        fixed: 'right',
+        width: 100
+      })
+    }
 
     const userInfo = this.$store.getters.userInfo
     if (!['Admin'].includes(userInfo.roletype) &&
@@ -345,16 +329,6 @@ export default {
       }
     }
   },
-  computed: {
-    isActionsOnIsoPermitted () {
-      return (['Admin'].includes(this.$store.getters.userInfo.roletype) || // If admin or owner or belongs to current project
-        (this.resource.domainid === this.$store.getters.userInfo.domainid && this.resource.account === this.$store.getters.userInfo.account) ||
-        (this.resource.domainid === this.$store.getters.userInfo.domainid && this.resource.projectid && this.$store.getters.project && this.$store.getters.project.id && this.resource.projectid === this.$store.getters.project.id)) &&
-        (this.resource.isready || !this.resource.status || this.resource.status.indexOf('Downloaded') === -1) && // Iso is ready or downloaded
-        this.resource.account !== 'system'
-    }
-  },
-  emits: ['update-zones'],
   methods: {
     initForm () {
       this.formRef = ref()
@@ -381,10 +355,16 @@ export default {
         this.$notifyError(error)
       }).finally(() => {
         this.fetchLoading = false
-        this.updateImageZones()
       })
       this.fetchZoneData()
-      this.fetchOsCategoryId()
+    },
+    fetchZoneIcon (zoneid) {
+      const zoneItem = this.zones.filter(zone => zone.id === zoneid)
+      if (zoneItem?.[0]?.icon?.base64image) {
+        this.zoneIcon = zoneItem[0].icon.base64image
+        return true
+      }
+      return false
     },
     handleChangePage (page, pageSize) {
       this.page = page
@@ -395,6 +375,13 @@ export default {
       this.page = currentPage
       this.pageSize = pageSize
       this.fetchData()
+    },
+    isActionPermitted () {
+      return (['Admin'].includes(this.$store.getters.userInfo.roletype) || // If admin or owner or belongs to current project
+        (this.resource.domainid === this.$store.getters.userInfo.domainid && this.resource.account === this.$store.getters.userInfo.account) ||
+        (this.resource.domainid === this.$store.getters.userInfo.domainid && this.resource.projectid && this.$store.getters.project && this.$store.getters.project.id && this.resource.projectid === this.$store.getters.project.id)) &&
+        (this.resource.isready || !this.resource.status || this.resource.status.indexOf('Downloaded') === -1) && // Iso is ready or downloaded
+        this.resource.account !== 'system'
     },
     setSelection (selection) {
       this.selectedRowKeys = selection
@@ -511,41 +498,9 @@ export default {
       this.zoneLoading = true
       api('listZones', { showicon: true }).then(json => {
         const zones = json.listzonesresponse.zone || []
-        this.zones = zones
-        this.copyZones = [...zones.filter((zone) => this.currentRecord.zoneid !== zone.id)]
+        this.zones = [...zones.filter((zone) => this.currentRecord.zoneid !== zone.id)]
       }).finally(() => {
         this.zoneLoading = false
-        this.updateImageZones()
-      })
-    },
-    updateImageZones () {
-      if (!Array.isArray(this.dataSource) || !Array.isArray(this.zones) ||
-        this.dataSource.length === 0 || this.zones.length === 0) {
-        return
-      }
-      const imageZones = []
-      this.dataSource.forEach(item => {
-        const zone = this.zones.find(zone => item.zoneid === zone.id)
-        if (zone && zone.icon) {
-          item.zoneicon = zone.icon
-        }
-        imageZones.push(zone)
-      })
-      if (imageZones.length !== 0) {
-        this.$emit('update-zones', imageZones)
-      }
-    },
-    fetchOsCategoryId () {
-      const needed = this.$route.meta.name === 'iso' &&
-        'listOsTypes' in this.$store.getters.apis &&
-        this.resource && this.resource.ostypeid &&
-        (this.$config.imageSelectionInterface === undefined ||
-        this.$config.imageSelectionInterface === 'modern')
-      if (!needed) {
-        return
-      }
-      api('listOsTypes', { id: this.resource.ostypeid }).then(json => {
-        this.osCategoryId = json?.listostypesresponse?.ostype?.[0]?.oscategoryid || null
       })
     },
     showCopyIso (record) {
@@ -600,19 +555,6 @@ export default {
     },
     closeModal () {
       this.showConfirmationAction = false
-    },
-    onAddInstance (record) {
-      const query = { isoid: this.resource.id, zoneid: record.zoneid }
-      if (this.resource.arch) {
-        query.arch = this.resource.arch
-      }
-      if (this.osCategoryId) {
-        query.oscategoryid = this.osCategoryId
-      }
-      this.$router.push({
-        path: '/action/deployVirtualMachine',
-        query: query
-      })
     }
   }
 }

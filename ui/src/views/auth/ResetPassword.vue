@@ -157,7 +157,6 @@ export default {
       this.form = reactive({
         server: (this.server.apiHost || '') + this.server.apiBase,
         username: this.$route.query?.username || '',
-        domain: this.$route.query?.domain || '',
         token: this.$route.query?.token || ''
       })
       this.rules = {

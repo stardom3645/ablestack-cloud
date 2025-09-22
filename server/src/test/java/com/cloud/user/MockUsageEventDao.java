@@ -27,7 +27,6 @@ import com.cloud.utils.db.SearchCriteria;
 
 import javax.naming.ConfigurationException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -141,11 +140,6 @@ public class MockUsageEventDao implements UsageEventDao{
     @Override
     public List<UsageEventVO> listAll(Filter filter) {
         return null;
-    }
-
-    @Override
-    public List<Long> listAllIds() {
-        return Collections.emptyList();
     }
 
     @Override

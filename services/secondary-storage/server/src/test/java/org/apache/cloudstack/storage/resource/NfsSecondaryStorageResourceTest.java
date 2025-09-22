@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -103,7 +104,7 @@ public class NfsSecondaryStorageResourceTest {
     @Test
     public void testCleanupStagingNfs() throws Exception{
 
-        NfsSecondaryStorageResource spyResource = resource;
+        NfsSecondaryStorageResource spyResource = spy(resource);
         spyResource.logger = loggerMock;
         RuntimeException exception = new RuntimeException();
         doThrow(exception).when(spyResource).execute(any(DeleteCommand.class));

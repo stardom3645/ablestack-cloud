@@ -24,10 +24,8 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.response.ResourceIconResponse;
-import org.apache.commons.collections.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class ResourceIconDaoImpl extends GenericDaoBase<ResourceIconVO, Long> implements ResourceIconDao {
@@ -60,36 +58,11 @@ public class ResourceIconDaoImpl extends GenericDaoBase<ResourceIconVO, Long> im
     }
 
     @Override
-    public List<ResourceIconVO> listByResourceTypeAndIds(ResourceTag.ResourceObjectType resourceType,
-                Collection<Long> resourceIds) {
-        if (CollectionUtils.isEmpty(resourceIds)) {
-            return new ArrayList<>();
-        }
-        SearchBuilder<ResourceIconVO> sb = createSearchBuilder();
-        sb.and("resourceId", sb.entity().getResourceId(), SearchCriteria.Op.IN);
-        sb.and("resourceType", sb.entity().getResourceType(), SearchCriteria.Op.EQ);
-        sb.done();
-        SearchCriteria<ResourceIconVO> sc = sb.create();
-        sc.setParameters("resourceId", resourceIds.toArray());
-        sc.setParameters("resourceType", resourceType);
-        return listBy(sc);
-    }
-
-    @Override
-    public List<ResourceIconVO> listByResourceTypeAndUuids(ResourceTag.ResourceObjectType resourceType,
-                Collection<String> resourceUuids) {
-        if (CollectionUtils.isEmpty(resourceUuids)) {
-            return new ArrayList<>();
-        }
+    public List<ResourceIconResponse> listResourceIcons(List<String> resourceUuids, ResourceTag.ResourceObjectType resourceType) {
         SearchCriteria<ResourceIconVO> sc = AllFieldsSearch.create();
         sc.setParameters("uuid", resourceUuids.toArray());
         sc.setParameters("resourceType", resourceType);
-        return listBy(sc);
-    }
-
-    @Override
-    public List<ResourceIconResponse> listResourceIcons(List<String> resourceUuids, ResourceTag.ResourceObjectType resourceType) {
-        List<ResourceIconVO> resourceIcons = listByResourceTypeAndUuids(resourceType, resourceUuids);
+        List<ResourceIconVO> resourceIcons = listBy(sc);
         List<ResourceIconResponse> iconResponses = new ArrayList<>();
         for (ResourceIconVO resourceIcon : resourceIcons) {
             ResourceIconResponse response = new ResourceIconResponse();

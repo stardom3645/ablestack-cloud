@@ -28,8 +28,6 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import com.cloud.host.Status;
@@ -450,18 +448,6 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "delete_protection")
     protected Boolean deleteProtection;
 
-    @Column(name = "arch")
-    protected String arch;
-
-    @Column(name = "lease_expiry_date")
-    @Temporal(value = TemporalType.TIMESTAMP)
-    private Date leaseExpiryDate;
-
-    @Column(name = "lease_expiry_action")
-    private String leaseExpiryAction;
-
-    @Column(name = "lease_action_execution")
-    private String leaseActionExecution;
 
     public UserVmJoinVO() {
         // Empty constructor
@@ -976,7 +962,7 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return isDynamicallyScalable;
     }
 
-    public Boolean isDeleteProtection() {
+    public Boolean getDeleteProtection() {
         return deleteProtection;
     }
 
@@ -1013,23 +999,4 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return qemuAgentVersion;
     }
 
-    public String getArch() {
-        return arch;
-    }
-
-    public Date getLeaseExpiryDate() {
-        return leaseExpiryDate;
-    }
-
-    public String getLeaseExpiryAction() {
-        return leaseExpiryAction;
-    }
-
-    public void setLeaseExpiryAction(String leaseExpiryAction) {
-        this.leaseExpiryAction = leaseExpiryAction;
-    }
-
-    public String getLeaseActionExecution() {
-        return leaseActionExecution;
-    }
 }

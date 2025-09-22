@@ -484,7 +484,7 @@ This requires configuring and setting up CKS: http://docs.cloudstack.apache.org/
 - [ ] Disable/enable host
 - [ ] Enable/cancel maintenance mode
 - [ ] Enable/disable out-of-band management
-- [ ] Enable/disable HA
+- [ ] Enable/disale HA
 - [ ] Delete host (only if disabled)
 
 **Infrastructure > Primary Storage**

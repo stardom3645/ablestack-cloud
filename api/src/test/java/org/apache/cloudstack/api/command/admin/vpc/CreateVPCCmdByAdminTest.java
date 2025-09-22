@@ -20,6 +20,7 @@ package org.apache.cloudstack.api.command.admin.vpc;
 import com.cloud.network.vpc.VpcService;
 import com.cloud.user.AccountService;
 import com.cloud.utils.db.EntityManager;
+import junit.framework.TestCase;
 import org.apache.cloudstack.api.ResponseGenerator;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,7 +34,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CreateVPCCmdByAdminTest {
+public class CreateVPCCmdByAdminTest extends TestCase {
 
     @Mock
     public VpcService _vpcService;
@@ -42,10 +43,8 @@ public class CreateVPCCmdByAdminTest {
     @Mock
     public AccountService _accountService;
     private ResponseGenerator responseGenerator;
-    @Mock
-    public Object job;
     @InjectMocks
-    CreateVPCCmdByAdmin cmd;
+    CreateVPCCmdByAdmin cmd = new CreateVPCCmdByAdmin();
 
     @Test
     public void testBgpPeerIds() {

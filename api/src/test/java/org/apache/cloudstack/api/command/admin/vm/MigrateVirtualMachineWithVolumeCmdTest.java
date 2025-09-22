@@ -68,12 +68,6 @@ public class MigrateVirtualMachineWithVolumeCmdTest {
     @Mock
     Host hostMock;
 
-    @Mock
-    private Object job;
-
-    @Mock
-    private Object _responseObject;
-
     @Spy
     @InjectMocks
     MigrateVirtualMachineWithVolumeCmd cmdSpy;

@@ -219,23 +219,24 @@ public class StorPoolDataMotionStrategy implements DataMotionStrategy {
                 } else {
                     answer = (CopyCmdAnswer) ep2.sendMessage(backupSnapshot);
                     if (answer != null && answer.getResult()) {
-                        SpApiResponse resSnapshot = StorPoolUtil.volumeSnapshot(volumeName, template.getUuid(), null, "template", null, conn);
+                        SpApiResponse resSnapshot = StorPoolUtil.volumeFreeze(volumeName, conn);
                         if (resSnapshot.getError() != null) {
-                            logger.debug(String.format("Could not snapshot volume with ID={}", snapshot.getId()));
-                            StorPoolUtil.spLog("VolumeSnapshot failed with error=%s", resSnapshot.getError().getDescr());
+                            logger.debug("Could not snapshot volume [id: {}, name: {}]", snapshot.getId(), snapshot.getName());
+                            StorPoolUtil.spLog("Volume freeze failed with error=%s", resSnapshot.getError().getDescr());
                             err = resSnapshot.getError().getDescr();
+                            StorPoolUtil.volumeDelete(volumeName, conn);
                         } else {
-                           String templPath = StorPoolUtil.devPath(
-                                    StorPoolUtil.getSnapshotNameFromResponse(resSnapshot, false, StorPoolUtil.GLOBAL_ID));
                             StorPoolHelper.updateVmStoreTemplate(template.getId(), template.getDataStore().getRole(),
-                                    templPath, _templStoreDao);
+                                    StorPoolUtil.devPath(StorPoolUtil.getNameFromResponse(res, false)), _templStoreDao);
                         }
+                    } else {
+                        err = "Could not copy template to secondary " + answer.getResult();
+                        StorPoolUtil.volumeDelete(StorPoolUtil.getNameFromResponse(res, true), conn);
                     }
                 }
             } catch (CloudRuntimeException e) {
                 err = e.getMessage();
             }
-            StorPoolUtil.volumeDelete(volumeName, conn);
         }
         _vmTemplateDetailsDao.persist(new VMTemplateDetailVO(template.getId(), StorPoolUtil.SP_STORAGE_POOL_ID,
                 String.valueOf(vInfo.getDataStore().getId()), false));

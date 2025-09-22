@@ -75,13 +75,6 @@ public class LibvirtRequestWrapper extends RequestWrapper {
         if (commandWrapper == null) {
             throw new CommandNotSupported("No way to handle " + command.getClass());
         }
-        Answer answer = commandWrapper.execute(command, serverResource);
-
-        if (answer != null && command.isReconcile() && serverResource instanceof LibvirtComputingResource) {
-            LibvirtComputingResource libvirtComputingResource = (LibvirtComputingResource) serverResource;
-            libvirtComputingResource.createOrUpdateLogFileForCommand(command, answer);
-        }
-
-        return answer;
+        return commandWrapper.execute(command, serverResource);
     }
 }

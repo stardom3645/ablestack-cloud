@@ -18,22 +18,20 @@
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import org.apache.cloudstack.storage.to.SnapshotObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.cloudstack.utils.qemu.QemuImgException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.libvirt.LibvirtException;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.cloud.agent.api.to.DataStoreTO;
@@ -44,8 +42,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @RunWith(MockitoJUnitRunner.class)
 public class LibvirtRevertSnapshotCommandWrapperTest {
 
-    @Spy
-    LibvirtRevertSnapshotCommandWrapper libvirtRevertSnapshotCommandWrapperSpy;
+    LibvirtRevertSnapshotCommandWrapper libvirtRevertSnapshotCommandWrapperSpy = Mockito.spy(LibvirtRevertSnapshotCommandWrapper.class);
 
     @Mock
     KVMStoragePool kvmStoragePoolPrimaryMock;
@@ -71,9 +68,6 @@ public class LibvirtRevertSnapshotCommandWrapperTest {
     @Mock
     VolumeObjectTO volumeObjectToMock;
 
-    @Mock
-    LibvirtComputingResource resourceMock;
-
     @Test
     public void validateGetFullPathAccordingToStorage() {
         String snapshotPath = "snapshotPath";
@@ -87,6 +81,25 @@ public class LibvirtRevertSnapshotCommandWrapperTest {
     }
 
     @Test
+    public void validateReplaceVolumeWithSnapshotReplaceFiles() throws IOException {
+        try (MockedStatic<Files> ignored = Mockito.mockStatic(Files.class)) {
+            Mockito.when(Files.copy(Mockito.any(Path.class), Mockito.any(Path.class), Mockito.any(CopyOption.class)))
+                   .thenReturn(pathMock);
+            libvirtRevertSnapshotCommandWrapperSpy.replaceVolumeWithSnapshot("test", "test");
+        }
+    }
+
+    @Test (expected = IOException.class)
+    public void validateReplaceVolumeWithSnapshotThrowsIOException() throws IOException {
+        try (MockedStatic<Files> ignored = Mockito.mockStatic(Files.class)) {
+            Mockito.when(
+                                Files.copy(Mockito.any(Path.class), Mockito.any(Path.class), Mockito.any(CopyOption.class)))
+                        .thenThrow(IOException.class);
+            libvirtRevertSnapshotCommandWrapperSpy.replaceVolumeWithSnapshot("test", "test");
+        }
+    }
+
+    @Test
     public void validateGetSnapshotPathExistsOnPrimaryStorage() {
         String snapshotPath = "test";
         Pair<String, SnapshotObjectTO> expectedResult = new Pair<>(snapshotPath, snapshotObjectToPrimaryMock);
@@ -94,7 +107,7 @@ public class LibvirtRevertSnapshotCommandWrapperTest {
         Mockito.doReturn(snapshotPath).when(snapshotObjectToPrimaryMock).getPath();
 
         try (MockedStatic<Files> ignored = Mockito.mockStatic(Files.class)) {
-            Mockito.when(Files.exists(Mockito.any(Path.class))).thenReturn(true);
+            Mockito.when(Files.exists(Mockito.any(Path.class), Mockito.any())).thenReturn(true);
 
             Pair<String, SnapshotObjectTO> result = libvirtRevertSnapshotCommandWrapperSpy.getSnapshot(
                     snapshotObjectToPrimaryMock, snapshotObjectToSecondaryMock,
@@ -144,29 +157,20 @@ public class LibvirtRevertSnapshotCommandWrapperTest {
     }
 
     @Test
-    public void validateRevertVolumeToSnapshotReplaceSuccessfully() throws LibvirtException, QemuImgException {
+    public void validateRevertVolumeToSnapshotReplaceSuccessfully() throws IOException {
         Mockito.doReturn(volumeObjectToMock).when(snapshotObjectToSecondaryMock).getVolume();
         Mockito.doReturn(pairStringSnapshotObjectToMock).when(libvirtRevertSnapshotCommandWrapperSpy).getSnapshot(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.doNothing().when(libvirtRevertSnapshotCommandWrapperSpy).replaceVolumeWithSnapshot(Mockito.any(), Mockito.any());
-        libvirtRevertSnapshotCommandWrapperSpy.revertVolumeToSnapshot(kvmStoragePoolSecondaryMock, snapshotObjectToPrimaryMock, snapshotObjectToSecondaryMock, kvmStoragePoolPrimaryMock, resourceMock
-        );
+        libvirtRevertSnapshotCommandWrapperSpy.revertVolumeToSnapshot(snapshotObjectToPrimaryMock, snapshotObjectToSecondaryMock, dataStoreToMock, kvmStoragePoolPrimaryMock,
+                kvmStoragePoolSecondaryMock);
     }
 
     @Test (expected = CloudRuntimeException.class)
-    public void validateRevertVolumeToSnapshotReplaceVolumeThrowsQemuImgException() throws LibvirtException, QemuImgException {
+    public void validateRevertVolumeToSnapshotReplaceVolumeThrowsIOException() throws IOException {
         Mockito.doReturn(volumeObjectToMock).when(snapshotObjectToSecondaryMock).getVolume();
         Mockito.doReturn(pairStringSnapshotObjectToMock).when(libvirtRevertSnapshotCommandWrapperSpy).getSnapshot(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.doThrow(QemuImgException.class).when(libvirtRevertSnapshotCommandWrapperSpy).replaceVolumeWithSnapshot(Mockito.any(), Mockito.any());
-        libvirtRevertSnapshotCommandWrapperSpy.revertVolumeToSnapshot(kvmStoragePoolSecondaryMock, snapshotObjectToPrimaryMock, snapshotObjectToSecondaryMock, kvmStoragePoolPrimaryMock, resourceMock
-        );
-    }
-
-    @Test (expected = CloudRuntimeException.class)
-    public void validateRevertVolumeToSnapshotReplaceVolumeThrowsLibvirtException() throws LibvirtException, QemuImgException {
-        Mockito.doReturn(volumeObjectToMock).when(snapshotObjectToSecondaryMock).getVolume();
-        Mockito.doReturn(pairStringSnapshotObjectToMock).when(libvirtRevertSnapshotCommandWrapperSpy).getSnapshot(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.doThrow(LibvirtException.class).when(libvirtRevertSnapshotCommandWrapperSpy).replaceVolumeWithSnapshot(Mockito.any(), Mockito.any());
-        libvirtRevertSnapshotCommandWrapperSpy.revertVolumeToSnapshot(kvmStoragePoolSecondaryMock, snapshotObjectToPrimaryMock, snapshotObjectToSecondaryMock, kvmStoragePoolPrimaryMock, resourceMock
-        );
+        Mockito.doThrow(IOException.class).when(libvirtRevertSnapshotCommandWrapperSpy).replaceVolumeWithSnapshot(Mockito.any(), Mockito.any());
+        libvirtRevertSnapshotCommandWrapperSpy.revertVolumeToSnapshot(snapshotObjectToPrimaryMock, snapshotObjectToSecondaryMock, dataStoreToMock, kvmStoragePoolPrimaryMock,
+                kvmStoragePoolSecondaryMock);
     }
 }

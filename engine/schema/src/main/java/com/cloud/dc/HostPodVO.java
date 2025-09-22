@@ -71,9 +71,6 @@ public class HostPodVO implements Pod {
     @Column(name = "uuid")
     private String uuid;
 
-    @Column(name = "storage_access_groups")
-    String storageAccessGroups;
-
     public HostPodVO(String name, long dcId, String gateway, String cidrAddress, int cidrSize, String description) {
         this.name = name;
         this.dataCenterId = dcId;
@@ -200,14 +197,6 @@ public class HostPodVO implements Pod {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
-    }
-
-    public String getStorageAccessGroups() {
-        return storageAccessGroups;
-    }
-
-    public void setStorageAccessGroups(String storageAccessGroups) {
-        this.storageAccessGroups = storageAccessGroups;
     }
 
     @Override

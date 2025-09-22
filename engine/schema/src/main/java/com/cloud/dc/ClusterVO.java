@@ -85,10 +85,6 @@ public class ClusterVO implements Cluster {
     @Column(name = "uuid")
     String uuid;
 
-    @Column(name = "storage_access_groups")
-    String storageAccessGroups;
-
-
     public ClusterVO() {
         clusterType = Cluster.ClusterType.CloudManaged;
         allocationState = Grouping.AllocationState.Enabled;
@@ -217,14 +213,6 @@ public class ClusterVO implements Cluster {
 
     public void setArch(String arch) {
         this.arch = arch;
-    }
-
-    public String getStorageAccessGroups() {
-        return storageAccessGroups;
-    }
-
-    public void setStorageAccessGroups(String storageAccessGroups) {
-        this.storageAccessGroups = storageAccessGroups;
     }
 
     @Override

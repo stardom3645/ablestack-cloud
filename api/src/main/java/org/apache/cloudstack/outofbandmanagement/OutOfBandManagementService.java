@@ -39,7 +39,7 @@ public interface OutOfBandManagementService {
     long getId();
     boolean isOutOfBandManagementEnabled(Host host);
     void submitBackgroundPowerSyncTask(Host host);
-    boolean transitionPowerStateToDisabled(List<Long> hostIds);
+    boolean transitionPowerStateToDisabled(List<? extends Host> hosts);
 
     OutOfBandManagementResponse enableOutOfBandManagement(DataCenter zone);
     OutOfBandManagementResponse enableOutOfBandManagement(Cluster cluster);

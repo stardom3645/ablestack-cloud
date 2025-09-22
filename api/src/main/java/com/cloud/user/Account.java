@@ -71,7 +71,6 @@ public interface Account extends ControlledEntity, InternalIdentity, Identity {
     }
 
     public static final long ACCOUNT_ID_SYSTEM = 1;
-    public static final long ACCOUNT_ID_ADMIN = 2;
 
     public String getAccountName();
 

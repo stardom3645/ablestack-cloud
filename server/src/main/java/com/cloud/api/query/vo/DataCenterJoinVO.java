@@ -125,9 +125,6 @@ public class DataCenterJoinVO extends BaseViewVO implements InternalIdentity, Id
     @Enumerated(value = EnumType.STRING)
     private DataCenter.Type type;
 
-    @Column(name = "storage_access_groups")
-    private String storageAccessGroups;
-
     public DataCenterJoinVO() {
     }
 
@@ -237,11 +234,7 @@ public class DataCenterJoinVO extends BaseViewVO implements InternalIdentity, Id
         return sortKey;
     }
 
-    public DataCenter.Type getType() {
+     public DataCenter.Type getType() {
         return type;
-    }
-
-    public String getStorageAccessGroups() {
-        return storageAccessGroups;
     }
 }

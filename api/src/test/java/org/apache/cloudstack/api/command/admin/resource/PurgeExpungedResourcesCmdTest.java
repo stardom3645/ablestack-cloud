@@ -44,7 +44,7 @@ public class PurgeExpungedResourcesCmdTest {
 
     @Spy
     @InjectMocks
-    PurgeExpungedResourcesCmd spyCmd;
+    PurgeExpungedResourcesCmd spyCmd = Mockito.spy(new PurgeExpungedResourcesCmd());
 
     @Test
     public void testGetResourceType() {

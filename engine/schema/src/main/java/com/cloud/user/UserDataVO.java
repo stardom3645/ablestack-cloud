@@ -65,9 +65,6 @@ public class UserDataVO implements UserData {
     @Column(name = GenericDao.REMOVED_COLUMN)
     private Date removed;
 
-    @Column(name = "for_cks")
-    private boolean forCks;
-
     @Override
     public long getDomainId() {
         return domainId;
@@ -108,11 +105,6 @@ public class UserDataVO implements UserData {
         return params;
     }
 
-    @Override
-    public boolean isForCks() {
-        return forCks;
-    }
-
     public void setAccountId(long accountId) {
         this.accountId = accountId;
     }
@@ -140,6 +132,4 @@ public class UserDataVO implements UserData {
     public Date getRemoved() {
         return removed;
     }
-
-    public void setForCks(boolean forCks) { this.forCks = forCks; }
 }

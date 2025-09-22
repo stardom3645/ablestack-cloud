@@ -70,7 +70,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.cloudstack</groupId>
-            <artifactId>cloud-plugin-maintenance</artifactId>
+            <artifactId>cloud-plugin-shutdown</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

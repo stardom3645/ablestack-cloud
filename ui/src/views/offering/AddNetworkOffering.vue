@@ -312,10 +312,11 @@
             </a-radio-button>
           </a-radio-group>
         </a-form-item>
-        <a-form-item name="serviceofferingid" ref="serviceofferingid" v-if="guestType !== 'l2'">
+        <a-form-item name="serviceofferingid" ref="serviceofferingid">
           <a-alert v-if="!isVirtualRouterForAtLeastOneService" type="warning" style="margin-bottom: 10px">
             <template #message>
-              <span v-html="$t('message.vr.alert.upon.network.offering.creation.others')" />
+              <span v-if="guestType === 'l2'" v-html="$t('message.vr.alert.upon.network.offering.creation.l2')" />
+              <span v-else v-html="$t('message.vr.alert.upon.network.offering.creation.others')" />
             </template>
           </a-alert>
           <template #label>
@@ -330,11 +331,8 @@
             }"
             :loading="serviceOfferingLoading"
             :placeholder="apiParams.serviceofferingid.description">
-            <a-select-option
-              v-for="(offering, index) in serviceOfferings"
-              :value="offering.id"
-              :key="index">
-              {{ offering.displaytext || offering.name }}
+            <a-select-option v-for="(opt) in serviceOfferings" :key="opt.id" :label="opt.name || opt.description">
+              {{ opt.name || opt.description }}
             </a-select-option>
           </a-select>
         </a-form-item>
@@ -771,6 +769,7 @@ export default {
         this.form.lbtype = 'publicLb'
         this.isVirtualRouterForAtLeastOneService = false
         this.isVpcVirtualRouterForAtLeastOneService = false
+        this.serviceOfferings = []
         this.serviceOfferingLoading = false
         this.sourceNatServiceChecked = false
         this.lbServiceChecked = false
@@ -858,7 +857,9 @@ export default {
       params.systemvmtype = 'domainrouter'
       this.serviceOfferingLoading = true
       api('listServiceOfferings', params).then(json => {
-        this.serviceOfferings = json?.listserviceofferingsresponse?.serviceoffering || []
+        const listServiceOfferings = json.listserviceofferingsresponse.serviceoffering
+        this.serviceOfferings = this.serviceOfferings.concat(listServiceOfferings)
+        this.form.serviceofferingid = this.serviceOfferings.length > 0 ? this.serviceOfferings[0].id : ''
       }).finally(() => {
         this.serviceOfferingLoading = false
       })

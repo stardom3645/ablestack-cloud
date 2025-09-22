@@ -53,7 +53,10 @@ import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
 
+import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
+import org.apache.cloudstack.framework.async.AsyncCompletionCallback;
+import org.apache.cloudstack.storage.command.CommandResult;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreVO;
@@ -102,8 +105,8 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
         AmazonS3 s3client = getS3Client(storeId, accountId);
 
         try {
-            if (s3client.doesBucketExistV2(bucketName)) {
-                throw new CloudRuntimeException("Bucket already exists with the name: " + bucketName);
+            if (s3client.getBucketAcl(bucketName) != null) {
+                throw new CloudRuntimeException("Bucket already exists with name " + bucketName);
             }
         } catch (AmazonS3Exception e) {
             if (e.getStatusCode() != 404) {
@@ -271,11 +274,9 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
             if (user.isPresent()) {
                 logger.info("User already exists in Ceph RGW: " + username);
                 return true;
-            } else {
-                logger.debug("User does not exist. Creating user in Ceph RGW: " + username);
             }
         } catch (Exception e) {
-            logger.debug("Get user info failed for user {} with exception {}. Proceeding with user creation.",  username, e.getMessage());
+            logger.debug("User does not exist. Creating user in Ceph RGW: " + username);
         }
 
         try {
@@ -341,7 +342,7 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
         RgwAdmin rgwAdmin = getRgwAdminClient(storeId);
 
         try {
-            rgwAdmin.setIndividualBucketQuota(null, bucket.getName(), -1, size * 1024 * 1024);
+            rgwAdmin.setBucketQuota(bucket.getName(), -1, size);
         } catch (Exception e) {
             throw new CloudRuntimeException(e);
         }
@@ -401,12 +402,16 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
                         new AWSStaticCredentialsProvider(
                                 new BasicAWSCredentials(accessKey, secretKey)))
                 .withEndpointConfiguration(
-                        new AwsClientBuilder.EndpointConfiguration(url, null))
+                        new AwsClientBuilder.EndpointConfiguration(url, "auto"))
                 .build();
 
         if (client == null) {
             throw new CloudRuntimeException("Error while creating Ceph RGW S3 client");
         }
         return client;
+    }
+
+    @Override
+    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
     }
 }

@@ -190,11 +190,6 @@ public class CheckOnHostCommandTest {
         };
 
         @Override
-        public Long getLastManagementServerId() {
-            return null;
-        };
-
-        @Override
         public Date getRemoved() {
             Date date = null;
             try {
@@ -283,11 +278,6 @@ public class CheckOnHostCommandTest {
         @Override
         public CPU.CPUArch getArch() {
             return CPU.CPUArch.amd64;
-        }
-
-        @Override
-        public String getStorageAccessGroups() {
-            return null;
         }
     };
 

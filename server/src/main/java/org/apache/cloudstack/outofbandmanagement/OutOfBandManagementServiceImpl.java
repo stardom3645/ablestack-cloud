@@ -295,11 +295,11 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
                 && isOutOfBandManagementEnabledForHost(host.getId());
     }
 
-    public boolean transitionPowerStateToDisabled(List<Long> hostIds) {
+    public boolean transitionPowerStateToDisabled(List<? extends Host> hosts) {
         boolean result = true;
-        for (Long hostId : hostIds) {
+        for (Host host : hosts) {
             result = result && transitionPowerState(OutOfBandManagement.PowerState.Event.Disabled,
-                    outOfBandManagementDao.findByHost(hostId));
+                    outOfBandManagementDao.findByHost(host.getId()));
         }
         return result;
     }
@@ -328,7 +328,7 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
     @ActionEvent(eventType = EventTypes.EVENT_HOST_OUTOFBAND_MANAGEMENT_DISABLE, eventDescription = "disabling out-of-band management on a zone")
     public OutOfBandManagementResponse disableOutOfBandManagement(final DataCenter zone) {
         dataCenterDetailsDao.persist(zone.getId(), OOBM_ENABLED_DETAIL, String.valueOf(false));
-        transitionPowerStateToDisabled(hostDao.listIdsByDataCenterId(zone.getId()));
+        transitionPowerStateToDisabled(hostDao.findByDataCenterId(zone.getId()));
 
         return buildEnableDisableResponse(false);
     }
@@ -344,7 +344,7 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
     @ActionEvent(eventType = EventTypes.EVENT_HOST_OUTOFBAND_MANAGEMENT_DISABLE, eventDescription = "disabling out-of-band management on a cluster")
     public OutOfBandManagementResponse disableOutOfBandManagement(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), OOBM_ENABLED_DETAIL, String.valueOf(false));
-        transitionPowerStateToDisabled(hostDao.listIdsByClusterId(cluster.getId()));
+        transitionPowerStateToDisabled(hostDao.findByClusterId(cluster.getId()));
         return buildEnableDisableResponse(false);
     }
 
@@ -364,7 +364,7 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
         outOfBandManagementConfig.setEnabled(true);
         boolean updateResult = outOfBandManagementDao.update(outOfBandManagementConfig.getId(), (OutOfBandManagementVO) outOfBandManagementConfig);
         if (updateResult) {
-            transitionPowerStateToDisabled(Collections.singletonList(host.getId()));
+            transitionPowerStateToDisabled(Collections.singletonList(host));
         }
         return buildEnableDisableResponse(true);
     }
@@ -377,7 +377,7 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
         outOfBandManagementConfig.setEnabled(false);
         boolean updateResult = outOfBandManagementDao.update(outOfBandManagementConfig.getId(), (OutOfBandManagementVO) outOfBandManagementConfig);
         if (updateResult) {
-            transitionPowerStateToDisabled(Collections.singletonList(host.getId()));
+            transitionPowerStateToDisabled(Collections.singletonList(host));
         }
         return buildEnableDisableResponse(false);
     }
@@ -652,8 +652,10 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
                     if (isOutOfBandManagementEnabled(host)) {
                         submitBackgroundPowerSyncTask(host);
                     } else if (outOfBandManagementHost.getPowerState() != OutOfBandManagement.PowerState.Disabled) {
-                        if (transitionPowerStateToDisabled(Collections.singletonList(host.getId()))) {
-                            logger.debug("Out-of-band management was disabled in zone/cluster/host, disabled power state for {}", host);
+                        if (transitionPowerStateToDisabled(Collections.singletonList(host))) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(String.format("Out-of-band management was disabled in zone/cluster/host, disabled power state for %s", host));
+                            }
                         }
                     }
                 }

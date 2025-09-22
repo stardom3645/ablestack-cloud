@@ -269,12 +269,4 @@ public class SnapshotHelper {
 
         return snapshotIdsOnlyInPrimaryStorage;
     }
-
-    public SnapshotInfo convertSnapshotIfNeeded(SnapshotInfo snapshotInfo) {
-        if (snapshotInfo.getParent() == null || !HypervisorType.KVM.equals(snapshotInfo.getHypervisorType())) {
-            return snapshotInfo;
-        }
-
-        return snapshotService.convertSnapshot(snapshotInfo);
-    }
 }

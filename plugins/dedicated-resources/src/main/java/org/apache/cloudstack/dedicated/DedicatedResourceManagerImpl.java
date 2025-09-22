@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.cloudstack.affinity.AffinityGroup;
 import org.apache.cloudstack.affinity.AffinityGroupService;
 import org.apache.cloudstack.affinity.dao.AffinityGroupDao;
@@ -44,9 +45,8 @@ import org.apache.cloudstack.api.response.DedicatePodResponse;
 import org.apache.cloudstack.api.response.DedicateZoneResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.configuration.Config;
@@ -126,7 +126,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
     @ActionEvent(eventType = EventTypes.EVENT_DEDICATE_RESOURCE, eventDescription = "dedicating a Zone")
     public List<DedicatedResourceVO> dedicateZone(final Long zoneId, final Long domainId, final String accountName) {
         Long accountId = null;
-        List<Long> hostIds = null;
+        List<HostVO> hosts = null;
         if (accountName != null) {
             Account caller = CallContext.current().getCallingAccount();
             Account owner = _accountMgr.finalizeOwner(caller, accountName, domainId, null);
@@ -203,20 +203,18 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
                 releaseDedicatedResource(null, null, dr.getClusterId(), null);
             }
 
-            hostIds = _hostDao.listEnabledIdsByDataCenterId(dc.getId());
-            for (Long hostId : hostIds) {
-                DedicatedResourceVO dHost = _dedicatedDao.findByHostId(hostId);
+            hosts = _hostDao.listByDataCenterId(dc.getId());
+            for (HostVO host : hosts) {
+                DedicatedResourceVO dHost = _dedicatedDao.findByHostId(host.getId());
                 if (dHost != null) {
                     if (!(childDomainIds.contains(dHost.getDomainId()))) {
-                        HostVO host = _hostDao.findById(hostId);
                         throw new CloudRuntimeException("Host " + host.getName() + " under this Zone " + dc.getName() + " is dedicated to different account/domain");
                     }
                     if (accountId != null) {
                         if (dHost.getAccountId().equals(accountId)) {
                             hostsToRelease.add(dHost);
                         } else {
-                            HostVO host = _hostDao.findById(hostId);
-                            logger.error("{} under {} is dedicated to different account/domain", host, dc);
+                            logger.error(String.format("Host %s under this Zone %s is dedicated to different account/domain", host, dc));
                             throw new CloudRuntimeException("Host " + host.getName() + " under this Zone " + dc.getName() + " is dedicated to different account/domain");
                         }
                     } else {
@@ -232,7 +230,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
             }
         }
 
-        checkHostsSuitabilityForExplicitDedication(accountId, childDomainIds, hostIds);
+        checkHostsSuitabilityForExplicitDedication(accountId, childDomainIds, hosts);
 
         final Long accountIdFinal = accountId;
         return Transaction.execute(new TransactionCallback<List<DedicatedResourceVO>>() {
@@ -286,7 +284,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
         childDomainIds.add(domainId);
         checkAccountAndDomain(accountId, domainId);
         HostPodVO pod = _podDao.findById(podId);
-        List<Long> hostIds = null;
+        List<HostVO> hosts = null;
         if (pod == null) {
             throw new InvalidParameterValueException("Unable to find pod by id " + podId);
         } else {
@@ -341,20 +339,18 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
                 releaseDedicatedResource(null, null, dr.getClusterId(), null);
             }
 
-            hostIds = _hostDao.listIdsByPodId(pod.getId());
-            for (Long hostId : hostIds) {
-                DedicatedResourceVO dHost = _dedicatedDao.findByHostId(hostId);
+            hosts = _hostDao.findByPodId(pod.getId());
+            for (HostVO host : hosts) {
+                DedicatedResourceVO dHost = _dedicatedDao.findByHostId(host.getId());
                 if (dHost != null) {
                     if (!(getDomainChildIds(domainId).contains(dHost.getDomainId()))) {
-                        HostVO host = _hostDao.findById(hostId);
                         throw new CloudRuntimeException("Host " + host.getName() + " under this Pod " + pod.getName() + " is dedicated to different account/domain");
                     }
                     if (accountId != null) {
                         if (dHost.getAccountId().equals(accountId)) {
                             hostsToRelease.add(dHost);
                         } else {
-                            HostVO host = _hostDao.findById(hostId);
-                            logger.error("{} under this {} is dedicated to different account/domain", host, pod);
+                            logger.error(String.format("Host %s under this Pod %s is dedicated to different account/domain", host, pod));
                             throw new CloudRuntimeException("Host " + host.getName() + " under this Pod " + pod.getName() + " is dedicated to different account/domain");
                         }
                     } else {
@@ -370,7 +366,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
             }
         }
 
-        checkHostsSuitabilityForExplicitDedication(accountId, childDomainIds, hostIds);
+        checkHostsSuitabilityForExplicitDedication(accountId, childDomainIds, hosts);
 
         final Long accountIdFinal = accountId;
         return Transaction.execute(new TransactionCallback<List<DedicatedResourceVO>>() {
@@ -406,7 +402,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
     @ActionEvent(eventType = EventTypes.EVENT_DEDICATE_RESOURCE, eventDescription = "dedicating a Cluster")
     public List<DedicatedResourceVO> dedicateCluster(final Long clusterId, final Long domainId, final String accountName) {
         Long accountId = null;
-        List<Long> hostIds = null;
+        List<HostVO> hosts = null;
         if (accountName != null) {
             Account caller = CallContext.current().getCallingAccount();
             Account owner = _accountMgr.finalizeOwner(caller, accountName, domainId, null);
@@ -452,13 +448,12 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
             }
 
             //check if any resource under this cluster is dedicated to different account or sub-domain
-            hostIds = _hostDao.listIdsByClusterId(cluster.getId());
+            hosts = _hostDao.findByClusterId(cluster.getId());
             List<DedicatedResourceVO> hostsToRelease = new ArrayList<DedicatedResourceVO>();
-            for (Long hostId : hostIds) {
-                DedicatedResourceVO dHost = _dedicatedDao.findByHostId(hostId);
+            for (HostVO host : hosts) {
+                DedicatedResourceVO dHost = _dedicatedDao.findByHostId(host.getId());
                 if (dHost != null) {
                     if (!(childDomainIds.contains(dHost.getDomainId()))) {
-                        HostVO host = _hostDao.findById(hostId);
                         throw new CloudRuntimeException("Host " + host.getName() + " under this Cluster " + cluster.getName() +
                             " is dedicated to different account/domain");
                     }
@@ -484,7 +479,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
             }
         }
 
-        checkHostsSuitabilityForExplicitDedication(accountId, childDomainIds, hostIds);
+        checkHostsSuitabilityForExplicitDedication(accountId, childDomainIds, hosts);
 
         final Long accountIdFinal = accountId;
         return Transaction.execute(new TransactionCallback<List<DedicatedResourceVO>>() {
@@ -581,7 +576,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
 
         List<Long> childDomainIds = getDomainChildIds(domainId);
         childDomainIds.add(domainId);
-        checkHostSuitabilityForExplicitDedication(accountId, childDomainIds, host.getId());
+        checkHostSuitabilityForExplicitDedication(accountId, childDomainIds, host);
 
         final Long accountIdFinal = accountId;
         return Transaction.execute(new TransactionCallback<List<DedicatedResourceVO>>() {
@@ -667,14 +662,13 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
         return vms;
     }
 
-    private boolean checkHostSuitabilityForExplicitDedication(Long accountId, List<Long> domainIds, long hostId) {
+    private boolean checkHostSuitabilityForExplicitDedication(Long accountId, List<Long> domainIds, Host host) {
         boolean suitable = true;
-        List<UserVmVO> allVmsOnHost = getVmsOnHost(hostId);
+        List<UserVmVO> allVmsOnHost = getVmsOnHost(host.getId());
         if (accountId != null) {
             for (UserVmVO vm : allVmsOnHost) {
                 if (vm.getAccountId() != accountId) {
-                    Host host = _hostDao.findById(hostId);
-                    logger.info("{} found to be unsuitable for explicit dedication as it is running instances of another account", host);
+                    logger.info(String.format("Host %s found to be unsuitable for explicit dedication as it is running instances of another account", host));
                     throw new CloudRuntimeException("Host " + host.getUuid() + " found to be unsuitable for explicit dedication as it is " +
                         "running instances of another account");
                 }
@@ -682,8 +676,7 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
         } else {
             for (UserVmVO vm : allVmsOnHost) {
                 if (!domainIds.contains(vm.getDomainId())) {
-                    Host host = _hostDao.findById(hostId);
-                    logger.info("{} found to be unsuitable for explicit dedication as it is running instances of another domain", host);
+                    logger.info(String.format("Host %s found to be unsuitable for explicit dedication as it is running instances of another domain", host));
                     throw new CloudRuntimeException("Host " + host.getUuid() + " found to be unsuitable for explicit dedication as it is " +
                         "running instances of another domain");
                 }
@@ -692,10 +685,10 @@ public class DedicatedResourceManagerImpl implements DedicatedService {
         return suitable;
     }
 
-    private boolean checkHostsSuitabilityForExplicitDedication(Long accountId, List<Long> domainIds, List<Long> hostIds) {
+    private boolean checkHostsSuitabilityForExplicitDedication(Long accountId, List<Long> domainIds, List<HostVO> hosts) {
         boolean suitable = true;
-        for (Long hostId : hostIds) {
-            checkHostSuitabilityForExplicitDedication(accountId, domainIds, hostId);
+        for (HostVO host : hosts) {
+            checkHostSuitabilityForExplicitDedication(accountId, domainIds, host);
         }
         return suitable;
     }

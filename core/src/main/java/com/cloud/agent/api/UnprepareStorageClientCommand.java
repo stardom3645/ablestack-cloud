@@ -19,22 +19,18 @@
 
 package com.cloud.agent.api;
 
-import java.util.Map;
-
 import com.cloud.storage.Storage.StoragePoolType;
 
 public class UnprepareStorageClientCommand extends Command {
     private StoragePoolType poolType;
     private String poolUuid;
-    private Map<String, String> details;
 
     public UnprepareStorageClientCommand() {
     }
 
-    public UnprepareStorageClientCommand(StoragePoolType poolType, String poolUuid, Map<String, String> details) {
+    public UnprepareStorageClientCommand(StoragePoolType poolType, String poolUuid) {
         this.poolType = poolType;
         this.poolUuid = poolUuid;
-        this.details = details;
     }
 
     @Override
@@ -48,9 +44,5 @@ public class UnprepareStorageClientCommand extends Command {
 
     public String getPoolUuid() {
         return poolUuid;
-    }
-
-    public Map<String, String> getDetails() {
-        return details;
     }
 }

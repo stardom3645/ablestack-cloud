@@ -31,7 +31,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.cloud.api.query.dao.TemplateJoinDao;
 import com.cloud.api.query.vo.TemplateJoinVO;
-import com.cloud.cpu.CPU;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KubernetesVersionManagerImplTest {
@@ -58,7 +57,6 @@ public class KubernetesVersionManagerImplTest {
         Mockito.when(kubernetesSupportedVersion.getIsoId()).thenReturn(1L);
         KubernetesSupportedVersionResponse response = new KubernetesSupportedVersionResponse();
         TemplateJoinVO templateJoinVO = Mockito.mock(TemplateJoinVO.class);
-        Mockito.when(templateJoinVO.getArch()).thenReturn(CPU.CPUArch.getDefault());
         String uuid = UUID.randomUUID().toString();
         Mockito.when(templateJoinVO.getUuid()).thenReturn(uuid);
         Mockito.when(templateJoinDao.findById(1L)).thenReturn(templateJoinVO);

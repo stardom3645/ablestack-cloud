@@ -213,7 +213,7 @@
               @change="updateMtu()"/>
               <div style="color: red" v-if="errorPrivateMtu" v-html="errorPrivateMtu.replace('%x', privateMtuMax)"></div>
           </a-form-item>
-          <a-form-item ref="vlan" name="vlan" v-if="!isObjectEmpty(selectedNetworkOffering) && selectedNetworkOffering.specifyvlan">
+          <a-form-item v-if="!isObjectEmpty(selectedNetworkOffering) && selectedNetworkOffering.specifyvlan">
             <template #label>
               <tooltip-label :title="$t('label.vlan')" :tooltip="$t('label.vlan')"/>
             </template>
@@ -242,18 +242,18 @@
           </a-form-item>
           <a-form-item ref="gateway" name="gateway" :colon="false">
             <template #label>
-              <tooltip-label :title="$t('label.gateway')" :tooltip="gatewayPlaceholder"/>
+              <tooltip-label :title="$t('label.gateway')" :tooltip="$t('label.create.tier.gateway.description')"/>
             </template>
             <a-input
-              :placeholder="gatewayPlaceholder"
+              :placeholder="$t('label.create.tier.gateway.description')"
               v-model:value="form.gateway"></a-input>
           </a-form-item>
           <a-form-item ref="netmask" name="netmask" :colon="false">
             <template #label>
-              <tooltip-label :title="$t('label.netmask')" :tooltip="netmaskPlaceholder"/>
+              <tooltip-label :title="$t('label.netmask')" :tooltip="$t('label.create.tier.netmask.description')"/>
             </template>
             <a-input
-              :placeholder="netmaskPlaceholder"
+              :placeholder="$t('label.create.tier.netmask.description')"
               v-model:value="form.netmask"></a-input>
           </a-form-item>
           <a-form-item ref="externalId" name="externalId" :colon="false">
@@ -363,7 +363,6 @@ import { api } from '@/api'
 import { mixinForm } from '@/utils/mixin'
 import Status from '@/components/widgets/Status'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
-import { getNetmaskFromCidr } from '@/utils/network'
 
 export default {
   name: 'VpcTiersTab',
@@ -401,8 +400,6 @@ export default {
       selectedNetworkOffering: {},
       privateMtuMax: 1500,
       errorPrivateMtu: '',
-      gatewayPlaceholder: '',
-      netmaskPlaceholder: '',
       algorithms: {
         Source: 'source',
         'Round-robin': 'roundrobin',
@@ -628,9 +625,9 @@ export default {
           if (this.publicLBExists && (idx === -1 || this.lbProviderMap.publicLb.vpc.indexOf(offering.service.map(svc => { return svc.provider[0].name })[idx]) === -1)) {
             filteredOfferings.push(offering)
           } else if (!this.publicLBExists && vpcLbServiceIndex > -1) {
-            const vpcLbServiceProviders = vpcLbServiceIndex === -1 ? undefined : this.resource.service[vpcLbServiceIndex].provider.map(provider => provider.name)
+            const vpcLbServiceProvider = vpcLbServiceIndex === -1 ? undefined : this.resource.service[vpcLbServiceIndex].provider[0].name
             const offeringLbServiceProvider = idx === -1 ? undefined : offering.service[idx].provider[0].name
-            if (vpcLbServiceProviders && (!offeringLbServiceProvider || (offeringLbServiceProvider && vpcLbServiceProviders.includes(offeringLbServiceProvider)))) {
+            if (vpcLbServiceProvider && (!offeringLbServiceProvider || (offeringLbServiceProvider && vpcLbServiceProvider === offeringLbServiceProvider))) {
               filteredOfferings.push(offering)
             }
           } else {
@@ -699,13 +696,6 @@ export default {
       this.initForm()
       this.fetchNetworkAclList()
       this.fetchNetworkOfferings()
-      const cidr = this.resource.cidr
-      const netmask = getNetmaskFromCidr(cidr)
-      if (netmask) {
-        this.gatewayPlaceholder = this.$t('label.create.tier.gateway.description', { value: cidr })
-        this.netmaskPlaceholder = this.$t('label.create.tier.netmask.description', { value: netmask })
-      }
-
       this.showCreateNetworkModal = true
       this.rules = {
         name: [{ required: true, message: this.$t('label.required') }],

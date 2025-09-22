@@ -56,8 +56,8 @@ public class LibvirtStoragePool implements KVMStoragePool {
     protected String authSecret;
     protected String sourceHost;
     protected int sourcePort;
+
     protected String sourceDir;
-    protected Map<String, String> details;
 
     public LibvirtStoragePool(String uuid, String name, StoragePoolType type, StorageAdaptor adaptor, StoragePool pool) {
         this.uuid = uuid;
@@ -311,11 +311,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public Map<String, String> getDetails() {
-        return this.details;
-    }
-
-    public void setDetails(Map<String, String> details) {
-        this.details = details;
+        return null;
     }
 
     @Override

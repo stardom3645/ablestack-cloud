@@ -58,7 +58,7 @@ This requires configuring and setting up CKS: http://docs.cloudstack.apache.org/
 
 **VPC**
 - [ ] Add VPC
-- [ ] VPC actions - update, restart, delete
+- [ ] VPC actions - updat, restart, delete
 - [ ] Add security group
 - [ ] Add/delete ingress/egress rule
 

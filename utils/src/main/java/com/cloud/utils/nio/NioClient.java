@@ -33,90 +33,74 @@ import org.apache.cloudstack.utils.security.SSLUtils;
 
 public class NioClient extends NioConnection {
 
-    protected String host;
-    protected SocketChannel clientConnection;
+    protected String _host;
+    protected SocketChannel _clientConnection;
 
-    public NioClient(final String name, final String host, final int port, final int workers,
-             final Integer sslHandshakeTimeout, final HandlerFactory factory) {
+    public NioClient(final String name, final String host, final int port, final int workers, final HandlerFactory factory) {
         super(name, port, workers, factory);
-        setSslHandshakeTimeout(sslHandshakeTimeout);
-        this.host = host;
-    }
-
-    protected void closeChannel() {
-        try {
-            if (clientConnection != null && clientConnection.isOpen()) {
-                clientConnection.close();
-            }
-        } catch (IOException e) {
-            logger.error("Failed to close SocketChannel", e);
-        }
+        _host = host;
     }
 
     @Override
     protected void init() throws IOException {
-        Task task;
-        String hostLog = host + ":" + _port;
+        _selector = Selector.open();
+        Task task = null;
+
         try {
-            logger.info("Connecting to {}", hostLog);
-            _selector = Selector.open();
-            clientConnection = SocketChannel.open();
-            final InetSocketAddress serverAddress = new InetSocketAddress(host, _port);
-            clientConnection.connect(serverAddress);
-            logger.info("Connected to {}", hostLog);
-            clientConnection.configureBlocking(false);
+            _clientConnection = SocketChannel.open();
+
+            logger.info("Connecting to " + _host + ":" + _port);
+            final InetSocketAddress peerAddr = new InetSocketAddress(_host, _port);
+            _clientConnection.connect(peerAddr);
+            _clientConnection.configureBlocking(false);
 
             final SSLContext sslContext = Link.initClientSSLContext();
-            SSLEngine sslEngine = sslContext.createSSLEngine(host, _port);
+            SSLEngine sslEngine = sslContext.createSSLEngine(_host, _port);
             sslEngine.setUseClientMode(true);
             sslEngine.setEnabledProtocols(SSLUtils.getSupportedProtocols(sslEngine.getEnabledProtocols()));
             sslEngine.beginHandshake();
-            if (!Link.doHandshake(clientConnection, sslEngine, getSslHandshakeTimeout())) {
-                throw new IOException(String.format("SSL Handshake failed while connecting to host: %s", hostLog));
+            if (!Link.doHandshake(_clientConnection, sslEngine)) {
+                logger.error("SSL Handshake failed while connecting to host: " + _host + " port: " + _port);
+                _selector.close();
+                throw new IOException("SSL Handshake failed while connecting to host: " + _host + " port: " + _port);
             }
             logger.info("SSL: Handshake done");
+            logger.info("Connected to " + _host + ":" + _port);
 
-            final Link link = new Link(serverAddress, this);
+            final Link link = new Link(peerAddr, this);
             link.setSSLEngine(sslEngine);
-            final SelectionKey key = clientConnection.register(_selector, SelectionKey.OP_READ);
+            final SelectionKey key = _clientConnection.register(_selector, SelectionKey.OP_READ);
             link.setKey(key);
             key.attach(link);
             // Notice we've already connected due to the handshake, so let's get the
             // remaining task done
             task = _factory.create(Task.Type.CONNECT, link, null);
         } catch (final GeneralSecurityException e) {
-            closeChannel();
+            _selector.close();
             throw new IOException("Failed to initialise security", e);
         } catch (final IOException e) {
-            closeChannel();
-            logger.error("IOException while connecting to {}", hostLog, e);
+            _selector.close();
             throw e;
         }
-        if (task != null) {
-            _executor.submit(task);
-        }
+        _executor.submit(task);
     }
 
     @Override
-    protected void registerLink(final InetSocketAddress address, final Link link) {
+    protected void registerLink(final InetSocketAddress saddr, final Link link) {
         // don't do anything.
     }
 
     @Override
-    protected void unregisterLink(final InetSocketAddress address) {
+    protected void unregisterLink(final InetSocketAddress saddr) {
         // don't do anything.
     }
 
     @Override
     public void cleanUp() throws IOException {
         super.cleanUp();
-        if (clientConnection != null && clientConnection.isOpen()) {
-            clientConnection.close();
+        if (_clientConnection != null) {
+            _clientConnection.close();
         }
         logger.info("NioClient connection closed");
-    }
-
-    public String getHost() {
-        return host;
     }
 }

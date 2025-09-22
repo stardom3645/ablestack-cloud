@@ -42,8 +42,4 @@ public interface IndirectAgentLBAlgorithm {
      * @return true if the lists are equal, false if not
      */
     boolean compare(final List<String> msList, final List<String> receivedMsList);
-
-    default boolean isHostListNeeded() {
-        return false;
-    }
 }

@@ -37,21 +37,17 @@ public class BackupScheduleResponse extends BaseResponse {
     @Param(description = "ID of the VM")
     private String vmId;
 
-    @SerializedName(ApiConstants.SCHEDULE)
+    @SerializedName("schedule")
     @Param(description = "time the backup is scheduled to be taken.")
     private String schedule;
 
-    @SerializedName(ApiConstants.INTERVAL_TYPE)
+    @SerializedName("intervaltype")
     @Param(description = "the interval type of the backup schedule")
     private DateUtil.IntervalType intervalType;
 
-    @SerializedName(ApiConstants.TIMEZONE)
+    @SerializedName("timezone")
     @Param(description = "the time zone of the backup schedule")
     private String timezone;
-
-    @SerializedName(ApiConstants.MAX_BACKUPS)
-    @Param(description = "maximum number of backups retained")
-    private Integer maxBakups;
 
     public String getVmName() {
         return vmName;
@@ -91,9 +87,5 @@ public class BackupScheduleResponse extends BaseResponse {
 
     public void setTimezone(String timezone) {
         this.timezone = timezone;
-    }
-
-    public void setMaxBakups(Integer maxBakups) {
-        this.maxBakups = maxBakups;
     }
 }

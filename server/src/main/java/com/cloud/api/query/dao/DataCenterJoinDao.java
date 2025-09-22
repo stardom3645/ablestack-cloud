@@ -25,8 +25,6 @@ import com.cloud.utils.db.GenericDao;
 
 public interface DataCenterJoinDao extends GenericDao<DataCenterJoinVO, Long> {
 
-    ZoneResponse newMinimalDataCenterResponse(ResponseView view, DataCenterJoinVO dataCenter);
-
     ZoneResponse newDataCenterResponse(ResponseView view, DataCenterJoinVO dof, Boolean showCapacities, Boolean showResourceImage);
 
     DataCenterJoinVO newDataCenterView(DataCenter dof);

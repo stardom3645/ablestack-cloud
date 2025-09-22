@@ -25,6 +25,8 @@ import static org.junit.Assert.assertFalse;
 import com.cloud.agent.api.CheckGuestOsMappingCommand;
 import org.junit.Test;
 
+import com.cloud.agent.api.AgentControlCommand;
+
 public class CheckGuestOsMappingCommandTest {
 
     @Test
