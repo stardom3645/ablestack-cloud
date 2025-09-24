@@ -51,7 +51,7 @@
                     <template #suffixIcon><filter-outlined class="ant-select-suffix" /></template>
                     <a-select-option
                       v-if="['Admin', 'DomainAdmin'].includes($store.getters.userInfo.roletype) &&
-                      ['vm', 'iso', 'template', 'pod', 'cluster', 'host', 'systemvm', 'router', 'storagepool', 'kubernetes', 'computeoffering', 'systemoffering', 'diskoffering', 'sharedfs'].includes($route.name) ||
+                      ['vm', 'iso', 'template', 'pod', 'cluster', 'host', 'systemvm', 'router', 'storagepool', 'kubernetes', 'computeoffering', 'systemoffering', 'diskoffering', 'sharedfs', 'alertRules'].includes($route.name) ||
                       ['account'].includes($route.name)"
                       key="all"
                       :label="$t('label.all')">
@@ -970,6 +970,9 @@ export default {
       }
       if (['event', 'computeoffering', 'systemoffering', 'diskoffering', 'quotatariff'].includes(routeName)) {
         return 'active'
+      }
+      if (['alertRules'].includes(routeName)) {
+        return 'all'
       }
       return 'self'
     }
@@ -2057,6 +2060,12 @@ export default {
           delete query.allocationstate
         } else {
           query.allocationstate = filter
+        }
+      } else if (this.$route.name === 'alertRules') {
+        if (filter === 'all') {
+          delete query.state
+        } else {
+          query.state = String(filter).toUpperCase()
         }
       } else if (['host'].includes(this.$route.name)) {
         if (filter === 'all') {

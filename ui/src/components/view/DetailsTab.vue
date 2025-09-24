@@ -164,6 +164,10 @@
           <div v-else-if="item === 'usersource'">
             {{ $t(getUserSourceLabel(dataResource[item])) }}
           </div>
+          <div v-else-if="['summary', 'description'].includes(item)">
+            <div v-if="dataResource[item]" v-html="dataResource[item]"></div>
+            <span v-else>—</span>
+          </div>
           <div v-else>{{ dataResource[item] }}</div>
         </div>
       </a-list-item>

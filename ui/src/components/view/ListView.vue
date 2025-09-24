@@ -243,6 +243,9 @@
       <template v-if="column.key === 'agentstate'">
         <status :text="text ? text : ''" displayText />
       </template>
+      <template v-if="column.key === 'ispaused'">
+        <status :text="text ? text : ''" displayText />
+      </template>
       <template v-if="column.key === 'cpunumber'">
         <span>{{ record.serviceofferingdetails?.mincpunumber && record.serviceofferingdetails?.maxcpunumber ? `${record.serviceofferingdetails.mincpunumber} - ${record.serviceofferingdetails.maxcpunumber}` : record.cpunumber }}</span>
       </template>
@@ -756,7 +759,7 @@ export default {
         '/zone', '/pod', '/cluster', '/host', '/storagepool', '/imagestore', '/systemvm', '/router', '/ilbvm', '/annotation',
         '/computeoffering', '/systemoffering', '/diskoffering', '/backupoffering', '/networkoffering', '/vpcoffering',
         '/tungstenfabric', '/oauthsetting', '/guestos', '/guestoshypervisormapping', '/webhook', 'webhookdeliveries', '/quotatariff', '/sharedfs',
-        '/ipv4subnets', '/disasterrecoverycluster'].join('|'))
+        '/ipv4subnets', '/disasterrecoverycluster', '/alertRules'].join('|'))
         .test(this.$route.path)
     },
     enableGroupAction () {
