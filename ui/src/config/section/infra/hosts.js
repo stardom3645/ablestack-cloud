@@ -24,6 +24,7 @@ export default {
   icon: 'database-outlined',
   docHelp: 'conceptsandterminology/concepts.html#about-hosts',
   permission: ['listHostsMetrics'],
+  searchFilters: ['name', 'zoneid', 'podid', 'clusterid', 'hypervisor'],
   resourceType: 'Host',
   filters: () => {
     const filters = ['enabled', 'disabled', 'maintenance', 'up', 'down', 'alert']
@@ -31,7 +32,7 @@ export default {
   },
   params: { type: 'routing' },
   columns: () => {
-    const fields = ['name', 'state', 'resourcestate', 'ipaddress', 'hypervisor', 'instances', 'powerstate']
+    const fields = ['name', 'state', 'resourcestate', 'ipaddress', 'hypervisor', 'instances', 'powerstate', 'version', 'haenable', 'hastate']
     const metricsFields = ['cpunumber', 'cputotalghz', 'cpuusedghz', 'cpuallocatedghz', 'memorytotalgb', 'memoryusedgb', 'memoryallocatedgb', 'networkread', 'networkwrite']
     if (store.getters.metrics) {
       fields.push(...metricsFields)
@@ -40,10 +41,28 @@ export default {
     fields.push('zonename')
     return fields
   },
-  details: ['name', 'id', 'resourcestate', 'ipaddress', 'hypervisor', 'type', 'clustername', 'podname', 'zonename', 'disconnected', 'created'],
+  details: ['name', 'id', 'resourcestate', 'ipaddress', 'hypervisor', 'arch', 'type', 'clustername', 'podname', 'zonename', 'disconnected', 'created'],
   tabs: [{
     name: 'details',
     component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+  }, {
+    name: 'metrics',
+    component: shallowRef(defineAsyncComponent(() => import('@/views/plugins/IFrameWall.vue')))
+  }, {
+    name: 'outofbandmanagement',
+    component: shallowRef(defineAsyncComponent(() => import('@/views/infra/OobmTab.vue')))
+  }, {
+    name: 'listhostdevices',
+    component: shallowRef(defineAsyncComponent(() => import('@/views/infra/ListHostDevicesTab.vue')))
+  }, {
+    name: 'hostalerts',
+    title: 'Wall Alerts',
+    component: shallowRef(defineAsyncComponent(() => import('@/views/infra/HostAlertsTab.vue')))
+  }, {
+    name: 'events',
+    resourceType: 'Host',
+    component: shallowRef(defineAsyncComponent(() => import('@/components/view/EventsTab.vue'))),
+    show: () => { return 'listEvents' in store.getters.apis }
   }, {
     name: 'comments',
     component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
@@ -68,12 +87,8 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit',
       dataView: true,
-      args: ['name', 'hosttags', 'oscategoryid'],
-      mapping: {
-        oscategoryid: {
-          api: 'listOsCategories'
-        }
-      }
+      popup: true,
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/HostUpdate')))
     },
     {
       api: 'provisionCertificate',
@@ -97,7 +112,7 @@ export default {
       label: 'label.action.force.reconnect',
       message: 'message.confirm.action.force.reconnect',
       dataView: true,
-      show: (record) => { return ['Disconnected', 'Up'].includes(record.state) }
+      show: (record) => { return ['Disconnected', 'Up', 'Alert'].includes(record.state) }
     },
     {
       api: 'updateHost',
@@ -144,13 +159,17 @@ export default {
       message: 'label.outofbandmanagement.configure',
       docHelp: 'adminguide/hosts.html#out-of-band-management',
       dataView: true,
-      args: ['hostid', 'address', 'port', 'username', 'password', 'driver'],
+      post: true,
+      args: ['hostid', 'address', 'port', 'username', 'password', 'driver', 'manageconsoleprotocol', 'manageconsoleport'],
       mapping: {
         hostid: {
           value: (record) => { return record.id }
         },
         driver: {
           options: ['ipmitool', 'nestedcloudstack', 'redfish']
+        },
+        manageconsoleprotocol: {
+          options: ['http', 'https']
         }
       }
     },
@@ -280,7 +299,7 @@ export default {
     },
     {
       api: 'startRollingMaintenance',
-      icon: 'setting-outlined',
+      icon: 'control-outlined',
       label: 'label.start.rolling.maintenance',
       message: 'label.start.rolling.maintenance',
       docHelp: 'adminguide/hosts.html#kvm-rolling-maintenance',
@@ -293,6 +312,26 @@ export default {
         hostids: {
           value: (record) => { return record.id }
         }
+      }
+    },
+    {
+      api: 'declareHostAsDegraded',
+      icon: 'exception-outlined',
+      label: 'label.declare.host.as.degraded',
+      message: 'label.declare.host.as.degraded',
+      dataView: true,
+      show: (record) => {
+        return record.resourcestate !== 'Degraded' && (record.state === 'Alert' || record.state === 'Disconnected')
+      }
+    },
+    {
+      api: 'cancelHostAsDegraded',
+      icon: 'file-done-outlined',
+      label: 'label.cancel.host.as.degraded',
+      message: 'label.cancel.host.as.degraded',
+      dataView: true,
+      show: (record) => {
+        return record.resourcestate === 'Degraded'
       }
     },
     {

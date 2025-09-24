@@ -17,7 +17,8 @@
 
 <template>
   <div>
-    <a-affix v-if="this.$store.getters.shutdownTriggered" >
+    <announcement-banner />
+    <a-affix v-if="this.$store.getters.shutdownTriggered">
       <a-alert :message="$t('message.shutdown.triggered')" type="error" banner :showIcon="false" class="shutdownHeader" />
     </a-affix>
     <a-layout class="layout" :class="[device]">
@@ -37,7 +38,9 @@
               :collapsed="false"
               :collapsible="true"
               mode="inline"
-              @menuSelect="menuSelect"></side-menu>
+              :style="{ paddingBottom: isSidebarVisible ? '300px' : '0' }"
+              @menuSelect="menuSelect"
+              ></side-menu>
           </a-drawer>
           <side-menu
             v-else
@@ -45,7 +48,9 @@
             :menus="menus"
             :theme="navTheme"
             :collapsed="collapsed"
-            :collapsible="true"></side-menu>
+            :collapsible="true"
+            :style="{ paddingBottom: isSidebarVisible ? '300px' : '0' }"
+            ></side-menu>
         </template>
         <template v-else>
           <a-drawer
@@ -62,7 +67,9 @@
               :collapsed="false"
               :collapsible="true"
               mode="inline"
-              @menuSelect="menuSelect"></side-menu>
+              :style="{ paddingBottom: isSidebarVisible ? '300px' : '0' }"
+              @menuSelect="menuSelect"
+              ></side-menu>
           </a-drawer>
         </template>
 
@@ -77,11 +84,25 @@
             <setting :visible="showSetting" />
           </template>
         </drawer>
-
       </a-affix>
 
-      <a-layout :class="[layoutMode, `content-width-${contentWidth}`]" :style="{ paddingLeft: contentPaddingLeft, minHeight: '100vh' }">
-        <!-- layout header -->
+      <div style="position: fixed; bottom: 45px; right: 0px; z-index: 100;">
+        <a-button
+          type="primary"
+          @click="toggleSidebar"
+          style="width: 40px; height: 40px; padding: 0; background: #aaa; border: none; color: #fff;">
+          <ScheduleOutlined />
+        </a-button>
+      </div>
+
+      <event-sidebar
+        :isVisible="isSidebarVisible"
+        ref="eventSidebar"
+        @update:isVisible="isSidebarVisible = $event" />
+
+      <a-layout
+        :class="[layoutMode, `content-width-${contentWidth}`]"
+        :style="{ paddingLeft: contentPaddingLeft, minHeight: '100vh', paddingBottom: isSidebarVisible ? '300px' : '0' }">
         <a-affix style="z-index: 100">
           <global-header
             :style="this.$store.getters.shutdownTriggered ? 'margin-top: 25px;' : null"
@@ -90,8 +111,7 @@
             :theme="navTheme"
             :collapsed="collapsed"
             :device="device"
-            @toggle="toggle"
-          />
+            @toggle="toggle" />
         </a-affix>
 
         <a-button
@@ -103,13 +123,13 @@
 
         <!-- layout content -->
         <a-layout-content
-        class="layout-content"
-        :class="{'is-header-fixed': fixedHeader}">
+          class="layout-content"
+          :class="{'is-header-fixed': fixedHeader}"
+          :style="{ paddingBottom: isSidebarVisible ? '300' : '0' }">
           <slot></slot>
         </a-layout-content>
 
-        <!-- layout footer -->
-        <a-layout-footer style="padding: 0">
+        <a-layout-footer style="padding: 0; transition: padding-bottom 0.3s;" :style="{ paddingBottom: isSidebarVisible ? '300' : '0' }">
           <global-footer />
         </a-layout-footer>
       </a-layout>
@@ -128,6 +148,9 @@ import { isAdmin } from '@/role'
 import { api } from '@/api'
 import Drawer from '@/components/widgets/Drawer'
 import Setting from '@/components/view/Setting.vue'
+import EventSidebar from '@/components/view/EventSidebar.vue'
+import AnnouncementBanner from '@/components/header/AnnouncementBanner.vue'
+import AutoAlertBanner from '@/components/header/AutoAlertBanner.vue'
 
 export default {
   name: 'GlobalLayout',
@@ -136,7 +159,10 @@ export default {
     GlobalHeader,
     GlobalFooter,
     Drawer,
-    Setting
+    Setting,
+    EventSidebar,
+    AnnouncementBanner,
+    AutoAlertBanner
   },
   mixins: [mixin, mixinDevice],
   data () {
@@ -144,7 +170,8 @@ export default {
       collapsed: false,
       menus: [],
       showSetting: false,
-      showClear: false
+      showClear: false,
+      isSidebarVisible: false
     }
   },
   computed: {
@@ -177,13 +204,6 @@ export default {
     mainMenu (newMenu) {
       this.menus = newMenu.find((item) => item.path === '/').children
     },
-    '$store.getters.darkMode' (darkMode) {
-      if (darkMode) {
-        document.body.classList.add('dark-mode')
-      } else {
-        document.body.classList.remove('dark-mode')
-      }
-    },
     '$store.getters.countNotify' (countNotify) {
       this.showClear = false
       if (countNotify && countNotify > 0) {
@@ -199,15 +219,12 @@ export default {
   created () {
     this.menus = this.mainMenu.find((item) => item.path === '/').children
     this.collapsed = !this.sidebarOpened
-    const readyForShutdownPollingJob = setInterval(this.checkShutdown, 5000)
-    this.$store.commit('SET_READY_FOR_SHUTDOWN_POLLING_JOB', readyForShutdownPollingJob)
+    if ('readyForShutdown' in this.$store.getters.apis) {
+      const readyForShutdownPollingJob = setInterval(this.checkShutdown, 5000)
+      this.$store.commit('SET_READY_FOR_SHUTDOWN_POLLING_JOB', readyForShutdownPollingJob)
+    }
   },
   mounted () {
-    const layoutMode = this.$config.theme['@layout-mode'] || 'light'
-    this.$store.dispatch('SetDarkMode', (layoutMode === 'dark'))
-    if (layoutMode === 'dark') {
-      document.body.classList.add('dark-mode')
-    }
     const userAgent = navigator.userAgent
     if (userAgent.indexOf('Edge') > -1) {
       this.$nextTick(() => {
@@ -223,10 +240,14 @@ export default {
       this.showClear = true
     }
   },
-  beforeUnmount () {
+  unmounted () {
     document.body.classList.remove('dark')
   },
   methods: {
+    toggleSidebar () {
+      this.isSidebarVisible = true
+      this.$refs.eventSidebar.openSiderBar()
+    },
     ...mapActions(['setSidebar']),
     toggle () {
       this.collapsed = !this.collapsed
@@ -255,9 +276,11 @@ export default {
       this.$store.commit('SET_COUNT_NOTIFY', 0)
     },
     checkShutdown () {
-      api('readyForShutdown', {}).then(json => {
-        this.$store.dispatch('SetShutdownTriggered', json.readyforshutdownresponse.readyforshutdown.shutdowntriggered || false)
-      })
+      if (!this.$store.getters.features.securityfeaturesenabled) {
+        api('readyForShutdown', {}).then(json => {
+          this.$store.dispatch('SetShutdownTriggered', json.readyforshutdownresponse.readyforshutdown.shutdowntriggered || false)
+        })
+      }
     }
   }
 }
@@ -267,6 +290,7 @@ export default {
 .layout-content {
   &.is-header-fixed {
     margin: 78px 12px 0;
+    transition: padding-bottom 0.3s ease
   }
 }
 
@@ -315,4 +339,7 @@ export default {
   position: absolute;
 }
 
+.layout.ant-layout .sidemenu .ant-header-fixedHeader {
+  top: auto !important
+}
 </style>

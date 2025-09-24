@@ -51,7 +51,7 @@
                     <template #suffixIcon><filter-outlined class="ant-select-suffix" /></template>
                     <a-select-option
                       v-if="['Admin', 'DomainAdmin'].includes($store.getters.userInfo.roletype) &&
-                      ['vm', 'iso', 'template', 'pod', 'cluster', 'host', 'systemvm', 'router', 'storagepool', 'kubernetes'].includes($route.name) ||
+                      ['vm', 'iso', 'template', 'pod', 'cluster', 'host', 'systemvm', 'router', 'storagepool', 'kubernetes', 'computeoffering', 'systemoffering', 'diskoffering', 'sharedfs', 'alertRules'].includes($route.name) ||
                       ['account'].includes($route.name)"
                       key="all"
                       :label="$t('label.all')">
@@ -67,7 +67,7 @@
                   </a-select>
                 </a-tooltip>
                 <a-switch
-                  v-if="!dataView && ['vm', 'volume', 'zone', 'cluster', 'host', 'storagepool', 'managementserver'].includes($route.name)"
+                  v-if="!dataView && ['vm', 'volume', 'zone', 'cluster', 'host', 'storagepool', 'managementserver', 'sharedfs'].includes($route.name)"
                   style="margin-left: 8px; min-height: 23px; margin-bottom: 4px"
                   :checked-children="$t('label.metrics')"
                   :un-checked-children="$t('label.metrics')"
@@ -151,17 +151,16 @@
         </a-modal>
       </keep-alive>
       <a-modal
-        v-else
+        v-else-if="currentAction.label === 'label.download.events'"
         :visible="showAction"
         :closable="true"
         :maskClosable="false"
         :footer="null"
         style="top: 20px;"
         :width="modalWidth"
-        :ok-button-props="getOkProps()"
         :cancel-button-props="getCancelProps()"
         :confirmLoading="actionLoading"
-        @cancel="cancelAction"
+        @cancel="closeAction"
         centered
       >
         <template #title>
@@ -219,7 +218,6 @@
             :ref="formRef"
             :model="form"
             :rules="rules"
-            @finish="handleSubmit"
             layout="vertical">
             <div v-for="(field, fieldIndex) in currentAction.paramFields" :key="fieldIndex">
               <a-form-item
@@ -230,6 +228,248 @@
               >
                 <template #label>
                   <tooltip-label :title="$t('label.' + field.name)" :tooltip="field.description"/>
+                </template>
+
+                <a-switch
+                  v-if="field.type==='boolean'"
+                  v-model:checked="form[field.name]"
+                  :placeholder="field.description"
+                  v-focus="fieldIndex === firstIndex"
+                />
+                <a-select
+                  v-else-if="currentAction.mapping && field.name in currentAction.mapping && currentAction.mapping[field.name].options"
+                  :loading="field.loading"
+                  v-model:value="form[field.name]"
+                  :placeholder="field.description"
+                  v-focus="fieldIndex === firstIndex"
+                  showSearch
+                  optionFilterProp="label"
+                  :filterOption="(input, option) => {
+                    return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }"
+                >
+                  <a-select-option key="" >{{ }}</a-select-option>
+                  <a-select-option v-for="(opt, optIndex) in currentAction.mapping[field.name].options" :key="optIndex">
+                    {{ opt }}
+                  </a-select-option>
+                </a-select>
+                <a-select
+                  v-else-if="field.name==='keypair' ||
+                    (field.name==='account' && !['addAccountToProject', 'createAccount'].includes(currentAction.api))"
+                  showSearch
+                  optionFilterProp="label"
+                  v-model:value="form[field.name]"
+                  :loading="field.loading"
+                  :placeholder="field.description"
+                  :filterOption="(input, option) => {
+                    return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }"
+                  v-focus="fieldIndex === firstIndex"
+                >
+                  <a-select-option key="">{{ }}</a-select-option>
+                  <a-select-option v-for="(opt, optIndex) in field.opts" :key="optIndex">
+                    {{ opt.name || opt.description || opt.traffictype || opt.publicip }}
+                  </a-select-option>
+                </a-select>
+                <a-select
+                  v-else-if="field.type==='uuid'"
+                  showSearch
+                  optionFilterProp="label"
+                  v-model:value="form[field.name]"
+                  :loading="field.loading"
+                  :placeholder="field.description"
+                  :filterOption="(input, option) => {
+                    return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }"
+                  v-focus="fieldIndex === firstIndex"
+                >
+                  <a-select-option key="" label="">{{ }}</a-select-option>
+                  <a-select-option v-for="opt in field.opts" :key="opt.id" :label="opt.name || opt.description || opt.traffictype || opt.publicip">
+                    <div>
+                      <span v-if="(field.name.startsWith('template') || field.name.startsWith('iso'))">
+                        <span v-if="opt.icon">
+                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                        </span>
+                        <os-logo v-else :osId="opt.ostypeid" :osName="opt.ostypename" size="lg" style="margin-left: -1px" />
+                      </span>
+                      <span v-if="(field.name.startsWith('zone'))">
+                        <span v-if="opt.icon">
+                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                        </span>
+                        <global-outlined v-else style="margin-right: 5px" />
+                      </span>
+                      <span v-if="(field.name.startsWith('project'))">
+                        <span v-if="opt.icon">
+                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                        </span>
+                        <project-outlined v-else style="margin-right: 5px" />
+                      </span>
+                      <span v-if="(field.name.startsWith('account') || field.name.startsWith('user'))">
+                        <span v-if="opt.icon">
+                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                        </span>
+                        <user-outlined v-else style="margin-right: 5px"/>
+                      </span>
+                      <span v-if="(field.name.startsWith('network'))">
+                        <span v-if="opt.icon">
+                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                        </span>
+                        <apartment-outlined v-else style="margin-right: 5px"/>
+                      </span>
+                      <span v-if="(field.name.startsWith('domain'))">
+                        <span v-if="opt.icon">
+                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                        </span>
+                        <block-outlined v-else style="margin-right: 5px"/>
+                      </span>
+                      {{ opt.name || opt.description || opt.traffictype || opt.publicip }}
+                    </div>
+                  </a-select-option>
+                </a-select>
+                <a-select
+                  v-else-if="field.type==='list'"
+                  :loading="field.loading"
+                  mode="multiple"
+                  v-model:value="form[field.name]"
+                  :placeholder="field.description"
+                  v-focus="fieldIndex === firstIndex"
+                  showSearch
+                  optionFilterProp="label"
+                  :filterOption="(input, option) => {
+                    return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }"
+                >
+                  <a-select-option v-for="(opt, optIndex) in field.opts" :key="optIndex">
+                    {{ opt.name && opt.type ? opt.name + ' (' + opt.type + ')' : opt.name || opt.description }}
+                  </a-select-option>
+                </a-select>
+                <a-input-number
+                  v-else-if="field.type==='long'"
+                  v-focus="fieldIndex === firstIndex"
+                  style="width: 100%;"
+                  v-model:value="form[field.name]"
+                  :placeholder="field.description"
+                />
+                <a-input-password
+                  v-else-if="field.name==='password' || field.name==='currentpassword' || field.name==='confirmpassword'"
+                  v-model:value="form[field.name]"
+                  :placeholder="field.description"
+                  @blur="($event) => handleConfirmBlur($event, field.name)"
+                  v-focus="fieldIndex === firstIndex"
+                />
+                <a-textarea
+                  v-else-if="field.name==='certificate' || field.name==='privatekey' || field.name==='certchain'"
+                  rows="2"
+                  v-model:value="form[field.name]"
+                  :placeholder="field.description"
+                  v-focus="fieldIndex === firstIndex"
+                />
+                <a-input
+                  v-else
+                  v-focus="fieldIndex === firstIndex"
+                  v-model:value="form[field.name]"
+                  :placeholder="field.description" />
+              </a-form-item>
+            </div>
+
+            <div :span="24" class="action-button">
+              <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
+              <a-button type="primary" @click="getCsvDownload(currentAction)" ref="submit">{{ $t('label.ok') }}</a-button>
+            </div>
+          </a-form>
+        </a-spin>
+        <br />
+      </a-modal>
+      <a-modal
+        v-else
+        :visible="showAction"
+        :closable="true"
+        :maskClosable="false"
+        :footer="null"
+        style="top: 20px;"
+        :width="modalWidth"
+        :ok-button-props="getOkProps()"
+        ok-text="111"
+        :cancel-button-props="getCancelProps()"
+        :confirmLoading="actionLoading"
+        @cancel="cancelAction"
+        centered
+      >
+        <template #title>
+          <span v-if="currentAction.label">{{ $t(currentAction.label) }}</span>
+          <a
+            v-if="currentAction.docHelp || $route.meta.docHelp"
+            style="margin-left: 5px"
+            :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
+            target="_blank">
+            <question-circle-outlined />
+          </a>
+        </template>
+        <a-spin :spinning="actionLoading" v-ctrl-enter="handleSubmit">
+          <span v-if="currentAction.message">
+            <div v-if="selectedRowKeys.length > 0">
+              <a-alert
+                v-if="['delete-outlined', 'DeleteOutlined', 'poweroff-outlined', 'PoweroffOutlined'].includes(currentAction.icon)"
+                type="error">
+                <template #message>
+                  <exclamation-circle-outlined style="color: red; fontSize: 30px; display: inline-flex" />
+                  <span style="padding-left: 5px" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>`" />
+                  <span v-html="currentAction.message" />
+                </template>
+              </a-alert>
+              <a-alert v-else type="warning">
+                <template #message>
+                  <span v-if="selectedRowKeys.length > 0" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>`" />
+                  <span v-html="currentAction.message" />
+                </template>
+              </a-alert>
+            </div>
+            <div v-else>
+              <a-alert type="warning">
+                <template #message>
+                  <span v-html="currentAction.message" />
+                </template>
+              </a-alert>
+            </div>
+            <div v-if="selectedRowKeys.length > 0">
+              <a-divider />
+              <a-table
+                v-if="selectedRowKeys.length > 0"
+                size="middle"
+                :columns="chosenColumns"
+                :dataSource="selectedItems"
+                :rowKey="(record, idx) => record.id || record.name || record.usageType || idx + '-' + Math.random()"
+                :pagination="true"
+                style="overflow-y: auto"
+              >
+                <template #bodyCell="{ column, text }">
+                  <template v-if="column.key === 'allocated' && ['asnumbers', 'publicip'].includes($route.meta.name)">
+                    {{ $toLocaleDate(text) }}
+                  </template>
+                </template>
+              </a-table>
+            </div>
+            <br v-if="currentAction.paramFields.length > 0"/>
+          </span>
+          <a-form
+            :ref="formRef"
+            :model="form"
+            :rules="rules"
+            @finish="handleSubmit"
+            layout="vertical">
+            <div v-for="(field, fieldIndex) in currentAction.paramFields" :key="fieldIndex">
+              <a-form-item
+                :name="field.name"
+                :ref="field.name"
+                :v-bind="field.name"
+                v-if="!(currentAction.mapping && field.name in currentAction.mapping && currentAction.mapping[field.name].value)"
+              >
+                <template #label>
+                  <tooltip-label
+                    v-if="['domain', 'guestcidraddress'].includes(field.name) && ['createZone', 'updateZone'].includes(currentAction.api)"
+                    :title="$t('label.default.network.' + field.name + '.isolated.network')"
+                    :tooltip="field.description"/>
+                  <tooltip-label v-else :title="$t('label.' + field.name)" :tooltip="field.description"/>
                 </template>
 
                 <a-switch
@@ -395,7 +635,7 @@
 
     <div :style="this.$store.getters.shutdownTriggered ? 'margin-top: 24px; margin-bottom: 12px' : null">
       <div v-if="dataView">
-        <slot name="resource" v-if="$route.path.startsWith('/quotasummary') || $route.path.startsWith('/publicip')"></slot>
+        <slot name="resource" v-if="$route.path.startsWith('/publicip')"></slot>
         <resource-view
           v-else
           :resource="resource"
@@ -408,13 +648,15 @@
           :columns="columns"
           :items="items"
           :actions="actions"
+          :currentPage="page"
+          :pageSize="pageSize"
           :columnKeys="columnKeys"
           :selectedColumns="selectedColumns"
           ref="listview"
           @update-selected-columns="updateSelectedColumns"
           @selection-change="onRowSelectionChange"
           @refresh="fetchData"
-          @edit-tariff-action="(showAction, record) => $emit('edit-tariff-action', showAction, record)"/>
+        />
         <a-pagination
           class="row-element"
           style="margin-top: 10px"
@@ -422,7 +664,9 @@
           :current="page"
           :pageSize="pageSize"
           :total="itemCount"
-          :showTotal="total => `${$t('label.showing')} ${Math.min(total, 1+((page-1)*pageSize))}-${Math.min(page*pageSize, total)} ${$t('label.of')} ${total} ${$t('label.items')}`"
+          :showTotal="total => this.$localStorage.get('LOCALE') == 'ko_KR' ?
+            `${$t('label.total')} ${total} ${$t('label.items')} ${$t('label.of')} ${Math.min(total, 1+((page-1)*pageSize))}-${Math.min(page*pageSize, total)} ${$t('label.showing')}` :
+            `${$t('label.showing')} ${Math.min(total, 1+((page-1)*pageSize))}-${Math.min(page*pageSize, total)} ${$t('label.of')} ${total} ${$t('label.items')}`"
           :pageSizeOptions="pageSizeOptions"
           @change="changePage"
           @showSizeChange="changePageSize"
@@ -530,6 +774,10 @@ export default {
     eventBus.off('vm-refresh-data')
     eventBus.off('async-job-complete')
     eventBus.off('exec-action')
+    eventBus.off('desktop-refresh-data')
+    eventBus.off('resource-request-refresh-data')
+    eventBus.off('automation-refresh-data')
+    eventBus.off('dr-refresh-data')
   },
   mounted () {
     eventBus.on('exec-action', (args) => {
@@ -543,6 +791,31 @@ export default {
     this.rules = reactive({})
     eventBus.on('vm-refresh-data', () => {
       if (this.$route.path === '/vm' || this.$route.path.includes('/vm/')) {
+        this.fetchData()
+      }
+    })
+    eventBus.on('desktop-refresh-data', () => {
+      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
+        this.fetchData()
+      }
+    })
+    eventBus.on('resource-request-refresh-data', () => {
+      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
+        this.fetchData()
+      }
+    })
+    // eventBus.on('automation-refresh-data', () => {
+    //   if (this.$route.path === '/automationtemplate' || this.$route.path.includes('/automationtemplate/')) {
+    //     this.fetchData()
+    //   }
+    // })
+    eventBus.on('automation-controller-refresh-data', () => {
+      if (this.$route.path === '/automationcontroller' || this.$route.path.includes('/automationcontroller/')) {
+        this.fetchData()
+      }
+    })
+    eventBus.on('dr-refresh-data', () => {
+      if (this.$route.path === '/disasterrecoverycluster' || this.$route.path.includes('/disasterrecoverycluster/')) {
         this.fetchData()
       }
     })
@@ -637,6 +910,7 @@ export default {
   },
   watch: {
     '$route' (to, from) {
+      clearInterval(this.refreshInterval)
       if (to.fullPath !== from.fullPath && !to.fullPath.includes('action/') && to?.query?.tab !== 'browser') {
         if ('page' in to.query) {
           this.page = Number(to.query.page)
@@ -645,7 +919,11 @@ export default {
           this.page = 1
         }
         this.itemCount = 0
+        if ('listview' in this.$refs && this.$refs.listview) {
+          this.$refs.listview.resetSelection()
+        }
         this.fetchData()
+        if (Object.keys(to.params).length === 0) this.refreshInterval = setInterval(this.fetchData, 5000)
         if ('projectid' in to.query) {
           this.switchProject(to.query.projectid)
         }
@@ -681,7 +959,7 @@ export default {
         return this.$route.query.filter
       }
       const routeName = this.$route.name
-      if ((this.projectView && routeName === 'vm') || (['Admin', 'DomainAdmin'].includes(this.$store.getters.userInfo.roletype) && ['vm', 'iso', 'template', 'pod', 'cluster', 'host', 'systemvm', 'router', 'storagepool'].includes(routeName)) || ['account', 'guestnetwork', 'guestvlans', 'oauthsetting', 'guestos', 'guestoshypervisormapping', 'kubernetes'].includes(routeName)) {
+      if ((this.projectView && routeName === 'vm') || (['Admin', 'DomainAdmin'].includes(this.$store.getters.userInfo.roletype) && ['vm', 'iso', 'template', 'pod', 'cluster', 'host', 'systemvm', 'router', 'storagepool'].includes(routeName)) || ['account', 'guestnetwork', 'guestvlans', 'oauthsetting', 'guestos', 'guestoshypervisormapping', 'kubernetes', 'asnumbers', 'networkoffering'].includes(routeName)) {
         return 'all'
       }
       if (['publicip'].includes(routeName)) {
@@ -690,8 +968,11 @@ export default {
       if (['volume'].includes(routeName)) {
         return 'user'
       }
-      if (['event'].includes(routeName)) {
+      if (['event', 'computeoffering', 'systemoffering', 'diskoffering', 'quotatariff'].includes(routeName)) {
         return 'active'
+      }
+      if (['alertRules'].includes(routeName)) {
+        return 'all'
       }
       return 'self'
     }
@@ -705,10 +986,49 @@ export default {
     },
     getOkProps () {
       if (this.selectedRowKeys.length > 0 && this.currentAction?.groupAction) {
-        return { props: { type: 'default' } }
       } else {
         return { props: { type: 'primary' } }
       }
+    },
+    getCsvDownload (paramFields) {
+      var csvFile = 'event.csv'
+      var downloadLink
+      var row = []
+      var fields = paramFields.resource
+      console.log('JSON.stringify(fields)')
+      console.log(JSON.stringify(fields))
+      let csv = 'id,username,type,level,description,account,domainid,resourcetype,created,state,key\n'
+
+      csv += row.join(',')
+      for (var i = 0; i < this.selectedItems.length; i++) {
+        row = []
+        row.push(
+          this.selectedItems[i].id,
+          this.selectedItems[i].username,
+          this.selectedItems[i].type,
+          this.selectedItems[i].level,
+          this.selectedItems[i].description,
+          this.selectedItems[i].account,
+          this.selectedItems[i].domainid,
+          this.selectedItems[i].resourcetype,
+          this.selectedItems[i].created,
+          this.selectedItems[i].state,
+          this.selectedItems[i].key
+        )
+        csv += row.join(',')
+        csv += '\n'
+      }
+
+      const BOM = '\uFEFF'
+      csv = BOM + csv
+
+      csvFile = new Blob([csv], { type: 'text/csv' })
+      downloadLink = document.createElement('a')
+      downloadLink.download = 'event'
+      downloadLink.href = window.URL.createObjectURL(csvFile)
+      downloadLink.style.display = 'none'
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
     },
     getCancelProps () {
       if (this.selectedRowKeys.length > 0 && this.currentAction?.groupAction) {
@@ -735,7 +1055,7 @@ export default {
       })
     },
     fetchData (params = {}) {
-      if (this.$route.name === 'deployVirtualMachine') {
+      if (['deployVirtualMachine', 'usage'].includes(this.$route.name)) {
         return
       }
       if (this.routeName !== this.$route.name) {
@@ -769,6 +1089,9 @@ export default {
         'isofilter' in params && this.routeName === 'iso') {
         params.isofilter = 'all'
       }
+      if (['Admin', 'DomainAdmin'].includes(this.$store.getters.userInfo.roletype) && ['computeoffering', 'systemoffering', 'diskoffering'].includes(this.routeName) && this.$route.params.id) {
+        params.state = 'all'
+      }
       if (Object.keys(this.$route.query).length > 0) {
         if ('page' in this.$route.query) {
           this.page = Number(this.$route.query.page)
@@ -793,9 +1116,9 @@ export default {
       }
 
       this.projectView = Boolean(store.getters.project && store.getters.project.id)
-      this.hasProjectId = ['vm', 'vmgroup', 'ssh', 'affinitygroup', 'volume', 'snapshot', 'vmsnapshot', 'guestnetwork',
-        'vpc', 'securitygroups', 'publicip', 'vpncustomergateway', 'template', 'iso', 'event', 'kubernetes',
-        'autoscalevmgroup', 'vnfapp'].includes(this.$route.name)
+      this.hasProjectId = ['vm', 'vmgroup', 'ssh', 'affinitygroup', 'userdata', 'volume', 'snapshot', 'buckets', 'vmsnapshot', 'guestnetwork',
+        'vpc', 'securitygroups', 'publicip', 'vpncustomergateway', 'template', 'iso', 'event', 'kubernetes', 'sharedfs',
+        'autoscalevmgroup', 'vnfapp', 'webhook'].includes(this.$route.name)
 
       if ((this.$route && this.$route.params && this.$route.params.id) || this.$route.query.dataView) {
         this.dataView = true
@@ -811,12 +1134,13 @@ export default {
         params.listsystemvms = true
       }
 
-      if ('listview' in this.$refs && this.$refs.listview) {
-        this.$refs.listview.resetSelection()
-      }
+      // console.log('this.$refs :>> ', this.$refs)
+      // if ('listview' in this.$refs && this.$refs.listview) {
+      //   this.$refs.listview.resetSelection()
+      // }
 
       if (this.$route && this.$route.meta && this.$route.meta.permission) {
-        this.apiName = this.$route.meta.permission[0]
+        this.apiName = (this.$route.meta.getApiToCall && this.$route.meta.getApiToCall()) || this.$route.meta.permission[0]
         if (this.$route.meta.columns) {
           const columns = this.$route.meta.columns
           if (columns && typeof columns === 'function') {
@@ -879,6 +1203,9 @@ export default {
           this.$store.getters.customColumns[this.$store.getters.userInfo.id][this.$route.path] = this.selectedColumns
         } else {
           this.selectedColumns = this.$store.getters.customColumns[this.$store.getters.userInfo.id][this.$route.path] || this.selectedColumns
+          if (this.$store.getters.listAllProjects && !this.projectView) {
+            this.selectedColumns.push('project')
+          }
           this.updateSelectedColumns()
         }
       }
@@ -887,7 +1214,7 @@ export default {
         return ![this.$t('label.state'), this.$t('label.hostname'), this.$t('label.hostid'), this.$t('label.zonename'),
           this.$t('label.zone'), this.$t('label.zoneid'), this.$t('label.ip'), this.$t('label.ipaddress'), this.$t('label.privateip'),
           this.$t('label.linklocalip'), this.$t('label.size'), this.$t('label.sizegb'), this.$t('label.current'),
-          this.$t('label.created'), this.$t('label.order')].includes(column.title)
+          this.$t('label.created'), this.$t('label.order'), this.$t('label.networkname')].includes(column.title)
       })
       this.chosenColumns.splice(this.chosenColumns.length - 1, 1)
 
@@ -898,9 +1225,10 @@ export default {
       if (['listVirtualMachinesMetrics'].includes(this.apiName) && this.dataView) {
         delete params.details
         delete params.isvnf
+        params.details = 'group,nics,secgrp,tmpl,servoff,diskoff,iso,volume,affgrp,backoff'
       }
 
-      this.loading = true
+      this.loading = refreshed
       if (this.$route.params && this.$route.params.id) {
         params.id = this.$route.params.id
         if (['listSSHKeyPairs'].includes(this.apiName)) {
@@ -908,6 +1236,8 @@ export default {
             delete params.id
             params.name = this.$route.params.id
           }
+          params.account = this.$route.query.account
+          params.domainid = this.$route.query.domainid
         }
         if (['listPublicIpAddresses'].includes(this.apiName)) {
           params.allocatedonly = false
@@ -945,11 +1275,17 @@ export default {
         params.showIcon = true
       }
 
+      const customParamHandler = this.$route.meta.customParamHandler
+      if (customParamHandler && typeof customParamHandler === 'function') {
+        params = customParamHandler(params, this.$route.query)
+      }
+
       if (['listAnnotations', 'listRoles', 'listZonesMetrics', 'listPods',
         'listClustersMetrics', 'listHostsMetrics', 'listStoragePoolsMetrics',
         'listImageStores', 'listSystemVms', 'listManagementServers',
         'listConfigurations', 'listHypervisorCapabilities',
-        'listAlerts', 'listNetworkOfferings', 'listVPCOfferings'].includes(this.apiName)) {
+        'listAlerts', 'listNetworkOfferings', 'listVPCOfferings',
+        'listASNumbers'].includes(this.apiName)) {
         delete params.listall
       }
 
@@ -972,7 +1308,7 @@ export default {
           break
         }
 
-        if ('id' in this.$route.params && this.$route.params.id !== params.id) {
+        if ('id' in this.$route.params && this.$route.params.id !== params.id && !['listSSHKeyPairs'].includes(this.apiName)) {
           console.log('DEBUG - Discarding API response as its `id` does not match the uuid on the browser path')
           return
         }
@@ -982,6 +1318,12 @@ export default {
           this.items = []
         }
         this.itemCount = apiItemCount
+
+        if (this.dataView && this.$route.path.includes('/zone/') && 'listVmwareDcs' in this.$store.getters.apis) {
+          api('listVmwareDcs', { zoneid: this.items[0].id }).then(response => {
+            this.items[0].vmwaredc = response.listvmwaredcsresponse.VMwareDC
+          })
+        }
 
         if (['listTemplates', 'listIsos'].includes(this.apiName) && this.items.length > 1) {
           this.items = [...new Map(this.items.map(x => [x.id, x])).values()]
@@ -1142,13 +1484,11 @@ export default {
       this.currentAction.paramFields = []
       this.currentAction.paramFilters = []
       if ('message' in action) {
-        var message = action.message
         if (typeof action.message === 'function') {
-          message = action.message(action.resource)
+          action.message = action.message(action.resource)
         }
-        action.message = message
+        action.message = Array.isArray(action.message) ? this.$t(...action.message) : this.$t(action.message)
       }
-
       this.getArgs(action, isGroupAction, paramFields)
       this.getFilters(action, isGroupAction, paramFields)
       this.getFirstIndexFocus()
@@ -1477,18 +1817,26 @@ export default {
                   this.selectedItems.filter(item => item === resource)
                 }
               }
-              var message = action.successMessage ? this.$t(action.successMessage) : this.$t(action.label) +
-                (resourceName ? ' - ' + resourceName : '')
-              var duration = 2
-              if (action.additionalMessage) {
-                message = message + ' - ' + this.$t(action.successMessage)
-                duration = 5
-              }
               if (this.selectedItems.length === 0) {
+                let message = ''
+                let messageDuration = 2
+                if ('successMessage' in action) {
+                  message = action.successMessage
+                  if (typeof action.successMessage === 'function') {
+                    message = action.successMessage(action.resource)
+                  }
+                  message = Array.isArray(message) ? this.$t(...message) : this.$t(message)
+                } else {
+                  message = this.$t(action.label) + (resourceName ? ' - ' + resourceName : '')
+                }
+                if ('additionalMessage' in action) {
+                  message = `${message} - ${this.$t(action.additionalMessage)}`
+                  messageDuration = 5
+                }
                 this.$message.success({
                   content: message,
                   key: action.label + resourceName,
-                  duration: duration
+                  duration: messageDuration
                 })
               }
               break
@@ -1535,13 +1883,16 @@ export default {
               continue
             }
             if (input === undefined || input === null ||
-              (input === '' && !['updateStoragePool', 'updateHost', 'updatePhysicalNetwork', 'updateDiskOffering', 'updateNetworkOffering', 'updateServiceOffering', 'updateZone', 'updateAccount'].includes(action.api))) {
+              (input === '' && !['updateStoragePool', 'updateHost', 'updatePhysicalNetwork',
+                'updateDiskOffering', 'updateNetworkOffering', 'updateServiceOffering',
+                'updateZone', 'updateAccount', 'updateWebhook'].includes(action.api))) {
               if (param.type === 'boolean') {
                 params[key] = false
               }
               break
             }
-            if (input === '' && !['tags', 'hosttags', 'storagetags', 'dns2', 'ip6dns1', 'ip6dns2', 'internaldns2', 'networkdomain'].includes(key)) {
+            if (input === '' && !['tags', 'hosttags', 'storagetags', 'dns2', 'ip6dns1',
+              'ip6dns2', 'internaldns2', 'networkdomain', 'secretkey'].includes(key)) {
               break
             }
             if (action.mapping && key in action.mapping && action.mapping[key].options) {
@@ -1710,6 +2061,12 @@ export default {
         } else {
           query.allocationstate = filter
         }
+      } else if (this.$route.name === 'alertRules') {
+        if (filter === 'all') {
+          delete query.state
+        } else {
+          query.state = String(filter).toUpperCase()
+        }
       } else if (['host'].includes(this.$route.name)) {
         if (filter === 'all') {
           delete query.resourcestate
@@ -1736,6 +2093,12 @@ export default {
         } else if (filter === 'allocatedonly') {
           query.allocatedonly = 'true'
         }
+      } else if (this.$route.name === 'asnumbers') {
+        if (['allocatedonly', 'free'].includes(filter)) {
+          query.isallocated = (filter === 'allocatedonly')
+        } else {
+          delete query.isallocated
+        }
       } else if (this.$route.name === 'event') {
         if (filter === 'archived') {
           query.archived = true
@@ -1754,6 +2117,8 @@ export default {
         } else {
           query.clustertype = filter === 'cloud.managed' ? 'CloudManaged' : 'ExternalManaged'
         }
+      } else if (['computeoffering', 'systemoffering', 'diskoffering'].includes(this.$route.name)) {
+        query.state = filter
       }
       query.filter = filter
       query.page = '1'
@@ -1775,7 +2140,9 @@ export default {
         if ('searchQuery' in opts) {
           const value = opts.searchQuery
           if (value && value.length > 0) {
-            if (this.$route.name === 'quotaemailtemplate') {
+            if (this.$route.name === 'role') {
+              query.keyword = value
+            } else if (this.$route.name === 'quotaemailtemplate') {
               query.templatetype = value
             } else if (this.$route.name === 'globalsetting') {
               query.name = value
@@ -1896,7 +2263,6 @@ export default {
           this.rules[field.name].push(rule)
           break
         case (field.type === 'uuid'):
-          console.log('uuid: ' + field)
           rule.required = field.required
           rule.message = this.$t('message.error.select')
           this.rules[field.name].push(rule)

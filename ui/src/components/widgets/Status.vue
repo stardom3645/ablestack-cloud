@@ -51,6 +51,12 @@ export default {
       if (this.displayText && this.text) {
         var state = this.text
         switch (state.toLowerCase()) {
+          case 'enabled':
+            state = this.$t('state.enabled')
+            break
+          case 'disabled':
+            state = this.$t('state.disabled')
+            break
           case 'running':
             state = this.$t('state.running')
             break
@@ -78,14 +84,86 @@ export default {
           case 'error':
             state = this.$t('state.error')
             break
-          case 'ReadOnly':
+          case 'readonly':
             state = this.$t('state.readonly')
             break
-          case 'ReadWrite':
+          case 'readwrite':
             state = this.$t('state.readwrite')
             break
-          case 'InProgress':
+          case 'inprogress':
             state = this.$t('state.inprogress')
+            break
+          case 'down':
+            state = this.$t('state.down')
+            break
+          case 'up':
+            state = this.$t('state.up')
+            break
+          case 'prepareformaintenance':
+            state = this.$t('state.prepareformaintenance')
+            break
+          case 'maintenance':
+            state = this.$t('state.maintenance')
+            break
+          case 'active':
+            state = this.$t('state.enabled')
+            break
+          case 'inactive':
+            state = this.$t('state.disabled')
+            break
+          case 'disconnected':
+            state = this.$t('state.disconnected')
+            break
+          case 'connecting':
+            state = this.$t('state.connecting')
+            break
+          case 'ready':
+            state = this.$t('state.ready')
+            break
+          case 'not ready':
+            state = this.$t('state.notready')
+            break
+          case 'setup':
+            state = this.$t('state.setup')
+            break
+          case 'allocated':
+            state = this.$t('state.allocated')
+            break
+          case 'free':
+            state = this.$t('state.free')
+            break
+          case 'destroyed':
+            state = this.$t('state.destroyed')
+            break
+          case 'snapshotting':
+            state = this.$t('state.snapshotting')
+            break
+          case 'backedup':
+            state = this.$t('state.backedup')
+            break
+          case 'backingup':
+            state = this.$t('state.backingup')
+            break
+          case 'destroying':
+            state = this.$t('state.destroying')
+            break
+          case 'scheduled':
+            state = this.$t('state.scheduled')
+            break
+          case 'started':
+            state = this.$t('state.started')
+            break
+          case 'completed':
+            state = this.$t('state.completed')
+            break
+          case 'alerting':
+            state = this.$t('state.alerting')
+            break
+          case 'ok':
+            state = this.$t('state.ok')
+            break
+          case 'nodata':
+            state = this.$t('state.nodata')
             break
         }
         return state.charAt(0).toUpperCase() + state.slice(1)
@@ -102,6 +180,7 @@ export default {
         case 'download complete':
         case 'enabled':
         case 'implemented':
+        case 'ok':
         case 'on':
         case 'readwrite':
         case 'ready':
@@ -113,9 +192,11 @@ export default {
         case 'up':
         case 'success':
         case 'poweron':
+        case 'syncing':
           status = 'success'
           break
         case 'alert':
+        case 'alerting':
         case 'declined':
         case 'disabled':
         case 'disconnected':
@@ -135,10 +216,15 @@ export default {
         case 'stopping':
         case 'upgrading':
         case 'inprogress':
+        case 'connecting':
+        case 'prepareformaintenance':
+        case 'snapshotting':
+        case 'backingup':
+        case 'destroying':
           status = 'processing'
           break
         case 'allocated':
-          if (this.$route.path.startsWith('/publicip')) {
+          if (this.$route.path.startsWith('/publicip') || this.$route.path.startsWith('/guestvlans')) {
             status = 'success'
           } else {
             status = 'warning'
@@ -149,6 +235,8 @@ export default {
         case 'pending':
         case 'unsecure':
         case 'warning':
+        case 'free':
+        case 'scheduled':
           status = 'warning'
           break
       }
@@ -157,6 +245,8 @@ export default {
     getStatusColor (state) {
       switch (state.toLowerCase()) {
         case 'scheduled':
+          return 'orange'
+        case 'started':
           return 'blue'
         case 'reserved':
           return 'orange'
@@ -168,23 +258,24 @@ export default {
       if (!(state && this.displayText)) {
         return ''
       }
+      let result
       if (this.$route.path === '/vmsnapshot' || this.$route.path.includes('/vmsnapshot/')) {
-        return this.$t('message.vmsnapshot.state.' + state.toLowerCase())
+        result = this.$t('message.vmsnapshot.state.' + state.toLowerCase())
+      } else if (this.$route.path === '/vm' || this.$route.path.includes('/vm/')) {
+        result = this.$t('message.vm.state.' + state.toLowerCase())
+      } else if (this.$route.path === '/volume' || this.$route.path.includes('/volume/')) {
+        result = this.$t('message.volume.state.' + state.toLowerCase())
+      } else if (this.$route.path === '/guestnetwork' || this.$route.path.includes('/guestnetwork/')) {
+        result = this.$t('message.guestnetwork.state.' + state.toLowerCase())
+      } else if (this.$route.path === '/publicip' || this.$route.path.includes('/publicip/')) {
+        result = this.$t('message.publicip.state.' + state.toLowerCase())
       }
-      if (this.$route.path === '/vm' || this.$route.path.includes('/vm/')) {
-        return this.$t('message.vm.state.' + state.toLowerCase())
+
+      if (!result || (result.startsWith('message.') && result.endsWith('.state.' + state.toLowerCase()))) {
+        // Nothing for snapshots, vpcs, gateways, vnpnconn, vpnuser, kubectl, event, project, account, infra. They're all self explanatory
+        result = this.$t(state)
       }
-      if (this.$route.path === '/volume' || this.$route.path.includes('/volume/')) {
-        return this.$t('message.volume.state.' + state.toLowerCase())
-      }
-      if (this.$route.path === '/guestnetwork' || this.$route.path.includes('/guestnetwork/')) {
-        return this.$t('message.guestnetwork.state.' + state.toLowerCase())
-      }
-      if (this.$route.path === '/publicip' || this.$route.path.includes('/publicip/')) {
-        return this.$t('message.publicip.state.' + state.toLowerCase())
-      }
-      // Nothing for snapshots, vpcs, gateways, vnpnconn, vpnuser, kubectl, event, project, account, infra. They're all self explanatory
-      return this.$t(state)
+      return result
     },
     getStyle () {
       let styles = { display: 'inline-flex' }

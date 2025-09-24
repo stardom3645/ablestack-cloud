@@ -23,6 +23,17 @@
       </div>
     </template>
   </a-alert>
+  <div v-if="['host'].includes($route.meta.name)  && licenseCode !== ''">
+    <a-alert type="success" :showIcon="true" v-if="licenseCode == 'OK'" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + '~' + dataResource.licenseExpiryDate" :description="'(' + calculateDday(dataResource.licenseExpiryDate) + $t('message.license.days.left') + ')'" />
+    <a-alert type="error" :showIcon="true" v-else-if="licenseCode == 'PASSED'" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + '~' + dataResource.licenseExpiryDate" :description="'(' + $t('message.license.renewal.required') + ')'" />
+    <a-alert type="error" :showIcon="true" v-else-if="licenseCode == 'NOSTART'" :message="$t('message.alert.licenseexpired') + ' : ' + dataResource.licenseStartDate + '~' + dataResource.licenseExpiryDate" :description="'(' + $t('message.license.nostart') + ')'" />
+    <a-alert type="error" :showIcon="true" v-else-if="licenseCode == 'NONE'" :message="$t('message.license.not.found1')" :description="$t('message.license.not.found2')"/>
+  </div>
+  <a-alert v-if="ip4routes" type="info" :showIcon="true" :message="$t('label.add.upstream.ipv4.routes')">
+    <template #description>
+      <p v-html="ip4routes" />
+    </template>
+  </a-alert>
   <a-alert v-if="ip6routes" type="info" :showIcon="true" :message="$t('label.add.upstream.ipv6.routes')">
     <template #description>
       <p v-html="ip6routes" />
@@ -37,23 +48,58 @@
     size="small"
     :dataSource="fetchDetails()">
     <template #renderItem="{item}">
-      <a-list-item v-if="item in dataResource && !customDisplayItems.includes(item)">
-        <div>
-          <strong>{{ item === 'service' ? $t('label.supportedservices') : $t('label.' + String(item).toLowerCase()) }}</strong>
+      <a-list-item v-if="(item in dataResource && !customDisplayItems.includes(item)) || (offeringDetails.includes(item) && dataResource.serviceofferingdetails)">
+        <div style="width: 100%">
+          <strong>{{ item === 'service' ? $t('label.supportedservices') : $t(getDetailTitle(item)) }}</strong>
+          <a-tooltip v-if="['volume', 'snapshot', 'template', 'iso'].includes($route.meta.name) && item === 'usedfsbytes'"><template #title>{{ $t('message.usedfsbytes') }}</template><QuestionCircleOutlined style="margin-left: 8px;"/></a-tooltip>
+          <a-tooltip v-if="['volume', 'snapshot', 'template', 'iso'].includes($route.meta.name) && item === 'savingrate'"><template #title>{{ $t('message.savingrate') }}</template><QuestionCircleOutlined style="margin-left: 8px;"/></a-tooltip>
           <br/>
           <div v-if="Array.isArray(dataResource[item]) && item === 'service'">
             <div v-for="(service, idx) in dataResource[item]" :key="idx">
-              {{ service.name }} : {{ service.provider[0].name }}
+              {{ service.name }} : {{ service.provider?.[0]?.name }}
             </div>
+          </div>
+          <div v-else-if="$route.meta.name === 'backup' && (item === 'size' || item === 'virtualsize')">
+            {{ $bytesToHumanReadableSize(dataResource[item]) }}
+            <a-tooltip placement="right">
+              <template #title>
+                {{ dataResource[item] }} bytes
+              </template>
+              <QuestionCircleOutlined />
+            </a-tooltip>
           </div>
           <div v-else-if="$route.meta.name === 'backup' && item === 'volumes'">
             <div v-for="(volume, idx) in JSON.parse(dataResource[item])" :key="idx">
               <router-link :to="{ path: '/volume/' + volume.uuid }">{{ volume.type }} - {{ volume.path }}</router-link> ({{ parseFloat(volume.size / (1024.0 * 1024.0 * 1024.0)).toFixed(1) }} GB)
             </div>
           </div>
+          <div v-else-if="$route.meta.name === 'vm' && item === 'qemuagentversion'">
+            {{ dataResource[item] === 'Not Installed' ? $t('label.state.qemuagentversion.notinstalled') : dataResource[item]}}
+          </div>
+          <div v-else-if="$route.meta.name === 'controllertemplate' && item === 'dctemplate'">
+            <div v-for="(dctemplate, idx) in dataResource[item]" :key="idx">
+              <router-link :to="{ path: '/template/' + dctemplate.id }">{{ dctemplate.name }}</router-link>
+            </div>
+          </div>
+          <div v-else-if="$route.meta.name === 'controllertemplate' && item === 'workstemplate'">
+            <div v-for="(workstemplate, idx) in dataResource[item]" :key="idx">
+              <router-link :to="{ path: '/template/' + workstemplate.id }">{{ workstemplate.name }}</router-link>
+            </div>
+          </div>
+          <div v-else-if="$route.meta.name === 'mastertemplate' && item === 'templatename'">
+            <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
+          </div>
+          <div v-else-if="$route.meta.name === 'deployedresource' && item === 'accessinfo'">
+            <div v-html="dataResource.accessinfo"></div>
+          </div>
           <div v-else-if="$route.meta.name === 'computeoffering' && item === 'rootdisksize'">
             <div>
               {{ dataResource.rootdisksize }} GB
+            </div>
+          </div>
+          <div v-else-if="$route.meta.name === 'buckets' && item === 'size'">
+            <div>
+              {{ convertKB(dataResource.size) }}
             </div>
           </div>
           <div v-else-if="['template', 'iso'].includes($route.meta.name) && item === 'size'">
@@ -71,13 +117,19 @@
               {{ parseFloat(dataResource.virtualsize / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GiB
             </div>
           </div>
+          <div v-else-if="['volume', 'snapshot', 'template', 'iso'].includes($route.meta.name) && item === 'usedfsbytes'">
+            <div>
+              {{ parseFloat(dataResource.usedfsbytes / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GiB
+            </div>
+          </div>
           <div v-else-if="['name', 'type'].includes(item)">
             <span v-if="['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(dataResource[item])">{{ $t(dataResource[item].toLowerCase()) }}</span>
             <span v-else>{{ dataResource[item] }}</span>
           </div>
-          <div v-else-if="['created', 'sent', 'lastannotated', 'collectiontime', 'lastboottime', 'lastserverstart', 'lastserverstop'].includes(item)">
+          <div v-else-if="['created', 'sent', 'lastannotated', 'collectiontime', 'lastboottime', 'lastserverstart', 'lastserverstop', 'removed', 'effectiveDate', 'endDate'].includes(item)">
             {{ $toLocaleDate(dataResource[item]) }}
           </div>
+          <div style="white-space: pre-wrap;" v-else-if="$route.meta.name === 'quotatariff' && item === 'description'">{{ dataResource[item] }}</div>
           <div v-else-if="$route.meta.name === 'userdata' && item === 'userdata'">
             <div style="white-space: pre-wrap;"> {{ decodeUserData(dataResource.userdata)}} </div>
           </div>
@@ -91,7 +143,39 @@
               </span>
             </div>
           </div>
+          <div v-else-if="$route.meta.name === 'computeoffering' && offeringDetails.includes(item)">
+            {{ dataResource.serviceofferingdetails[item] }}
+          </div>
+          <div v-else-if="item === 'headers'" style="white-space: pre-line;">
+            {{ dataResource[item] }}
+          </div>
+          <div v-else-if="item === 'payload'" style="white-space: pre-wrap;">
+            {{ JSON.stringify(JSON.parse(dataResource[item]), null, 4) || dataResource[item] }}
+          </div>
+          <div v-else-if="item === 'dedicatedresources'">
+            <div v-for="(resource, idx) in sortDedicatedResourcesByName(dataResource[item])" :key="idx">
+              <div>
+                <router-link :to="getResourceLink(resource.resourcetype, resource.resourceid)">
+                  {{ resource.resourcename }}
+                </router-link>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="item === 'usersource'">
+            {{ $t(getUserSourceLabel(dataResource[item])) }}
+          </div>
+          <div v-else-if="['summary', 'description'].includes(item)">
+            <div v-if="dataResource[item]" v-html="dataResource[item]"></div>
+            <span v-else>—</span>
+          </div>
           <div v-else>{{ dataResource[item] }}</div>
+        </div>
+      </a-list-item>
+      <a-list-item v-else-if="['cluster', 'zone'].includes($route.meta.name) && item === 'haenable'">
+        <div>
+          <strong>{{ $t('label.ha.enable') }}</strong>
+          <br/>
+          <div>{{ dataResource.resourcedetails?.resourceHAEnabled }}</div>
         </div>
       </a-list-item>
       <a-list-item v-else-if="item === 'ip6address' && ipV6Address && ipV6Address.length > 0">
@@ -108,6 +192,13 @@
           <div>{{ dataResource[item] }}</div>
         </div>
       </a-list-item>
+      <a-list-item v-else-if="['startdate', 'enddate'].includes(item)">
+        <div>
+          <strong>{{ $t('label.' + item.replace('date', '.date.and.time'))}}</strong>
+          <br/>
+          <div>{{ $toLocaleDate(dataResource[item]) }}</div>
+        </div>
+      </a-list-item>
     </template>
     <HostInfo :resource="dataResource" v-if="$route.meta.name === 'host' && 'listHosts' in $store.getters.apis" />
     <DedicateData :resource="dataResource" v-if="dedicatedSectionActive" />
@@ -119,6 +210,8 @@
 import DedicateData from './DedicateData'
 import HostInfo from '@/views/infra/HostInfo'
 import VmwareData from './VmwareData'
+import { genericCompare } from '@/utils/sort'
+import { api } from '@/api'
 
 export default {
   name: 'DetailsTab',
@@ -154,7 +247,13 @@ export default {
       dedicatedRoutes: ['zone', 'pod', 'cluster', 'host'],
       dedicatedSectionActive: false,
       projectname: '',
-      dataResource: {}
+      dataResource: {},
+      detailsTitles: [],
+      licenseInfo: {
+        expired: false,
+        expiryDate: ''
+      },
+      licenseCode: ''
     }
   },
   mounted () {
@@ -162,7 +261,12 @@ export default {
   },
   computed: {
     customDisplayItems () {
-      return ['ip6routes', 'privatemtu', 'publicmtu', 'provider']
+      var items = ['ip4routes', 'ip6routes', 'privatemtu', 'publicmtu', 'provider']
+      if (this.$route.meta.name === 'webhookdeliveries' || this.$route.meta.name === 'quotasummary') {
+        items.push('startdate')
+        items.push('enddate')
+      }
+      return items
     },
     vnfAccessMethods () {
       if (this.resource.templatetype === 'VNF' && ['vm', 'vnfapp'].includes(this.$route.meta.name)) {
@@ -207,9 +311,11 @@ export default {
         }
 
         const managementDeviceIds = []
-        for (const vnfnic of this.resource.vnfnics) {
-          if (vnfnic.management) {
-            managementDeviceIds.push(vnfnic.deviceid)
+        if (this.resource.vnfnics) {
+          for (const vnfnic of this.resource.vnfnics) {
+            if (vnfnic.management) {
+              managementDeviceIds.push(vnfnic.deviceid)
+            }
           }
         }
         const managementIps = []
@@ -253,9 +359,22 @@ export default {
       }
       return null
     },
+    offeringDetails () {
+      return ['maxcpunumber', 'mincpunumber', 'minmemory', 'maxmemory']
+    },
     ipV6Address () {
       if (this.dataResource.nic && this.dataResource.nic.length > 0) {
         return this.dataResource.nic.filter(e => { return e.ip6address }).map(e => { return e.ip6address }).join(', ')
+      }
+      return null
+    },
+    ip4routes () {
+      if (this.resource.ip4routes && this.resource.ip4routes.length > 0) {
+        var routes = []
+        for (var route of this.resource.ip4routes) {
+          routes.push(route.subnet + ' via ' + route.gateway)
+        }
+        return routes.join('<br>')
       }
       return null
     },
@@ -273,12 +392,15 @@ export default {
   created () {
     this.dataResource = this.resource
     this.dedicatedSectionActive = this.dedicatedRoutes.includes(this.$route.meta.name)
+    if (['host'].includes(this.$route.meta.name)) {
+      this.fetchLicenseInfo()
+    }
   },
   watch: {
     resource: {
       deep: true,
-      handler () {
-        this.dataResource = this.resource
+      handler (newVal) {
+        this.dataResource = newVal
         if ('account' in this.dataResource && this.dataResource.account.startsWith('PrjAcct-')) {
           this.projectname = this.dataResource.account.substring(this.dataResource.account.indexOf('-') + 1, this.dataResource.account.lastIndexOf('-'))
           this.dataResource.projectname = this.projectname
@@ -307,12 +429,108 @@ export default {
       this.dataResource.account = projectAdmins.join()
     },
     fetchDetails () {
-      var details = this.$route.meta.details
+      let details = this.$route.meta.details
+
+      if (!details) {
+        return
+      }
+
       if (typeof details === 'function') {
         details = details()
       }
-      details = this.projectname ? [...details.filter(x => x !== 'account'), 'projectname'] : details
-      return details
+
+      let detailsKeys = []
+      for (const detail of details) {
+        if (typeof detail === 'object') {
+          const field = detail.field
+          detailsKeys.push(field)
+          this.detailsTitles[field] = detail.customTitle
+        } else {
+          detailsKeys.push(detail)
+          this.detailsTitles[detail] = detail
+        }
+      }
+
+      detailsKeys = this.projectname ? [...detailsKeys.filter(x => x !== 'account'), 'projectname'] : detailsKeys
+      return detailsKeys
+    },
+    getDetailTitle (detail) {
+      return `label.${String(this.detailsTitles[detail]).toLowerCase()}`
+    },
+    getResourceLink (type, id) {
+      return `/${type.toLowerCase()}/${id}`
+    },
+    sortDedicatedResourcesByName (resources) {
+      resources.sort((resource, otherResource) => {
+        return genericCompare(resource.resourcename, otherResource.resourcename)
+      })
+
+      return resources
+    },
+    convertKB (val) {
+      if (val < 1024) return `${(val).toFixed(2)} KB`
+      if (val < 1024 * 1024) return `${(val / 1024).toFixed(2)} MB`
+      if (val < 1024 * 1024 * 1024) return `${(val / 1024 / 1024).toFixed(2)} GB`
+      if (val < 1024 * 1024 * 1024 * 1024) return `${(val / 1024 / 1024 / 1024).toFixed(2)} TB`
+      return val
+    },
+    getUserSourceLabel (source) {
+      if (source === 'saml2') {
+        source = 'saml'
+      } else if (source === 'saml2disabled') {
+        source = 'saml.disabled'
+      }
+
+      return `label.${source}`
+    },
+    fetchLicenseInfo () {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      api('licenseCheck', { hostid: this.resource.id }).then(response => {
+        const licenseData = response?.null?.licensecheck
+        if (licenseData) {
+          var expiryDate = new Date(licenseData.expirydate)
+          var issuedDate = new Date(licenseData.issueddate)
+          expiryDate.setHours(0, 0, 0, 0)
+          issuedDate.setHours(0, 0, 0, 0)
+
+          this.dataResource.licenseStartDate = issuedDate.getFullYear() + '-' + this.leftPad(issuedDate.getMonth() + 1) + '-' + this.leftPad(issuedDate.getDate())
+          this.dataResource.licenseExpiryDate = expiryDate.getFullYear() + '-' + this.leftPad(expiryDate.getMonth() + 1) + '-' + this.leftPad(expiryDate.getDate())
+          this.dataResource.hostId = licenseData.hostid
+          this.dataResource.hasLicense = licenseData.haslicense === 'true'
+          this.dataResource.licenseValid = licenseData.success === 'true'
+
+          if (today <= expiryDate && today >= issuedDate) {
+            this.licenseCode = 'OK'
+          } else if (today > expiryDate) {
+            this.licenseCode = 'PASSED'
+          } else if (today < issuedDate) {
+            this.licenseCode = 'NOSTART'
+          } else {
+            this.licenseCode = 'NONE'
+          }
+        } else {
+          this.dataResource.licenseStartDate = ''
+          this.dataResource.licenseExpiryDate = ''
+          this.dataResource.hasLicense = false
+          this.dataResource.licenseValid = false
+          this.licenseCode = 'NONE'
+        }
+      })
+    },
+    calculateDday (expiryDate) {
+      const today = new Date()
+      const expiry = new Date(expiryDate)
+      const diffTime = expiry - today
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays
+    },
+    leftPad (value) {
+      if (value >= 10) {
+        return value
+      }
+      return `0${value}`
     }
   }
 }
