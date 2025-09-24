@@ -176,6 +176,15 @@ export default {
           case 'absent':
             state = this.$t('state.absent')
             break
+          case 'alerting':
+            state = this.$t('state.alerting')
+            break
+          case 'ok':
+            state = this.$t('state.ok')
+            break
+          case 'nodata':
+            state = this.$t('state.nodata')
+            break
         }
         return state.charAt(0).toUpperCase() + state.slice(1)
       }
@@ -191,6 +200,7 @@ export default {
         case 'download complete':
         case 'enabled':
         case 'implemented':
+        case 'ok':
         case 'on':
         case 'readwrite':
         case 'ready':
@@ -209,6 +219,7 @@ export default {
           status = 'success'
           break
         case 'alert':
+        case 'alerting':
         case 'declined':
         case 'disabled':
         case 'disconnected':

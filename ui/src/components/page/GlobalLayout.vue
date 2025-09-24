@@ -17,6 +17,7 @@
 
 <template>
   <div>
+    <announcement-banner />
     <a-affix v-if="this.$store.getters.shutdownTriggered">
       <a-alert :message="$t('message.shutdown.triggered')" type="error" banner :showIcon="false" class="shutdownHeader" />
     </a-affix>
@@ -148,6 +149,8 @@ import { api } from '@/api'
 import Drawer from '@/components/widgets/Drawer'
 import Setting from '@/components/view/Setting.vue'
 import EventSidebar from '@/components/view/EventSidebar.vue'
+import AnnouncementBanner from '@/components/header/AnnouncementBanner.vue'
+import AutoAlertBanner from '@/components/header/AutoAlertBanner.vue'
 
 export default {
   name: 'GlobalLayout',
@@ -157,7 +160,9 @@ export default {
     GlobalFooter,
     Drawer,
     Setting,
-    EventSidebar
+    EventSidebar,
+    AnnouncementBanner,
+    AutoAlertBanner
   },
   mixins: [mixin, mixinDevice],
   data () {
@@ -334,4 +339,7 @@ export default {
   position: absolute;
 }
 
+.layout.ant-layout .sidemenu .ant-header-fixedHeader {
+  top: auto !important
+}
 </style>
