@@ -179,9 +179,6 @@ export default {
           case 'alerting':
             state = this.$t('state.alerting')
             break
-          case 'ok':
-            state = this.$t('state.ok')
-            break
           case 'nodata':
             state = this.$t('state.nodata')
             break
@@ -213,7 +210,6 @@ export default {
         case 'success':
         case 'poweron':
         case 'syncing':
-        case 'ok':
         case 'redundant':
         case 'goodinuse':
           status = 'success'
