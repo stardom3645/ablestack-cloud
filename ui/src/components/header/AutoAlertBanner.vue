@@ -1452,11 +1452,47 @@ export default {
       return isBinaryTargetRule(it) || isStateLikeRule(it)
     }
 
+    const discreteFailureCount = (it) => {
+      const linkCount = breachedEntityLinks(it).length
+      if (linkCount > 0) {
+        return linkCount
+      }
+
+      const keyCount = breachedKeysOf(it).length
+      if (keyCount > 0) {
+        return keyCount
+      }
+
+      const rows = currentTargetsOf(it)
+      let flagged = 0
+      for (let i = 0; i < rows.length; i += 1) {
+        const row = rows[i] || {}
+        const breached = !!takeFirst(row.breached, row.isBreached, row.isbreached)
+        if (breached) {
+          flagged += 1
+        }
+      }
+      if (flagged > 0) {
+        return flagged
+      }
+
+      const arr = Array.isArray(it && it.alerts) ? it.alerts : ruleInstances(it && it.rule)
+      return Array.isArray(arr) ? arr.length : 0
+    }
+
+    const discreteMetricText = (it) => {
+      const failedCount = discreteFailureCount(it)
+      if (failedCount > 0) {
+        const label = tr('label.targets.failed', 'Failed targets')
+        return failedCount > 1 ? `${label} (${failedCount})` : label
+      }
+      return tr('label.current.ok', 'Current status: Normal')
+    }
+
     const drawerItemMetricInlineText = (it) => {
       // 상태형(0/1) 규칙은 숫자 표시 대신 상태만 표시합니다.
       if (isDiscreteTargetRule(it)) {
-        const hasBad = breachedKeysOf(it).length > 0
-        return hasBad ? tr('label.current.bad') : tr('label.current.ok')
+        return discreteMetricText(it)
       }
 
       const unit = metricUnitOf(it)
@@ -1501,8 +1537,7 @@ export default {
 
     const drawerItemMetricLineText = (it) => {
       if (isDiscreteTargetRule(it)) {
-        const hasBad = breachedKeysOf(it).length > 0
-        return hasBad ? tr('label.current.state.bad') : tr('label.current.state.ok')
+        return discreteMetricText(it)
       }
 
       const unit = metricUnitOf(it)
@@ -1539,10 +1574,9 @@ export default {
     const drawerItemMetricUi = (it) => {
       // 템플릿에서 부분 스타일 적용이 가능하도록, 현재/임계값을 분리한 구조를 반환합니다.
       if (isDiscreteTargetRule(it)) {
-        const hasBad = breachedKeysOf(it).length > 0
         return {
           kind: 'binary',
-          text: hasBad ? tr('label.current.state.bad') : tr('label.current.state.ok')
+          text: discreteMetricText(it)
         }
       }
 
@@ -2188,14 +2222,14 @@ export default {
     const filterKnownVmLinks = (it) => {
       const rawList = vmEntityLinksRaw(it)
       if (!Array.isArray(rawList) || rawList.length === 0) { return [] }
-      if (!vmIndexReady.value) { return rawList }
 
-      return rawList.filter((lnk) => {
-        const label = String(lnk && (lnk.label || lnk.keyword || '')).trim()
-        if (!label) { return false }
-        if (!VM_NAME_RE.test(label)) { return true }
-        const shown = displayVm(label)
-        return shown !== label
+      return rawList.map((lnk) => {
+        const rawLabel = String(lnk && (lnk.label || lnk.keyword || '')).trim()
+        if (!rawLabel) { return lnk }
+        return {
+          ...lnk,
+          label: displayVm(rawLabel) || rawLabel
+        }
       })
     }
 
