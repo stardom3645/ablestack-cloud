@@ -2918,6 +2918,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         String destIp = StringUtils.isNotBlank(destHost.getMigrationIp())
             ? destHost.getMigrationIp()
             : destination.getHost().getPrivateIpAddress();
+        if (StringUtils.isBlank(virtualMachineTO.getVncAddr())) {
+            virtualMachineTO.setVncAddr(destination.getHost().getPrivateIpAddress());
+        }
 
         final boolean isWindows = _guestOsCategoryDao.findById(_guestOsDao.findById(vmInstance.getGuestOSId()).getCategoryId()).getName().equalsIgnoreCase("Windows");
         final MigrateCommand migrateCommand = new MigrateCommand(vmInstance.getInstanceName(), destIp, isWindows, virtualMachineTO,

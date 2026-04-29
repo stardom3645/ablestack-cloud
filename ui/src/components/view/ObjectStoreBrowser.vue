@@ -18,21 +18,26 @@
 <template>
   <a-modal
     :visible="showUploadModal"
-    :closable="true"
+    :closable="!uploadLoading"
     :destroyOnClose="true"
     :title="$t('label.upload')"
     :maskClosable="false"
     :cancelText="$t('label.cancel')"
-    @cancel="() => showUploadModal = false"
+    @cancel="closeUploadModal"
     :okText="$t('label.upload')"
+    :confirmLoading="uploadLoading"
+    :okButtonProps="{ disabled: uploadLoading || uploadFileList.length === 0 }"
+    :cancelButtonProps="{ disabled: uploadLoading }"
     @ok="uploadFiles()"
     centered
     >
     <a-upload-dragger
       :multiple="true"
-      :v-model:file-list="uploadFileList"
+      :fileList="uploadFileList"
       listType="picture"
-      :beforeUpload="beforeUpload">
+      :disabled="uploadLoading"
+      :beforeUpload="beforeUpload"
+      @remove="removeUploadFile">
       <p class="ant-upload-drag-icon">
         <cloud-upload-outlined />
       </p>
@@ -46,11 +51,20 @@
     <a-input
       v-model:value="uploadDirectory"
       :placeholder="$t('label.upload.description')"
-      :loading="loading"
+      :disabled="uploadLoading"
       enter-button/>
     <a-divider dashed/>
     <tooltip-label bold :title="$t('label.metadata')" :tooltip="$t('label.metadata.upload.description')"/>
     <KeyValuePairInput :pairs="uploadMetaData" @update-pairs="(pairs) => uploadMetaData = pairs" />
+    <div v-if="uploadLoading || uploadTotalCount > 0" class="object-store-upload-progress">
+      <a-progress
+        :percent="uploadProgressPercent"
+        :status="uploadFailedCount > 0 ? 'exception' : uploadLoading ? 'active' : 'success'" />
+      <div class="object-store-upload-progress-text">
+        업로드 {{ uploadCompletedCount }} / {{ uploadTotalCount }}
+        <span v-if="uploadFailedCount > 0">, 실패 {{ uploadFailedCount }}</span>
+      </div>
+    </div>
   </a-modal>
 
   <a-drawer
@@ -123,22 +137,33 @@
   <div>
     <a-card class="breadcrumb-card">
       <a-row>
-        <a-breadcrumb :routes="getRoutes()">
-          <template #itemRender="{ route }">
-            <span v-if="[''].includes(route.path) && route.breadcrumbName === 'root'">
-              <a @click="openDir('')">
-                <HomeOutlined/>
-              </a>
-            </span>
-            <span v-else>
-              <a @click="openDir(route.path)">
+        <a-breadcrumb>
+          <a-breadcrumb-item>
+            <a @click="openDir('')">
+              <HomeOutlined />
+              <span v-if="getObjectStorePathRoutes().length === 0" class="object-store-root-path">/</span>
+            </a>
+          </a-breadcrumb-item>
+          <a-breadcrumb-item
+            v-for="route in getObjectStorePathRoutes()"
+            :key="route.path">
+            <a @click="openDir(route.path)">
               {{ route.breadcrumbName }}
-              </a>
-            </span>
-          </template>
+            </a>
+          </a-breadcrumb-item>
         </a-breadcrumb>
       </a-row>
       <a-divider/>
+      <a-row class="object-store-usage-row" :gutter="[16, 8]">
+        <a-col>
+          <span class="object-store-usage-label">사용량</span>
+          <span>{{ convertKB(resource.size || 0) }}</span>
+        </a-col>
+        <a-col v-if="resource.quota">
+          <span class="object-store-usage-label">총용량</span>
+          <span>{{ resource.quota }} GiB</span>
+        </a-col>
+      </a-row>
       <a-row :gutter="[10,10]" :wrap="true">
         <a-col flex="75%">
           <a-input-search
@@ -168,7 +193,7 @@
             shape="round"
             size="medium"
             type="primary"
-            @click="() => showUploadModal = true">
+            @click="openUploadModal">
             <upload-outlined />
             {{ $t('label.upload') }}
           </a-button>
@@ -189,11 +214,11 @@
     <div>
       <a-table
         :columns="columns"
-        :scroll="{ y: 300 }"
         :row-key="record => record"
         :data-source="records"
         :loading="loading"
-        :pagination="{ current: page, pageSize: 1000, total: total, showSizeChanger: false }"
+        :size="'small'"
+        :pagination="{ current: page, pageSize: pageSize, total: total, showSizeChanger: false }"
         :row-selection="{ selectedRowsKeys: selectedRows, onChange: onSelectChange }"
         @change="handleTableChange">
         <template #bodyCell="{ column, record }">
@@ -225,13 +250,26 @@
 </template>
 
 <script>
-import { reactive } from 'vue'
 import * as Minio from 'minio'
+import { api } from '@/api'
 import { genericCompare } from '@/utils/sort.js'
 import InfoCard from '@/components/view/InfoCard'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import KeyValuePairInput from '@/components/KeyValuePairInput'
+
+const objectStorePresignedUrlExpiryConfigKey = 'objectstore.presigned.url.expiry.seconds'
+const defaultObjectStorePresignedUrlExpirySeconds = 24 * 60 * 60
+
+const normalizeObjectStorePath = path => {
+  if (!path || path === '/') {
+    return ''
+  }
+  path = String(path).replace(/^\/+/, '')
+  return path.endsWith('/') ? path : `${path}/`
+}
+
+const pageSize = 10
 
 export default {
   name: 'ObjectStoreBrowser',
@@ -273,7 +311,8 @@ export default {
       client: null,
       loading: false,
       records: [],
-      browserPath: this.$route.query.browserPath || '',
+      browserPath: normalizeObjectStorePath(this.$route.query.browserPath),
+      pageSize,
       page: 1,
       pageStartAfterMap: { 1: '' },
       total: 0,
@@ -281,22 +320,60 @@ export default {
       selectedRows: [],
       searchPrefix: '',
       showUploadModal: false,
-      uploadFileList: reactive([]),
-      uploadDirectory: this.$route.query.browserPath || '',
+      uploadFileList: [],
+      uploadDirectory: normalizeObjectStorePath(this.$route.query.browserPath),
       uploadMetaData: {},
+      uploadLoading: false,
+      uploadTotalCount: 0,
+      uploadCompletedCount: 0,
+      uploadFailedCount: 0,
+      objectStorePresignedUrlExpirySeconds: defaultObjectStorePresignedUrlExpirySeconds,
       record: {},
       showObjectDetails: false,
       fetching: false
     }
   },
+  computed: {
+    uploadProgressPercent () {
+      if (!this.uploadTotalCount) {
+        return 0
+      }
+      return Math.round((this.uploadCompletedCount / this.uploadTotalCount) * 100)
+    }
+  },
   created () {
     this.fetchData()
+    this.fetchObjectStorePresignedUrlExpirySeconds()
   },
   methods: {
+    openUploadModal () {
+      if (this.uploadLoading) {
+        return
+      }
+      this.resetUploadForm()
+      this.showUploadModal = true
+    },
+    closeUploadModal () {
+      if (this.uploadLoading) {
+        return
+      }
+      this.showUploadModal = false
+      this.resetUploadForm()
+    },
+    resetUploadProgress () {
+      this.uploadTotalCount = 0
+      this.uploadCompletedCount = 0
+      this.uploadFailedCount = 0
+    },
+    resetUploadForm () {
+      this.uploadFileList = []
+      this.uploadDirectory = this.browserPath
+      this.uploadMetaData = {}
+      this.resetUploadProgress()
+    },
     handleTableChange (pagination, filters, sorter) {
       if (this.page !== pagination.current) {
         this.page = pagination.current
-        this.fetchData()
       }
     },
     fetchData () {
@@ -316,12 +393,9 @@ export default {
         this.listObjects()
       }
     },
-    getRoutes () {
+    getObjectStorePathRoutes () {
       let path = ''
-      const routeList = [{
-        path: path,
-        breadcrumbName: 'root'
-      }]
+      const routeList = []
       for (const route of this.browserPath.split('/')) {
         if (route) {
           path = `${path}${route}/`
@@ -340,12 +414,17 @@ export default {
       if (val < 1024 * 1024 * 1024 * 1024 * 1024) return `${(val / 1024 / 1024 / 1024 / 1024).toFixed(2)} TB`
       return val
     },
+    convertKB (val) {
+      if (val < 1024) return `${Number(val).toFixed(2)} KB`
+      if (val < 1024 * 1024) return `${(val / 1024).toFixed(2)} MB`
+      if (val < 1024 * 1024 * 1024) return `${(val / 1024 / 1024).toFixed(2)} GB`
+      if (val < 1024 * 1024 * 1024 * 1024) return `${(val / 1024 / 1024 / 1024).toFixed(2)} TB`
+      return val
+    },
     openDir (name) {
-      if (name === '/') {
-        name = ''
-      }
-      this.browserPath = name
-      this.uploadDirectory = name
+      const normalizedName = normalizeObjectStorePath(name)
+      this.browserPath = normalizedName
+      this.uploadDirectory = normalizedName
       this.page = 1
       this.fetchData()
     },
@@ -358,29 +437,12 @@ export default {
       }
       this.fetching = true
       this.records = []
-      var stream = this.client.extensions.listObjectsV2WithMetadata(this.resource.name, this.browserPath + this.searchPrefix, false, this.pageStartAfterMap[this.page])
+      var stream = this.client.extensions.listObjectsV2WithMetadata(this.resource.name, normalizeObjectStorePath(this.browserPath) + this.searchPrefix, false, '')
       stream.on('data', obj => {
         this.records.push(obj)
-        if (this.records.length >= 1000) {
-          stream.destroy()
-        }
       })
       stream.on('end', obj => {
-        var total = 0
-        if (this.records.length > 0) {
-          if (this.records.length >= 1000) {
-            total = (this.page + 1) * 1000
-            if (total > this.total) {
-              this.total = total
-            }
-          } else {
-            total = (this.page - 1) * 1000 + this.records.length
-          }
-          this.pageStartAfterMap[this.page + 1] = this.records[this.records.length - 1].name
-        }
-        if (total > this.total) {
-          this.total = total
-        }
+        this.total = this.records.length
         this.loading = false
         this.fetching = false
       })
@@ -460,35 +522,99 @@ export default {
         this.listObjects()
       }
     },
+    fetchObjectStorePresignedUrlExpirySeconds () {
+      api('listConfigurations', { name: objectStorePresignedUrlExpiryConfigKey }).then(json => {
+        const value = json?.listconfigurationsresponse?.configuration?.[0]?.value
+        const expirySeconds = Number(value)
+        if (Number.isFinite(expirySeconds) && expirySeconds > 0) {
+          this.objectStorePresignedUrlExpirySeconds = Math.floor(expirySeconds)
+        }
+      }).catch(error => {
+        console.warn(`Failed to load ${objectStorePresignedUrlExpiryConfigKey}`, error)
+      })
+    },
+    getObjectStorePresignedUrlExpirySeconds () {
+      const expirySeconds = Number(this.objectStorePresignedUrlExpirySeconds)
+      if (!Number.isFinite(expirySeconds) || expirySeconds <= 0) {
+        return defaultObjectStorePresignedUrlExpirySeconds
+      }
+      return Math.floor(expirySeconds)
+    },
     onSelectChange (selectedRow) {
       this.selectedRows = selectedRow
     },
     beforeUpload (file) {
-      this.uploadFileList.push(file)
+      if (this.uploadLoading) {
+        return false
+      }
+      this.uploadFileList = [...this.uploadFileList, file]
       return false
     },
+    removeUploadFile (file) {
+      if (this.uploadLoading) {
+        return false
+      }
+      const index = this.uploadFileList.indexOf(file)
+      if (index < 0) {
+        return true
+      }
+      const newFileList = this.uploadFileList.slice()
+      newFileList.splice(index, 1)
+      this.uploadFileList = newFileList
+      return true
+    },
     uploadFiles () {
-      if (!this.uploadDirectory.endsWith('/')) {
+      if (this.uploadLoading) {
+        return
+      }
+      const files = [...this.uploadFileList]
+      if (files.length === 0) {
+        return
+      }
+      this.uploadDirectory = normalizeObjectStorePath(this.uploadDirectory)
+      if (this.uploadDirectory && !this.uploadDirectory.endsWith('/')) {
         this.uploadDirectory = this.uploadDirectory + '/'
       }
-      var promises = []
-      while (this.uploadFileList.length > 0) {
-        const file = this.uploadFileList.pop()
+      this.uploadLoading = true
+      this.loading = true
+      this.uploadTotalCount = files.length
+      this.uploadCompletedCount = 0
+      this.uploadFailedCount = 0
+      const metadata = { ...this.uploadMetaData }
+      const promises = files.map(file => {
         const objectName = this.uploadDirectory + file.name
-        promises.push(this.asyncUploadFile(file, objectName))
-      }
-      Promise.allSettled(promises).then(() => {
-        this.uploadDirectory = this.browserPath
-        this.uploadMetaData = {}
-        this.uploadFileList = []
-        this.listObjects()
+        return this.asyncUploadFile(file, objectName, metadata)
+          .catch(error => {
+            this.uploadFailedCount++
+            throw error
+          })
+          .finally(() => {
+            this.uploadCompletedCount++
+          })
       })
-      this.showUploadModal = false
+      Promise.allSettled(promises).then(results => {
+        const failedCount = results.filter(result => result.status === 'rejected').length
+        if (failedCount > 0) {
+          this.$notification.error({
+            message: this.$t('message.upload.failed'),
+            description: `${failedCount} / ${files.length}`
+          })
+          return
+        }
+        this.showUploadModal = false
+        this.resetUploadForm()
+        this.listObjects()
+      }).finally(() => {
+        this.uploadLoading = false
+        if (this.uploadFailedCount > 0) {
+          this.loading = false
+        }
+      })
     },
-    asyncUploadFile (file, objectName) {
+    asyncUploadFile (file, objectName, metadata) {
       return new Promise((resolve, reject) => {
         file.arrayBuffer().then((buffer) => {
-          this.client.putObject(this.resource.name, objectName, Buffer.from(buffer), file.size, this.uploadMetaData, err => {
+          this.client.putObject(this.resource.name, objectName, Buffer.from(buffer), file.size, metadata, err => {
             if (err) {
               return reject(this.$notification.error({
                 message: this.$t('message.upload.failed'),
@@ -500,13 +626,13 @@ export default {
               description: objectName.split('/').pop()
             }))
           })
-        })
+        }).catch(reject)
       })
     },
     showObjectDescription (record) {
       this.record = { ...record }
       this.record.url = this.resource.url + '/' + record.name
-      this.client.presignedGetObject(this.resource.name, record.name, 24 * 60 * 60, (err, presignedUrl) => {
+      this.client.presignedGetObject(this.resource.name, record.name, this.getObjectStorePresignedUrlExpirySeconds(), (err, presignedUrl) => {
         if (err) {
           return this.$notification.error({
             message: this.$t('error.execute.api.failed'),
@@ -539,3 +665,29 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.object-store-root-path {
+  margin-left: 4px;
+}
+
+.object-store-usage-row {
+  margin-bottom: 12px;
+}
+
+.object-store-usage-label {
+  color: rgba(0, 0, 0, 0.65);
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.object-store-upload-progress {
+  margin-top: 16px;
+}
+
+.object-store-upload-progress-text {
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 12px;
+  margin-top: 4px;
+}
+</style>

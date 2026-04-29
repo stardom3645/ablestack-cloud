@@ -955,7 +955,7 @@ export default {
     },
     handleContextAction (action) {
       this.closeContextQuickView()
-      this.$parent.execAction(action, false)
+      this.$parent.execAction(action, action.groupAction && this.selectedRowKeys.length > 1)
     },
     generateRowKeyValue (record) {
       return record.uid || (record.metadata && record.metadata.rule_uid) || record.id || record.name || record.usageType

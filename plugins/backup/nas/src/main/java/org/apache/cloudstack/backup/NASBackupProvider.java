@@ -50,6 +50,7 @@ import com.cloud.vm.snapshot.dao.VMSnapshotDetailsDao;
 
 
 import org.apache.cloudstack.backup.dao.BackupDao;
+import org.apache.cloudstack.backup.dao.BackupOfferingDao;
 import org.apache.cloudstack.backup.dao.BackupRepositoryDao;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -72,6 +73,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -79,6 +81,7 @@ import static org.apache.cloudstack.backup.BackupManager.BackupFrameworkEnabled;
 
 public class NASBackupProvider extends AdapterBase implements BackupProvider, Configurable {
     private static final Logger LOG = LogManager.getLogger(NASBackupProvider.class);
+    private static final long STALE_BACKUP_THRESHOLD_MS = TimeUnit.DAYS.toMillis(1);
 
     ConfigKey<Integer> NASBackupRestoreMountTimeout = new ConfigKey<>("Advanced", Integer.class,
             "nas.backup.restore.mount.timeout",
@@ -89,6 +92,9 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
 
     @Inject
     private BackupDao backupDao;
+
+    @Inject
+    private BackupOfferingDao backupOfferingDao;
 
     @Inject
     private BackupRepositoryDao backupRepositoryDao;
@@ -481,7 +487,7 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
         }
 
         if (answer != null && answer.getResult()) {
-            return backupDao.remove(backup.getId());
+            return true;
         }
 
         logger.debug("There was an error removing the backup with id {}", backup.getId());
@@ -600,6 +606,11 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
         return "NAS Backup Plugin";
     }
 
+    private boolean isBackupManagedByThisProvider(Backup backup) {
+        BackupOffering offering = backupOfferingDao.findByIdIncludingRemoved(backup.getBackupOfferingId());
+        return offering != null && Objects.equals(getName(), offering.getProvider());
+    }
+
     @Override
     public String getConfigComponentName() {
         return BackupService.class.getSimpleName();
@@ -607,6 +618,27 @@ public class NASBackupProvider extends AdapterBase implements BackupProvider, Co
 
     @Override
     public void syncBackups(VirtualMachine vm) {
+        for (final Backup backup : backupDao.listByVmId(vm.getDataCenterId(), vm.getId())) {
+            if (!isBackupManagedByThisProvider(backup)) {
+                continue;
+            }
+            if (!(backup instanceof BackupVO) || !Backup.Status.BackingUp.equals(backup.getStatus()) || !isOlderThanOneDay(backup.getDate())) {
+                continue;
+            }
+            LOG.warn("Removing stale NAS backup [{}] for VM [{}] stuck in BackingUp for over one day. Repository path: [{}]",
+                    backup.getUuid(), vm.getInstanceName(), backup.getExternalId());
+            try {
+                if (deleteBackup(backup, true)) {
+                    backupDao.remove(backup.getId());
+                }
+            } catch (Exception e) {
+                LOG.warn("Failed to delete stale NAS backup [{}] for VM [{}]", backup.getUuid(), vm.getInstanceName(), e);
+            }
+        }
+    }
+
+    private boolean isOlderThanOneDay(Date backupDate) {
+        return backupDate != null && backupDate.getTime() <= System.currentTimeMillis() - STALE_BACKUP_THRESHOLD_MS;
     }
 
     @Override

@@ -344,7 +344,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     // ovftool --version => sample output: VMware ovftool 4.6.0 (build-21452615)
     public static final String OVF_EXPORT_TOOl_GET_VERSION_CMD = "ovftool --version | awk '{print $3}'";
 
-    public static final String WINDOWS_GUEST_CONVERSION_SUPPORTED_CHECK_CMD = "rpm -qa | grep -i virtio-win";
+    public static final String WINDOWS_GUEST_CONVERSION_SUPPORTED_PACKAGE = "virtio-win";
     public static final String UBUNTU_WINDOWS_GUEST_CONVERSION_SUPPORTED_CHECK_CMD = "dpkg -l virtio-win";
     public static final String UBUNTU_NBDKIT_PKG_CHECK_CMD = "dpkg -l nbdkit";
 
@@ -5093,82 +5093,91 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             String mergeCommand = String.format("virsh qemu-agent-command %s '{\"execute\":\"guest-info\"}'", vmName);
             String result = Script.runSimpleBashScript(mergeCommand);
 
-            if (result != null) {
-                qemuAgentVersion = new JsonParser().parse(result).getAsJsonObject().get("return").getAsJsonObject().get("version").getAsString();
-                metrics.setQemuAgentVersion(qemuAgentVersion);
+            if (StringUtils.isNotBlank(result) && !(result.startsWith("error"))) {
+                try {
+                    qemuAgentVersion = new JsonParser().parse(result).getAsJsonObject().get("return").getAsJsonObject().get("version").getAsString();
+                    metrics.setQemuAgentVersion(qemuAgentVersion);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to parse qemu guest-info result for VM [{}], keeping default qemu agent version.", vmName, e);
+                }
 
-                result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_NETWORK_GET_INTERFACES, null), 2, 0);
-                if (result != null && !(result.startsWith("error"))) {
-                    LOGGER.debug(dm.getName() +" >>  " + result);
-                    JsonArray arrData = (JsonArray) new JsonParser().parse(result).getAsJsonObject().get("return");
-                    for (JsonElement je : arrData) {
-                        JsonElement nicName = je.getAsJsonObject().get("name") == null ? null : je.getAsJsonObject().get("name");
-                        JsonElement nicAddrs = je.getAsJsonObject().get("ip-addresses") == null ? null : je.getAsJsonObject().get("ip-addresses");
-                        if(nicName == null || "lo".equals(nicName.getAsString())) {
-                            continue;
-                        } else {
-                            if (nicAddrs ==  null){
+                try {
+                    result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_NETWORK_GET_INTERFACES, null), 2, 0);
+                    if (StringUtils.isNotBlank(result) && !(result.startsWith("error"))) {
+                        LOGGER.debug(dm.getName() + " >>  " + result);
+                        JsonArray arrData = (JsonArray) new JsonParser().parse(result).getAsJsonObject().get("return");
+                        for (JsonElement je : arrData) {
+                            JsonElement nicName = je.getAsJsonObject().get("name") == null ? null : je.getAsJsonObject().get("name");
+                            JsonElement nicAddrs = je.getAsJsonObject().get("ip-addresses") == null ? null : je.getAsJsonObject().get("ip-addresses");
+                            if (nicName == null || "lo".equals(nicName.getAsString())) {
                                 continue;
                             } else {
-                                JsonElement nicMac = je.getAsJsonObject().get("hardware-address") == null ? null : je.getAsJsonObject().get("hardware-address");
-                                if (nicMac == null) {
+                                if (nicAddrs == null) {
                                     continue;
                                 } else {
-                                    JsonArray arrData2 = (JsonArray) je.getAsJsonObject().get("ip-addresses");
-                                    for (JsonElement je2 : arrData2) {
-                                        JsonElement nicAddrIp = je2.getAsJsonObject().get("ip-address") == null  ? null : je2.getAsJsonObject().get("ip-address");
-                                        JsonElement nicAddrIpType = je2.getAsJsonObject().get("ip-address-type") == null ? null : je2.getAsJsonObject().get("ip-address-type");
-                                        if(nicAddrIp == null || nicAddrIpType== null || !"ipv4".equals(nicAddrIpType.getAsString())) {
-                                            continue;
-                                        } else {
-                                            nicAddrMap.put(nicMac.getAsString(), nicAddrIp.getAsString());
+                                    JsonElement nicMac = je.getAsJsonObject().get("hardware-address") == null ? null : je.getAsJsonObject().get("hardware-address");
+                                    if (nicMac == null) {
+                                        continue;
+                                    } else {
+                                        JsonArray arrData2 = (JsonArray) je.getAsJsonObject().get("ip-addresses");
+                                        for (JsonElement je2 : arrData2) {
+                                            JsonElement nicAddrIp = je2.getAsJsonObject().get("ip-address") == null ? null : je2.getAsJsonObject().get("ip-address");
+                                            JsonElement nicAddrIpType = je2.getAsJsonObject().get("ip-address-type") == null ? null : je2.getAsJsonObject().get("ip-address-type");
+                                            if (nicAddrIp == null || nicAddrIpType == null || !"ipv4".equals(nicAddrIpType.getAsString())) {
+                                                continue;
+                                            } else {
+                                                nicAddrMap.put(nicMac.getAsString(), nicAddrIp.getAsString());
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                        metrics.setNicAddrMap(nicAddrMap);
                     }
-                    metrics.setNicAddrMap(nicAddrMap);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to fetch guest network interfaces for VM [{}], continuing without NIC address stats.", vmName, e);
                 }
 
-                result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_GET_FSINFO, null), 2, 0);
-                if (result != null && !(result.startsWith("error"))) {
-                    // logger.debug(dm.getName() + " >>  " + result);
+                try {
+                    result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_GET_FSINFO, null), 2, 0);
+                    if (StringUtils.isNotBlank(result) && !(result.startsWith("error"))) {
+                        JsonArray arrData = (JsonArray) new JsonParser().parse(result).getAsJsonObject().get("return");
 
-                    JsonArray arrData = (JsonArray) new JsonParser().parse(result).getAsJsonObject().get("return");
+                        for (JsonElement je : arrData) {
+                            JsonObject jsonObj = je.getAsJsonObject();
+                            JsonElement diskInfo = jsonObj.get("disk");
 
-                    for (JsonElement je : arrData) {
-                        JsonObject jsonObj = je.getAsJsonObject();
-                        JsonElement diskInfo = jsonObj.get("disk");
+                            if (diskInfo != null && diskInfo.isJsonArray()) {
+                                for (JsonElement diskElement : diskInfo.getAsJsonArray()) {
+                                    // Capacity used by disk file system
+                                    JsonObject diskObj = diskElement.getAsJsonObject();
 
-                        if (diskInfo != null && diskInfo.isJsonArray()) {
-                            for (JsonElement diskElement : diskInfo.getAsJsonArray()) {
-                                // Capacity used by disk file system
-                                JsonObject diskObj = diskElement.getAsJsonObject();
+                                    JsonElement serialElement = diskObj.get("serial");
+                                    JsonElement usedFsBytesElement = jsonObj.get("used-bytes");
+                                    if (serialElement == null || serialElement.isJsonNull() || usedFsBytesElement == null || usedFsBytesElement.isJsonNull()) {
+                                        continue;
+                                    }
 
-                                JsonElement serialElement = diskObj.get("serial");
-                                JsonElement usedFsBytesElement = jsonObj.get("used-bytes");
-                                if (serialElement == null || serialElement.isJsonNull() || usedFsBytesElement == null || usedFsBytesElement.isJsonNull()) {
-                                    continue;
+                                    String serial = diskObj.get("serial").getAsString();
+                                    long usedFsBytes = usedFsBytesElement.getAsLong();
+                                    if (serial.length() >= 20) {
+                                        // serial to half path uuid
+                                        String serialVal = serial.substring(serial.length() - 20);
+                                        String serialUuid = serialVal.substring(0, 8) + "-"
+                                                + serialVal.substring(8, 12) + "-"
+                                                + serialVal.substring(12, 16) + "-"
+                                                + serialVal.substring(16, 20);
+                                        serial = serialUuid;
+                                    }
+                                    fsUsageMap.put(serial, fsUsageMap.getOrDefault(serial, 0L) + usedFsBytes);
                                 }
-
-                                String serial = diskObj.get("serial").getAsString();
-                                long usedFsBytes = usedFsBytesElement.getAsLong();
-                                if (serial.length() >= 20) {
-                                    //serial to half path uuid
-                                    String serial_val = serial.substring(serial.length() - 20);
-                                    String serial_uuid = serial_val.substring(0, 8) + "-"
-                                    + serial_val.substring(8, 12) + "-"
-                                    + serial_val.substring(12, 16) + "-"
-                                    + serial_val.substring(16, 20);
-                                    serial = serial_uuid;
-                                    System.out.println(serial);
-                                }
-                                fsUsageMap.put(serial, fsUsageMap.getOrDefault(serial, 0L) + usedFsBytes);
                             }
                         }
+                        metrics.setFsUsageMap(fsUsageMap);
                     }
-                    metrics.setFsUsageMap(fsUsageMap);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to fetch guest filesystem info for VM [{}], continuing without filesystem usage stats.", vmName, e);
                 }
             }
 
@@ -6148,12 +6157,25 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return exitValue == 0;
     }
 
+    public int runPackageQueryWithFallback(final String packageName, final long timeout) {
+        int exitValue = runPackageQuery("aspkg", packageName, timeout);
+        if (exitValue == 0) {
+            return exitValue;
+        }
+        return runPackageQuery("rpm", packageName, timeout);
+    }
+
+    private int runPackageQuery(final String packageManager, final String packageName, final long timeout) {
+        return Script.runSimpleBashScriptForExitValue(
+                String.format("%s -qa | grep -i %s", packageManager, packageName), (int) timeout, true);
+    }
+
     public boolean hostSupportsWindowsGuestConversion() {
         if (isUbuntuHost()) {
             int exitValue = Script.runSimpleBashScriptForExitValue(UBUNTU_WINDOWS_GUEST_CONVERSION_SUPPORTED_CHECK_CMD);
             return exitValue == 0;
         }
-        int exitValue = Script.runSimpleBashScriptForExitValue(WINDOWS_GUEST_CONVERSION_SUPPORTED_CHECK_CMD);
+        int exitValue = runPackageQueryWithFallback(WINDOWS_GUEST_CONVERSION_SUPPORTED_PACKAGE, getCmdsTimeout());
         return exitValue == 0;
     }
 
@@ -6451,4 +6473,3 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         } catch (IOException e) {}
     }
 }
-

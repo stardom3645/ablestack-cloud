@@ -89,6 +89,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
@@ -104,6 +105,7 @@ public class CommvaultBackupProvider extends AdapterBase implements BackupProvid
     private static final int BASE_MT = 89;
     private static final Pattern VERSION_PATTERN = Pattern.compile("^(\\d+)\\s*SP\\s*(\\d+)(?:\\.(\\d+))?$", Pattern.CASE_INSENSITIVE);
     private static final String COMMVAULT_DIRECTORY = "/tmp/mold/backup";
+    private static final long STALE_BACKUP_THRESHOLD_MS = TimeUnit.DAYS.toMillis(1);
 
     public ConfigKey<String> CommvaultUrl = new ConfigKey<>("Advanced", String.class,
             "backup.plugin.commvault.url", "https://localhost/commandcenter/api",
@@ -860,6 +862,11 @@ public class CommvaultBackupProvider extends AdapterBase implements BackupProvid
         return "Commvault Backup Plugin";
     }
 
+    private boolean isBackupManagedByThisProvider(Backup backup) {
+        BackupOffering offering = backupOfferingDao.findByIdIncludingRemoved(backup.getBackupOfferingId());
+        return offering != null && Objects.equals(getName(), offering.getProvider());
+    }
+
     @Override
     public String getConfigComponentName() {
         return BackupService.class.getSimpleName();
@@ -874,6 +881,21 @@ public class CommvaultBackupProvider extends AdapterBase implements BackupProvid
         }
         final CommvaultClient client = getClient(vm.getDataCenterId());
         for (final Backup backup: backupDao.listByVmId(vm.getDataCenterId(), vm.getId())) {
+            if (!isBackupManagedByThisProvider(backup)) {
+                continue;
+            }
+            if (Backup.Status.BackingUp.equals(backup.getStatus()) && isOlderThanOneDay(backup.getDate())) {
+                LOG.warn("Removing stale Commvault backup [{}] for VM [{}] stuck in BackingUp for over one day. External ID: [{}]",
+                        backup.getUuid(), vm.getInstanceName(), backup.getExternalId());
+                try {
+                    if (deleteBackup(backup, true)) {
+                        backupDao.remove(backup.getId());
+                    }
+                } catch (Exception e) {
+                    LOG.warn("Failed to delete stale Commvault backup [{}] for VM [{}]", backup.getUuid(), vm.getInstanceName(), e);
+                }
+                continue;
+            }
             String externalId = backup.getExternalId();
             String jobId = externalId.substring(externalId.lastIndexOf(',') + 1).trim();
             String path = externalId.substring(0, externalId.lastIndexOf(','));
@@ -904,6 +926,10 @@ public class CommvaultBackupProvider extends AdapterBase implements BackupProvid
             }
         }
         return;
+    }
+
+    private boolean isOlderThanOneDay(Date backupDate) {
+        return backupDate != null && backupDate.getTime() <= System.currentTimeMillis() - STALE_BACKUP_THRESHOLD_MS;
     }
 
     @Override

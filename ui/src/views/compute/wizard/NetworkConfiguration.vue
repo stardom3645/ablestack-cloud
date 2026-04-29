@@ -75,7 +75,7 @@
           </template>
           <template v-if="column.key === 'linkState'">
             <a-form-item v-if="record.type === 'L2'" :name="'linkState' + record.id">
-              <a-switch v-model:checked="form[`linkState` + record.id]" @change="($event) => updateNetworkData('linkState', record.id, $event)" style="margin-bottom: 30px"/>
+              <a-switch v-model:checked="form[`linkState` + record.id]" @change="($event) => updateNetworkData('linkstate', record.id, $event)" style="margin-bottom: 30px"/>
             </a-form-item>
           </template>
         </template>
@@ -219,8 +219,9 @@ export default {
           form[macAddressKey] = this.preFillContent.macAddressArray[presetMacAddressIndex]
           presetMacAddressIndex++
         }
-        console.log('record.linkState :>> ', record.linkState)
-        form[linkState] = record.linkState === undefined ? true : record.linkState
+        form[linkState] = record.linkstate === undefined
+          ? (record.linkState === undefined ? true : record.linkState)
+          : record.linkstate
       })
       this.form = reactive(form)
       this.rules = reactive(rules)

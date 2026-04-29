@@ -227,8 +227,7 @@ export default {
     this.menus = this.mainMenu.find(item => item.path === '/').children
     this.collapsed = !this.sidebarOpened
     if ('readyForShutdown' in this.$store.getters.apis) {
-      const job = setInterval(this.checkShutdown, 5000)
-      this.$store.commit('SET_READY_FOR_SHUTDOWN_POLLING_JOB', job)
+      this.checkShutdown()
     }
   },
   mounted () {

@@ -213,20 +213,20 @@
                 <template #message>
                   <exclamation-circle-outlined style="color: red; fontSize: 30px; display: inline-flex" />
                   <span style="padding-left: 5px" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>&nbsp`" />
-                  <span v-html="$t(currentAction.message)" />
+                  <span v-html="currentAction.message" />
                 </template>
               </a-alert>
               <a-alert v-else type="warning">
                 <template #message>
                   <span v-if="selectedRowKeys.length > 0" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>&nbsp`" />
-                  <span v-html="$t(currentAction.message)" />
+                  <span v-html="currentAction.message" />
                 </template>
               </a-alert>
             </div>
             <div v-else>
               <a-alert type="warning">
                 <template #message>
-                  <span v-html="$t(currentAction.message)" />
+                  <span v-html="currentAction.message" />
                 </template>
               </a-alert>
             </div>
@@ -1614,11 +1614,12 @@ export default {
       })
       this.currentAction.paramFields = []
       this.currentAction.paramFilters = []
-      if ('message' in action) {
-        if (typeof action.message === 'function') {
-          action.message = action.message(action.resource)
+      if ('message' in this.currentAction) {
+        let message = this.currentAction.message
+        if (typeof message === 'function') {
+          message = message(action.resource)
         }
-        action.message = Array.isArray(action.message) ? this.$t(...action.message) : this.$t(action.message)
+        this.currentAction.message = Array.isArray(message) ? this.$t(...message) : this.$t(message)
       }
       this.getArgs(action, isGroupAction, paramFields)
       this.getFilters(action, isGroupAction, paramFields)

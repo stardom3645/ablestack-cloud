@@ -428,9 +428,18 @@ public class WallAlertsServiceImpl extends ManagerBase implements WallAlertsServ
                                 // 인스턴스 라벨을 기반으로 대상 요약 문자열을 생성합니다.
                                 // resp.getInstances()는 우리가 바로 위에서 채운 instList입니다.
                                 final String targets = buildTargetInfo(ruleKind, resp.getInstances());
+                                final String summary = sanitizeXmlText(firstNonBlank(
+                                        getLabelValueIgnoreCase(r.annotations, "summary"),
+                                        getLabelValueIgnoreCase(r.annotations, "description")
+                                ));
+
+                                resp.setSummary(summary);
+                                resp.setDescription(sanitizeXmlText(
+                                        getLabelValueIgnoreCase(r.annotations, "description")
+                                ));
 
                                 // zoneId, podId 매핑값이 없으면 0L / null 유지
-                                maybeSendWallAlert(resolvedUid, ruleTitle, op, th1, th2, 0L, null, targets);
+                                maybeSendWallAlert(resolvedUid, ruleTitle, summary, op, th1, th2, 0L, null, targets);
                             }
 
                             filtered.add(resp);
@@ -975,12 +984,13 @@ public class WallAlertsServiceImpl extends ManagerBase implements WallAlertsServ
 
     private void maybeSendWallAlert(final String uid,
                                     final String ruleName,
+                                    final String summary,
                                     final String operator,
                                     final Double threshold,
                                     final Double thresholdMax,
                                     final long zoneId,
                                     final Long podId) {
-        maybeSendWallAlert(uid, ruleName, operator, threshold, thresholdMax, zoneId, podId, System.currentTimeMillis(), null);
+        maybeSendWallAlert(uid, ruleName, summary, operator, threshold, thresholdMax, zoneId, podId, System.currentTimeMillis(), null);
     }
 
     /**
@@ -991,18 +1001,20 @@ public class WallAlertsServiceImpl extends ManagerBase implements WallAlertsServ
      */
     private void maybeSendWallAlert(final String uid,
                                     final String ruleName,
+                                    final String summary,
                                     final String operator,
                                     final Double threshold,
                                     final Double thresholdMax,
                                     final long zoneId,
                                     final Long podId,
                                     final String targetInfo) {
-        maybeSendWallAlert(uid, ruleName, operator, threshold, thresholdMax, zoneId, podId, System.currentTimeMillis(), targetInfo);
+        maybeSendWallAlert(uid, ruleName, summary, operator, threshold, thresholdMax, zoneId, podId, System.currentTimeMillis(), targetInfo);
     }
 
     // AlertManager로 listAlerts 등록 (UID TTL 중복 억제)
     private void maybeSendWallAlert(final String uid,
                                     final String ruleName,
+                                    final String summary,
                                     final String operator,
                                     final Double threshold,
                                     final Double thresholdMax,
@@ -1020,17 +1032,8 @@ public class WallAlertsServiceImpl extends ManagerBase implements WallAlertsServ
             // 프리픽스/UID 꼬리 제거
             final String title = cleanTitle(ruleName);
 
-            // 임계 연산자/값을 사람 읽기 좋은 꼬리 문구로 변환
-            final String tail  = opPhrase(operator, threshold, thresholdMax);
-
-            // 1) 기본 메시지(예전 subject 느낌)
-            final String base = (tail == null || tail.isEmpty())
-                    ? String.format("Wall Alert: %s", title)
-                    : String.format("Wall Alert: %s — %s", title, tail);
-
-            // 2) 타깃 정보까지 포함한 “최종 메시지”
-            //    - 여기 안에 "Targets — ..." 가 들어갑니다.
-            final String message = buildAlertContent(base, targetInfo);
+            final String tail = opPhrase(operator, threshold, thresholdMax);
+            final String message = buildAlertContent(title, summary, tail, targetInfo);
 
             // 3) CloudStack 쪽에서 description을 subject 기준으로 뽑기 때문에
             //    subject와 content 모두에 message를 동일하게 넣어줍니다.
@@ -1068,22 +1071,40 @@ public class WallAlertsServiceImpl extends ManagerBase implements WallAlertsServ
         return s.trim();
     }
 
-    // 제목(subject)과 대상 정보(targetInfo)를 합쳐서 description에 넣을 문자열을 만듭니다.
-    private static String buildAlertContent(final String subject, final String targetInfo) {
-        if (targetInfo == null || targetInfo.trim().isEmpty()) {
-            // 대상 정보가 없으면 예전처럼 subject만 그대로 사용합니다.
-            return subject;
+    private static String buildAlertContent(final String title,
+                                            final String summary,
+                                            final String thresholdPhrase,
+                                            final String targetInfo) {
+        final java.util.List<String> parts = new java.util.ArrayList<>();
+        parts.add("Wall Alert: " + title);
+
+        final String summaryText = cleanSummary(summary);
+        if (!isBlank(summaryText)) {
+            parts.add(summaryText);
+        } else if (!isBlank(thresholdPhrase)) {
+            parts.add(thresholdPhrase);
         }
 
-        final StringBuilder sb = new StringBuilder();
-        sb.append(subject);
+        final String targetsText = normalizeTargetInfo(targetInfo);
+        if (!isBlank(targetsText)) {
+            parts.add(targetsText);
+        }
 
-        // 보기 좋게 한 줄 띄우고 대상 정보 추가
-        sb.append(System.lineSeparator())
-                .append(System.lineSeparator())
-                .append(targetInfo.trim());
+        return String.join(" — ", parts);
+    }
 
-        return sb.toString();
+    private static String cleanSummary(final String raw) {
+        if (isBlank(raw)) {
+            return "";
+        }
+        return raw.replaceAll("<[^>]+>", " ").replaceAll("\\s+", " ").trim();
+    }
+
+    private static String normalizeTargetInfo(final String raw) {
+        if (isBlank(raw)) {
+            return "";
+        }
+        return raw.trim().replaceFirst("^Targets\\s+[—-]\\s*", "Targets: ");
     }
 
     /**
@@ -1202,18 +1223,7 @@ public class WallAlertsServiceImpl extends ManagerBase implements WallAlertsServ
                 return "";
             }
 
-            // 그 외 규칙은 이전처럼 "라벨 한 번이라도 보여주는" 폴백을 유지합니다.
-            final java.util.List<String> rawLabels = new java.util.ArrayList<>();
-            final AlertInstanceResponse first = src.get(0);
-            if (first != null && first.labels != null) {
-                for (Map.Entry<String, String> e : first.labels.entrySet()) {
-                    rawLabels.add(e.getKey() + "=" + e.getValue());
-                }
-            }
-            if (rawLabels.isEmpty()) {
-                return "";
-            }
-            return "Targets — " + String.join(", ", rawLabels);
+            return "";
         }
 
         return "Targets — " + String.join(" | ", parts);
@@ -1251,12 +1261,20 @@ public class WallAlertsServiceImpl extends ManagerBase implements WallAlertsServ
 
     /**
      * 라벨에서 호스트 이름을 추출합니다.
-     * nodename, host, hostname, host_name, host_ip, hostip, node, machine, server 순으로 시도하고,
+     * pingip/target/dst 같은 실제 타깃 키를 우선 보고,
+     * 그 다음 nodename, host, hostname, host_name, host_ip, hostip, node, machine, server 순으로 시도하고,
      * 없으면 instance에서 포트를 제거한 값을 사용합니다.
      */
     private String extractHostNameFromLabels(final Map<String, String> labels) {
-        // 1차 후보: 다양한 host 관련 키들
+        // 1차 후보: 실제 타깃을 직접 가리키는 키들
         final String[] keys = new String[] {
+                "pingip",
+                "target",
+                "dst",
+                "destination",
+                "remote",
+                "remote_ip",
+                "peer",
                 "nodename",
                 "host",
                 "hostname",
