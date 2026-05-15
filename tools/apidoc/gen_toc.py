@@ -305,7 +305,9 @@ known_categories = {
     'listVhbaDevices.xml': 'Storage',
     'listHostScsiDevices.xml': 'Storage',
     'updateHostScsiDevices.xml': 'Storage',
-    'deleteVhbaDevice.xml': 'Storage'
+    'deleteVhbaDevice.xml': 'Storage',
+    'listRackLayouts.xml': 'Rack Management',
+    'updateRackLayout.xml': 'Rack Management'
 }
 
 
