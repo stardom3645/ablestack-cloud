@@ -39,6 +39,7 @@ public interface ConsoleAccessManager extends Manager, Configurable {
             ConfigKey.Scope.Global);
 
     ConsoleEndpoint generateConsoleEndpoint(Long vmId, String extraSecurityToken, String clientAddress);
+    ConsoleEndpoint generateConsoleEndpointForNetdive(String vmId, String clientAddress);
 
     boolean isSessionAllowed(String sessionUuid);
 
