@@ -230,6 +230,45 @@ public class ConsoleAccessManagerImpl extends ManagerBase implements ConsoleAcce
     }
 
     @Override
+    public ConsoleEndpoint generateConsoleEndpointForNetdive(String vmId, String clientAddress) {
+        try {
+            if (ObjectUtils.anyNull(virtualMachineManager, managementServer)) {
+                return new ConsoleEndpoint(false, null, "Console service is not ready");
+            }
+
+            if (keysManager.getHashKey() == null) {
+                return new ConsoleEndpoint(false, null, "Console access denied. Ticket service is not ready yet");
+            }
+
+            if (StringUtils.isBlank(vmId)) {
+                return new ConsoleEndpoint(false, null, "vmId is required");
+            }
+
+            VirtualMachine vm = entityManager.findByUuid(VirtualMachine.class, vmId);
+            if (vm == null) {
+                try {
+                    vm = entityManager.findById(VirtualMachine.class, Long.valueOf(vmId));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            if (vm == null) {
+                return new ConsoleEndpoint(false, null, "Cannot find VM with ID " + vmId);
+            }
+
+            DataCenter zone = dataCenterDao.findById(vm.getDataCenterId());
+            if (zone != null && DataCenter.Type.Edge.equals(zone.getType())) {
+                return new ConsoleEndpoint(false, null, "Console access is not supported for Edge zones");
+            }
+
+            String sessionUuid = UUID.randomUUID().toString();
+            return generateAccessEndpoint(vm.getId(), sessionUuid, null, clientAddress);
+        } catch (Exception e) {
+            logger.error("Unexpected exception in ConsoleAccessManager(Netdive) - vmId: {}", vmId, e);
+            return new ConsoleEndpoint(false, null, "Server Internal Error");
+        }
+    }
+
+    @Override
     public boolean isSessionAllowed(String sessionUuid) {
         return consoleSessionDao.isSessionAllowed(sessionUuid);
     }
