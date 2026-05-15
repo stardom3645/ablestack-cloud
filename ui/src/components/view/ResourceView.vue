@@ -57,8 +57,15 @@
                   :resource="resource"
                   :resourceType="tab.resourceType"
                   :loading="loading"
-                  :tab="activeTab" />
-                <component v-else :is="tab.component" :resource="resource" :loading="loading" :tab="activeTab" />
+                  :tab="activeTab"
+                  @change-resource="$emit('change-resource', $event)" />
+                <component
+                  v-else
+                  :is="tab.component"
+                  :resource="resource"
+                  :loading="loading"
+                  :tab="activeTab"
+                  @change-resource="$emit('change-resource', $event)" />
               </keep-alive>
             </a-tab-pane>
           </template>

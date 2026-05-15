@@ -224,16 +224,27 @@
         <span>{{ text <= 0 || !text ? 'N/A' : text }}</span>
       </template>
       <template v-else-if="['size', 'virtualsize'].includes(column.key)">
-        <span v-if="text && $route.path === '/kubernetes'">
+        <span v-if="$route.meta.name === 'buckets' && text !== undefined && text !== null">
+          {{ convertKB(text) }}
+        </span>
+        <span v-else-if="text && $route.path === '/kubernetes'">
           {{ text }}
         </span>
         <span v-else-if="text">
           {{ parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) }} GiB
         </span>
       </template>
+      <template v-if="$route.meta.name === 'buckets' && column.key === 'quota' && text !== undefined && text !== null">
+        <span>{{ text }} GiB</span>
+      </template>
       <template v-if="column.key === 'physicalsize'">
         <span v-if="text">
           {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
+        </span>
+      </template>
+      <template v-if="['disksizetotal', 'disksizeused'].includes(column.key)">
+        <span v-if="text !== undefined && text !== null">
+          {{ $bytesToHumanReadableSize(text) }}
         </span>
       </template>
       <template v-if="column.key === 'physicalnetworkname'">
@@ -856,6 +867,13 @@ export default {
     }
   },
   methods: {
+    convertKB (val) {
+      if (val < 1024) return `${Number(val).toFixed(2)} KB`
+      if (val < 1024 * 1024) return `${(val / 1024).toFixed(2)} MB`
+      if (val < 1024 * 1024 * 1024) return `${(val / 1024 / 1024).toFixed(2)} GB`
+      if (val < 1024 * 1024 * 1024 * 1024) return `${(val / 1024 / 1024 / 1024).toFixed(2)} TB`
+      return val
+    },
     getFirstSelectedItem () {
       const list = this.selectionList || []
       if (list.length > 0) {

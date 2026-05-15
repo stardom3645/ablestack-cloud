@@ -128,6 +128,11 @@
               {{ parseFloat(dataResource.usedfsbytes / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GiB
             </div>
           </div>
+          <div v-else-if="$route.meta.name === 'imagestore' && ['disksizetotal', 'disksizeused'].includes(item)">
+            <div>
+              {{ $bytesToHumanReadableSize(dataResource[item]) }}
+            </div>
+          </div>
           <div v-else-if="['name', 'type'].includes(item)">
             <span v-if="['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(dataResource[item])">{{ $t(dataResource[item].toLowerCase()) }}</span>
             <span v-else>{{ dataResource[item] }}</span>

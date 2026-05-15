@@ -673,7 +673,8 @@
           :loading="loading"
           :tabs="$route.meta.tabs"
           :actions="actions"
-          @exec-action="handleDataViewAction" />
+          @exec-action="handleDataViewAction"
+          @change-resource="resource = $event" />
       </div>
       <div class="row-element" v-else>
         <list-view
