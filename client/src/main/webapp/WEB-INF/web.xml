@@ -53,6 +53,11 @@
         <servlet-class>com.cloud.servlet.ConsoleProxyServlet</servlet-class>
         <load-on-startup>6</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>netdiveConsoleServlet</servlet-name>
+        <servlet-class>com.cloud.servlet.NetdiveConsoleServlet</servlet-class>
+        <load-on-startup>7</load-on-startup>
+    </servlet>
 
     <servlet-mapping>
          <servlet-name>apiServlet</servlet-name>
@@ -62,6 +67,10 @@
     <servlet-mapping>
          <servlet-name>consoleServlet</servlet-name>
          <url-pattern>/console</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+         <servlet-name>netdiveConsoleServlet</servlet-name>
+         <url-pattern>/netdive/*</url-pattern>
     </servlet-mapping>
 
     <error-page>
