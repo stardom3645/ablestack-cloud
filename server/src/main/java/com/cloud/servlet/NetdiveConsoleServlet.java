@@ -63,8 +63,18 @@ public class NetdiveConsoleServlet extends HttpServlet {
         if ("true".equalsIgnoreCase(mock)) {
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("application/json;charset=UTF-8");
+
+            String scheme = req.isSecure() ? "https" : "http";
+            String host = req.getServerName();
+            int port = req.getServerPort();
+
+            String base = scheme + "://" + host;
+            if (!(("http".equals(scheme) && port == 80) || ("https".equals(scheme) && port == 443))) {
+                base += ":" + port;
+            }
+
             Map<String, String> mockResult = new HashMap<>();
-            mockResult.put("url", "http://10.10.32.10/resource/noVNC/vnc.html?autoconnect=true&show_dot=true&port=8080&token=mock");
+            mockResult.put("url", base + "/resource/noVNC/vnc.html?autoconnect=true&show_dot=true&port=8080&token=mock");
             resp.getWriter().print(gson.toJson(mockResult));
             return;
         }
