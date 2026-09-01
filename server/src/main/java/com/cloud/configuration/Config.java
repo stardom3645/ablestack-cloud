@@ -1677,7 +1677,7 @@ public enum Config {
             ManagementServer.class,
             Integer.class,
             "baremetal.provision.done.notification.port",
-            "433",
+            "443",
             "the port that listens baremetal provision done notification. Should be the same to port management server listening on for now. Please change it to management server port if it's not default 8080",
             null),
     ExternalBaremetalSystemUrl(
