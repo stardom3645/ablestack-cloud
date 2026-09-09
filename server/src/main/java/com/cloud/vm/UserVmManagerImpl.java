@@ -10447,13 +10447,14 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
         }
 
+        boolean recovered = false;
         for (String operationId : operationIds) {
             logger.info("Recovering SharedMountPoint clone source overlay commit for operation [{}].", operationId);
             tryCommitFastCloneSourceOverlay(operationId);
-            return true;
+            recovered = true;
         }
 
-        return false;
+        return recovered;
     }
 
     protected boolean checkOneRunningSharedMountPointFastCloneVolume() {
@@ -10624,6 +10625,17 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             VolumeDetailVO status = volumeDetailsDao.findDetail(volumeId, FAST_CLONE_FLATTEN_STATUS);
             if (role != null && FAST_CLONE_ROLE_CLONE.equals(role.getValue()) && status != null &&
                     (FAST_CLONE_FLATTEN_PENDING.equals(status.getValue()) || FAST_CLONE_FLATTEN_RUNNING.equals(status.getValue()))) {
+                VolumeVO volume = _volsDao.findById(volumeId);
+                if (volume == null) {
+                    volumeDetailsDao.removeDetail(volumeId, FAST_CLONE_FLATTEN_STATUS);
+                    continue;
+                }
+                Long vmId = volume.getInstanceId();
+                UserVmVO vm = vmId != null ? _vmDao.findById(vmId) : null;
+                if (vm == null || vm.getRemoved() != null || vm.getState() == State.Destroyed || vm.getState() == State.Expunging) {
+                    volumeDetailsDao.removeDetail(volumeId, FAST_CLONE_FLATTEN_STATUS);
+                    continue;
+                }
                 return true;
             }
         }
