@@ -10331,9 +10331,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (FAST_CLONE_FLATTEN_RUNNING.equalsIgnoreCase(detail.getValue())) {
             throw new CloudRuntimeException(String.format("Unable to %s VM while SharedMountPoint clone flatten is running.", operation));
         }
-        if (FAST_CLONE_FLATTEN_PENDING.equalsIgnoreCase(detail.getValue()) && !"start".equals(operation)) {
-            throw new CloudRuntimeException(String.format("Unable to %s VM while SharedMountPoint clone flatten is pending.", operation));
-        }
     }
 
     protected void cleanupFailedFastCloneVolumes(List<VolumeVO> cloneVolumes) {
@@ -10708,6 +10705,18 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         IpAddresses addr = new IpAddresses(null, ipv6Address, macAddress);
         long serviceOfferingId = curVm.getServiceOfferingId();
         ServiceOffering serviceOffering = serviceOfferingDao.findById(curVm.getId(), serviceOfferingId);
+        ServiceOfferingVO baseOffering = serviceOfferingDao.findById(serviceOfferingId);
+
+        if (!baseOffering.isDynamic() || baseOffering.getCpu() != null) {
+            customParameters.remove(UsageEventVO.DynamicParameters.cpuNumber.name());
+        }
+        if (!baseOffering.isCustomCpuSpeedSupported()) {
+            customParameters.remove(UsageEventVO.DynamicParameters.cpuSpeed.name());
+        }
+        if (!baseOffering.isDynamic() || baseOffering.getRamSize() != null) {
+            customParameters.remove(UsageEventVO.DynamicParameters.memory.name());
+        }
+
         List<SecurityGroupVO> securityGroupList = _securityGroupMgr.getSecurityGroupsForVm(curVm.getId());
         List<Long> securityGroupIdList = securityGroupList.stream().map(SecurityGroupVO::getId).collect(Collectors.toList());
         String name = cmd.getName();
