@@ -20,6 +20,7 @@ import path from 'path'
 import { mount, flushPromises } from '@vue/test-utils'
 import { defineAsyncComponent, h, markRaw } from 'vue'
 import ResourceView from '@/components/view/ResourceView'
+import AutogenView from '@/views/AutogenView'
 
 jest.mock('@/components/view/InfoCard', () => ({ render: () => null }))
 jest.mock('@/api', () => ({ getAPI: jest.fn() }))
@@ -30,6 +31,25 @@ function context (query = {}, tabs = [{ name: 'details' }, { name: 'events' }]) 
 }
 
 describe('ResourceView resource navigation', () => {
+  it.each([
+    ['/customaction/2', {}, true],
+    ['/customaction/3', { tab: 'events' }, true],
+    ['/vm/4', { keyword: 'action/' }, true],
+    ['/action/updateCustomAction', {}, false],
+    ['/vm/4', { tab: 'browser' }, false]
+  ])('refreshes the destination data for %s with query %j: %s', (routePath, query, refresh) => {
+    const vm = {
+      resetSelection: jest.fn(),
+      clearAutoRefresh: jest.fn(),
+      fetchData: jest.fn(),
+      scheduleAutoRefresh: jest.fn()
+    }
+    AutogenView.watch.$route.call(vm,
+      { path: routePath, fullPath: routePath + '?' + new URLSearchParams(query), query },
+      { fullPath: '/extension/1?tab=customactions' })
+    expect(vm.fetchData).toHaveBeenCalledTimes(refresh ? 1 : 0)
+  })
+
   it('isolates detail instances by path, not tab query or delayed API resource ID', () => {
     const source = fs.readFileSync(path.resolve(__dirname, '../../../../src/views/AutogenView.vue'), 'utf8')
     expect(source).toMatch(/<resource-view\s+v-else\s+:key="\$route.path"/)
