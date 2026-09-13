@@ -197,9 +197,8 @@ export default {
       }
     },
     setActiveTab () {
-      const visibleTabs = this.tabs.filter(tab => this.showTab(tab))
       const requestedTab = this.$route.query.tab || this.historyTab
-      const selected = visibleTabs.find(tab => tab.name === requestedTab) || visibleTabs[0]
+      const selected = this.tabs.find(tab => tab.name === requestedTab) || this.tabs[0]
       this.activeTab = selected ? selected.name : ''
     }
   }

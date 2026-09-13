@@ -46,10 +46,10 @@ describe('ResourceView resource navigation', () => {
     expect(vm.activeTab).toBe(expected)
   })
 
-  it('does not select hidden or absent tabs', () => {
+  it('preserves a declared tab while resource-dependent visibility is loading', () => {
     const vm = context({ tab: 'events' }, [{ name: 'details' }, { name: 'events', hidden: true }])
     ResourceView.methods.setActiveTab.call(vm)
-    expect(vm.activeTab).toBe('details')
+    expect(vm.activeTab).toBe('events')
     vm.tabs = []
     ResourceView.methods.setActiveTab.call(vm)
     expect(vm.activeTab).toBe('')
