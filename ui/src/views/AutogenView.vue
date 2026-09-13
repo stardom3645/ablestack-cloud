@@ -806,6 +806,7 @@
         ></slot>
         <resource-view
           v-else
+          :key="$route.path"
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
