@@ -2833,7 +2833,7 @@ export default {
           this.loading.deploy = false
         }
       }).catch(err => {
-        this.formRef.value.scrollToField(err.errorFields[0].name)
+        this.formRef.value.scrollToField(err.errorFields[0].name, { block: 'center' })
         if (err) {
           if (err.licensesaccepted) {
             this.$notification.error({
@@ -3989,6 +3989,18 @@ export default {
         cursor: default;
         pointer-events: none;
       }
+    }
+  }
+
+  // Keep invalid input text on the same dark surface as valid inputs.
+  .dark-mode .deploy-vm-layout .ant-form-item-has-error {
+    .ant-input,
+    .ant-input:hover,
+    .ant-input-affix-wrapper,
+    .ant-input-affix-wrapper:hover,
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+      // Override the shared dark theme error background.
+      background-color: transparent !important;
     }
   }
 
