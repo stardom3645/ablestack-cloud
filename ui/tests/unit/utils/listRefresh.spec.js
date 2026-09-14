@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { createListRefresh, listRowKey } from '@/utils/listRefresh'
+import { createListRefresh, listRowKey, canRefreshList } from '@/utils/listRefresh'
 
 const flush = async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve() }
 describe('list refresh scheduling', () => {
@@ -71,5 +71,32 @@ describe('list refresh scheduling', () => {
     expect(listRowKey({ id: 'a', state: 'Running' })).toBe(listRowKey({ id: 'a', state: 'Stopped' }))
     expect(listRowKey({ name: 'same', account: 'a' })).not.toBe(listRowKey({ name: 'same', account: 'b' }))
     expect(listRowKey({ name: 'x', state: 'Running' })).toBe(listRowKey({ name: 'x', state: 'Stopped' }))
+  })
+})
+
+describe('editable focus policy', () => {
+  it('continues polling after row selection but pauses for text editing and visible modals', () => {
+    const root = document.createElement('div')
+    root.innerHTML = '<input type="checkbox"><input type="radio"><input type="text">'
+    root.getClientRects = () => [{ width: 100, height: 100 }]
+    document.body.appendChild(root)
+    const [checkbox, radio, text] = root.querySelectorAll('input')
+    checkbox.focus()
+    expect(canRefreshList(root)).toBe(true)
+    radio.focus()
+    expect(canRefreshList(root)).toBe(true)
+    text.focus()
+    expect(canRefreshList(root)).toBe(false)
+    text.blur()
+    root.setAttribute('data-list-editing', 'true')
+    expect(canRefreshList(root)).toBe(false)
+    root.removeAttribute('data-list-editing')
+    const modal = document.createElement('div')
+    modal.className = 'ant-modal-wrap'
+    modal.getClientRects = () => [{ width: 100, height: 100 }]
+    document.body.appendChild(modal)
+    expect(canRefreshList(root)).toBe(false)
+    modal.remove()
+    root.remove()
   })
 })

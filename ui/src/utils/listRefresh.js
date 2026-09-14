@@ -71,7 +71,7 @@ export function canRefreshList (element) {
     root = root.nextElementSibling
   }
   return !!root?.getClientRects?.().length &&
-    !root.querySelector?.('input:focus, textarea:focus, [contenteditable="true"]:focus, [data-list-editing="true"]') &&
+    !root.querySelector?.('input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):focus, textarea:focus, [contenteditable="true"]:focus, [data-list-editing="true"]') &&
     root.getAttribute?.('data-list-editing') !== 'true' &&
     !Array.from(document.querySelectorAll('.ant-modal-wrap')).some(el => el.getClientRects().length && getComputedStyle(el).display !== 'none')
 }
