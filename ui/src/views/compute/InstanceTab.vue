@@ -286,7 +286,7 @@ export default {
     AnnotationsTab,
     VolumesTab
   },
-  mixins: [listRefreshMixin(['loadDevicesFromDb'], { active: vm => !!vm.vm?.id }), mixinDevice],
+  mixins: [listRefreshMixin(['loadDevicesFromDb'], { active: vm => !!vm.vm?.id && vm.currentTab === 'hostdevices' }), mixinDevice],
   props: {
     resource: {
       type: Object,
