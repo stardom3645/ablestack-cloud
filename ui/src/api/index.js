@@ -45,7 +45,7 @@ function hasSessionKey () {
   return !!getSessionKey()
 }
 
-export function getAPI (command, args = {}, { optionalDiscovery = false } = {}) {
+export function getAPI (command, args = {}, { optionalDiscovery = false, timeout } = {}) {
   args.command = command
   args.response = 'json'
 
@@ -60,7 +60,8 @@ export function getAPI (command, args = {}, { optionalDiscovery = false } = {}) 
     },
     url: '/',
     method: 'GET',
-    ...(optionalDiscovery ? { optionalDiscovery: true, timeout: 15000 } : {})
+    ...(optionalDiscovery ? { optionalDiscovery: true, timeout: 15000 } : {}),
+    ...(timeout ? { timeout } : {})
   })
 }
 

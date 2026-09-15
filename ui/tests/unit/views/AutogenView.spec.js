@@ -1645,6 +1645,7 @@ describe('Views > AutogenView.vue', () => {
         expect(mockAxios).toHaveBeenLastCalledWith({
           url: '/',
           method: 'GET',
+          timeout: 15000,
           params: {
             command: 'queryAsyncJobResult',
             response: 'json',
@@ -1686,6 +1687,7 @@ describe('Views > AutogenView.vue', () => {
         expect(mockAxios).toHaveBeenLastCalledWith({
           url: '/',
           method: 'GET',
+          timeout: 15000,
           params: {
             command: 'queryAsyncJobResult',
             response: 'json',
@@ -1696,7 +1698,7 @@ describe('Views > AutogenView.vue', () => {
         done()
       })
 
-      it('fetchData() should not be called when $pollJob error response', async (done) => {
+      it('refreshes resource data on a terminal job failure', async (done) => {
         originalFunc.fetchData = wrapper.vm.fetchData
         wrapper.vm.fetchData = jest.fn((args) => {})
         const fetchData = jest.spyOn(wrapper.vm, 'fetchData')
@@ -1717,11 +1719,12 @@ describe('Views > AutogenView.vue', () => {
         })
         await flushPromises()
 
-        expect(fetchData).not.toHaveBeenCalled()
+        expect(fetchData).toHaveBeenCalled()
         expect(mockAxios).toHaveBeenCalled()
         expect(mockAxios).toHaveBeenLastCalledWith({
           url: '/',
           method: 'GET',
+          timeout: 15000,
           params: {
             command: 'queryAsyncJobResult',
             response: 'json',
