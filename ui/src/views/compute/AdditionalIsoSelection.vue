@@ -8,7 +8,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License. -->
 <template>
-  <div>
+  <div class="additional-iso-selection">
     <a-checkbox v-model:checked="enabled" :disabled="!supported" @change="toggle">
       {{ $t('label.additional.iso.connect') }}
     </a-checkbox>
@@ -105,3 +105,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.additional-iso-selection {
+  margin-top: 24px;
+}
+</style>
