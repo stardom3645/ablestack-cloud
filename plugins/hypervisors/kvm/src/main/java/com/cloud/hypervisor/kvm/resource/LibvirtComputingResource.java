@@ -4055,16 +4055,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
             }
             guest.setIothreads(customParams.containsKey(VmDetailConstants.IOTHREADS));
-            configureBootOrder(guest, customParams);
+            if (!"true".equals(customParams.get("deploy.additional.iso"))) {
+                configureBootOrder(guest, customParams);
+            }
         } else {
             configureBootOrder(guest, null);
         }
         guest.setUuid(uuid);
-        guest.setBootOrder(GuestDef.BootOrder.HARDISK);
-        if(!isGuestS390x()) {
-            guest.setBootOrder(GuestDef.BootOrder.CDROM);
-        }
-        guest.setBootOrder(GuestDef.BootOrder.CDROM);
         return guest;
     }
 
@@ -4590,6 +4587,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             if (vm.getDevices() == null) {
                 LOGGER.error("There is no devices for" + vm);
                 throw new RuntimeException("There is no devices for" + vm);
+            }
+            if (details != null && "true".equals(details.get("deploy.additional.iso"))) {
+                boolean cdFirst = "cdrom".equalsIgnoreCase(details.get(VmDetailConstants.BOOT_ORDER));
+                if (volume.getType() == Volume.Type.ROOT) {
+                    disk.setBootOrder(cdFirst ? 2 : 1);
+                } else if (volume.getType() == Volume.Type.ISO && devId == TemplateManager.CDROM_PRIMARY_DEVICE_SEQ
+                        && data.getPath() != null) {
+                    disk.setBootOrder(cdFirst ? 1 : 2);
+                }
             }
             vm.getDevices().addDevice(disk);
         }

@@ -626,4 +626,17 @@ public class LibvirtVMDefTest extends TestCase {
                 "<backend type='emulator' version='2.0'/>\n" +
                 "</tpm>\n", tpmDef.toString());
     }
+
+    @Test
+    public void testInstallationIsoBootOrderDoesNotMakeDriverBootable() {
+        DiskDef installation = new DiskDef();
+        installation.defISODisk("/install.iso", 3, DiskDef.DiskType.FILE);
+        installation.setBootOrder(1);
+        DiskDef driver = new DiskDef();
+        driver.defISODisk("/virtio.iso", 4, DiskDef.DiskType.FILE);
+        assertTrue(installation.toString().contains("<boot order='1'/>"));
+        assertFalse(driver.toString().contains("<boot "));
+        assertTrue(installation.toString().contains("hdc"));
+        assertTrue(driver.toString().contains("hdd"));
+    }
 }
