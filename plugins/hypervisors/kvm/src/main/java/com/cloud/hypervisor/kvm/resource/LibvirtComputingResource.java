@@ -2158,21 +2158,37 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return unsupported;
         }
         try {
-            for (String binary : java.util.List.of("swtpm", "swtpm_setup")) {
-                Script check = new Script(Script.getExecutableAbsolutePath(binary), Duration.standardSeconds(10), LOGGER);
-                check.add("--version");
-                if (check.execute(new AllLinesParser()) != null) { return unsupported; }
-            }
-            Script command = new Script(Script.getExecutableAbsolutePath("virsh"), Duration.standardSeconds(30), LOGGER);
-            command.add("-c", "qemu:///system");
-            command.add("domcapabilities");
-            command.add("--virttype", "kvm");
-            AllLinesParser parser = new AllLinesParser();
-            if (command.execute(parser) != null) { return unsupported; }
-            return TpmCapabilities.parse(parser.getLines());
+            // swtpm_setup 0.8.0 returns exit 1 for --version, even when installed correctly.
+            runTpmCommand(Script.getExecutableAbsolutePath("swtpm"), "socket", "--print-capabilities");
+            runTpmCommand(Script.getExecutableAbsolutePath("swtpm_setup"), "--print-capabilities");
+            return TpmCapabilities.parse(runTpmCommand(Script.getExecutableAbsolutePath("virsh"),
+                    "-c", "qemu:///system", "domcapabilities", "--virttype", "kvm"));
         } catch (Exception e) {
             LOGGER.warn("Unable to discover vTPM capability; refusing TPM allocation", e);
             return unsupported;
+        }
+    }
+
+    protected String runTpmCommand(String... args) throws Exception {
+        Process process = new ProcessBuilder(args).redirectErrorStream(true).start();
+        java.util.concurrent.CompletableFuture<byte[]> output = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try {
+                return process.getInputStream().readAllBytes();
+            } catch (java.io.IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+        });
+        try {
+            if (!process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                throw new java.io.IOException("TPM capability command timed out: " + args[0]);
+            }
+            String text = new String(output.get(5, java.util.concurrent.TimeUnit.SECONDS), java.nio.charset.StandardCharsets.UTF_8);
+            if (process.exitValue() != 0) {
+                throw new java.io.IOException("TPM capability command failed: " + args[0] + ": " + text);
+            }
+            return text;
+        } finally {
+            process.destroyForcibly();
         }
     }
 

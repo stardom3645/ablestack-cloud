@@ -7734,4 +7734,12 @@ public class LibvirtComputingResourceTest {
         Pair<Integer, Long> result = libvirtComputingResourceSpy.getPeriodAndQuota(cpuQuotaPercentage);
         Assert.assertEquals(expectedResult, result);
     }
+
+    @Test
+    public void testTpmCommandCapturesFastProcessOutput() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            assertEquals("tpm\n", libvirtComputingResourceSpy.runTpmCommand("/usr/bin/printf", "tpm\n"));
+        }
+        Assert.assertThrows(java.io.IOException.class, () -> libvirtComputingResourceSpy.runTpmCommand("/usr/bin/false"));
+    }
 }

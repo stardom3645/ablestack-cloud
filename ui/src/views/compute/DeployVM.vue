@@ -630,6 +630,7 @@
                     <a-form-item v-if="hypervisor === 'KVM'" :label="$t('label.tpm')" name="tpmversion" ref="tpmversion">
                       <a-select
                         v-model:value="form.tpmversion"
+                        @change="form.tpmmodel = 'tpm-tis'"
                         showSearch
                         optionFilterProp="label"
                         :filterOption="filterOption">
@@ -638,8 +639,8 @@
                         </a-select-option>
                       </a-select>
                     </a-form-item>
-                    <a-form-item v-if="hypervisor === 'KVM' && form.tpmversion === 'V2_0'" :label="$t('label.tpm.model')" name="tpmmodel">
-                      <a-select v-model:value="form.tpmmodel" :options="[{ value: 'tpm-tis', label: 'TIS' }, { value: 'tpm-crb', label: 'CRB' }]" />
+                    <a-form-item v-if="hypervisor === 'KVM' && ['V1_2', 'V2_0'].includes(form.tpmversion)" :label="$t('label.tpm.model')" name="tpmmodel">
+                      <a-select v-model:value="form.tpmmodel" :options="form.tpmversion === 'V1_2' ? [{ value: 'tpm-tis', label: 'TIS' }] : [{ value: 'tpm-tis', label: 'TIS' }, { value: 'tpm-crb', label: 'CRB' }]" />
                     </a-form-item>
                     <a-form-item
                       :label="$t('label.bootintosetup')"
@@ -2087,6 +2088,7 @@ export default {
       this.options.tpmversion = [
         { id: 'INHERIT', description: this.$t('label.tpm.inherit') },
         { id: 'NONE', description: this.$t('label.disabled') },
+        { id: 'V1_2', description: 'TPM Version 1.2' },
         { id: 'V2_0', description: 'TPM Version 2.0' }
       ]
     },
