@@ -1646,6 +1646,7 @@ describe('Views > AutogenView.vue', () => {
           url: '/',
           method: 'GET',
           timeout: 15000,
+          backgroundJob: true,
           params: {
             command: 'queryAsyncJobResult',
             response: 'json',
@@ -1688,6 +1689,7 @@ describe('Views > AutogenView.vue', () => {
           url: '/',
           method: 'GET',
           timeout: 15000,
+          backgroundJob: true,
           params: {
             command: 'queryAsyncJobResult',
             response: 'json',
@@ -1725,6 +1727,7 @@ describe('Views > AutogenView.vue', () => {
           url: '/',
           method: 'GET',
           timeout: 15000,
+          backgroundJob: true,
           params: {
             command: 'queryAsyncJobResult',
             response: 'json',

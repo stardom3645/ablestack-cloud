@@ -51,7 +51,7 @@ export const pollJobPlugin = {
       })
     }
     const tracker = createJobTracker({
-      query: jobId => getAPI('queryAsyncJobResult', { jobId }, { timeout: 15000 }).then(json => json.queryasyncjobresultresponse),
+      query: jobId => getAPI('queryAsyncJobResult', { jobId }, { timeout: 15000, backgroundJob: true }).then(json => json.queryasyncjobresultresponse),
       onState: (jobId, result, meta) => {
         const { options, router, originalPage, path } = meta
         const {
