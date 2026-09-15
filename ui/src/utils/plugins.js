@@ -65,6 +65,7 @@ export const pollJobPlugin = {
         const interrupted = Boolean(result.trackingStatus)
         // Clean up before invoking application callbacks or event listeners.
         if (terminal || interrupted) message.destroy(jobId)
+        if (terminal && options.retry && options.batchKey) notification.close(options.batchKey)
         if (result.trackingStatus === 'cancelled') {
           safe(() => store.commit('SET_HEADER_NOTICES', store.getters.headerNotices.map(notice => notice.key === jobId ? { ...notice, status: 'unknown' } : notice)))
           return
@@ -93,7 +94,7 @@ export const pollJobPlugin = {
           return
         }
         if (result.jobstatus === 1) {
-          if (showSuccessMessage) message.success({ content: name ? `${successMessage} - ${name}` : successMessage, key: jobId, duration: 2 })
+          if (showSuccessMessage || options.retry) message.success({ content: name ? `${successMessage} - ${name}` : successMessage, key: jobId, duration: 2 })
         } else if (result.jobstatus === 2) {
           if (!bulkAction) message.error({ content: errorMessage, key: jobId, duration: 1 })
           safe(() => notifyError({ key: jobId, message: action?.label ? i18n.global.t(action.label) : errorMessage, description: result.jobresult?.errortext }))
@@ -108,6 +109,7 @@ export const pollJobPlugin = {
     // A route change may cancel one query; retry it. A security scope change must stop tracking.
     store.watch(() => [store.state.user.token, store.getters.userInfo?.id, store.getters.project?.id].join('|'), () => tracker.clear())
     app.config.globalProperties.$pollJob = function (options) {
+      if (options.retry) options = { ...tracker.metadata(options.jobId)?.options, ...options }
       const originalPage = normalizePath(options.originalPage || this.$router.currentRoute.value.path)
       const meta = { options, router: this.$router, originalPage, path: this.$route.fullPath, context: this }
       return tracker.track(options.jobId, meta, options.retry).then(result => {

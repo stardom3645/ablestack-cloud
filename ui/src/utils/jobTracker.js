@@ -51,6 +51,7 @@ export function createJobTracker ({ query, onState, interval = 3000, maxRetries 
     }
   }
   return {
+    metadata (id) { return jobs.get(id)?.meta },
     track (id, meta = {}, retry = false) {
       const previous = jobs.get(id)
       if (previous && !(retry && previous.done && previous.result.trackingStatus)) return previous.promise

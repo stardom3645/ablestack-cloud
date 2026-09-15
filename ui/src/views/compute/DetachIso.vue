@@ -145,6 +145,7 @@ export default {
           },
           poll: (jobId, id) => this.$pollJob({
             jobId,
+            batchKey: key,
             title,
             description: isoName(id),
             resourceId: this.resource.id,
@@ -160,6 +161,7 @@ export default {
         const unknown = results.filter(result => result.trackingStatus).length
         const pending = ids.length - results.length
         this.$notification.info({
+          key,
           message: title,
           description: this.$t('message.iso.detach.summary', { success: succeeded.length, failed, unknown, pending }) + ' ' + results.map(result => `${isoName(result.id)}: ${this.$t(result.jobstatus === 1 ? 'label.success' : result.jobstatus === 2 ? 'label.failed' : 'label.job.check.result')}`).join('; '),
           duration: succeeded.length === ids.length ? 5 : 0
@@ -168,7 +170,7 @@ export default {
         // Keep only explicit failures selected; never repeat an uncertain accepted operation.
         this.attached = this.attached.filter(iso => !succeeded.includes(iso.id))
         this.form.ids = results.filter(result => result.jobstatus === 2).map(result => result.id)
-        if (succeeded.length === ids.length) this.closeAction()
+        if (succeeded.length === ids.length || unknown) this.closeAction()
       } finally {
         this.$message.destroy(key)
         this.loading = false
