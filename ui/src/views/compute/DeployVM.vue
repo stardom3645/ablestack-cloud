@@ -208,6 +208,14 @@
                         </a-form-item>
                       </div>
                     </a-card>
+                    <additional-iso-selection
+                      v-if="imageType === 'isoid'"
+                      :zone-id="form.zoneid"
+                      :primary-id="form.isoid"
+                      :owner="owner"
+                      :project-id="$store.getters.project?.id"
+                      :supported="!!apiParams?.additionalisoids && form.hypervisor === 'KVM'"
+                      @change="additionalIsoSelection = $event" />
                     <a-form-item class="form-item-hidden">
                       <a-input v-model:value="form.templateid" />
                     </a-form-item>
@@ -977,6 +985,7 @@
 
 <script>
 import { deploymentTpmParams } from '@/utils/tpm'
+import AdditionalIsoSelection from './AdditionalIsoSelection.vue'
 import { ref, reactive, toRaw, nextTick, h } from 'vue'
 import { Button, message } from 'ant-design-vue'
 import { getAPI, postAPI } from '@/api'
@@ -1013,6 +1022,7 @@ import DeployInstanceBackupSelection from '@views/compute/wizard/DeployInstanceB
 export default {
   name: 'Wizard',
   components: {
+    AdditionalIsoSelection,
     OwnershipSelection,
     InfoCard,
     DeployButtons,
@@ -1057,6 +1067,7 @@ export default {
       isZoneSelectedMultiArch: false,
       dynamicscalingenabled: true,
       imageType: 'templateid',
+      additionalIsoSelection: { enabled: false, ids: [], valid: true },
       imageSearchFilters: null,
       templateKey: 0,
       showRegisteredUserdata: true,
@@ -2458,6 +2469,7 @@ export default {
       this.updateImages()
     },
     changeImageType (imageType) {
+      this.additionalIsoSelection = { enabled: false, ids: [], valid: true }
       this.imageType = imageType
       this.updateImages()
     },
@@ -2470,6 +2482,13 @@ export default {
       if (this.loading.deploy) return
       this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
+        if (this.imageType === 'isoid' && this.additionalIsoSelection.enabled && !this.additionalIsoSelection.valid) {
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('message.additional.iso.required')
+          })
+          return
+        }
         if (!values.templateid && !values.isoid && !values.volumeid && !values.snapshotid) {
           this.$notification.error({
             message: this.$t('message.request.failed'),
@@ -2544,6 +2563,9 @@ export default {
           deployVmData.snapshotid = values.snapshotid
         } else {
           deployVmData.templateid = values.isoid
+          if (this.additionalIsoSelection.enabled) {
+            deployVmData.additionalisoids = this.additionalIsoSelection.ids.join(',')
+          }
         }
 
         if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {

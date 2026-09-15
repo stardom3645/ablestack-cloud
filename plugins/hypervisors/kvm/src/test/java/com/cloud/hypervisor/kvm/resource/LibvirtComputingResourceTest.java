@@ -7742,4 +7742,28 @@ public class LibvirtComputingResourceTest {
         }
         Assert.assertThrows(java.io.IOException.class, () -> libvirtComputingResourceSpy.runTpmCommand("/usr/bin/false"));
     }
+
+    @Test
+    public void testAdditionalIsoOmitsOsBootOrderForBiosAndUefi() {
+        for (boolean uefi : new boolean[] {false, true}) {
+            VirtualMachineTO to = createDefaultVM(false);
+            Map<String, String> details = new HashMap<>();
+            details.put("deploy.additional.iso", "true");
+            details.put(VmDetailConstants.BOOT_ORDER, "cdrom");
+            if (uefi) {
+                details.put(GuestDef.BootType.UEFI.toString(), "legacy");
+            }
+            GuestDef guest = libvirtComputingResourceSpy.createGuestFromSpec(to, new LibvirtVMDef(), to.getUuid(), details);
+            Assert.assertFalse(guest.toString().contains("<boot dev="));
+        }
+    }
+
+    @Test
+    public void testLegacyBootOrderHasNoDuplicateDevices() {
+        VirtualMachineTO to = createDefaultVM(false);
+        GuestDef guest = libvirtComputingResourceSpy.createGuestFromSpec(to, new LibvirtVMDef(), to.getUuid(), null);
+        String xml = guest.toString();
+        Assert.assertEquals(xml.indexOf("<boot dev='hd'"), xml.lastIndexOf("<boot dev='hd'"));
+        Assert.assertTrue(xml.indexOf("<boot dev='hd'") < xml.indexOf("<boot dev='cdrom'"));
+    }
 }
