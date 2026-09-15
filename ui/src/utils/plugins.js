@@ -101,7 +101,7 @@ export const pollJobPlugin = {
         }
         safe(() => eventBus.emit('update-job-details', { jobId, resourceId: options.resourceId }))
         const samePage = normalizePath(router.currentRoute.value.path) === originalPage
-        if (samePage && (!action || !('isFetchData' in action) || action.isFetchData)) {
+        if (samePage && (options.retry || !action || !('isFetchData' in action) || action.isFetchData)) {
           safe(() => eventBus.emit('async-job-complete', action))
         }
       }
@@ -111,6 +111,7 @@ export const pollJobPlugin = {
     app.config.globalProperties.$pollJob = function (options) {
       if (options.retry) options = { ...tracker.metadata(options.jobId)?.options, ...options }
       const originalPage = normalizePath(options.originalPage || this.$router.currentRoute.value.path)
+      options = { ...options, originalPage }
       const meta = { options, router: this.$router, originalPage, path: this.$route.fullPath, context: this }
       return tracker.track(options.jobId, meta, options.retry).then(result => {
         if (result.jobstatus === 1) safe(() => options.successMethod?.(result))
