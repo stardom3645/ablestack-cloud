@@ -2224,6 +2224,7 @@ export default {
           loadingMessage: `${this.$t(action.label)} - ${resourceName}`,
           showLoading: showLoading,
           catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => resolve(false),
           action,
           bulkAction: `${selectedItems.length > 0}` && this.showGroupActionModal,
           resourceId: resource
