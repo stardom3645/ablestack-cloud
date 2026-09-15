@@ -2740,7 +2740,7 @@ public class LibvirtVMDef {
             StringBuilder tpmBuidler = new StringBuilder();
             if (model != null) {
                 tpmBuidler.append("<tpm model='").append(model).append("'>\n");
-                tpmBuidler.append("<backend type='emulator' version='").append(version).append("'/>\n");
+                tpmBuidler.append("<backend type='emulator' version='").append(version).append("' persistent_state='yes'/>\n");
                 tpmBuidler.append("</tpm>\n");
             }
             return tpmBuidler.toString();

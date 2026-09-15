@@ -7636,6 +7636,8 @@
   "label.update.members": "멤버 수 변경",
   "message.success.config.resource.schedule": "자원 스케줄을 설정했습니다.",
   "message.error.remove.resource.schedule": "자원 스케줄을 삭제하지 못했습니다.",
+  "label.tpm.model": "TPM 모델",
+  "label.tpm.inherit": "템플릿 설정 사용 (미지정 시 사용 안 함)",
   "label.additional.iso.connect": "추가 ISO 연결",
   "label.additional.iso": "추가 비부팅 ISO",
   "message.additional.iso.unsupported": "추가 ISO 생성 기능을 지원하는 서버와 KVM이 필요합니다.",
