@@ -115,7 +115,7 @@ export default {
       this.$emit('close-action')
     },
     async handleSubmit (e) {
-      if (e) e.preventDefault()
+      if (e && typeof e.preventDefault === 'function') e.preventDefault()
       if (this.loading) return
       try {
         await this.formRef.value.validate()

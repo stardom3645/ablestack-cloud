@@ -11,7 +11,7 @@ describe('ISO detach batch', () => {
     expect(results).toHaveLength(2); expect(submit).toHaveBeenCalledTimes(2)
   })
   it('does not interpret missing jobid or network loss as success', async () => {
-    for (const submit of [async () => ({}), async () => { throw new Error('offline') }, async () => Promise.reject({ response: { status: 502, data: '<html>gateway error</html>' } })]) {
+    for (const submit of [async () => ({}), async () => { throw new Error('offline') }, async () => Promise.reject(Object.assign(new Error('gateway'), { response: { status: 502, data: '<html>gateway error</html>' } }))]) {
       const results = await detachIsoBatch({ ids: ['a', 'b'], submit, poll: jest.fn(), onProgress: () => {} })
       expect(results).toHaveLength(1); expect(results[0].trackingStatus).toBe('unknown')
     }
