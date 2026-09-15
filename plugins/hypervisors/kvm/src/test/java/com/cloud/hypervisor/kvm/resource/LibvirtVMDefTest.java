@@ -623,7 +623,7 @@ public class LibvirtVMDefTest extends TestCase {
         assertEquals(LibvirtVMDef.TpmDef.TpmModel.TIS, tpmDef.getModel());
         assertEquals(LibvirtVMDef.TpmDef.TpmVersion.V2_0, tpmDef.getVersion());
         assertEquals("<tpm model='tpm-tis'>\n" +
-                "<backend type='emulator' version='2.0'/>\n" +
+                "<backend type='emulator' version='2.0' persistent_state='yes'/>\n" +
                 "</tpm>\n", tpmDef.toString());
     }
 }

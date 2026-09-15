@@ -7673,5 +7673,7 @@
   "label.delete.confirmation": "Enter the exact resource name to proceed with deletion",
   "message.oauth.domain.providers.hint": "Enter your domain to see domain-specific providers",
   "message.oauth.domain.providers.empty": "No OAuth providers configured for this domain",
-  "message.oauth.domain.providers.prompt": "Enter your domain to see available providers"
+  "message.oauth.domain.providers.prompt": "Enter your domain to see available providers",
+  "label.tpm.model": "TPM model",
+  "label.tpm.inherit": "Use template setting (disabled if unspecified)"
 }

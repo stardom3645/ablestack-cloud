@@ -627,7 +627,7 @@
                         </a-select-option>
                       </a-select>
                     </a-form-item>
-                    <a-form-item :label="$t('label.tpm')" name="tpmversion" ref="tpmversion">
+                    <a-form-item v-if="hypervisor === 'KVM'" :label="$t('label.tpm')" name="tpmversion" ref="tpmversion">
                       <a-select
                         v-model:value="form.tpmversion"
                         showSearch
@@ -637,6 +637,9 @@
                           {{ tpmversion.description }}
                         </a-select-option>
                       </a-select>
+                    </a-form-item>
+                    <a-form-item v-if="hypervisor === 'KVM' && form.tpmversion === 'V2_0'" :label="$t('label.tpm.model')" name="tpmmodel">
+                      <a-select v-model:value="form.tpmmodel" :options="[{ value: 'tpm-tis', label: 'TIS' }, { value: 'tpm-crb', label: 'CRB' }]" />
                     </a-form-item>
                     <a-form-item
                       :label="$t('label.bootintosetup')"
@@ -972,6 +975,7 @@
 </template>
 
 <script>
+import { deploymentTpmParams } from '@/utils/tpm'
 import { ref, reactive, toRaw, nextTick, h } from 'vue'
 import { Button, message } from 'ant-design-vue'
 import { getAPI, postAPI } from '@/api'
@@ -2034,6 +2038,7 @@ export default {
         ['name', 'keyboard', 'boottype', 'bootmode', 'userdata', 'tpmversion', 'iothreadsenabled', 'iodriverpolicy', 'nicmultiqueuenumber', 'nicpackedvirtqueues'].forEach(this.fillValue)
         this.form.boottype = this.defaultBootType ? this.defaultBootType : this.options.bootTypes && this.options.bootTypes.length > 0 ? this.options.bootTypes[0].id : undefined
         this.form.bootmode = this.defaultBootMode ? this.defaultBootMode : this.options.bootModes && this.options.bootModes.length > 0 ? this.options.bootModes[0].id : undefined
+        this.form.tpmmodel = 'tpm-tis'
         this.form.tpmversion = this.defaultTPM ? this.defaultTPM : this.options.tpmversion && this.options.tpmversion.length > 0 ? this.options.tpmversion[0].id : undefined
         this.form.machinecompatibility = this.form.machinecompatibility || 'standard'
         this.instanceConfig = toRaw(this.form)
@@ -2080,7 +2085,8 @@ export default {
     },
     fetchTpm () {
       this.options.tpmversion = [
-        { id: 'NONE', description: 'Disabled' },
+        { id: 'INHERIT', description: this.$t('label.tpm.inherit') },
+        { id: 'NONE', description: this.$t('label.disabled') },
         { id: 'V2_0', description: 'TPM Version 2.0' }
       ]
     },
@@ -2505,7 +2511,7 @@ export default {
           deployVmData.boottype = values.boottype
           deployVmData.bootmode = values.bootmode
         }
-        deployVmData.tpmversion = values.tpmversion
+        Object.assign(deployVmData, deploymentTpmParams(this.hypervisor, values))
         deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
         deployVmData.iothreadsenabled = values.iothreadsenabled
         deployVmData.iodriverpolicy = values.iodriverpolicy

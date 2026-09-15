@@ -3391,6 +3391,13 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 .map(item -> (item).trim())
                 .collect(Collectors.toList());
         List<VMInstanceDetailVO> existingDetails = vmInstanceDetailsDao.listDetails(id);
+        if (HypervisorType.KVM.equals(vmInstance.getHypervisorType())) {
+            Map<String, String> tpmDetails = new HashMap<>();
+            for (VMInstanceDetailVO detail : existingDetails) {
+                tpmDetails.put(detail.getName(), detail.getValue());
+            }
+            KvmTpmConfig.validateUpdate(tpmDetails, details, cleanupDetails);
+        }
         if (cleanupDetails){
             if (template != null && template.isDeployAsIs()) {
                 throw new InvalidParameterValueException("Detail settings are read from OVA, it cannot be cleaned up by API call.");
@@ -5456,6 +5463,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         setVncPasswordForKvmIfAvailable(customParameters, vm);
 
+        Map<String, String> normalizedTpm = HypervisorType.KVM.equals(hypervisorType) && !isImport
+                ? KvmTpmConfig.forCreation(template.getDetails(), customParameters) : null;
+
         vm.setUserVmType(vmType);
         _vmDao.persist(vm);
         for (String key : customParameters.keySet()) {
@@ -5496,6 +5506,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             } else {
                 vm.setDetail(key, customParameters.get(key));
             }
+        }
+        if (normalizedTpm != null) {
+            vm.details.keySet().removeIf(KvmTpmConfig::isKey);
+            normalizedTpm.forEach((key, value) -> {
+                if (KvmTpmConfig.isKey(key)) { vm.setDetail(key, value); }
+            });
         }
         vm.setDetail(VmDetailConstants.DEPLOY_VM, "true");
 

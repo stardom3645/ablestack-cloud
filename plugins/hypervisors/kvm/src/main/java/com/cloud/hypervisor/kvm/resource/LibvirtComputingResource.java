@@ -2149,6 +2149,33 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return !uefiProperties.isEmpty();
     }
 
+    public Map<String, String> getTpmCapabilities() {
+        Map<String, String> unsupported = new HashMap<>();
+        unsupported.put("host.tpm.enable", "false");
+        unsupported.put(com.cloud.vm.KvmTpmConfig.HOST_MODELS, "");
+        unsupported.put(com.cloud.vm.KvmTpmConfig.HOST_VERSIONS, "");
+        if ("false".equalsIgnoreCase(_tpmProperties.getProperty("host.tpm.enable"))) {
+            return unsupported;
+        }
+        try {
+            for (String binary : java.util.List.of("swtpm", "swtpm_setup")) {
+                Script check = new Script(Script.getExecutableAbsolutePath(binary), Duration.standardSeconds(10), LOGGER);
+                check.add("--version");
+                if (check.execute(new AllLinesParser()) != null) { return unsupported; }
+            }
+            Script command = new Script(Script.getExecutableAbsolutePath("virsh"), Duration.standardSeconds(30), LOGGER);
+            command.add("-c", "qemu:///system");
+            command.add("domcapabilities");
+            command.add("--virttype", "kvm");
+            AllLinesParser parser = new AllLinesParser();
+            if (command.execute(parser) != null) { return unsupported; }
+            return TpmCapabilities.parse(parser.getLines());
+        } catch (Exception e) {
+            LOGGER.warn("Unable to discover vTPM capability; refusing TPM allocation", e);
+            return unsupported;
+        }
+    }
+
     public boolean isTpmPropertiesFileLoaded() {
         return !_tpmProperties.isEmpty();
     }
@@ -3560,9 +3587,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         Map<String, String> customParams = vmTO.getDetails();
         boolean isUefiEnabled = false;
         boolean isSecureBoot = false;
-        boolean isTpmEnabled = false;
         String bootMode = null;
-        String tpmversion = null;
 
         if (MapUtils.isNotEmpty(customParams) && customParams.containsKey(GuestDef.BootType.UEFI.toString())) {
             isUefiEnabled = true;
@@ -3574,19 +3599,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
 
             bootMode = customParams.get(GuestDef.BootType.UEFI.toString());
-        }
-        if (MapUtils.isNotEmpty(customParams) && (
-                customParams.containsKey(GuestDef.TpmVersion.V2_0.toString()) ||
-                customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())
-        )) {
-            isTpmEnabled = true;
-            LOGGER.debug(String.format("Enabled TPM for VM UUID [%s].", uuid));
-
-            if(customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())) {
-                tpmversion = customParams.get(GuestDef.TpmVersion.V2_0.toString());
-            }else if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())) {
-                tpmversion = customParams.get(GuestDef.TpmVersion.V1_2.toString());
-            }
         }
 
         Map<String, String> extraConfig = vmTO.getExtraConfig();
@@ -3957,17 +3969,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return cmd;
     }
 
+    public void validateTpmForHost(VirtualMachineTO vmTO) {
+        createTpmDef(vmTO);
+    }
+
     protected TpmDef createTpmDef(VirtualMachineTO vmTO) {
         Map<String, String> details = vmTO.getDetails();
-        if (MapUtils.isEmpty(details)) {
-            return null;
+        com.cloud.vm.KvmTpmConfig tpm = com.cloud.vm.KvmTpmConfig.resolve(details, false);
+        if (!tpm.isEnabled()) { return null; }
+        if (details == null || !details.containsKey(com.cloud.vm.KvmTpmConfig.MODEL)) {
+            throw new com.cloud.exception.InvalidParameterValueException(
+                    "Legacy TPM metadata has no canonical device model. Audit the existing domain and TPM state before starting.");
         }
-        String tpmModel = details.get(VmDetailConstants.VIRTUAL_TPM_MODEL);
-        if (tpmModel == null) {
-            return null;
+        if (!tpm.supportedBy(getTpmCapabilities())) {
+            throw new com.cloud.exception.InvalidParameterValueException("Host does not support requested TPM model/version: "
+                    + tpm.getModel() + "/" + tpm.getVersion());
         }
-        String tpmVersion = details.get(VmDetailConstants.VIRTUAL_TPM_VERSION);
-        return new TpmDef(tpmModel, tpmVersion);
+        return new TpmDef(tpm.getModel(), tpm.getVersion());
     }
 
     private void configureGuestIfUefiEnabled(boolean isSecureBoot, String bootMode, GuestDef guest) {

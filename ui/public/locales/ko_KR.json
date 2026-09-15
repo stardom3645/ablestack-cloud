@@ -7632,5 +7632,7 @@
   "label.scheduleactions": "작업",
   "label.update.members": "멤버 수 변경",
   "message.success.config.resource.schedule": "자원 스케줄을 설정했습니다.",
-  "message.error.remove.resource.schedule": "자원 스케줄을 삭제하지 못했습니다."
+  "message.error.remove.resource.schedule": "자원 스케줄을 삭제하지 못했습니다.",
+  "label.tpm.model": "TPM 모델",
+  "label.tpm.inherit": "템플릿 설정 사용 (미지정 시 사용 안 함)"
 }
