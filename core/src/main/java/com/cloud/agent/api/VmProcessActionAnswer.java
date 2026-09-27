@@ -14,10 +14,17 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package org.apache.cloudstack.vm.process;
-import org.apache.cloudstack.api.response.VmProcessSnapshotResponse;
-public interface VmProcessSnapshotService {
-    java.util.Map<String,Object> actionTarget(long vmId, String snapshotId, long pid, String serviceName);
-    VmProcessSnapshotResponse refresh(long vmId);
-    VmProcessSnapshotResponse list(long vmId, String snapshotId, String keyword, String sort, boolean descending, int page, int pageSize);
+package com.cloud.agent.api;
+
+public class VmProcessActionAnswer extends Answer {
+    private String resultJson;
+
+    public VmProcessActionAnswer(VmProcessActionCommand c, String json) {
+        super(c, true, null);
+        resultJson = json;
+    }
+
+    public String getResultJson() {
+        return resultJson;
+    }
 }

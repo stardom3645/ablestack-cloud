@@ -58,7 +58,7 @@ public final class VmProcessSnapshot {
             validate(result, c); return result;
         } catch (RuntimeException e) { throw new IOException("Invalid snapshot", e); }
     }
-    private static Object read(JsonReader r, int depth) throws IOException {
+    static Object read(JsonReader r, int depth) throws IOException {
         if (depth > 12) throw new IOException("JSON depth");
         switch (r.peek()) {
             case BEGIN_OBJECT:

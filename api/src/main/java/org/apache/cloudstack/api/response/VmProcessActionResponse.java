@@ -14,10 +14,26 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package org.apache.cloudstack.vm.process;
-import org.apache.cloudstack.api.response.VmProcessSnapshotResponse;
-public interface VmProcessSnapshotService {
-    java.util.Map<String,Object> actionTarget(long vmId, String snapshotId, long pid, String serviceName);
-    VmProcessSnapshotResponse refresh(long vmId);
-    VmProcessSnapshotResponse list(long vmId, String snapshotId, String keyword, String sort, boolean descending, int page, int pageSize);
+package org.apache.cloudstack.api.response;
+
+import com.cloud.serializer.Param;
+import com.google.gson.annotations.SerializedName;
+
+import org.apache.cloudstack.api.BaseResponse;
+
+import java.util.Map;
+
+public class VmProcessActionResponse extends BaseResponse {
+    @SerializedName("processstate")
+    @Param(description = "Durable action result; internal placement authority omitted")
+    @com.google.gson.annotations.JsonAdapter(ProcessStateAdapter.class)
+    private Map<String, Object> processState;
+
+    public void setProcessState(Map<String, Object> state) {
+        processState = state;
+    }
+
+    public Map<String, Object> getProcessState() {
+        return processState;
+    }
 }

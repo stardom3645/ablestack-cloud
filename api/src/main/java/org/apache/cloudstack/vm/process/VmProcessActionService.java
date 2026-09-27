@@ -15,9 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 package org.apache.cloudstack.vm.process;
-import org.apache.cloudstack.api.response.VmProcessSnapshotResponse;
-public interface VmProcessSnapshotService {
-    java.util.Map<String,Object> actionTarget(long vmId, String snapshotId, long pid, String serviceName);
-    VmProcessSnapshotResponse refresh(long vmId);
-    VmProcessSnapshotResponse list(long vmId, String snapshotId, String keyword, String sort, boolean descending, int page, int pageSize);
+
+import org.apache.cloudstack.api.response.VmProcessActionResponse;
+
+public interface VmProcessActionService {
+    VmProcessActionResponse execute(
+            long vmId,
+            String requestId,
+            String snapshotId,
+            long pid,
+            String action,
+            String service);
+
+    VmProcessActionResponse get(long vmId, String operationId, String requestId);
+
+    default VmProcessActionResponse get(long vmId, String operationId) {
+        return get(vmId, operationId, null);
+    }
 }

@@ -59,6 +59,7 @@ public class VmProcessSnapshotServiceImpl extends com.cloud.utils.component.Mana
     private static final class Entry {
         long started, completed, host, generation;
         boolean running;
+        String guestObservedAt;
         Map<String, Object> snapshot;
     }
     @Override public List<Class<?>> getCommands() {
@@ -113,6 +114,7 @@ public class VmProcessSnapshotServiceImpl extends com.cloud.utils.component.Mana
                 // Round trip enforces byte bounds, strict fields and exact numeric identity.
                 result = VmProcessSnapshot.decode(((GetVmProcessSnapshotAnswer) answer).getSnapshotJson(), c);
                 if ("snapshot".equals(result.get("kind"))) {
+                    entry.guestObservedAt = (String) result.get("observedAt");
                     Instant time = Instant.now(); result.put("observedAt", time.toString()); result.put("expiresAt", time.plusSeconds(10).toString());
                     synchronized (entries) { entry.snapshot = result; entry.completed = now(); }
                 }
@@ -134,6 +136,26 @@ public class VmProcessSnapshotServiceImpl extends com.cloud.utils.component.Mana
                 return response(VmProcessSnapshot.failure(c, "STALE_SNAPSHOT"), 0, true, "UNAVAILABLE");
             }
             return page(e.snapshot, keyword, sort == null ? "pid" : sort, descending, page, size);
+        }
+    }
+    @Override public Map<String,Object> actionTarget(long vmId,String snapshotId,long pid,String serviceName) {
+        UserVmVO vm=authorized(vmId);command(vm);
+        synchronized(entries) {
+            Entry e=entries.get(vmId);
+            if(e==null || e.running || e.snapshot==null || !snapshotId.equals(e.snapshot.get("snapshotId")) || e.host!=vm.getHostId()
+                    || e.generation!=vm.getUpdated() || now()-e.completed>=10_000_000_000L) throw new InvalidParameterValueException("STALE_SNAPSHOT");
+            for(Object object:(List<?>)e.snapshot.get("processes")) {
+                Map<String,Object> row=VmProcessSnapshot.map(object),identity=VmProcessSnapshot.map(row.get("identity"));
+                if(((Number)identity.get("pid")).longValue()!=pid)continue;
+                Map<String,Object> selected=new LinkedHashMap<>();selected.put("identity",new LinkedHashMap<>(identity));selected.put("authority",e.snapshot.get("authority"));
+                selected.put("observedAt",e.guestObservedAt);selected.put("service",null);
+                if(serviceName!=null) {
+                    for(Object service:(List<?>)row.get("services")) if(serviceName.equals(VmProcessSnapshot.map(service).get("name")))selected.put("service",service);
+                    if(selected.get("service")==null)throw new InvalidParameterValueException("STALE_IDENTITY");
+                }
+                return selected;
+            }
+            throw new InvalidParameterValueException("STALE_IDENTITY");
         }
     }
     private static VmProcessSnapshotResponse refreshed(Map<String, Object> snapshot) {
