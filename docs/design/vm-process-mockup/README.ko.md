@@ -61,91 +61,91 @@ under the License.
 
 라이트
 
-![프로세스 목록과 작업 메뉴 라이트](images/01-list-light.png)
+![프로세스 목록과 작업 메뉴 라이트](images/01-list-light.jpg)
 
 다크
 
-![프로세스 목록과 작업 메뉴 다크](images/01-list-dark.png)
+![프로세스 목록과 작업 메뉴 다크](images/01-list-dark.jpg)
 
 ### 02. 정상 종료 확인
 
 라이트
 
-![정상 종료 확인 라이트](images/02-terminate-light.png)
+![정상 종료 확인 라이트](images/02-terminate-light.jpg)
 
 다크
 
-![정상 종료 확인 다크](images/02-terminate-dark.png)
+![정상 종료 확인 다크](images/02-terminate-dark.jpg)
 
 ### 03. 강제 종료 확인
 
 라이트
 
-![강제 종료 확인 라이트](images/03-kill-light.png)
+![강제 종료 확인 라이트](images/03-kill-light.jpg)
 
 다크
 
-![강제 종료 확인 다크](images/03-kill-dark.png)
+![강제 종료 확인 다크](images/03-kill-dark.jpg)
 
 ### 04. 서비스 재시작 확인
 
 라이트
 
-![서비스 재시작 확인 라이트](images/04-restart-light.png)
+![서비스 재시작 확인 라이트](images/04-restart-light.jpg)
 
 다크
 
-![서비스 재시작 확인 다크](images/04-restart-dark.png)
+![서비스 재시작 확인 다크](images/04-restart-dark.jpg)
 
 ### 05. Tools 설치 안내와 RPC 확인
 
 라이트
 
-![Tools 설치 안내와 RPC 확인 라이트](images/05-tools-light.png)
+![Tools 설치 안내와 RPC 확인 라이트](images/05-tools-light.jpg)
 
 다크
 
-![Tools 설치 안내와 RPC 확인 다크](images/05-tools-dark.png)
+![Tools 설치 안내와 RPC 확인 다크](images/05-tools-dark.jpg)
 
 ### 06. Global 비활성
 
 라이트
 
-![Global 비활성 라이트](images/06-disabled-light.png)
+![Global 비활성 라이트](images/06-disabled-light.jpg)
 
 다크
 
-![Global 비활성 다크](images/06-disabled-dark.png)
+![Global 비활성 다크](images/06-disabled-dark.jpg)
 
 ### 07. 결과 미확정과 읽기 전용 조회
 
 라이트
 
-![결과 미확정과 읽기 전용 조회 라이트](images/07-unknown-light.png)
+![결과 미확정과 읽기 전용 조회 라이트](images/07-unknown-light.jpg)
 
 다크
 
-![결과 미확정과 읽기 전용 조회 다크](images/07-unknown-dark.png)
+![결과 미확정과 읽기 전용 조회 다크](images/07-unknown-dark.jpg)
 
 ### 08. 오래된 목록과 변경 차단
 
 라이트
 
-![오래된 목록과 변경 차단 라이트](images/08-stale-light.png)
+![오래된 목록과 변경 차단 라이트](images/08-stale-light.jpg)
 
 다크
 
-![오래된 목록과 변경 차단 다크](images/08-stale-dark.png)
+![오래된 목록과 변경 차단 다크](images/08-stale-dark.jpg)
 
 ### 09. Windows 미지원 작업 안내
 
 라이트
 
-![Windows 미지원 작업 안내 라이트](images/09-windows-light.png)
+![Windows 미지원 작업 안내 라이트](images/09-windows-light.jpg)
 
 다크
 
-![Windows 미지원 작업 안내 다크](images/09-windows-dark.png)
+![Windows 미지원 작업 안내 다크](images/09-windows-dark.jpg)
 
 ## 재현
 
