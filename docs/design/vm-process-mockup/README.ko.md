@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
  -->
 
-# C6 프로세스 탭 — 구현 전 UI 목업 v2
+# C6 프로세스 탭 — 구현 전 UI 목업 v3
 
 검토 이슈: https://github.com/ablecloud-team/ablestack-cloud/issues/1176
 
@@ -159,3 +159,13 @@ under the License.
 ## v2 변경
 
 사용자 검토 반영: 선두 파란 버튼을 핵심 변경 액션으로 전환하고 프로세스 탭을 네 번째로 이동했습니다. 준비 미완료/Global 비활성/UNKNOWN/만료 상태에서는 핵심 액션을 차단하며 보조 확인 기능을 파란 주 버튼으로 승격하지 않습니다.
+
+## v3 — CPU 사용량 검토 반영
+
+메모리 앞에 CPU 사용량 열을 추가했습니다. 소수점 한 자리 %와 오른쪽 정렬을 사용하고 null은 ‘—’, 실제 0은 ‘0.0%’로 구분합니다. 한 코어 100% 기준이므로 여러 코어 사용 시 100%를 초과할 수 있습니다. CPU 열에는 현재 미지원인 정렬 아이콘을 표시하지 않았습니다.
+
+**이미지 CPU 수치는 표시 형식 검토용 예시이며 현재 실행 결과가 아닙니다.** 현재 qemu Linux `lib/process/process_list_linux.py`는 `cpuPercent: None`, Windows `lib/process/ProcessList.ps1`은 `cpuPercent=$null`을 반환합니다. 계약 schema에는 nullable number 필드가 있지만 실제 샘플링은 미구현입니다. Cloud `VmProcessSnapshotServiceImpl.page`의 정렬 허용 값도 pid/name/memoryBytes뿐입니다.
+
+C1 계약 기준: 두 sample 사이 프로세스 CPU time / wall interval ×100, Linux/Windows 동일 의미. 최초 sample, 재부팅, 카운터 감소, 관측 누락은 null입니다. 실제 CPU 수치를 제공하려면 qemu 샘플링과 CPU 정렬의 Cloud 연동/테스트가 선행되어야 합니다. 수집 연동 전 실제 UI는 CPU를 ‘—’로 표시해야 하며 null을 0으로 바꾸면 안 됩니다.
+
+이번 변경은 목업/검토 문서뿐이며 CPU 수집 코드나 API는 수정하지 않았습니다.
