@@ -31,8 +31,9 @@ under the License.
 C1 capability envelope의 공개 투영으로 authority에는 vmUuid만 포함한다. 내부 hostUuid와
 placementGeneration은 Agent 응답 확인에만 사용한다. nullable 버전 필드는 JSON null로 유지한다.
 
-- 기본 설정 `vm.process.capability.enabled=false`.
-- 관리자가 `vm.process.capability.test.vm.uuids`에 쉼표로 지정한 VM은 root admin만 시험할 수 있다.
+- C4부터 최상위 설정 `vm.process.management.enabled=false`를 사용하며 명시적 true가 필요하다.
+- 종전 `vm.process.capability.enabled`와 `vm.process.capability.test.vm.uuids`는 등록만 유지하고 무시한다. 관리자도 우회할 수 없다.
+- 아래 2026-09-25 기록은 당시 C2 검증이며, 현재 정책과 C4 검증은 `../vm-process-snapshot/README.ko.md`를 따른다.
 - C1의 논리 권한 `vm.process.read`는 Cloud 동적 역할에서 이 API 명령 이름의 조회 권한으로 관리한다.
 - API ACL(ListEntry)과 서비스의 account/domain/project 접근 검사 모두 적용한다. 응답 직전 접근 권한도 재검사한다.
 - User VM만 허용하고 비KVM/비Running 상태는 각각 UNSUPPORTED_HYPERVISOR/VM_NOT_RUNNING으로 응답한다.

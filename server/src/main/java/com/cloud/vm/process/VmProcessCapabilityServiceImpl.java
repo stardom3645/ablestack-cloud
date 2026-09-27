@@ -17,7 +17,6 @@
 package com.cloud.vm.process;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -49,20 +48,21 @@ public class VmProcessCapabilityServiceImpl extends com.cloud.utils.component.Ma
     @Override public java.util.List<Class<?>> getCommands() {
         return java.util.List.of(org.apache.cloudstack.api.command.user.vm.GetVirtualMachineProcessCapabilitiesCmd.class);
     }
+    public static final ConfigKey<Boolean> MANAGEMENT_ENABLED = new ConfigKey<>("Advanced", Boolean.class,
+            "vm.process.management.enabled", "false", "Explicitly enable VM process observations and management APIs. Disabled by default; no test allowlist bypass.", true);
     public static final ConfigKey<Boolean> ENABLED = new ConfigKey<>("Advanced", Boolean.class,
-            "vm.process.capability.enabled", "false", "Enable bounded VM process capability observations.", true);
+            "vm.process.capability.enabled", "false", "Deprecated and ignored; use vm.process.management.enabled.", true);
     public static final ConfigKey<String> TEST_VMS = new ConfigKey<>("Advanced", String.class,
-            "vm.process.capability.test.vm.uuids", "", "Administrator test VM UUID allowlist while capability rollout is disabled.", true);
+            "vm.process.capability.test.vm.uuids", "", "Deprecated and ignored; no allowlist bypass of vm.process.management.enabled.", true);
     @Inject private UserVmDao vmDao;
     @Inject private AccountManager accountManager;
     @Inject private HostDao hostDao;
     @Inject private AgentManager agentManager;
     private final Semaphore admission = new Semaphore(8);
     @Override public String getConfigComponentName() { return getClass().getSimpleName(); }
-    @Override public ConfigKey<?>[] getConfigKeys() { return new ConfigKey<?>[] { ENABLED, TEST_VMS }; }
+    @Override public ConfigKey<?>[] getConfigKeys() { return new ConfigKey<?>[] { MANAGEMENT_ENABLED, ENABLED, TEST_VMS }; }
     boolean enabled(UserVmVO vm) {
-        return Boolean.TRUE.equals(ENABLED.value()) || accountManager.isRootAdmin(CallContext.current().getCallingAccount().getId())
-                && Arrays.stream(Objects.toString(TEST_VMS.value(), "").split(",")).map(String::trim).anyMatch(vm.getUuid()::equals);
+        return Boolean.TRUE.equals(MANAGEMENT_ENABLED.value());
     }
     @Override public VmProcessCapabilityResponse getCapabilities(long vmId) {
         UserVmVO vm = vmDao.findById(vmId);
@@ -98,6 +98,7 @@ public class VmProcessCapabilityServiceImpl extends com.cloud.utils.component.Ma
         } catch (com.cloud.exception.AgentUnavailableException | com.cloud.exception.OperationTimedoutException e) {
             result = VmProcessCapability.fail(result, "CHECK_FAILED", "Agent observation unavailable");
         } finally { admission.release(); }
+        if (!enabled(vm)) throw new InvalidParameterValueException("VM process management is disabled");
         return response(result);
     }
     static VmProcessCapabilityResponse response(Map<String, Object> internal) {

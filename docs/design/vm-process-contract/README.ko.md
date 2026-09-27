@@ -119,7 +119,8 @@ helper가 없는 기존 VM도 RPC 가능 여부는 표시할 수 있지만 프�
 ## 4. OS 및 실행 환경 지원 매트릭스
 
 아래는 **1.0 구현 대상으로 확정한 매트릭스**이며 실제 제품 지원 승인은 Q6/C7 실증 후에만 부여한다.
-검증 전 전역 기능 플래그는 기본 off, 관리자 test allowlist에서만 활성화한다.
+전역 설정 `vm.process.management.enabled`는 기본 false이며 관리자가 명시적으로 true로 선택해야 활성화한다.
+C4 추가 요구사항에 따라 관리자 test allowlist도 이 설정을 우회하지 못한다.
 QGA의 특정 최소 버전만으로 승인하지 않는다. 8개 RPC+guest-info와 package hash별 probe 결과가 필수 gate다.
 QGA/Tools 실제 검증 버전·ISO SHA는 Q6 보고서에 채워야 하며 아직 검증 완료 항목은 없다.
 

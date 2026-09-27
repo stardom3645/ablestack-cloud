@@ -212,6 +212,51 @@ public final class KvmVmOperationGuard implements AutoCloseable {
         }
     }
 
+    /** Agent-owned read context: one inherited flock, live stdin pipe and shared monitoring admission. */
+    public static String processSnapshot(String uuid, String requestJson) throws IOException, InterruptedException {
+        if (!UUID.fromString(uuid).toString().equals(uuid) || requestJson.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 65536)
+            throw new IOException("Invalid process request");
+        if (!admitProbe()) throw new IOException("Monitoring capacity exhausted");
+        Process child = null; Path request = null;
+        try {
+            directory(ROOT); Path locks = ROOT.resolve("locks"); directory(locks);
+            Path lockFile = locks.resolve(uuid + ".lock");
+            try { Files.createFile(lockFile, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"))); }
+            catch (FileAlreadyExistsException ignored) { }
+            if (Files.isSymbolicLink(lockFile) || !Files.isRegularFile(lockFile, LinkOption.NOFOLLOW_LINKS)
+                    || !Files.getOwner(lockFile).equals(Files.getOwner(Paths.get("/proc/self")))
+                    || Files.getPosixFilePermissions(lockFile).stream().anyMatch(p -> p.name().equals("GROUP_WRITE") || p.name().equals("OTHERS_WRITE")))
+                throw new IOException("Unsafe process guard lock");
+            request = Files.createTempFile(ROOT, "process-read-", ".json", PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+            Files.writeString(request, requestJson, java.nio.charset.StandardCharsets.UTF_8);
+            // Fixed shell program; validated paths are positional argv, never interpolated as shell source.
+            ProcessBuilder builder = new ProcessBuilder("/bin/sh", "-c",
+                    "exec 9<>\"$1\"; flock -n 9 || exit 3; exec /usr/bin/vm_exec --process-protocol 1.0 --request-json \"$2\" --cloud-read-guard-fd 9",
+                    "process-read", lockFile.toString(), request.toString());
+            builder.redirectError(ProcessBuilder.Redirect.DISCARD); builder.environment().put("LC_ALL", "C");
+            child = builder.start();
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(6);
+            java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+            java.io.InputStream stream = child.getInputStream(); byte[] buffer = new byte[8192];
+            while (child.isAlive() || stream.available() > 0) {
+                if (System.nanoTime() > deadline) throw new IOException("Process snapshot deadline exceeded");
+                int available = stream.available();
+                if (available > 0) {
+                    int count = stream.read(buffer, 0, Math.min(buffer.length, available));
+                    if (count > 0) { if (output.size() + count > 1048576) throw new IOException("Process output limit"); output.write(buffer, 0, count); }
+                } else Thread.sleep(5);
+            }
+            if (child.exitValue() != 0) throw new IOException("Process helper failed");
+            return java.nio.charset.StandardCharsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(output.toByteArray())).toString();
+        } finally {
+            if (child != null && child.isAlive()) terminate(child);
+            if (child != null && child.isAlive()) CHILDREN.add(child); else PROBES.release();
+            if (child != null) try { child.getOutputStream().close(); } catch (IOException ignored) { }
+            if (request != null) Files.deleteIfExists(request);
+        }
+    }
+
     public static String guestCommand(Domain domain, String command, int seconds) {
         try { return probe(Math.max(1, seconds) * 1000L, "virsh", "-c", "qemu:///system", "qemu-agent-command",
                 domain.getUUIDString(), "--timeout", Integer.toString(Math.max(1, seconds)), command); }

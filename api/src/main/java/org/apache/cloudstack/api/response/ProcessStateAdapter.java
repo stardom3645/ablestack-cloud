@@ -34,6 +34,8 @@ public final class ProcessStateAdapter extends TypeAdapter<Map<String, Object>> 
         finally { out.setSerializeNulls(previous); }
     }
     @Override public Map<String, Object> read(JsonReader in) throws IOException {
-        throw new IOException("Response-only adapter");
+        // Async job results are deserialized by ApiSerializerHelper before public serialization.
+        // This is a response DTO, never a request/agent trust boundary.
+        return GSON.fromJson(in, new com.google.gson.reflect.TypeToken<Map<String, Object>>() { }.getType());
     }
 }
