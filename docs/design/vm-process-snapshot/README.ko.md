@@ -27,8 +27,8 @@ qemu 누적 기준: Q4/SELinux 보강 `610b106ad9ab6939a2c22752555c70d61af83ff0`
 
 Global 설정 `vm.process.management.enabled`는 기본 **false**이며 동적으로 반영한다.
 관리자가 Global 설정에서 명시적으로 true로 설정해야 capability/refresh/list API를 사용할 수 있다.
-종전 `vm.process.capability.enabled`, `vm.process.capability.test.vm.uuids`는 호환을 위해 등록만 유지하며
-이제 무시한다. 관리자와 테스트 VM도 새 전역 설정을 우회할 수 없다.
+종전 `vm.process.capability.enabled`, `vm.process.capability.test.vm.uuids`는 등록을 제거하고
+기존 DB 행도 동일 버전 마이그레이션에서 정리한다. 관리자와 테스트 VM도 새 전역 설정을 우회할 수 없다.
 설정 false에서는 Agent 실행/캐시 조회를 거부하며 진행 중 수집의 결과도 반환하지 않는다.
 이 설정은 향후 변경 API에도 동일하게 적용해야 한다. 현재 종료·재시작은 구현/노출하지 않는다.
 

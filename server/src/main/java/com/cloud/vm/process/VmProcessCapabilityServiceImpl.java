@@ -50,17 +50,13 @@ public class VmProcessCapabilityServiceImpl extends com.cloud.utils.component.Ma
     }
     public static final ConfigKey<Boolean> MANAGEMENT_ENABLED = new ConfigKey<>("Advanced", Boolean.class,
             "vm.process.management.enabled", "false", "Explicitly enable VM process observations and management APIs. Disabled by default; no test allowlist bypass.", true);
-    public static final ConfigKey<Boolean> ENABLED = new ConfigKey<>("Advanced", Boolean.class,
-            "vm.process.capability.enabled", "false", "Deprecated and ignored; use vm.process.management.enabled.", true);
-    public static final ConfigKey<String> TEST_VMS = new ConfigKey<>("Advanced", String.class,
-            "vm.process.capability.test.vm.uuids", "", "Deprecated and ignored; no allowlist bypass of vm.process.management.enabled.", true);
     @Inject private UserVmDao vmDao;
     @Inject private AccountManager accountManager;
     @Inject private HostDao hostDao;
     @Inject private AgentManager agentManager;
     private final Semaphore admission = new Semaphore(8);
     @Override public String getConfigComponentName() { return getClass().getSimpleName(); }
-    @Override public ConfigKey<?>[] getConfigKeys() { return new ConfigKey<?>[] { MANAGEMENT_ENABLED, ENABLED, TEST_VMS }; }
+    @Override public ConfigKey<?>[] getConfigKeys() { return new ConfigKey<?>[] { MANAGEMENT_ENABLED }; }
     boolean enabled(UserVmVO vm) {
         return Boolean.TRUE.equals(MANAGEMENT_ENABLED.value());
     }
