@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
  -->
 
-# C6 프로세스 탭 — 구현 전 UI 목업 v3
+# C6 프로세스 탭 — 구현 전 UI 목업 v4
 
 검토 이슈: https://github.com/ablecloud-team/ablestack-cloud/issues/1176
 
@@ -150,7 +150,7 @@ under the License.
 ## 재현
 
 이 디렉터리를 정적 HTTP 서버로 열고 `index.html?state=list&theme=dark`로 접속합니다.
-`state`는 list/terminate/kill/restart/tools/disabled/unknown/stale/windows,
+`state`는 list/terminate/kill/restart/tools/disabled/unknown/stale/windows/cpu-sort,
 `theme`은 light/dark입니다. 하단 링크는 목업 화면 전환용이며 작업 버튼은 실제 동작하지 않습니다.
 `&capture=1`은 화면 전환용 링크를 숨깁니다.
 
@@ -160,12 +160,20 @@ under the License.
 
 사용자 검토 반영: 선두 파란 버튼을 핵심 변경 액션으로 전환하고 프로세스 탭을 네 번째로 이동했습니다. 준비 미완료/Global 비활성/UNKNOWN/만료 상태에서는 핵심 액션을 차단하며 보조 확인 기능을 파란 주 버튼으로 승격하지 않습니다.
 
-## v3 — CPU 사용량 검토 반영
+## v4 — CPU 사용량·정렬 검토 반영
 
-메모리 앞에 CPU 사용량 열을 추가했습니다. 소수점 한 자리 %와 오른쪽 정렬을 사용하고 null은 ‘—’, 실제 0은 ‘0.0%’로 구분합니다. 한 코어 100% 기준이므로 여러 코어 사용 시 100%를 초과할 수 있습니다. CPU 열에는 현재 미지원인 정렬 아이콘을 표시하지 않았습니다.
+메모리 앞에 CPU 사용량 열을 배치했습니다. 소수점 한 자리 %와 오른쪽 정렬을 사용하고 미측정은 ‘—’, 실제 0은 ‘0.0%’로 구분합니다. 한 코어 100% 기준이므로 여러 코어 사용 시 100%를 초과할 수 있습니다. CPU 열의 정렬 동작을 추가했으며 높은 순으로 볼 때 미측정 값은 마지막에, 같은 값은 PID 순서로 표시합니다.
 
-**이미지 CPU 수치는 표시 형식 검토용 예시이며 현재 실행 결과가 아닙니다.** 현재 qemu Linux `lib/process/process_list_linux.py`는 `cpuPercent: None`, Windows `lib/process/ProcessList.ps1`은 `cpuPercent=$null`을 반환합니다. 계약 schema에는 nullable number 필드가 있지만 실제 샘플링은 미구현입니다. Cloud `VmProcessSnapshotServiceImpl.page`의 정렬 허용 값도 pid/name/memoryBytes뿐입니다.
+라이트·다크의 기존 18개 화면을 갱신하고 CPU 높은 순 정렬 화면 2개를 추가했습니다. 이미지는 표시 형식 검토용 예시 데이터이며 실제 API 호출이나 VM 변경을 수행하지 않습니다.
 
-C1 계약 기준: 두 sample 사이 프로세스 CPU time / wall interval ×100, Linux/Windows 동일 의미. 최초 sample, 재부팅, 카운터 감소, 관측 누락은 null입니다. 실제 CPU 수치를 제공하려면 qemu 샘플링과 CPU 정렬의 Cloud 연동/테스트가 선행되어야 합니다. 수집 연동 전 실제 UI는 CPU를 ‘—’로 표시해야 하며 null을 0으로 바꾸면 안 됩니다.
+백엔드 선행 작업: [qemu #75](https://github.com/ablecloud-team/ablestack-qemu-exec-tools/issues/75), [Cloud #1183](https://github.com/ablecloud-team/ablestack-cloud/issues/1183).
 
-이번 변경은 목업/검토 문서뿐이며 CPU 수집 코드나 API는 수정하지 않았습니다.
+### 10. CPU 높은 순 정렬
+
+라이트
+
+![CPU 높은 순 정렬 라이트](images/10-cpu-sort-light.jpg)
+
+다크
+
+![CPU 높은 순 정렬 다크](images/10-cpu-sort-dark.jpg)
