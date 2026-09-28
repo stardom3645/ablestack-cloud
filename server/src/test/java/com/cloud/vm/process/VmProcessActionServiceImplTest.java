@@ -16,23 +16,38 @@
 // under the License.
 package com.cloud.vm.process;
 
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.cloud.agent.AgentManager;
-import com.cloud.agent.api.*;
-import com.cloud.exception.*;
-import com.cloud.user.*;
-import com.cloud.vm.*;
+
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.exception.PermissionDeniedException;
+import com.cloud.user.Account;
+import com.cloud.user.AccountManager;
+import com.cloud.vm.UserVmVO;
+import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.UserVmDao;
 
 import org.apache.cloudstack.context.CallContext;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 public class VmProcessActionServiceImplTest {
     private final UserVmDao dao = mock(UserVmDao.class);

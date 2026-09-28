@@ -17,13 +17,18 @@
 package com.cloud.vm.process;
 
 import com.cloud.agent.AgentManager;
-import com.cloud.agent.api.*;
+import com.cloud.agent.api.Answer;
+import com.cloud.agent.api.VmProcessAction;
+import com.cloud.agent.api.VmProcessActionAnswer;
+import com.cloud.agent.api.VmProcessActionCommand;
+import com.cloud.agent.api.VmProcessSnapshot;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.user.AccountManager;
 import com.cloud.utils.db.TransactionLegacy;
-import com.cloud.vm.*;
+import com.cloud.vm.UserVmVO;
+import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.UserVmDao;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,9 +36,17 @@ import com.google.gson.GsonBuilder;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.response.VmProcessActionResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.vm.process.*;
+import org.apache.cloudstack.vm.process.VmProcessActionService;
+import org.apache.cloudstack.vm.process.VmProcessSnapshotService;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Locale;
+import java.util.Set;
+import java.util.Objects;
+import java.util.UUID;
 
 import javax.inject.Inject;
 

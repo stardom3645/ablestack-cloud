@@ -16,14 +16,16 @@
 // under the License.
 package com.cloud.agent.api;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import com.google.gson.GsonBuilder;
 
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class VmProcessActionTest {
     private Map<String, Object> request() {

@@ -20,8 +20,14 @@ import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
 
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
-import org.apache.cloudstack.api.*;
-import org.apache.cloudstack.api.response.*;
+import org.apache.cloudstack.api.ACL;
+import org.apache.cloudstack.api.ApiCommandResourceType;
+import org.apache.cloudstack.api.ApiErrorCode;
+import org.apache.cloudstack.api.BaseAsyncCmd;
+import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.response.UserVmResponse;
+import org.apache.cloudstack.api.response.VmProcessActionResponse;
 import org.apache.cloudstack.vm.process.VmProcessActionService;
 
 import javax.inject.Inject;

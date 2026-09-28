@@ -16,11 +16,17 @@
 // under the License.
 package com.cloud.agent.api;
 
-import com.google.gson.stream.*;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.StringReader;
 import java.time.Instant;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /** Strict response projection. Never trust an agent's boolean success alone. */
 public final class VmProcessAction {

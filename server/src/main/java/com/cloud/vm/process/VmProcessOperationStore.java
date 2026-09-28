@@ -18,7 +18,11 @@ package com.cloud.vm.process;
 
 import com.cloud.utils.db.TransactionLegacy;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 /** All statements parameterized. No automatic deletion of unresolved reservations. */
 public class VmProcessOperationStore {
