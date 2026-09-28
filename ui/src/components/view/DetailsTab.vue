@@ -107,6 +107,9 @@
               {{ dataResource.rootdisksize }} GB
             </div>
           </div>
+          <div v-else-if="$route.meta.name === 'computeoffering' && item === 'diskofferingcomputeonly'">
+            {{ dataResource.diskofferingcomputeonly ? $t('label.compute.offering.dedicated.auto.created') : $t('label.general.disk.offering.link') }}
+          </div>
           <div v-else-if="$route.meta.name === 'buckets' && item === 'size'">
             <div>
               {{ convertKB(dataResource.size) }}

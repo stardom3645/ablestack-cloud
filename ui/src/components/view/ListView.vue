@@ -694,7 +694,7 @@
         <span v-else>{{ text }}</span>
       </template>
       <template v-if="column.key === 'diskofferingname'">
-        <router-link v-if="record.diskofferingname" :to="{ path: '/diskoffering/' + record.diskofferingid }">{{ text }}</router-link>
+        <router-link v-if="record.diskofferingname && record.diskofferingcomputeonly !== true" :to="{ path: '/diskoffering/' + record.diskofferingid }">{{ text }}</router-link>
         <span v-else>{{ text }}</span>
       </template>
       <template v-for="(value, name) in thresholdMapping" :key="name">
