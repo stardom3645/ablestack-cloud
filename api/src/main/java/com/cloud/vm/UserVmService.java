@@ -51,7 +51,6 @@ import org.apache.cloudstack.api.command.user.vm.UpdateVmNicIpCmd;
 import org.apache.cloudstack.api.command.user.vm.UpgradeVMCmd;
 import org.apache.cloudstack.api.command.user.vmgroup.CreateVMGroupCmd;
 import org.apache.cloudstack.api.command.user.vmgroup.DeleteVMGroupCmd;
-import org.apache.cloudstack.api.command.user.vm.UpdateVmNicLinkStateCmd;
 
 
 import com.cloud.dc.DataCenter;
@@ -574,11 +573,12 @@ public interface UserVmService {
      */
     Pair<Boolean, String> unmanageUserVM(Long vmId, Long targetHostId);
 
+    UserVm checkVbmcToVM(org.apache.cloudstack.api.command.user.vm.CheckVbmcToVMCmd cmd);
+
     UserVm allocateVbmcToVM(AllocateVbmcToVMCmd cmd);
 
     UserVm removeVbmcToVM(RemoveVbmcToVMCmd cmd);
 
-    UserVm updateVmNicLinkState(UpdateVmNicLinkStateCmd cmd);
 
     UserVm allocateVMFromBackup(CreateVMFromBackupCmd cmd) throws InsufficientCapacityException, ResourceAllocationException, ResourceUnavailableException;
 
