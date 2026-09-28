@@ -23,13 +23,15 @@ under the License.
         {{ primaryAction === 'service.restart' || !selected ? $t('label.vmprocess.restart') : $t('label.vmprocess.kill') }}
       </a-button>
       <a-button v-if="canAdminAction && isLinux" :disabled="!actionAvailable('process.terminate', selected)" @click="openAction('process.terminate', selected)">{{ $t('label.vmprocess.terminate') }}</a-button>
-      <a-button :loading="loading" :disabled="disabled || actionBusy" @click="refreshAll"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
-      <a-button :loading="capabilityLoading" :disabled="actionBusy" @click="checkCapability(true)">{{ $t('label.vmprocess.readiness') }}</a-button>
+      <a-button :disabled="disabled || actionBusy" @click="refreshAll"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+      <a-button :disabled="actionBusy" @click="checkCapability(true)">{{ $t('label.vmprocess.readiness') }}</a-button>
+      <a-button v-if="missingRpcs.length" @click="$emit('open-iso')">{{ $t('label.vmprocess.open.iso') }}</a-button>
+      <a-button v-if="operation && ['UNKNOWN', 'PENDING'].includes(operation.state)" :loading="operationChecking" @click="checkOperation">{{ $t('label.vmprocess.check.result') }}</a-button>
       <a-input-search v-model:value="search" :placeholder="$t('label.vmprocess.search')" :aria-label="$t('label.vmprocess.search')" :disabled="!snapshotId" @search="searchRows" />
     </div>
 
     <div v-if="capability || snapshotId" class="process-status">
-      <a-tag :color="snapshotId && !stale ? 'green' : 'orange'">{{ snapshotId && !stale ? $t('label.vmprocess.snapshot.ready') : $t('label.vmprocess.snapshot.stale') }}</a-tag>
+      <a-tag :color="snapshotId && (!stale || loading) ? 'green' : 'orange'">{{ snapshotId && (!stale || loading) ? $t('label.vmprocess.snapshot.ready') : $t('label.vmprocess.snapshot.stale') }}</a-tag>
       <span v-if="capability">{{ osLabel }}</span>
       <span v-if="observedAt">{{ $t('label.vmprocess.observed') }}: {{ $toLocaleDate(observedAt) }}</span>
       <span v-if="snapshotId">{{ $t('label.vmprocess.age') }}: {{ ageSeconds }}s / 10s</span>
@@ -37,20 +39,12 @@ under the License.
     </div>
 
     <a-alert v-if="disabled" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.disabled')" :description="$t('message.vmprocess.disabled.detail')" />
-    <a-alert v-else-if="missingRpcs.length" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.rpc.missing')" :description="missingRpcs.join(', ')" />
-    <div v-if="!disabled && missingRpcs.length" class="process-guidance">
-      <p>{{ $t('message.vmprocess.tools') }}</p>
-      <a-button @click="$emit('open-iso')">{{ $t('label.vmprocess.open.iso') }}</a-button>
-      <a-button @click="checkCapability(true)">{{ $t('label.vmprocess.readiness') }}</a-button>
-    </div>
-    <a-alert v-if="!disabled && capability && capability.readiness !== 'READY' && !missingRpcs.length" class="process-alert" type="info" show-icon :message="$t('message.vmprocess.readiness.unverified')" :description="$t('message.vmprocess.readiness.detail')" />
+    <a-alert v-else-if="missingRpcs.length" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.rpc.missing')" :description="missingRpcs.join(', ') + ' · ' + $t('message.vmprocess.tools')" />
     <a-alert v-if="errorText" class="process-alert" type="error" show-icon :message="errorText" />
-    <a-alert v-if="stale && snapshotId" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.stale')" />
     <a-alert v-if="operation" class="process-alert" :type="operation.state === 'FAILED' ? 'error' : operation.state === 'SUCCEEDED' ? 'success' : 'warning'" show-icon>
       <template #message>{{ $t('label.vmprocess.operation') }}: {{ actionLabel(operation.action) }} · {{ operation.name }} · {{ operation.state }}</template>
       <template #description>
         <span>{{ operation.state === 'UNKNOWN' ? $t('message.vmprocess.unknown') : operation.message }}</span>
-        <a-button v-if="operation.state === 'UNKNOWN' || operation.state === 'PENDING'" size="small" :loading="operationChecking" class="operation-check" @click="checkOperation">{{ $t('label.vmprocess.check.result') }}</a-button>
       </template>
     </a-alert>
 
@@ -58,7 +52,6 @@ under the License.
 :columns="columns"
 :data-source="rows"
 :row-key="rowKey"
-:loading="loading"
 :pagination="false"
 :scroll="{ x: 820 }"
 size="small"
@@ -90,6 +83,7 @@ size="small"
     <p class="process-footnote">{{ $t('message.vmprocess.limit') }}</p>
 
     <a-modal
+v-if="confirm"
 :visible="!!confirm"
 :title="actionLabel(confirm?.action)"
 :mask-closable="false"
@@ -217,8 +211,8 @@ export default {
       await this.checkCapability(false, token)
       if (this.current(token) && !this.disabled && this.rpcsReady) await this.refreshSnapshot(token)
     },
-    async refreshSnapshot (token = this.generation) {
-      if (!this.current(token) || this.loading || this.actionBusy || this.disabled || !this.rpcsReady) return
+    async refreshSnapshot (token = this.generation, forAction = false) {
+      if (!this.current(token) || this.loading || (!forAction && this.actionBusy) || this.disabled || !this.rpcsReady) return false
       this.loading = true
       this.errorText = ''
       try {
@@ -240,9 +234,15 @@ export default {
         this.observedAt = state.observedAt
         this.receivedAt = Date.now()
         this.ageSeconds = 0
-        this.selected = null
-        await this.loadPage(token)
-      } catch (error) { if (this.current(token)) this.errorText = errorMessage(error) } finally { if (this.current(token)) this.loading = false }
+        const selectedIdentity = this.selected?.identity
+        const pageLoaded = await this.loadPage(token)
+        if (this.current(token)) {
+          this.selected = pageLoaded && selectedIdentity
+            ? this.rows.find(row => row.identity?.pid === selectedIdentity.pid && row.identity?.bootId === selectedIdentity.bootId && row.identity?.startTicks === selectedIdentity.startTicks) || null
+            : null
+        }
+        return pageLoaded === true
+      } catch (error) { if (this.current(token)) this.errorText = errorMessage(error); return false } finally { if (this.current(token)) this.loading = false }
     },
     async loadPage (token = this.generation) {
       if (!this.current(token) || !this.snapshotId) return
@@ -256,10 +256,11 @@ export default {
         if (state.processstate.authority?.vmUuid !== this.resource.id || state.processstate.snapshotId !== this.snapshotId) throw new Error(this.$t('message.vmprocess.result.missing'))
         this.rows = state.processstate.processes || []
         this.total = state.count || 0
-      } catch (error) { if (this.current(token) && this.pageRequest === key) this.errorText = errorMessage(error) }
+        return true
+      } catch (error) { if (this.current(token) && this.pageRequest === key) this.errorText = errorMessage(error); return false }
     },
     selectRow (row) { if (!this.stale && !this.actionBusy) this.selected = row },
-    searchRows () { this.keyword = this.search.trim(); this.page = 1; this.selected = null; this.loadPage() },
+    searchRows () { this.keyword = this.search.trim(); this.page = 1; this.selected = null; if (this.stale) this.refreshSnapshot(); else this.loadPage() },
     tableChanged (_pagination, _filters, sorter) { if (!sorter?.columnKey) return; this.sortBy = sorter.columnKey; this.descending = sorter.order === 'descend'; this.page = 1; this.selected = null; this.loadPage() },
     pageChanged (page, size) { this.page = page; this.pageSize = size; this.selected = null; this.loadPage() },
     actionAvailable (action, row, service = null) {
@@ -279,8 +280,9 @@ export default {
       this.submitting = true
       try {
         const saved = choice.row.identity
-        const fresh = result(await getAPI('listVirtualMachineProcesses', { virtualmachineid: this.resource.id, snapshotid: this.snapshotId, keyword: this.keyword || undefined, sortby: this.sortBy, descending: this.descending, page: this.page, pagesize: this.pageSize }), 'listVirtualMachineProcesses')?.processsnapshot
-        if (!this.current(token) || fresh?.stale || !fresh?.processstate?.processes?.some(row => row.identity?.pid === saved.pid && row.identity?.bootId === saved.bootId && row.identity?.startTicks === saved.startTicks)) throw new Error(this.$t('message.vmprocess.stale'))
+        for (let attempt = 0; this.loading && attempt < 150 && this.current(token); attempt++) await pause(100)
+        const refreshed = await this.refreshSnapshot(token, true)
+        if (!refreshed || !this.current(token) || !this.rows.some(row => row.identity?.pid === saved.pid && row.identity?.bootId === saved.bootId && row.identity?.startTicks === saved.startTicks)) throw new Error(this.$t('message.vmprocess.stale'))
         const requestId = uuid()
         const pending = { requestId, action: choice.action, name: choice.row.name, pid: saved.pid, state: 'PENDING', message: '' }
         this.operation = pending; this.saveOperation(); this.confirm = null
@@ -342,8 +344,6 @@ export default {
 .process-toolbar :deep(.ant-input-search) { margin-left: auto; width: 275px; }
 .process-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--ui-text-secondary); margin-bottom: 12px; }
 .process-alert { margin: 12px 0; }
-.process-guidance { padding: 12px 16px; border: 1px solid var(--ui-border); background: var(--ui-bg-page); color: var(--ui-text-primary); margin-bottom: 16px; }
-.process-guidance button { margin-right: 8px; }
 .process-table :deep(.ant-table), .process-table :deep(.ant-table-thead > tr > th), .process-table :deep(.ant-table-tbody > tr > td) { color: var(--ui-text-primary); background: var(--ui-bg-surface); border-color: var(--ui-border); }
 .process-table :deep(.ant-table-tbody > tr:hover > td) { background: var(--ui-bg-page); }
 .process-table :deep(.ant-table-thead > tr > th) { background: var(--ui-bg-page); color: var(--ui-text-secondary); }
@@ -354,6 +354,5 @@ export default {
 .process-pagination :deep(.ant-pagination-item-link) { background: var(--ui-bg-surface); color: var(--ui-text-secondary); border-color: var(--ui-border); }
 .process-footnote { margin-top: 12px; color: var(--ui-text-secondary); font-size: 12px; }
 .process-mono { font-family: Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
-.operation-check { margin-left: 12px; }
 @media (max-width: 768px) { .process-toolbar :deep(.ant-input-search) { width: 100%; } }
 </style>
