@@ -1,4 +1,9 @@
 {
+  "message.vm.name.invalid": "The VM name must start with an ASCII letter, contain only ASCII letters, numbers and hyphens (-), and must not end with a hyphen.",
+  "message.vm.name.length": "Enter at most {max} characters. Each final VM name, including its automatically appended hyphen and number, must be no longer than 63 characters.",
+  "message.clone.name.invalid": "The clone name must start with an ASCII letter, contain only ASCII letters, numbers and hyphens (-), and must not end with a hyphen.",
+  "message.clone.name.length": "Enter at most {max} characters. Each final clone name, including its automatically appended number, must be no longer than 63 characters.",
+  "message.clone.count.invalid": "Enter a whole number of clones between 1 and 50.",
   "label.job.check.result": "Check result",
   "message.iso.detach.summary": "ISO detach: succeeded {success}, failed {failed}, result unknown {unknown}, not submitted {pending}.",
   "message.job.result.unknown": "The task result could not be confirmed. This does not mean the task failed. Click this notification to check again.",

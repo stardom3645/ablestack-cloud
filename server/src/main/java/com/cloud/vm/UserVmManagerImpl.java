@@ -11190,6 +11190,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (curVm == null) {
             throw new CloudRuntimeException("the VM doesn't exist or not registered in management server!");
         }
+        validateCloneNames(cmd, curVm.getDataCenterId());
         checkNoActiveBackupForClone(curVm.getId());
         UserVmVO vmStatus = _vmDao.findById(cmd.getId());
         if (vmStatus.getHypervisorType() != HypervisorType.KVM && vmStatus.getHypervisorType() != HypervisorType.Simulator) {
@@ -11216,12 +11217,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         DataCenter zone = _entityMgr.findById(DataCenter.class, zoneId);
         if (zone == null) {
             throw new InvalidParameterValueException("Unable to find a zone in the current VM by zone id=" + zoneId);
-        }
-        if (cmd.getName() != null && cmd.getName().length() > 0) {
-            VMInstanceVO vmByHostName = _vmInstanceDao.findVMByHostNameInZone(cmd.getName(), curVm.getDataCenterId());
-            if (vmByHostName != null && vmByHostName.getState() != State.Expunging) {
-                throw new InvalidParameterValueException("There already exists a VM by the name: " + cmd.getName() + ".");
-            }
         }
         // service offering check
         long serviceOfferingId = curVm.getServiceOfferingId();
@@ -11264,6 +11259,27 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         _resourceLimitMgr.checkResourceLimit(activeOwner, ResourceType.primary_storage, totalSize);
     }
 
+    protected void validateCloneNames(CloneVMCmd cmd, long zoneId) {
+        Integer count = cmd.getCount();
+        if (count == null || count < 1) {
+            throw new InvalidParameterValueException("The number of VM clones must be at least one");
+        }
+        String name = cmd.getName();
+        if (StringUtils.isBlank(name)) {
+            throw new InvalidParameterValueException("Clone VM name is required");
+        }
+        checkNameForRFCCompliance(name);
+        // Check the longest generated name before looking up any clone names.
+        checkNameForRFCCompliance(name + (count > 1 ? "-" + count : ""));
+        for (int index = 0; index < count; index++) {
+            String cloneName = name + (count > 1 ? "-" + (index + 1) : "");
+            VMInstanceVO existingVm = _vmInstanceDao.findVMByHostNameInZone(cloneName, zoneId);
+            if (existingVm != null && existingVm.getState() != State.Expunging) {
+                throw new InvalidParameterValueException("There already exists a VM by the name: " + cloneName + ".");
+            }
+        }
+    }
+
     protected void checkNoActiveBackupForClone(long vmId) {
         List<Backup> backups = backupDao.listByVmId(null, vmId);
         if (CollectionUtils.isEmpty(backups)) {
@@ -11300,6 +11316,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     protected Optional<UserVm> performCloneVirtualMachine(CloneVMCmd cmd) throws ResourceAllocationException, ResourceUnavailableException, InsufficientCapacityException {
         UserVmVO curVm = _vmDao.findById(cmd.getId());
+        // Recheck when the async job runs, before snapshots, volumes or source state are changed.
+        validateCloneNames(cmd, curVm.getDataCenterId());
         checkNoActiveBackupForClone(curVm.getId());
         Account curVmAccount = _accountDao.findById(curVm.getAccountId());
         long zoneId = cmd.getTargetVM().getDataCenterId();
@@ -11340,7 +11358,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             Map<VolumeVO, SnapshotVO> volumeSnapshots = getCloneVolumeSnapshots(curVm.getId(), vmSnapshot.getId());
             int count = cmd.getCount();
             for (int index = 1; index <= count; index++) {
-                cmd.setName(orgName + (count > 1 ? Integer.toString(index) : ""));
+                cmd.setName(orgName + (count > 1 ? "-" + index : ""));
                 cloningStarted = true;
                 lastCloneVm = cloneVmFromVolumeSnapshots(cmd, curVm, curVmAccount, zoneId, volumeSnapshots);
 
@@ -11599,7 +11617,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         try {
             for (int cnt = 1; cnt <= countOfCloneVM; cnt++) {
-                String cloneVmName = orgName + (countOfCloneVM > 1 ? Integer.toString(cnt) : "");
+                String cloneVmName = orgName + (countOfCloneVM > 1 ? "-" + cnt : "");
                 cmd.setName(cloneVmName);
                 cloneVmNames.add(cloneVmName);
 
