@@ -8044,5 +8044,22 @@
   "label.wall.availability.Timeout": "응답 시간 초과",
   "label.wall.availability.AuthenticationFailed": "인증 실패",
   "label.wall.availability.InvalidResponse": "응답 형식 오류",
-  "label.wall.availability.Degraded": "알림 조회 불가"
+  "label.wall.availability.Degraded": "알림 조회 불가",
+  "message.vmprocess.no.snapshot": "현재 프로세스 목록을 표시할 수 없습니다. 위 상태를 확인하세요.",
+  "message.vmprocess.status.host": "호스트에서 프로세스 상태를 확인하지 못했습니다.",
+  "message.vmprocess.status.host.detail": "관리자에게 해당 호스트의 Cloud Agent 모듈과 로그 확인을 요청한 뒤 다시 시도하세요.",
+  "message.vmprocess.status.qga": "게스트 에이전트에 연결할 수 없습니다.",
+  "message.vmprocess.status.qga.detail": "게스트 OS의 QEMU Guest Agent 서비스 상태를 확인한 뒤 다시 시도하세요.",
+  "message.vmprocess.status.hostTool": "호스트 프로세스 도구가 없습니다.",
+  "message.vmprocess.status.hostTool.detail": "관리자에게 호스트의 ablestack-qemu-exec-tools 설치 상태 확인을 요청하세요.",
+  "message.vmprocess.status.unsupportedOs": "지원하지 않는 게스트 운영체제입니다.",
+  "message.vmprocess.status.unsupportedOs.detail": "지원 운영체제와 버전을 확인하세요.",
+  "message.vmprocess.status.rpc": "QGA 실행에 필요한 RPC 권한이 부족합니다.",
+  "message.vmprocess.status.rpc.detail": "VM의 ISO 탭에서 ABLESTACK Tools를 연결하고 게스트 OS에 설치한 뒤 다시 확인하세요.",
+  "message.vmprocess.status.tools": "게스트 프로세스 도구가 준비되지 않았습니다.",
+  "message.vmprocess.status.tools.detail": "VM의 ISO 탭에서 ABLESTACK Tools를 연결하고 게스트 OS에 설치한 뒤 다시 확인하세요.",
+  "message.vmprocess.status.busy": "프로세스 목록을 일시적으로 조회할 수 없습니다.",
+  "message.vmprocess.status.busy.detail": "다른 작업이나 조회가 끝난 뒤 다시 시도하세요. 마지막으로 조회한 목록이 있으면 그대로 표시합니다.",
+  "message.vmprocess.status.snapshot": "프로세스 목록을 가져오지 못했습니다.",
+  "message.vmprocess.status.snapshot.detail": "잠시 후 다시 시도하세요. 계속 실패하면 호스트 및 게스트 에이전트 로그를 확인하세요."
 }

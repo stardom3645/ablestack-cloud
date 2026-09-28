@@ -25,21 +25,21 @@ under the License.
       <a-button v-if="canAdminAction && isLinux" :disabled="!actionAvailable('process.terminate', selected)" @click="openAction('process.terminate', selected)">{{ $t('label.vmprocess.terminate') }}</a-button>
       <a-button :disabled="disabled || actionBusy" @click="refreshAll"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-button :disabled="actionBusy" @click="checkCapability(true)">{{ $t('label.vmprocess.readiness') }}</a-button>
-      <a-button v-if="missingRpcs.length" @click="$emit('open-iso')">{{ $t('label.vmprocess.open.iso') }}</a-button>
+      <a-button v-if="diagnostic?.install" @click="$emit('open-iso')">{{ $t('label.vmprocess.open.iso') }}</a-button>
       <a-button v-if="operation && ['UNKNOWN', 'PENDING'].includes(operation.state)" :loading="operationChecking" @click="checkOperation">{{ $t('label.vmprocess.check.result') }}</a-button>
       <a-input-search v-model:value="search" :placeholder="$t('label.vmprocess.search')" :aria-label="$t('label.vmprocess.search')" :disabled="!snapshotId" @search="searchRows" />
     </div>
 
     <div v-if="capability || snapshotId" class="process-status">
-      <a-tag :color="snapshotId && (!stale || loading) ? 'green' : 'orange'">{{ snapshotId && (!stale || loading) ? $t('label.vmprocess.snapshot.ready') : $t('label.vmprocess.snapshot.stale') }}</a-tag>
-      <span v-if="capability">{{ osLabel }}</span>
+      <a-tag v-if="snapshotId" :color="!stale || loading ? 'green' : 'orange'">{{ !stale || loading ? $t('label.vmprocess.snapshot.ready') : $t('label.vmprocess.snapshot.stale') }}</a-tag>
+      <span v-if="osLabel">{{ osLabel }}</span>
       <span v-if="observedAt">{{ $t('label.vmprocess.observed') }}: {{ $toLocaleDate(observedAt) }}</span>
       <span v-if="snapshotId">{{ $t('label.vmprocess.age') }}: {{ ageSeconds }}s / 10s</span>
       <span v-if="total">{{ $t('label.vmprocess.total') }}: {{ total }}</span>
     </div>
 
     <a-alert v-if="disabled" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.disabled')" :description="$t('message.vmprocess.disabled.detail')" />
-    <a-alert v-else-if="missingRpcs.length" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.rpc.missing')" :description="missingRpcs.join(', ') + ' · ' + $t('message.vmprocess.tools')" />
+    <a-alert v-else-if="diagnostic" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.status.' + diagnostic.kind)" :description="diagnostic.missing?.length ? diagnostic.missing.join(', ') + ' · ' + $t('message.vmprocess.status.' + diagnostic.kind + '.detail') : $t('message.vmprocess.status.' + diagnostic.kind + '.detail')" />
     <a-alert v-if="errorText" class="process-alert" type="error" show-icon :message="errorText" />
     <a-alert v-if="operation" class="process-alert" :type="operation.state === 'FAILED' ? 'error' : operation.state === 'SUCCEEDED' ? 'success' : 'warning'" show-icon>
       <template #message>{{ $t('label.vmprocess.operation') }}: {{ actionLabel(operation.action) }} · {{ operation.name }} · {{ operation.state }}</template>
@@ -77,7 +77,7 @@ size="small"
           </a-dropdown>
         </template>
       </template>
-      <template #emptyText>{{ $t(disabled ? 'message.vmprocess.disabled' : missingRpcs.length ? 'message.vmprocess.tools' : 'message.vmprocess.empty') }}</template>
+      <template #emptyText>{{ $t(disabled ? 'message.vmprocess.disabled' : diagnostic ? 'message.vmprocess.no.snapshot' : 'message.vmprocess.empty') }}</template>
     </a-table>
     <a-pagination :current="page" :page-size="pageSize" :total="total" :show-size-changer="true" :page-size-options="['10', '20', '50', '100']" class="process-pagination" @change="pageChanged" />
     <p class="process-footnote">{{ $t('message.vmprocess.limit') }}</p>
@@ -112,8 +112,8 @@ v-if="confirm"
 
 <script>
 import { getAPI, postAPI } from '@/api'
+import { requiredRpcs, processOsLabel, processDiagnostic } from './vmProcessDisplay'
 
-const requiredRpcs = ['guest-exec', 'guest-exec-status', 'guest-file-open', 'guest-file-close', 'guest-file-read', 'guest-file-write', 'guest-file-seek', 'guest-file-flush']
 const actionApis = { 'process.terminate': 'terminateVirtualMachineProcess', 'process.kill': 'killVirtualMachineProcess', 'service.restart': 'restartVirtualMachineService' }
 const result = (json, command) => json?.[command.toLowerCase() + 'response']
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -136,15 +136,15 @@ export default {
   props: { resource: { type: Object, required: true }, active: { type: Boolean, default: false } },
   emits: ['open-iso'],
   data () {
-    return { capability: null, capabilityLoading: false, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
+    return { capability: null, capabilityLoading: false, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', snapshotFailure: null, selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
   },
   computed: {
     scopeKey () { return JSON.stringify([this.resource.id, this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$store.state?.user?.token]) },
     apiSet () { return this.$store.getters.apis || {} },
     canAdminAction () { return this.$store.getters.userInfo?.roletype === 'Admin' && Object.values(actionApis).some(api => api in this.apiSet) },
     isLinux () { return this.capability?.os?.family === 'linux' },
-    osLabel () { const os = this.capability?.os; return os ? [os.id, os.version].filter(Boolean).join(' ') : '' },
-    missingRpcs () { return this.capability?.rpcs ? requiredRpcs.filter(rpc => !['ENABLED', 'UNKNOWN'].includes(this.capability.rpcs[rpc])) : [] },
+    osLabel () { return processOsLabel(this.capability?.os) },
+    diagnostic () { return processDiagnostic(this.capability, this.snapshotId, this.snapshotFailure) },
     rpcsReady () { return this.capability?.rpcs && requiredRpcs.every(rpc => this.capability.rpcs[rpc] === 'ENABLED') },
     stale () { return !this.snapshotId || this.ageSeconds >= 10 || this.resource.state !== 'Running' },
     actionBusy () { return this.submitting || ['PENDING', 'UNKNOWN'].includes(this.operation?.state) },
@@ -172,7 +172,7 @@ export default {
     actionLabel (action) { return this.$t(action === 'service.restart' ? 'label.vmprocess.restart' : action === 'process.terminate' ? 'label.vmprocess.terminate' : 'label.vmprocess.kill') },
     storageKey () { return `vm-process-operation:${this.scopeKey}` },
     saveOperation () { try { if (this.operation && ['PENDING', 'UNKNOWN'].includes(this.operation.state)) sessionStorage.setItem(this.storageKey(), JSON.stringify(this.operation)); else sessionStorage.removeItem(this.storageKey()) } catch (_) {} },
-    reset () { this.capability = null; this.disabled = false; this.rows = []; this.snapshotId = null; this.observedAt = null; this.receivedAt = 0; this.ageSeconds = 0; this.total = 0; this.selected = null; this.confirm = null; this.operation = null; this.errorText = ''; this.page = 1; this.keyword = ''; this.search = '' },
+    reset () { this.capability = null; this.disabled = false; this.rows = []; this.snapshotId = null; this.observedAt = null; this.receivedAt = 0; this.ageSeconds = 0; this.total = 0; this.selected = null; this.confirm = null; this.operation = null; this.errorText = ''; this.snapshotFailure = null; this.page = 1; this.keyword = ''; this.search = '' },
     deactivate () { this.generation++; clearInterval(this.tickTimer); clearInterval(this.refreshTimer); this.tickTimer = null; this.refreshTimer = null; this.confirm = null; this.loading = false; this.capabilityLoading = false; this.operationChecking = false; this.submitting = false },
     async activate () {
       if (this.disposed || !this.active) return
@@ -202,7 +202,7 @@ export default {
         this.disabled = /disabled/i.test(message)
         this.errorText = this.disabled ? '' : message
         this.capability = null
-        this.rows = []; this.snapshotId = null; this.total = 0; this.selected = null
+        this.rows = []; this.snapshotId = null; this.snapshotFailure = null; this.total = 0; this.selected = null
       } finally { if (this.current(token)) this.capabilityLoading = false }
     },
     async refreshAll () {
@@ -214,7 +214,6 @@ export default {
     async refreshSnapshot (token = this.generation, forAction = false) {
       if (!this.current(token) || this.loading || (!forAction && this.actionBusy) || this.disabled || !this.rpcsReady) return false
       this.loading = true
-      this.errorText = ''
       try {
         const response = result(await postAPI('refreshVirtualMachineProcesses', { virtualmachineid: this.resource.id }), 'refreshVirtualMachineProcesses')
         if (!this.current(token)) return
@@ -229,7 +228,13 @@ export default {
         if (job?.jobstatus !== 1) throw new Error(job?.jobresult?.errortext || this.$t('message.vmprocess.result.missing'))
         const meta = job.jobresult?.processsnapshot
         const state = meta?.processstate
-        if (!state || state.kind !== 'snapshot' || state.authority?.vmUuid !== this.resource.id) throw new Error(state?.error?.message || this.$t('message.vmprocess.result.missing'))
+        if (state?.kind === 'failure' && state.authority?.vmUuid === this.resource.id) {
+          this.snapshotFailure = state.error || { code: 'CHECK_FAILED' }
+          return false
+        }
+        if (!state || state.kind !== 'snapshot' || state.authority?.vmUuid !== this.resource.id) throw new Error(this.$t('message.vmprocess.result.missing'))
+        this.snapshotFailure = null
+        this.errorText = ''
         this.snapshotId = state.snapshotId
         this.observedAt = state.observedAt
         this.receivedAt = Date.now()
