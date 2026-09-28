@@ -19,7 +19,7 @@ under the License.
 <template>
   <div class="vm-processes">
     <div class="process-toolbar">
-      <a-button v-if="canAdminAction" type="primary" :disabled="!primaryAction" @click="openAction(primaryAction, selected)">
+      <a-button v-if="canAdminAction" type="primary" :disabled="!primaryAction" @click="openPrimaryAction">
         {{ primaryAction === 'service.restart' || !selected ? $t('label.vmprocess.restart') : $t('label.vmprocess.kill') }}
       </a-button>
       <a-button v-if="canAdminAction && isLinux" :disabled="!actionAvailable('process.terminate', selected)" @click="openAction('process.terminate', selected)">{{ $t('label.vmprocess.terminate') }}</a-button>
@@ -269,6 +269,7 @@ export default {
       if (action === 'service.restart' && (!service || !(row.services || []).some(item => item.name === service.name))) return false
       return true
     },
+    openPrimaryAction () { this.openAction(this.primaryAction, this.selected, this.primaryAction === 'service.restart' ? this.selected?.services?.[0] : null) },
     openAction (action, row, service = null) { if (!this.actionAvailable(action, row, service)) return; this.selected = row; this.confirm = { action, row, service }; this.ack = false },
     closeConfirm () { if (!this.submitting) this.confirm = null },
     async submitAction () {
