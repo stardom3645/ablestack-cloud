@@ -26,8 +26,10 @@ under the License.
 - Global 설정이 꺼진 상태에서 안내 문구와 조회/변경 비활성화를 확인했다. 서버의 431 응답 본문을 해석해 원시 HTTP 오류를 화면에 노출하지 않는다.
 - Rocky VM에서 임시 `sleep` 프로세스를 선택해 종료 확인 대화상자와 비동기 결과를 검증했다. 서버는 실행 전 `STALE_IDENTITY`, `effect=NOT_STARTED`로 거부했고 UI는 성공으로 표시하지 않고 `FAILED`를 표시했다. 실제 종료 성공은 **미검증**이며 qemu Q5(#64)의 실행 경로 보완이 필요하다. 테스트 프로세스는 정리했다.
 - 다크 모드의 강제 종료 대화상자에서 대상 정보, 영향 경고, 명시적 동의 확인란, 동의 전 확인 버튼 비활성화를 확인했다. 변경 명령은 보내지 않았다.
+- 서비스가 연결된 행을 선택하면 첫 파란 버튼으로 서비스 재시작 확인창이 열리고 서비스 이름과 영향 경고가 표시되는 것을 확인했다. 보호 대상 서비스에는 변경 명령을 보내지 않았다.
 
 ![일반 모드 프로세스 목록](process-ubuntu-light.png)
 ![다크 모드 프로세스 목록](process-ubuntu-dark.png)
 ![다크 모드 강제 종료 확인](process-kill-modal-dark.png)
+![일반 모드 서비스 재시작 확인](process-service-modal-light.png)
 ![전역 설정 비활성화](process-disabled-light.png)
