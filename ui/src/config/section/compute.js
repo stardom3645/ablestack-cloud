@@ -766,7 +766,7 @@ export default {
       searchFilters: ['name', 'domainid', 'account', 'state'],
       permission: ['listKubernetesClusters'],
       columns: (store) => {
-        var fields = ['name', 'state', 'clustertype', { field: 'size', customTitle: 'cks.cluster.size' }, 'cpunumber', 'memory', 'kubernetesversionname']
+        var fields = ['name', 'state', 'clustertype', { field: 'size', customTitle: 'cks.cluster.size' }, { field: 'cpunumber', customTitle: 'cks.cluster.total.allocated.cpu' }, { field: 'memory', customTitle: 'cks.cluster.total.allocated.memory' }, 'kubernetesversionname']
         if (['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)) {
           fields.push('account')
         }
@@ -783,7 +783,7 @@ export default {
         const filters = ['cloud.managed', 'external.managed']
         return filters
       },
-      details: ['name', 'description', 'zonename', 'kubernetesversionname', 'autoscalingenabled', 'csienabled', { field: 'minsize', customTitle: 'cks.cluster.minsize' }, { field: 'maxsize', customTitle: 'cks.cluster.maxsize' }, { field: 'size', customTitle: 'cks.cluster.size' }, 'controlnodes', 'controlaffinitygroupnames', 'etcdnodes', 'etcdaffinitygroupnames', 'workeraffinitygroupnames', 'cpunumber', 'memory', 'keypair', 'cniconfigname', 'associatednetworkname', 'account', 'domain', 'zonename', 'clustertype', 'created'],
+      details: ['name', 'description', 'zonename', 'kubernetesversionname', 'autoscalingenabled', 'csienabled', { field: 'minsize', customTitle: 'cks.cluster.minsize' }, { field: 'maxsize', customTitle: 'cks.cluster.maxsize' }, { field: 'size', customTitle: 'cks.cluster.size' }, 'controlnodes', 'controlaffinitygroupnames', 'etcdnodes', 'etcdaffinitygroupnames', 'workeraffinitygroupnames', { field: 'cpunumber', customTitle: 'cks.cluster.total.allocated.cpu' }, { field: 'memory', customTitle: 'cks.cluster.total.allocated.memory' }, 'keypair', 'cniconfigname', 'associatednetworkname', 'account', 'domain', 'zonename', 'clustertype', 'created'],
       tabs: [
         {
           name: 'k8s',

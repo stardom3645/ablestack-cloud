@@ -558,6 +558,8 @@
   "label.cks.cluster.maxsize": "최대 워커 노드 수",
   "label.cks.cluster.minsize": "최소 워커 노드 수",
   "label.cks.cluster.size": "워커 노드 수",
+  "label.cks.cluster.total.allocated.cpu": "노드 할당 CPU 합계 (vCore)",
+  "label.cks.cluster.total.allocated.memory": "노드 할당 메모리 합계 (MB)",
   "label.cleanup": "정리",
   "label.clear": "지우기",
   "label.clear.list": "목록 제거",

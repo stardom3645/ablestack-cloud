@@ -596,6 +596,8 @@
   "label.cks.cluster.maxsize": "Maximum worker nodes",
   "label.cks.cluster.minsize": "Minimum worker nodes",
   "label.cks.cluster.size": "Worker nodes",
+  "label.cks.cluster.total.allocated.cpu": "Total allocated node CPU (vCPU)",
+  "label.cks.cluster.total.allocated.memory": "Total allocated node memory (MB)",
   "label.cleanup": "Clean up",
   "label.clear": "Clear",
   "label.clear.list": "Clear list",
