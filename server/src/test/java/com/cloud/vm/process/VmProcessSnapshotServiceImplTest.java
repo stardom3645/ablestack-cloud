@@ -27,6 +27,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,4 +162,48 @@ public class VmProcessSnapshotServiceImplTest {
         row.put("commandLine", "secret");
         assertThrows(java.io.IOException.class, () -> VmProcessSnapshot.decode(gson.toJson(good), c));
     }
+    private static long firstPid(org.apache.cloudstack.api.response.VmProcessSnapshotResponse response) {
+        Map<String, Object> row = VmProcessSnapshot.map(((List<?>) response.getProcessState().get("processes")).get(0));
+        return ((Number) VmProcessSnapshot.map(row.get("identity")).get("pid")).longValue();
+    }
+    @Test public void cpuNumbersSurviveDecoderAndSortWithNullLast() throws Exception {
+        GetVmProcessSnapshotCommand c = new GetVmProcessSnapshotCommand("vm", "11111111-1111-4111-8111-111111111111",
+                "22222222-2222-4222-8222-222222222222", "42", UUID.randomUUID().toString());
+        Map<String, Object> result = snapshot(c);
+        List<?> rows = (List<?>) result.get("processes");
+        VmProcessSnapshot.map(rows.get(0)).put("cpuPercent", null);
+        VmProcessSnapshot.map(rows.get(1)).put("cpuPercent", new BigDecimal("126.8"));
+        VmProcessSnapshot.map(rows.get(2)).put("cpuPercent", BigDecimal.ZERO);
+        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().serializeNulls().create();
+        Map<String, Object> decoded = VmProcessSnapshot.decode(gson.toJson(result), c);
+        assertEquals(new BigDecimal("126.8"), VmProcessSnapshot.map(((List<?>) decoded.get("processes")).get(1)).get("cpuPercent"));
+        assertEquals(1L, firstPid(VmProcessSnapshotServiceImpl.page(decoded, null, "cpuPercent", false, 1, 1)));
+        assertEquals(2L, firstPid(VmProcessSnapshotServiceImpl.page(decoded, null, "cpuPercent", false, 2, 1)));
+        assertEquals(3L, firstPid(VmProcessSnapshotServiceImpl.page(decoded, null, "cpuPercent", false, 3, 1)));
+        assertEquals(2L, firstPid(VmProcessSnapshotServiceImpl.page(decoded, null, "cpuPercent", true, 1, 1)));
+        assertEquals(1L, firstPid(VmProcessSnapshotServiceImpl.page(decoded, null, "cpuPercent", true, 2, 1)));
+        assertEquals(3L, firstPid(VmProcessSnapshotServiceImpl.page(decoded, null, "cpuPercent", true, 3, 1)));
+        VmProcessSnapshot.map(rows.get(1)).put("cpuPercent", 0);
+        assertEquals(1L, firstPid(VmProcessSnapshotServiceImpl.page(result, null, "cpuPercent", false, 1, 1)));
+        assertEquals(2L, firstPid(VmProcessSnapshotServiceImpl.page(result, null, "cpuPercent", false, 2, 1)));
+    }
+    @Test public void cpuDecoderRejectsInvalidNumbersWithoutWeakeningActions() throws Exception {
+        GetVmProcessSnapshotCommand c = new GetVmProcessSnapshotCommand("vm", "11111111-1111-4111-8111-111111111111",
+                "22222222-2222-4222-8222-222222222222", "42", UUID.randomUUID().toString());
+        Map<String, Object> result = snapshot(c);
+        Map<String, Object> row = VmProcessSnapshot.map(((List<?>) result.get("processes")).get(0));
+        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().serializeNulls().create();
+        for (Object cpu : List.of(-0.1, true, "1.25")) {
+            row.put("cpuPercent", cpu);
+            assertThrows(java.io.IOException.class, () -> VmProcessSnapshot.decode(gson.toJson(result), c));
+        }
+        for (Object cpu : List.of(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
+            row.put("cpuPercent", cpu);
+            assertThrows(IllegalArgumentException.class, () -> VmProcessSnapshot.validate(result, c));
+        }
+        row.put("cpuPercent", 250.5);
+        row.put("allowedActions", List.of("process.kill"));
+        assertThrows(java.io.IOException.class, () -> VmProcessSnapshot.decode(gson.toJson(result), c));
+    }
+
 }

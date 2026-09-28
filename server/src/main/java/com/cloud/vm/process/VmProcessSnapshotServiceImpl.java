@@ -17,6 +17,7 @@
 package com.cloud.vm.process;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -165,15 +166,27 @@ public class VmProcessSnapshotServiceImpl extends com.cloud.utils.component.Mana
         return response(metadata, count, false, (String) snapshot.get("status"));
     }
     static VmProcessSnapshotResponse page(Map<String, Object> snapshot, String keyword, String sort, boolean descending, int page, int size) {
-        if (page < 1 || size < 1 || size > 200 || keyword != null && keyword.length() > 256 || !Set.of("pid", "name", "memoryBytes").contains(sort)) throw new InvalidParameterValueException("Invalid snapshot page, search or sort");
+        if (page < 1 || size < 1 || size > 200 || keyword != null && keyword.length() > 256 || !Set.of("pid", "name", "memoryBytes", "cpuPercent").contains(sort)) throw new InvalidParameterValueException("Invalid snapshot page, search or sort");
         List<Map<String, Object>> rows = new ArrayList<>();
         for (Object row : (List<?>) snapshot.get("processes")) {
             Map<String, Object> value = VmProcessSnapshot.map(row);
             if (keyword == null || ((String) value.get("name")).toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT))) rows.add(value);
         }
         Comparator<Map<String, Object>> byPid = Comparator.comparingLong(v -> ((Number) VmProcessSnapshot.map(v.get("identity")).get("pid")).longValue());
-        Comparator<Map<String, Object>> comparator = "name".equals(sort) ? Comparator.comparing(v -> (String) v.get("name")) : "memoryBytes".equals(sort) ? Comparator.comparingLong(v -> v.get("memoryBytes") == null ? -1 : ((Number) v.get("memoryBytes")).longValue()) : byPid;
-        if (descending) comparator = comparator.reversed(); rows.sort(comparator.thenComparing(byPid));
+        Comparator<Map<String, Object>> comparator;
+        if ("cpuPercent".equals(sort)) {
+            comparator = (left, right) -> {
+                Object a = left.get("cpuPercent"), b = right.get("cpuPercent");
+                // Missing measurements stay last in both directions.
+                if (a == null || b == null) return a == b ? 0 : a == null ? 1 : -1;
+                int comparison = new BigDecimal(a.toString()).compareTo(new BigDecimal(b.toString()));
+                return descending ? -comparison : comparison;
+            };
+        } else {
+            comparator = "name".equals(sort) ? Comparator.comparing(v -> (String) v.get("name")) : "memoryBytes".equals(sort) ? Comparator.comparingLong(v -> v.get("memoryBytes") == null ? -1 : ((Number) v.get("memoryBytes")).longValue()) : byPid;
+            if (descending) comparator = comparator.reversed();
+        }
+        rows.sort(comparator.thenComparing(byPid));
         int start = (int) Math.min(rows.size(), ((long) page - 1) * size);
         Map<String, Object> projection = new LinkedHashMap<>(snapshot); projection.put("processes", new ArrayList<>(rows.subList(start, Math.min(rows.size(), start + size))));
         return response(projection, rows.size(), false, (String) snapshot.get("status"));

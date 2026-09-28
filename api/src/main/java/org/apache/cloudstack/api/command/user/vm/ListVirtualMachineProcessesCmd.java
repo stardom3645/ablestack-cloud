@@ -57,7 +57,7 @@ public class ListVirtualMachineProcessesCmd extends BaseCmd {
     private String snapshotId;
     @Parameter(name = "keyword", type = CommandType.STRING, description = "Case insensitive process name search, maximum 256 characters")
     private String keyword;
-    @Parameter(name = "sortby", type = CommandType.STRING, description = "pid, name or memoryBytes")
+    @Parameter(name = "sortby", type = CommandType.STRING, description = "pid, name, memoryBytes or cpuPercent")
     private String sort;
     @Parameter(name = "descending", type = CommandType.BOOLEAN, description = "Sort descending")
     private Boolean descending;

@@ -17,6 +17,7 @@
 package com.cloud.agent.api;
 
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -92,6 +93,14 @@ public final class VmProcessSnapshot {
         long n = new java.math.BigDecimal(value.toString()).longValueExact();
         if (n < min || n > max) throw new IllegalArgumentException("Numeric bound"); return n;
     }
+    private static void cpuPercent(Object value) {
+        if (!(value instanceof Number)) throw new IllegalArgumentException("CPU number required");
+        try {
+            if (new BigDecimal(value.toString()).signum() < 0) throw new IllegalArgumentException("Negative CPU");
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid CPU number", e);
+        }
+    }
     private static void uuid(Object value) {
         if (!(value instanceof String) || !UUID.fromString((String) value).toString().equals(value)) throw new IllegalArgumentException("UUID");
     }
@@ -127,7 +136,8 @@ public final class VmProcessSnapshot {
             if (row.get("owner") != null) text(row.get("owner"), 0, 256);
             if (row.get("ppid") != null) number(row.get("ppid"), 0, 4294967295L);
             if (row.get("memoryBytes") != null) number(row.get("memoryBytes"), 0, 9007199254740991L);
-            if (row.get("cpuPercent") != null || !List.of().equals(row.get("allowedActions"))) throw new IllegalArgumentException("Unimplemented actions");
+            if (row.get("cpuPercent") != null) cpuPercent(row.get("cpuPercent"));
+            if (!List.of().equals(row.get("allowedActions"))) throw new IllegalArgumentException("Unimplemented actions");
             if (!(row.get("services") instanceof List) || ((List<?>) row.get("services")).size() > 128) throw new IllegalArgumentException("Services");
             for (Object service : (List<?>) row.get("services")) {
                 Map<String, Object> s = map(service); fields(s, "manager", "name", "configurationHash");
