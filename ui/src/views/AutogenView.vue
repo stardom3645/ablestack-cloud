@@ -1712,7 +1712,7 @@ export default {
         'listImageStores', 'listSystemVms', 'listManagementServers',
         'listConfigurations', 'listHypervisorCapabilities',
         'listAlerts', 'listNetworkOfferings', 'listVPCOfferings',
-        'listASNumbers'].includes(this.apiName)) {
+        'listASNumbers', 'listWallAlertRules'].includes(this.apiName)) {
         delete params.listall
       }
 
