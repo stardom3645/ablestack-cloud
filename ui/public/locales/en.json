@@ -61,6 +61,7 @@
   "message.vmprocess.disabled": "Process management is disabled.",
   "message.vmprocess.disabled.detail": "An administrator must explicitly enable the Global setting vm.process.management.enabled before reads or actions.",
   "message.vmprocess.empty": "No processes to show. Refresh to check again.",
+  "message.vmprocess.loading": "Checking the process list...",
   "message.vmprocess.kill.ack": "I accept that force termination may cause data loss.",
   "message.vmprocess.kill.impact": "The process will stop without cleanup and unsaved work may be lost.",
   "message.vmprocess.limit": "CPU is measured with one core equal to 100%. — means unavailable, unlike 0.0%. Only linked services can be restarted; arbitrary processes cannot.",

@@ -38,9 +38,9 @@ under the License.
       <span v-if="total">{{ $t('label.vmprocess.total') }}: {{ total }}</span>
     </div>
 
-    <a-alert v-if="disabled" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.disabled')" :description="$t('message.vmprocess.disabled.detail')" />
+    <a-alert v-if="disabled && !initializing" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.disabled')" :description="$t('message.vmprocess.disabled.detail')" />
     <a-alert v-else-if="diagnostic" class="process-alert" type="warning" show-icon :message="$t('message.vmprocess.status.' + diagnostic.kind)" :description="diagnostic.missing?.length ? diagnostic.missing.join(', ') + ' · ' + $t('message.vmprocess.status.' + diagnostic.kind + '.detail') : $t('message.vmprocess.status.' + diagnostic.kind + '.detail')" />
-    <a-alert v-if="errorText" class="process-alert" type="error" show-icon :message="errorText" />
+    <a-alert v-if="errorText && !initializing" class="process-alert" type="error" show-icon :message="errorText" />
     <a-alert v-if="operation" class="process-alert" :type="operation.state === 'FAILED' ? 'error' : operation.state === 'SUCCEEDED' ? 'success' : 'warning'" show-icon>
       <template #message>{{ $t('label.vmprocess.operation') }}: {{ actionLabel(operation.action) }} · {{ operation.name }} · {{ operation.state }}</template>
       <template #description>
@@ -77,7 +77,7 @@ size="small"
           </a-dropdown>
         </template>
       </template>
-      <template #emptyText>{{ $t(disabled ? 'message.vmprocess.disabled' : diagnostic ? 'message.vmprocess.no.snapshot' : 'message.vmprocess.empty') }}</template>
+      <template #emptyText>{{ $t(initializing ? 'message.vmprocess.loading' : disabled ? 'message.vmprocess.disabled' : diagnostic ? 'message.vmprocess.no.snapshot' : 'message.vmprocess.empty') }}</template>
     </a-table>
     <a-pagination :current="page" :page-size="pageSize" :total="total" :show-size-changer="true" :page-size-options="['10', '20', '50', '100']" class="process-pagination" @change="pageChanged" />
     <p class="process-footnote">{{ $t('message.vmprocess.limit') }}</p>
@@ -139,7 +139,7 @@ export default {
   props: { resource: { type: Object, required: true }, active: { type: Boolean, default: false } },
   emits: ['open-iso'],
   data () {
-    return { capability: null, toolsIso: null, toolsDialog: false, toolsDialogCatalog: null, toolsDialogCapability: null, capabilityLoading: false, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', snapshotFailure: null, selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
+    return { capability: null, toolsIso: null, toolsDialog: false, toolsDialogCatalog: null, toolsDialogCapability: null, capabilityLoading: false, initializing: this.active, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', snapshotFailure: null, selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
   },
   computed: {
     scopeKey () { return JSON.stringify([this.resource.id, this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$store.state?.user?.token]) },
@@ -147,7 +147,7 @@ export default {
     canAdminAction () { return this.$store.getters.userInfo?.roletype === 'Admin' && Object.values(actionApis).some(api => api in this.apiSet) },
     isLinux () { return this.capability?.os?.family === 'linux' },
     osLabel () { return processOsLabel(this.capability?.os) },
-    diagnostic () { return processDiagnostic(this.capability, this.snapshotId, this.snapshotFailure) },
+    diagnostic () { return this.initializing ? null : processDiagnostic(this.capability, this.snapshotId, this.snapshotFailure) },
     rpcsReady () { return this.capability?.rpcs && requiredRpcs.every(rpc => this.capability.rpcs[rpc] === 'ENABLED') },
     stale () { return !this.snapshotId || this.ageSeconds >= 10 || this.resource.state !== 'Running' },
     actionBusy () { return this.submitting || ['PENDING', 'UNKNOWN'].includes(this.operation?.state) },
@@ -180,18 +180,21 @@ export default {
       this.toolsDialogCapability = this.capability ? { ...this.capability } : null
       this.toolsDialog = true
     },
-    reset () { this.capability = null; this.toolsIso = null; this.toolsDialog = false; this.disabled = false; this.rows = []; this.snapshotId = null; this.observedAt = null; this.receivedAt = 0; this.ageSeconds = 0; this.total = 0; this.selected = null; this.confirm = null; this.operation = null; this.errorText = ''; this.snapshotFailure = null; this.page = 1; this.keyword = ''; this.search = '' },
-    deactivate () { this.toolsDialog = false; this.generation++; clearInterval(this.tickTimer); clearInterval(this.refreshTimer); this.tickTimer = null; this.refreshTimer = null; this.confirm = null; this.loading = false; this.capabilityLoading = false; this.operationChecking = false; this.submitting = false },
+    reset () { this.capability = null; this.toolsIso = null; this.toolsDialog = false; this.initializing = false; this.disabled = false; this.rows = []; this.snapshotId = null; this.observedAt = null; this.receivedAt = 0; this.ageSeconds = 0; this.total = 0; this.selected = null; this.confirm = null; this.operation = null; this.errorText = ''; this.snapshotFailure = null; this.page = 1; this.keyword = ''; this.search = '' },
+    deactivate () { this.toolsDialog = false; this.generation++; clearInterval(this.tickTimer); clearInterval(this.refreshTimer); this.tickTimer = null; this.refreshTimer = null; this.confirm = null; this.loading = false; this.initializing = false; this.capabilityLoading = false; this.operationChecking = false; this.submitting = false },
     async activate () {
       if (this.disposed || !this.active) return
       const token = ++this.generation
-      try { this.operation = JSON.parse(sessionStorage.getItem(this.storageKey()) || 'null') } catch (_) { this.operation = null }
-      this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0
-      this.tickTimer = setInterval(() => { this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0 }, 1000)
-      this.refreshTimer = setInterval(() => { if (this.active && !this.actionBusy && !this.loading && !this.confirm && !this.toolsDialog) this.refreshAll() }, 9000)
-      await this.checkCapability(false, token)
-      if (this.current(token) && this.operation) await this.checkOperation()
-      if (this.current(token) && !this.disabled && this.rpcsReady && !this.actionBusy) await this.refreshSnapshot(token)
+      this.initializing = !this.snapshotId
+      try {
+        try { this.operation = JSON.parse(sessionStorage.getItem(this.storageKey()) || 'null') } catch (_) { this.operation = null }
+        this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0
+        this.tickTimer = setInterval(() => { this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0 }, 1000)
+        this.refreshTimer = setInterval(() => { if (this.active && !this.actionBusy && !this.loading && !this.confirm && !this.toolsDialog) this.refreshAll() }, 9000)
+        await this.checkCapability(false, token)
+        if (this.current(token) && this.operation) await this.checkOperation()
+        if (this.current(token) && !this.disabled && this.rpcsReady && !this.actionBusy) await this.refreshSnapshot(token)
+      } finally { if (this.current(token)) this.initializing = false }
     },
     current (token) { return !this.disposed && this.active && token === this.generation },
     async checkCapability (refresh = false, token = this.generation) {

@@ -61,6 +61,7 @@
   "message.vmprocess.disabled": "프로세스 관리 기능이 비활성화되어 있습니다.",
   "message.vmprocess.disabled.detail": "관리자가 Global 설정 vm.process.management.enabled를 명시적으로 활성화해야 조회와 변경이 가능합니다.",
   "message.vmprocess.empty": "표시할 프로세스가 없습니다. 새로고침하여 다시 확인하세요.",
+  "message.vmprocess.loading": "프로세스 목록을 확인하는 중입니다.",
   "message.vmprocess.kill.ack": "데이터 손실 가능성을 확인하고 강제 종료에 동의합니다.",
   "message.vmprocess.kill.impact": "정리 시간을 주지 않고 종료하므로 저장하지 않은 작업이 손실될 수 있습니다.",
   "message.vmprocess.limit": "CPU는 한 코어 100% 기준입니다. —는 미측정이며 0.0%와 다릅니다. 일반 프로세스 재시작은 지원하지 않으며 연결된 서비스만 재시작할 수 있습니다.",
