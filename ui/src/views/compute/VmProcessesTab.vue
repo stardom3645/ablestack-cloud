@@ -25,7 +25,7 @@ under the License.
       <a-button v-if="canAdminAction && isLinux" :disabled="!actionAvailable('process.terminate', selected)" @click="openAction('process.terminate', selected)">{{ $t('label.vmprocess.terminate') }}</a-button>
       <a-button :disabled="disabled || actionBusy" @click="refreshAll"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-button :disabled="actionBusy" @click="checkCapability(true)">{{ $t('label.vmprocess.readiness') }}</a-button>
-      <a-button v-if="diagnostic?.install" @click="toolsDialog = true">{{ $t('label.vmprocess.tools.title') }}</a-button>
+      <a-button v-if="diagnostic?.install" @click="openToolsDialog">{{ $t('label.vmprocess.tools.title') }}</a-button>
       <a-button v-if="operation && ['UNKNOWN', 'PENDING'].includes(operation.state)" :loading="operationChecking" @click="checkOperation">{{ $t('label.vmprocess.check.result') }}</a-button>
       <a-input-search v-model:value="search" :placeholder="$t('label.vmprocess.search')" :aria-label="$t('label.vmprocess.search')" :disabled="!snapshotId" @search="searchRows" />
     </div>
@@ -107,7 +107,7 @@ v-if="confirm"
         <a-button :type="confirm?.action === 'process.kill' ? 'default' : 'primary'" :danger="confirm?.action === 'process.kill'" :loading="submitting" :disabled="!confirm || !actionAvailable(confirm.action, confirm.row, confirm.service) || (confirm.action === 'process.kill' && !ack)" @click="submitAction">{{ actionLabel(confirm?.action) }}</a-button>
       </template>
     </a-modal>
-    <VmProcessToolsDialog :visible="toolsDialog" :resource="resource" :catalog="toolsIso" :capability="capability" @close="toolsDialog = false" @verified="refreshAll" />
+    <VmProcessToolsDialog :visible="toolsDialog" :resource="resource" :catalog="toolsDialogCatalog" :capability="toolsDialogCapability" @close="toolsDialog = false" @verified="refreshAll" />
   </div>
 </template>
 
@@ -139,7 +139,7 @@ export default {
   props: { resource: { type: Object, required: true }, active: { type: Boolean, default: false } },
   emits: ['open-iso'],
   data () {
-    return { capability: null, toolsIso: null, toolsDialog: false, capabilityLoading: false, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', snapshotFailure: null, selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
+    return { capability: null, toolsIso: null, toolsDialog: false, toolsDialogCatalog: null, toolsDialogCapability: null, capabilityLoading: false, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', snapshotFailure: null, selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
   },
   computed: {
     scopeKey () { return JSON.stringify([this.resource.id, this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$store.state?.user?.token]) },
@@ -175,6 +175,11 @@ export default {
     actionLabel (action) { return this.$t(action === 'service.restart' ? 'label.vmprocess.restart' : action === 'process.terminate' ? 'label.vmprocess.terminate' : 'label.vmprocess.kill') },
     storageKey () { return `vm-process-operation:${this.scopeKey}` },
     saveOperation () { try { if (this.operation && ['PENDING', 'UNKNOWN'].includes(this.operation.state)) sessionStorage.setItem(this.storageKey(), JSON.stringify(this.operation)); else sessionStorage.removeItem(this.storageKey()) } catch (_) {} },
+    openToolsDialog () {
+      this.toolsDialogCatalog = this.toolsIso ? { ...this.toolsIso } : null
+      this.toolsDialogCapability = this.capability ? { ...this.capability } : null
+      this.toolsDialog = true
+    },
     reset () { this.capability = null; this.toolsIso = null; this.toolsDialog = false; this.disabled = false; this.rows = []; this.snapshotId = null; this.observedAt = null; this.receivedAt = 0; this.ageSeconds = 0; this.total = 0; this.selected = null; this.confirm = null; this.operation = null; this.errorText = ''; this.snapshotFailure = null; this.page = 1; this.keyword = ''; this.search = '' },
     deactivate () { this.toolsDialog = false; this.generation++; clearInterval(this.tickTimer); clearInterval(this.refreshTimer); this.tickTimer = null; this.refreshTimer = null; this.confirm = null; this.loading = false; this.capabilityLoading = false; this.operationChecking = false; this.submitting = false },
     async activate () {
@@ -183,7 +188,7 @@ export default {
       try { this.operation = JSON.parse(sessionStorage.getItem(this.storageKey()) || 'null') } catch (_) { this.operation = null }
       this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0
       this.tickTimer = setInterval(() => { this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0 }, 1000)
-      this.refreshTimer = setInterval(() => { if (this.active && !this.actionBusy && !this.loading && !this.confirm) this.refreshAll() }, 9000)
+      this.refreshTimer = setInterval(() => { if (this.active && !this.actionBusy && !this.loading && !this.confirm && !this.toolsDialog) this.refreshAll() }, 9000)
       await this.checkCapability(false, token)
       if (this.current(token) && this.operation) await this.checkOperation()
       if (this.current(token) && !this.disabled && this.rpcsReady && !this.actionBusy) await this.refreshSnapshot(token)

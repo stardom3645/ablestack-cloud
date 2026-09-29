@@ -69,7 +69,10 @@ public class VmProcessCapabilityProbeTest {
         assertEquals("HOST_TOOL_MISSING", observe(false, info("", ""), null).get("readiness"));
         assertEquals("RPC_UNSUPPORTED", observe(true, info("guest-exec", "guest-file-read"), os("rocky", "10.2")).get("readiness"));
         assertEquals("RPC_DISABLED", observe(true, info("guest-exec", ""), os("rocky", "9.7")).get("readiness"));
-        assertEquals("UNSUPPORTED_OS", observe(true, info("", ""), os("rocky", "8.10")).get("readiness"));
+        assertEquals("TOOLS_REQUIRED", observe(true, info("", ""), os("rocky", "8.10")).get("readiness"));
+        assertEquals("TOOLS_REQUIRED", observe(true, info("", ""), os("debian", "12")).get("readiness"));
+        assertEquals("TOOLS_REQUIRED", observe(true, info("", ""), os("rhel", "9.6")).get("readiness"));
+        assertEquals("UNSUPPORTED_OS", observe(true, info("", ""), os("debian", "11")).get("readiness"));
         Map<String, Object> result = observe(true, info("", ""), os("mswindows", "2025"));
         assertEquals("TOOLS_REQUIRED", result.get("readiness"));
         assertEquals(List.of(), result.get("allowedActions"));
@@ -78,10 +81,14 @@ public class VmProcessCapabilityProbeTest {
         assertEquals("TOOLS_REQUIRED", observe(true, info("", ""), os("rocky", "10.2")).get("readiness"));
         assertEquals("TOOLS_REQUIRED", observe(true, info("", ""), os("ubuntu", "26.04")).get("readiness"));
     }
-    @Test public void clientWindowsAndUnsupportedArchAreNotSupported() {
+    @Test public void windowsProductTypeAndUnsupportedArchAreValidated() {
         Map<String, String> windows = VmProcessCapabilityProbe.parseOs(os("mswindows", "2025").replace("server", "client"));
         assertFalse(VmProcessCapabilityProbe.supportedOs(windows));
+        assertTrue(VmProcessCapabilityProbe.supportedOs(VmProcessCapabilityProbe.parseOs(os("mswindows", "11").replace("server", "client"))));
+        assertTrue(VmProcessCapabilityProbe.supportedOs(VmProcessCapabilityProbe.parseOs(os("mswindows", "2019"))));
+        assertFalse(VmProcessCapabilityProbe.supportedOs(VmProcessCapabilityProbe.parseOs(os("mswindows", "11"))));
         assertFalse(VmProcessCapabilityProbe.supportedOs(VmProcessCapabilityProbe.parseOs(os("rocky", "9.7").replace("x86_64", "aarch64"))));
+        assertTrue(VmProcessCapabilityProbe.supportedOs(VmProcessCapabilityProbe.parseOs(os("mswindows", "2025").replace("x86_64", "AMD64"))));
         assertTrue(VmProcessCapabilityProbe.supportedOs(VmProcessCapabilityProbe.parseOs(os("ubuntu", "24.04"))));
     }
     @Test public void guardResolvesNameBeforeGuestUuidObservation() {

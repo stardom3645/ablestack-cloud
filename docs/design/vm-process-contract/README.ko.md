@@ -111,6 +111,7 @@ Linux ISO 정책은 기존 FULL 명령과 하위 호환하되 신규 `process-ma
 Windows도 Q3에서 동일한 설치 결과 계약을 구현한다. OS 정책 때문에 실행 불가하면 READY로 만들지 않는다.
 
 Cloud는 관리자 지정 zone/OS/arch/ISO ID/version/checksum으로 Ready ISO를 선택한다.
+Cloud #1194부터 ISO 자동 선택에는 QGA OS의 `id`·`version`·`arch`와 Windows `productType=client|server`를 사용하고, Cloud 등록 OS와 불일치하면 추천하지 않는다. Linux `productType=none`이다. 종전 capability fixture와의 호환을 위해 schema에서 productType은 선택 필드이나 Windows 자동 선택에서는 필수다.
 attachIso 완료는 설치 완료가 아니다. 권한이 없으면 콘솔에서 Linux root/Windows 관리자 설치를 안내한다.
 이미 실행 가능할 때의 자동 설치와 VM 재부팅/오프라인 주입은 별도 확장이다.
 installer가 cloud-init/Cloudbase-init/Sysprep·네트워크·자격증명을 재설정하지 않는 repair 모드를 제공해야 한다.
@@ -126,11 +127,15 @@ QGA/Tools 실제 검증 버전·ISO SHA는 Q6 보고서에 채워야 하며 아�
 
 | 게스트 | 아키텍처 | adapter 필수 환경 | 조회 | 정상 종료 | 강제 종료 | 재시작 |
 |---|---|---|---|---|---|---|
-| Rocky Linux 9.6/9.7/9.8 및 10.2 | x86_64 | Python >=3.9, /proc, systemd, pidfd_open + pidfd_send_signal | 지원 목표 | TERM | KILL | systemd 서비스 |
+| Rocky Linux 8.x/9.x/10.x | x86_64 | Python >=3.9, /proc, systemd, pidfd_open + pidfd_send_signal | 지원 목표 | TERM | KILL | systemd 서비스 |
+| RHEL 8.x/9.x/10.x | x86_64 | Python >=3.9, /proc, systemd, pidfd_open + pidfd_send_signal | 지원 목표, 실제 RHEL 검증 전 catalog 등록 보류 | TERM | KILL | systemd 서비스 |
 | Ubuntu 22.04/24.04/26.04 | x86_64 | Python >=3.9, /proc, systemd, pidfd_open + pidfd_send_signal | 지원 목표 | TERM | KILL | systemd 서비스 |
-| Windows Server 2022/2025 | x86_64 | Windows PowerShell 5.1, CIM, .NET/native handle helper, SCM | 지원 목표 | 미지원 | TerminateProcess | SCM 서비스 |
+| Debian 12/13 | x86_64 | Python >=3.9, /proc, systemd, pidfd_open + pidfd_send_signal | 지원 목표 | TERM | KILL | systemd 서비스 |
+| Windows 11 | x86_64 | Windows PowerShell 5.1, CIM, .NET/native handle helper, SCM | 지원 목표 | 미지원 | TerminateProcess | SCM 서비스 |
+| Windows Server 2019/2022/2025 | x86_64 | Windows PowerShell 5.1, CIM, .NET/native handle helper, SCM | 지원 목표 | 미지원 | TerminateProcess | SCM 서비스 |
 
-Rocky minor별 ISO는 일치하는 것을 사용한다. ARM/32-bit/다른 OS/컨테이너 init/비systemd 환경은 1.0 밖이다.
+Rocky minor별 ISO는 만들지 않는다. 네 OS 계열별 다중 버전 ISO와 Cloud #1194의 구조화 catalog selector를 사용한다. Debian 11은 지원 대상에서 제외한다. ARM/32-bit/다른 OS/컨테이너 init/비systemd 환경은 1.0 밖이다.
+이 표는 지원 목표이며 qemu #79에서 검증한 것은 Rocky/Ubuntu/Debian/Windows 테스트 게스트 12종의 ISO 설치·설정이다. 실제 RHEL 게스트는 검증되지 않았다. QGA RPC와 프로세스 조회/종료/서비스 재시작까지 확인한 출시 가능 상태는 Cloud #1177의 별도 E2E 결과로 판정한다.
 pidfd나 Windows process handle 신원 보장을 확보하지 못하면 조회만 가능하고 mutation은 UNSUPPORTED_ACTION이다.
 Windows에서 taskkill /F를 정상 종료라고 표시하지 않는다. 서비스 제어가 필요한 경우 service.restart만 제공한다.
 Linux CPU는 두 sample 사이 process CPU time / wall interval ×100(한 코어 100%, 다중 코어 100% 초과 가능),

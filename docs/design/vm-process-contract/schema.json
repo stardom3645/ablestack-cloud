@@ -275,6 +275,9 @@
               "minLength": 1,
               "maxLength": 256
             },
+            "productType": {
+              "enum": ["none", "client", "server"]
+            },
             "arch": {
               "enum": [
                 "x86_64",

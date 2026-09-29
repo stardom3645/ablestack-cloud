@@ -17,6 +17,7 @@
         "family": "linux",
         "id": "rocky",
         "version": "9.7",
+        "productType": "none",
         "arch": "x86_64"
       },
       "qgaVersion": "8.2.0",

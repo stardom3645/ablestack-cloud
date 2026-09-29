@@ -25,8 +25,10 @@ export function missingProcessRpcs (capability) {
 export function processOsLabel (os) {
   if (!os || !os.version || os.version === 'unknown') return ''
   if (os.id === 'rocky') return `Rocky Linux ${os.version}`
+  if (os.id === 'rhel') return `Red Hat Enterprise Linux ${os.version}`
   if (os.id === 'ubuntu') return `Ubuntu ${os.version}`
-  if (os.family === 'windows' && os.id === 'mswindows') return `Windows Server ${os.version}`
+  if (os.id === 'debian') return `Debian ${os.version}`
+  if (os.family === 'windows' && os.id === 'mswindows') return `Windows ${os.productType === 'server' ? 'Server ' : ''}${os.version}`
   return ''
 }
 

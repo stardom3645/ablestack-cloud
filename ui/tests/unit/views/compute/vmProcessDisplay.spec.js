@@ -27,13 +27,19 @@ describe('VM process diagnostics', () => {
   it('explains a missing Windows guest adapter after a failed collection', () => {
     const capability = {
       readiness: 'TOOLS_REQUIRED',
-      os: { id: 'mswindows', family: 'windows', version: '2025' },
+      os: { id: 'mswindows', family: 'windows', productType: 'server', version: '2025' },
       rpcs: { 'guest-exec': 'ENABLED' }
     }
     expect(processDiagnostic(capability, null, { code: 'CHECK_FAILED' })).toEqual({ kind: 'tools', install: true })
     expect(processOsLabel(capability.os)).toBe('Windows Server 2025')
     expect(processDiagnostic(capability, null, null)).toEqual({ kind: 'tools', install: true })
     expect(processDiagnostic(capability, null, { code: 'BUSY' })).toEqual({ kind: 'tools', install: true })
+  })
+
+  it('labels each newly supported OS without confusing Windows products', () => {
+    expect(processOsLabel({ id: 'debian', version: '12' })).toBe('Debian 12')
+    expect(processOsLabel({ id: 'rhel', version: '9.6' })).toBe('Red Hat Enterprise Linux 9.6')
+    expect(processOsLabel({ id: 'mswindows', family: 'windows', productType: 'client', version: '11' })).toBe('Windows 11')
   })
 
   it('keeps transient busy results separate from a missing Tools diagnosis', () => {

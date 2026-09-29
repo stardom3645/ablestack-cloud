@@ -117,17 +117,23 @@ public class VmProcessCapabilityProbe {
     }
     public static Map<String, String> parseOs(String value) {
         JsonObject data = reply(value); String id = text(data, "id").toLowerCase(java.util.Locale.ROOT);
-        String family = "mswindows".equals(id) ? "windows" : ("rocky".equals(id) || "ubuntu".equals(id)) ? "linux" : "unknown";
-        if ("windows".equals(family) && (!data.has("variant-id") || !"server".equals(text(data, "variant-id")))) family = "unknown";
-        String arch = text(data, "machine");
-        return Map.of("family", family, "id", id, "version", text(data, "version-id"),
-                "arch", "x86_64".equals(arch) || "x86-64".equals(arch) ? "x86_64" : "unsupported");
+        String family = "mswindows".equals(id) ? "windows"
+                : Set.of("rocky", "rhel", "ubuntu", "debian").contains(id) ? "linux" : "unknown";
+        String productType = "windows".equals(family) && data.has("variant-id")
+                ? text(data, "variant-id").toLowerCase(java.util.Locale.ROOT) : "none";
+        String arch = text(data, "machine").toLowerCase(java.util.Locale.ROOT);
+        return Map.of("family", family, "id", id, "version", text(data, "version-id"), "productType", productType,
+                "arch", Set.of("x86_64", "x86-64", "amd64").contains(arch) ? "x86_64" : "unsupported");
     }
     public static boolean supportedOs(Map<String, String> os) {
         if (!"x86_64".equals(os.get("arch"))) return false;
         String version = os.get("version");
-        return "rocky".equals(os.get("id")) && Set.of("9.6", "9.7", "9.8", "10.2").contains(version)
+        return Set.of("rocky", "rhel").contains(os.get("id"))
+                && version.matches("(8|9|10)(\\.[0-9]+)*")
+                || "debian".equals(os.get("id")) && version.matches("(12|13)(\\.[0-9]+)*")
                 || "ubuntu".equals(os.get("id")) && Set.of("22.04", "24.04", "26.04").contains(version)
-                || "windows".equals(os.get("family")) && "mswindows".equals(os.get("id")) && Set.of("2022", "2025").contains(version);
+                || "windows".equals(os.get("family")) && "mswindows".equals(os.get("id"))
+                    && ("client".equals(os.get("productType")) && "11".equals(version)
+                        || "server".equals(os.get("productType")) && Set.of("2019", "2022", "2025").contains(version));
     }
 }

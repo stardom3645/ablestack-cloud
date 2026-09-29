@@ -45,6 +45,7 @@ under the License.
 import { getAPI, postAPI } from '@/api'
 import { attachedIsos, isoActionReason, isoOperations, startIsoOperation } from '@/utils/vmIsoActions'
 import { requiredRpcs } from './vmProcessDisplay'
+import { matchesToolsIsoChecksum } from './vmProcessToolsChecksum'
 
 const result = (json, command) => json?.[command.toLowerCase() + 'response']
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -74,6 +75,12 @@ export default {
     async loadMedia () {
       if (this.catalog?.status !== 'MATCHED') throw new Error(this.catalogError())
       if (!this.allowed) throw new Error(this.$t('message.vmprocess.tools.permission'))
+      const current = result(await getAPI('getVirtualMachineProcessCapabilities', { virtualmachineid: this.resource.id }), 'getVirtualMachineProcessCapabilities')?.processcapability?.toolsiso
+      if (current?.status !== 'MATCHED') throw new Error(this.$t('message.vmprocess.tools.catalog.' + (current?.status || 'OS_UNKNOWN').toLowerCase()))
+      if (current.isoId !== this.catalog.isoId || current.sha256 !== this.catalog.sha256 ||
+          current.sha512 !== this.catalog.sha512 ||
+          current.zoneId !== this.catalog.zoneId || current.arch !== this.catalog.arch ||
+          current.version !== this.catalog.version) throw new Error(this.$t('message.list.refresh.stale'))
       const vmResponse = await getAPI('listVirtualMachines', { id: this.resource.id })
       const vm = result(vmResponse, 'listVirtualMachines')?.virtualmachine?.find(item => item.id === this.resource.id)
       if (!vm) throw new Error(this.$t('message.list.refresh.stale'))
@@ -84,8 +91,7 @@ export default {
       if (iso.isready !== true) throw new Error(this.$t('message.vmprocess.tools.notready'))
       if (iso.zoneid && iso.zoneid !== vm.zoneid) throw new Error(this.$t('message.vmprocess.tools.zone'))
       if (iso.arch && iso.arch !== this.catalog.arch) throw new Error(this.$t('message.vmprocess.tools.arch'))
-      const checksum = String(iso.checksum || '').replace(/^\{SHA-256\}/i, '').replace(/^sha256:/i, '').toLowerCase()
-      if (checksum !== this.catalog.sha256) throw new Error(this.$t('message.vmprocess.tools.checksum'))
+      if (!matchesToolsIsoChecksum(iso.checksum, this.catalog)) throw new Error(this.$t('message.vmprocess.tools.checksum'))
       this.vm = vm; this.media = iso
       return { vm, iso }
     },

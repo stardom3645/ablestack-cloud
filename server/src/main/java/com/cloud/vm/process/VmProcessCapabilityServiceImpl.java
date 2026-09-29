@@ -40,6 +40,8 @@ import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.storage.GuestOSVO;
+import com.cloud.storage.dao.GuestOSDao;
 import com.cloud.user.AccountManager;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachine;
@@ -53,8 +55,9 @@ public class VmProcessCapabilityServiceImpl extends com.cloud.utils.component.Ma
     public static final ConfigKey<Boolean> MANAGEMENT_ENABLED = new ConfigKey<>("Advanced", Boolean.class,
             "vm.process.management.enabled", "false", "Explicitly enable VM process observations and management APIs. Disabled by default; no test allowlist bypass.", true);
     public static final ConfigKey<String> TOOLS_ISO_CATALOG = new ConfigKey<>("Advanced", String.class,
-            "vm.process.tools.iso.catalog", "[]", "JSON array of zoneId, osId, osVersion, arch, isoId, version and SHA-256 mappings for ABLESTACK Tools ISOs.", true);
+            "vm.process.tools.iso.catalog", "[]", "JSON array of zoneId, isoFamily, osId, productType, versions, arch, isoId, version and SHA-256 mappings for ABLESTACK Tools ISOs.", true);
     @Inject private DataCenterDao dataCenterDao;
+    @Inject private GuestOSDao guestOSDao;
     @Inject private UserVmDao vmDao;
     @Inject private AccountManager accountManager;
     @Inject private HostDao hostDao;
@@ -102,9 +105,11 @@ public class VmProcessCapabilityServiceImpl extends com.cloud.utils.component.Ma
         if (!enabled(vm)) throw new InvalidParameterValueException("VM process management is disabled");
         VmProcessCapabilityResponse publicResponse = response(result);
         DataCenterVO zone = dataCenterDao == null ? null : dataCenterDao.findById(vm.getDataCenterId());
+        GuestOSVO registeredOs = guestOSDao == null ? null : guestOSDao.findById(vm.getGuestOSId());
         @SuppressWarnings("unchecked") Map<String, Object> os = (Map<String, Object>) result.get("os");
         publicResponse.setToolsIso(VmProcessToolsIsoCatalog.resolve(TOOLS_ISO_CATALOG.value(),
-                zone == null ? null : zone.getUuid(), os));
+                zone == null ? null : zone.getUuid(), os,
+                registeredOs == null ? null : registeredOs.getDisplayName()));
         return publicResponse;
     }
     static VmProcessCapabilityResponse response(Map<String, Object> internal) {
