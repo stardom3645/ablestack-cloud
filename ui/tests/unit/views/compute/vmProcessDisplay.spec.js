@@ -32,6 +32,8 @@ describe('VM process diagnostics', () => {
     }
     expect(processDiagnostic(capability, null, { code: 'CHECK_FAILED' })).toEqual({ kind: 'tools', install: true })
     expect(processOsLabel(capability.os)).toBe('Windows Server 2025')
+    expect(processDiagnostic(capability, null, null)).toEqual({ kind: 'tools', install: true })
+    expect(processDiagnostic(capability, null, { code: 'BUSY' })).toEqual({ kind: 'tools', install: true })
   })
 
   it('keeps transient busy results separate from a missing Tools diagnosis', () => {

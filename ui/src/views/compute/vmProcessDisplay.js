@@ -34,7 +34,6 @@ export function processDiagnostic (capability, snapshotId, snapshotFailure) {
   const missing = missingProcessRpcs(capability)
   if (missing.length) return { kind: 'rpc', missing, install: true }
   const failure = snapshotFailure?.code
-  if (failure === 'BUSY') return { kind: 'busy' }
   if (!snapshotId) {
     const readiness = capability?.readiness
     if (readiness === 'CHECK_FAILED') return { kind: 'host' }
@@ -42,9 +41,11 @@ export function processDiagnostic (capability, snapshotId, snapshotFailure) {
     if (readiness === 'HOST_TOOL_MISSING') return { kind: 'hostTool' }
     if (readiness === 'UNSUPPORTED_OS') return { kind: 'unsupportedOs' }
     if (readiness === 'RPC_UNSUPPORTED' || readiness === 'RPC_DISABLED') return { kind: 'rpc', missing: [], install: true }
-    if (readiness === 'TOOLS_REQUIRED' && failure) return { kind: 'tools', install: true }
+    if (readiness === 'TOOLS_REQUIRED') return { kind: 'tools', install: true }
+    if (failure === 'BUSY') return { kind: 'busy' }
     if (failure) return { kind: 'snapshot' }
   }
+  if (failure === 'BUSY') return { kind: 'busy' }
   if (failure) return { kind: 'snapshot' }
   return null
 }

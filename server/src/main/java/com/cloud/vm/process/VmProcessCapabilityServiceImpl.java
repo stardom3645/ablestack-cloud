@@ -35,6 +35,8 @@ import com.cloud.agent.api.GetVmProcessCapabilitiesCommand;
 import com.cloud.agent.api.GetVmProcessCapabilitiesAnswer;
 import com.cloud.agent.api.VmProcessCapability;
 import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.dc.DataCenterVO;
+import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -50,13 +52,16 @@ public class VmProcessCapabilityServiceImpl extends com.cloud.utils.component.Ma
     }
     public static final ConfigKey<Boolean> MANAGEMENT_ENABLED = new ConfigKey<>("Advanced", Boolean.class,
             "vm.process.management.enabled", "false", "Explicitly enable VM process observations and management APIs. Disabled by default; no test allowlist bypass.", true);
+    public static final ConfigKey<String> TOOLS_ISO_CATALOG = new ConfigKey<>("Advanced", String.class,
+            "vm.process.tools.iso.catalog", "[]", "JSON array of zoneId, osId, osVersion, arch, isoId, version and SHA-256 mappings for ABLESTACK Tools ISOs.", true);
+    @Inject private DataCenterDao dataCenterDao;
     @Inject private UserVmDao vmDao;
     @Inject private AccountManager accountManager;
     @Inject private HostDao hostDao;
     @Inject private AgentManager agentManager;
     private final Semaphore admission = new Semaphore(8);
     @Override public String getConfigComponentName() { return getClass().getSimpleName(); }
-    @Override public ConfigKey<?>[] getConfigKeys() { return new ConfigKey<?>[] { MANAGEMENT_ENABLED }; }
+    @Override public ConfigKey<?>[] getConfigKeys() { return new ConfigKey<?>[] { MANAGEMENT_ENABLED, TOOLS_ISO_CATALOG }; }
     boolean enabled(UserVmVO vm) {
         return Boolean.TRUE.equals(MANAGEMENT_ENABLED.value());
     }
@@ -95,7 +100,12 @@ public class VmProcessCapabilityServiceImpl extends com.cloud.utils.component.Ma
             result = VmProcessCapability.fail(result, "CHECK_FAILED", "Agent observation unavailable");
         } finally { admission.release(); }
         if (!enabled(vm)) throw new InvalidParameterValueException("VM process management is disabled");
-        return response(result);
+        VmProcessCapabilityResponse publicResponse = response(result);
+        DataCenterVO zone = dataCenterDao == null ? null : dataCenterDao.findById(vm.getDataCenterId());
+        @SuppressWarnings("unchecked") Map<String, Object> os = (Map<String, Object>) result.get("os");
+        publicResponse.setToolsIso(VmProcessToolsIsoCatalog.resolve(TOOLS_ISO_CATALOG.value(),
+                zone == null ? null : zone.getUuid(), os));
+        return publicResponse;
     }
     static VmProcessCapabilityResponse response(Map<String, Object> internal) {
         Map<String, Object> publicState = new LinkedHashMap<>(internal);

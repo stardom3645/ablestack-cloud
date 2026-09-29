@@ -25,7 +25,7 @@ under the License.
       <a-button v-if="canAdminAction && isLinux" :disabled="!actionAvailable('process.terminate', selected)" @click="openAction('process.terminate', selected)">{{ $t('label.vmprocess.terminate') }}</a-button>
       <a-button :disabled="disabled || actionBusy" @click="refreshAll"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-button :disabled="actionBusy" @click="checkCapability(true)">{{ $t('label.vmprocess.readiness') }}</a-button>
-      <a-button v-if="diagnostic?.install" @click="$emit('open-iso')">{{ $t('label.vmprocess.open.iso') }}</a-button>
+      <a-button v-if="diagnostic?.install" @click="toolsDialog = true">{{ $t('label.vmprocess.tools.title') }}</a-button>
       <a-button v-if="operation && ['UNKNOWN', 'PENDING'].includes(operation.state)" :loading="operationChecking" @click="checkOperation">{{ $t('label.vmprocess.check.result') }}</a-button>
       <a-input-search v-model:value="search" :placeholder="$t('label.vmprocess.search')" :aria-label="$t('label.vmprocess.search')" :disabled="!snapshotId" @search="searchRows" />
     </div>
@@ -107,12 +107,14 @@ v-if="confirm"
         <a-button :type="confirm?.action === 'process.kill' ? 'default' : 'primary'" :danger="confirm?.action === 'process.kill'" :loading="submitting" :disabled="!confirm || !actionAvailable(confirm.action, confirm.row, confirm.service) || (confirm.action === 'process.kill' && !ack)" @click="submitAction">{{ actionLabel(confirm?.action) }}</a-button>
       </template>
     </a-modal>
+    <VmProcessToolsDialog :visible="toolsDialog" :resource="resource" :catalog="toolsIso" :capability="capability" @close="toolsDialog = false" @verified="refreshAll" />
   </div>
 </template>
 
 <script>
 import { getAPI, postAPI } from '@/api'
 import { requiredRpcs, processOsLabel, processDiagnostic } from './vmProcessDisplay'
+import VmProcessToolsDialog from './VmProcessToolsDialog.vue'
 
 const actionApis = { 'process.terminate': 'terminateVirtualMachineProcess', 'process.kill': 'killVirtualMachineProcess', 'service.restart': 'restartVirtualMachineService' }
 const result = (json, command) => json?.[command.toLowerCase() + 'response']
@@ -133,10 +135,11 @@ function errorMessage (error) {
 
 export default {
   name: 'VmProcessesTab',
+  components: { VmProcessToolsDialog },
   props: { resource: { type: Object, required: true }, active: { type: Boolean, default: false } },
   emits: ['open-iso'],
   data () {
-    return { capability: null, capabilityLoading: false, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', snapshotFailure: null, selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
+    return { capability: null, toolsIso: null, toolsDialog: false, capabilityLoading: false, disabled: false, rows: [], snapshotId: null, observedAt: null, receivedAt: 0, ageSeconds: 0, total: 0, page: 1, pageSize: 10, search: '', keyword: '', sortBy: 'pid', descending: false, loading: false, errorText: '', snapshotFailure: null, selected: null, confirm: null, ack: false, submitting: false, operation: null, operationChecking: false, generation: 0, disposed: false }
   },
   computed: {
     scopeKey () { return JSON.stringify([this.resource.id, this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$store.state?.user?.token]) },
@@ -172,8 +175,8 @@ export default {
     actionLabel (action) { return this.$t(action === 'service.restart' ? 'label.vmprocess.restart' : action === 'process.terminate' ? 'label.vmprocess.terminate' : 'label.vmprocess.kill') },
     storageKey () { return `vm-process-operation:${this.scopeKey}` },
     saveOperation () { try { if (this.operation && ['PENDING', 'UNKNOWN'].includes(this.operation.state)) sessionStorage.setItem(this.storageKey(), JSON.stringify(this.operation)); else sessionStorage.removeItem(this.storageKey()) } catch (_) {} },
-    reset () { this.capability = null; this.disabled = false; this.rows = []; this.snapshotId = null; this.observedAt = null; this.receivedAt = 0; this.ageSeconds = 0; this.total = 0; this.selected = null; this.confirm = null; this.operation = null; this.errorText = ''; this.snapshotFailure = null; this.page = 1; this.keyword = ''; this.search = '' },
-    deactivate () { this.generation++; clearInterval(this.tickTimer); clearInterval(this.refreshTimer); this.tickTimer = null; this.refreshTimer = null; this.confirm = null; this.loading = false; this.capabilityLoading = false; this.operationChecking = false; this.submitting = false },
+    reset () { this.capability = null; this.toolsIso = null; this.toolsDialog = false; this.disabled = false; this.rows = []; this.snapshotId = null; this.observedAt = null; this.receivedAt = 0; this.ageSeconds = 0; this.total = 0; this.selected = null; this.confirm = null; this.operation = null; this.errorText = ''; this.snapshotFailure = null; this.page = 1; this.keyword = ''; this.search = '' },
+    deactivate () { this.toolsDialog = false; this.generation++; clearInterval(this.tickTimer); clearInterval(this.refreshTimer); this.tickTimer = null; this.refreshTimer = null; this.confirm = null; this.loading = false; this.capabilityLoading = false; this.operationChecking = false; this.submitting = false },
     async activate () {
       if (this.disposed || !this.active) return
       const token = ++this.generation
@@ -192,7 +195,9 @@ export default {
       try {
         const json = await getAPI('getVirtualMachineProcessCapabilities', { virtualmachineid: this.resource.id })
         if (!this.current(token)) return
-        this.capability = result(json, 'getVirtualMachineProcessCapabilities')?.processcapability?.processstate || null
+        const response = result(json, 'getVirtualMachineProcessCapabilities')?.processcapability
+        this.capability = response?.processstate || null
+        this.toolsIso = response?.toolsiso || null
         this.disabled = false
         this.errorText = ''
         if (refresh && this.rpcsReady) await this.refreshSnapshot(token)
@@ -201,7 +206,7 @@ export default {
         const message = errorMessage(error)
         this.disabled = /disabled/i.test(message)
         this.errorText = this.disabled ? '' : message
-        this.capability = null
+        this.capability = null; this.toolsIso = null
         this.rows = []; this.snapshotId = null; this.snapshotFailure = null; this.total = 0; this.selected = null
       } finally { if (this.current(token)) this.capabilityLoading = false }
     },

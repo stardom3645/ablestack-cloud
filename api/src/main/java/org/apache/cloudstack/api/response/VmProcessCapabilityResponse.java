@@ -26,9 +26,14 @@ public class VmProcessCapabilityResponse extends BaseResponse {
     @Param(description = "Process capability contract 1.0; internal host authority is omitted")
     @com.google.gson.annotations.JsonAdapter(ProcessStateAdapter.class)
     private Map<String, Object> processState;
+    @SerializedName("toolsiso")
+    @Param(description = "Administrator configured Tools ISO for this zone and guest OS")
+    private Map<String, String> toolsIso;
     @SerializedName("ttlseconds")
     @Param(description = "Maximum observation lifetime; actions must revalidate")
     private int ttlSeconds = 30;
     public void setProcessState(Map<String, Object> value) { processState = value; }
     public Map<String, Object> getProcessState() { return processState; }
+    public void setToolsIso(Map<String, String> value) { toolsIso = value; }
+    public Map<String, String> getToolsIso() { return toolsIso; }
 }
