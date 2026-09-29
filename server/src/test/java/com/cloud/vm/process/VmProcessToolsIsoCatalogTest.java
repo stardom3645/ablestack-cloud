@@ -17,84 +17,113 @@
 package com.cloud.vm.process;
 
 import static org.junit.Assert.assertEquals;
+
+import java.util.HashMap;
 import java.util.Map;
+
 import org.junit.Test;
 
 public class VmProcessToolsIsoCatalogTest {
     private static final String ZONE = "11111111-1111-4111-8111-111111111111";
-    private static final String ISO = "22222222-2222-4222-8222-222222222222";
-    private static final String SHA = "a".repeat(64);
-    private static final String SHA512 = "b".repeat(128);
-    private static String entry(String family, String id, String product, String versions) {
-        return "{\"zoneId\":\"" + ZONE + "\",\"isoFamily\":\"" + family + "\",\"osId\":\"" + id
-                + "\",\"productType\":\"" + product + "\",\"versions\":" + versions
-                + ",\"arch\":\"x86_64\",\"isoId\":\"" + ISO + "\",\"version\":\"process-9\",\"sha256\":\"" + SHA
-                + "\",\"sha512\":\"" + SHA512 + "\"}";
+    private static final String ROCKY = "22222222-2222-4222-8222-222222222222";
+    private static final String UBUNTU = "33333333-3333-4333-8333-333333333333";
+    private static final String DEBIAN = "44444444-4444-4444-8444-444444444444";
+    private static final String WINDOWS = "55555555-5555-4555-8555-555555555555";
+    private static final String OTHER_ROCKY = "66666666-6666-4666-8666-666666666666";
+    private static final String CHECKSUM = "b".repeat(128);
+    private static final String ALL = "[\"" + ROCKY + "\",\"" + UBUNTU + "\",\"" + DEBIAN + "\",\"" + WINDOWS + "\"]";
+
+    private static VmProcessToolsIsoCatalog.IsoMetadata iso(String name, boolean inZone) {
+        return new VmProcessToolsIsoCatalog.IsoMetadata(name, "x86_64", CHECKSUM, true, true, false, inZone);
     }
-    private static final String ROCKY = "[" + entry("rocky", "rocky", "none", "[\"8\",\"9\",\"10\"]") + "]";
+
+    private static Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media() {
+        Map<String, VmProcessToolsIsoCatalog.IsoMetadata> entries = new HashMap<>();
+        entries.put(ROCKY, iso("ABLESTACK-Tools-Process-rocky-89806b1", true));
+        entries.put(UBUNTU, iso("ABLESTACK-Tools-ubuntu-process-9-89806b1.iso", true));
+        entries.put(DEBIAN, iso("ABLESTACK-Tools-Process-debian-89806b1", true));
+        entries.put(WINDOWS, iso("ABLESTACK-Tools-Process-windows-89806b1", true));
+        return entries;
+    }
+
     private static Map<String, String> os(String id, String version, String product) {
         return Map.of("family", "mswindows".equals(id) ? "windows" : "linux", "id", id,
                 "version", version, "productType", product, "arch", "x86_64");
     }
-    private static String status(String catalog, String id, String version, String product, String registered) {
-        return VmProcessToolsIsoCatalog.resolve(catalog, ZONE, os(id, version, product), registered).get("status");
+
+    private static Map<String, String> resolve(String catalog, String id, String version, String product,
+            String registered, Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media) {
+        return VmProcessToolsIsoCatalog.resolve(catalog, ZONE, os(id, version, product), registered, media::get);
     }
 
-    @Test public void oneIsoCoversAllRockyMajorsAndMinors() {
+    private static String status(String catalog, String id, String version, String product, String registered,
+            Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media) {
+        return resolve(catalog, id, version, product, registered, media).get("status");
+    }
+
+    @Test public void uuidOnlyCatalogUsesCloudIsoFamilyForAllSupportedVersions() {
+        Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media = media();
         for (String version : new String[] {"8.10", "9.7", "9.8", "10.2"}) {
-            assertEquals(ISO, VmProcessToolsIsoCatalog.resolve(ROCKY, ZONE, os("rocky", version, "none"),
-                    "Rocky Linux " + version.split("\\.")[0]).get("isoId"));
+            assertEquals(ROCKY, resolve(ALL, "rocky", version, "none",
+                    "Rocky Linux " + version.split("\\.")[0], media).get("isoId"));
         }
-        assertEquals(SHA512, VmProcessToolsIsoCatalog.resolve(ROCKY, ZONE, os("rocky", "9.8", "none"),
-                "Rocky Linux 9").get("sha512"));
+        assertEquals(UBUNTU, resolve(ALL, "ubuntu", "26.04", "none", "Ubuntu 26.04 LTS", media).get("isoId"));
+        assertEquals(DEBIAN, resolve(ALL, "debian", "13", "none", "Debian GNU/Linux 13 (64-bit)", media).get("isoId"));
+        assertEquals(WINDOWS, resolve(ALL, "mswindows", "11", "client", "Windows 11 (64-bit)", media).get("isoId"));
+        assertEquals(WINDOWS, resolve(ALL, "mswindows", "2025", "server", "Windows Server 2025 (64-bit)", media).get("isoId"));
+        assertEquals(ROCKY, resolve(ALL, "rhel", "9.6", "none", "Red Hat Enterprise Linux 9", media).get("isoId"));
+        assertEquals(CHECKSUM, resolve(ALL, "rocky", "9.8", "none", "Rocky Linux 9", media).get("checksum"));
+        assertEquals("ABLESTACK-Tools-Process-rocky-89806b1",
+                resolve(ALL, "rocky", "9.8", "none", "Rocky Linux 9", media).get("name"));
     }
-    @Test public void familyAndProductSelectorsAreExplicit() {
-        assertEquals("MATCHED", status("[" + entry("ubuntu", "ubuntu", "none", "[\"22.04\",\"24.04\",\"26.04\"]") + "]",
-                "ubuntu", "24.04", "none", "Ubuntu 24.04 LTS"));
-        assertEquals("MATCHED", status("[" + entry("debian", "debian", "none", "[\"12\",\"13\"]") + "]",
-                "debian", "12", "none", "Debian GNU/Linux 12 (64-bit)"));
-        assertEquals("MATCHED", status("[" + entry("windows", "mswindows", "server", "[\"2019\",\"2022\",\"2025\"]") + "]",
-                "mswindows", "2025", "server", "Windows Server 2025 (64-bit)"));
-        assertEquals("MATCHED", status("[" + entry("windows", "mswindows", "client", "[\"11\"]") + "]",
-                "mswindows", "11", "client", "Windows 11 (64-bit)"));
-        assertEquals("NO_MATCH", status(ROCKY, "rhel", "9.6", "none", "Red Hat Enterprise Linux 9"));
-        assertEquals("MATCHED", status("[" + entry("rocky", "rhel", "none", "[\"8\",\"9\",\"10\"]") + "]",
-                "rhel", "9.6", "none", "Red Hat Enterprise Linux 9"));
-        assertEquals("NO_MATCH", status("[" + entry("windows", "mswindows", "server", "[\"2025\"]") + "]",
-                "mswindows", "11", "client", "Windows 11 (64-bit)"));
-    }
-    @Test public void staleUnknownAndUnsupportedGuestsDoNotRecommend() {
-        assertEquals("NOT_CONFIGURED", status("[]", "rocky", "9.8", "none", "Rocky Linux 9"));
-        assertEquals("OS_MISMATCH", status(ROCKY, "rocky", "9.8", "none", "Rocky Linux 8"));
-        assertEquals("OS_MISMATCH", status(ROCKY, "rocky", "9.8", "none", null));
-        assertEquals("UNSUPPORTED_OS", status(ROCKY, "rocky", "11.1", "none", "Rocky Linux 10"));
-        assertEquals("UNSUPPORTED_OS", status(ROCKY, "debian", "11", "none", "Debian GNU/Linux 11"));
-        assertEquals("UNSUPPORTED_OS", VmProcessToolsIsoCatalog.resolve(ROCKY, ZONE,
-                Map.of("family", "linux", "id", "rocky", "version", "9.8", "arch", "aarch64"),
-                "Rocky Linux 9").get("status"));
-        assertEquals("OS_UNKNOWN", VmProcessToolsIsoCatalog.resolve(ROCKY, ZONE,
+
+    @Test public void unknownStaleAndUnsupportedGuestsDoNotRecommend() {
+        Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media = media();
+        assertEquals("NOT_CONFIGURED", status("[]", "rocky", "9.8", "none", "Rocky Linux 9", media));
+        assertEquals("OS_MISMATCH", status(ALL, "rocky", "9.8", "none", "Rocky Linux 8", media));
+        assertEquals("OS_MISMATCH", status(ALL, "rocky", "9.8", "none", null, media));
+        assertEquals("UNSUPPORTED_OS", status(ALL, "rocky", "11.1", "none", "Rocky Linux 11", media));
+        assertEquals("UNSUPPORTED_OS", status(ALL, "debian", "11", "none", "Debian GNU/Linux 11", media));
+        assertEquals("OS_UNKNOWN", VmProcessToolsIsoCatalog.resolve(ALL, ZONE,
                 Map.of("family", "unknown", "id", "unknown", "version", "unknown", "arch", "unsupported"),
-                "Rocky Linux 9").get("status"));
+                "Windows 11", media::get).get("status"));
     }
-    @Test public void malformedOrOverlappingCatalogFailsClosed() {
-        assertEquals("INVALID_CONFIG", status("bad", "rocky", "9.8", "none", "Rocky Linux 9"));
-        String item = ROCKY.substring(1, ROCKY.length() - 1);
-        assertEquals("INVALID_CONFIG", status("[" + item + "," + item + "]", "rocky", "9.8", "none", "Rocky Linux 9"));
-        assertEquals("INVALID_CONFIG", status("[" + item + "," + item.replace(ISO, "33333333-3333-4333-8333-333333333333") + "]",
-                "rocky", "9.8", "none", "Rocky Linux 9"));
-        assertEquals("INVALID_CONFIG", status(ROCKY.replace(SHA, "123"), "rocky", "9.8", "none", "Rocky Linux 9"));
-        assertEquals("INVALID_CONFIG", status(ROCKY.replace(SHA512, "123"), "rocky", "9.8", "none", "Rocky Linux 9"));
-        assertEquals("INVALID_CONFIG", status(ROCKY.replace("x86_64", "aarch64"), "rocky", "9.8", "none", "Rocky Linux 9"));
-        assertEquals("INVALID_CONFIG", status(ROCKY.replace("[\"8\",\"9\",\"10\"]", "[\"8.x\"]"),
-                "rocky", "9.8", "none", "Rocky Linux 9"));
+
+    @Test public void onlyIsosInTheVmZoneCanMatch() {
+        Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media = media();
+        media.put(ROCKY, iso("ABLESTACK-Tools-Process-rocky-89806b1", false));
+        assertEquals("NO_MATCH", status(ALL, "rocky", "9.8", "none", "Rocky Linux 9", media));
+        media.put(OTHER_ROCKY, iso("ABLESTACK-Tools-Process-rocky-89806b1", true));
+        assertEquals(OTHER_ROCKY, resolve(ALL.substring(0, ALL.length() - 1) + ",\"" + OTHER_ROCKY + "\"]",
+                "rocky", "9.8", "none", "Rocky Linux 9", media).get("isoId"));
     }
-    @Test public void legacyExactCatalogRemainsReadableDuringMigration() {
-        String legacy = "[" + entry("rocky", "rocky", "none", "[\"9\"]")
-                .replace("\"isoFamily\":\"rocky\",", "").replace("\"productType\":\"none\",", "")
-                .replace("\"versions\":[\"9\"],", "\"osVersion\":\"9.8\",") + "]";
-        assertEquals("MATCHED", status(legacy, "rocky", "9.8", "none", "Rocky Linux 9"));
-        assertEquals("NO_MATCH", status(legacy, "rocky", "9.7", "none", "Rocky Linux 9"));
-        String overlapping = legacy.substring(0, legacy.length() - 1) + "," + ROCKY.substring(1);
-        assertEquals("INVALID_CONFIG", status(overlapping, "rocky", "9.8", "none", "Rocky Linux 9"));
+
+    @Test public void legacyEntriesMigrateByIsoUuid() {
+        Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media = media();
+        String old = "[{\"isoId\":\"" + ROCKY + "\",\"osVersion\":\"9.8\"},"
+                + "{\"isoId\":\"" + ROCKY + "\",\"osVersion\":\"10.2\"}]";
+        assertEquals(ROCKY, resolve(old, "rocky", "8.10", "none", "Rocky Linux 8", media).get("isoId"));
+        assertEquals("INVALID_CONFIG", status("[{\"isoId\":\"" + ROCKY + "\"},\"" + UBUNTU + "\"]",
+                "rocky", "9.8", "none", "Rocky Linux 9", media));
+    }
+
+    @Test public void invalidOrAmbiguousCloudMediaFailsClosed() {
+        Map<String, VmProcessToolsIsoCatalog.IsoMetadata> media = media();
+        assertEquals("INVALID_CONFIG", status("bad", "rocky", "9.8", "none", "Rocky Linux 9", media));
+        assertEquals("INVALID_CONFIG", status("[{}]", "rocky", "9.8", "none", "Rocky Linux 9", media));
+        assertEquals("INVALID_CONFIG", status("[\"" + ROCKY + "\",\"" + ROCKY + "\"]",
+                "rocky", "9.8", "none", "Rocky Linux 9", media));
+        assertEquals("INVALID_CONFIG", status("[\"not-a-uuid\"]", "rocky", "9.8", "none", "Rocky Linux 9", media));
+        media.put(OTHER_ROCKY, iso("ABLESTACK-Tools-Process-rocky-89806b1", true));
+        assertEquals("INVALID_CONFIG", status(ALL.substring(0, ALL.length() - 1) + ",\"" + OTHER_ROCKY + "\"]",
+                "rocky", "9.8", "none", "Rocky Linux 9", media));
+        media.put(ROCKY, iso("Untrusted ISO", true));
+        assertEquals("INVALID_CONFIG", status(ALL, "rocky", "9.8", "none", "Rocky Linux 9", media));
+        media.put(ROCKY, new VmProcessToolsIsoCatalog.IsoMetadata(
+                "ABLESTACK-Tools-Process-rocky-89806b1", "x86_64", null, true, true, true, true));
+        assertEquals("INVALID_CONFIG", status(ALL, "rocky", "9.8", "none", "Rocky Linux 9", media));
+        media.put(ROCKY, new VmProcessToolsIsoCatalog.IsoMetadata(
+                "ABLESTACK-Tools-Process-rocky-89806b1", "aarch64", null, true, true, false, true));
+        assertEquals("INVALID_CONFIG", status(ALL, "rocky", "9.8", "none", "Rocky Linux 9", media));
     }
 }

@@ -30,6 +30,8 @@ qemu #79 / PR #80 GitHub Actions run `36545619710`의 `process-9-89806b1` manife
 | Debian | `715788e2-88b4-4c29-b09e-6ceeb70f61e8` | 12/13 |
 | Windows | `bc0d7fe7-2126-4944-b830-f2894b16543f` | client 11, server 2019/2022/2025 |
 
+Global 설정 `vm.process.tools.iso.catalog`는 위 ISO ID 네 개의 JSON 문자열 배열로 교체했다. 계열은 ISO 등록명 `ABLESTACK-Tools-Process-{계열}-89806b1`에서 읽고, 지원 버전은 Cloud 코드로 판정한다. `zoneId`·OS 버전·SHA-256/512를 설정에 수동 입력하지 않는다. Cloud 저장 체크섬과 `listIsos.checksum`의 표기 차이(`{SHA-512}` 접두사)는 정규화해 연결 시점에 비교한다. 기존 객체형 catalog는 이행 기간 동안 `isoId`를 추출해 읽는다.
+
 실제 `getVirtualMachineProcessCapabilities` API를 12개 VM에서 재호출한 결과:
 
 | VM | QGA 관측 OS | Cloud 등록 OS | catalog | 설명 |
@@ -47,7 +49,7 @@ qemu #79 / PR #80 GitHub Actions run `36545619710`의 `process-9-89806b1` manife
 | Windows Server 2019 | QGA 없음 | Server 2019 | OS_UNKNOWN | 자동 추정 금지 |
 | Windows 11 | QGA 없음 | Windows 11 | OS_UNKNOWN | 자동 추정 금지 |
 
-`MATCHED`는 ISO 추천일 뿐 READY가 아니다. 실제 RPC/프로세스 조회·작업과 출시 가능 상태는 Cloud #1177에서 검증한다. Windows 11/2019/2022는 ISO 탭에서 실제 OS를 확인한 관리자가 수동 연결하고, QGA 설치 뒤 재조회해야 자동 추천을 판단할 수 있다. RHEL은 지원 목표와 코드상 selector를 정의했지만 실제 RHEL 테스트 VM/설치 증거가 없으므로 catalog에 등록하지 않았다. Debian 11은 지원 대상에서 제외했다.
+`MATCHED`는 ISO 추천일 뿐 READY가 아니다. 실제 RPC/프로세스 조회·작업과 출시 가능 상태는 Cloud #1177에서 검증한다. Windows 11/2019/2022는 ISO 탭에서 실제 OS를 확인한 관리자가 수동 연결하고, QGA 설치 뒤 재조회해야 자동 추천을 판단할 수 있다. RHEL은 코드상 Rocky ISO 계열로 매칭되지만 실제 RHEL 테스트 VM/설치 증거가 없으므로 지원 확정 대상이 아니다. Debian 11은 지원 대상에서 제외했다.
 
 집중 테스트: server catalog 5개, KVM capability 5개, UI 7개, C1 schema/fixture 28 accepted·12 rejected·3 malformed. Server Checkstyle 0건. KVM 모듈에는 선행 변경 파일의 wildcard import 3건이 있어 이번 모듈 컴파일·테스트에서는 Checkstyle만 제외했다.
 

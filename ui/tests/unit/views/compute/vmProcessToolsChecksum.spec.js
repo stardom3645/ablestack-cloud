@@ -18,18 +18,17 @@
 import { matchesToolsIsoChecksum } from '@/views/compute/vmProcessToolsChecksum'
 
 describe('Tools ISO metadata checksum', () => {
-  const catalog = { sha256: 'a'.repeat(64), sha512: 'b'.repeat(128) }
-
-  it('checks either digest format returned by Cloud', () => {
-    expect(matchesToolsIsoChecksum('{SHA-256}' + 'A'.repeat(64), catalog)).toBe(true)
-    expect(matchesToolsIsoChecksum('sha512:' + 'B'.repeat(128), catalog)).toBe(true)
-    expect(matchesToolsIsoChecksum('b'.repeat(128), catalog)).toBe(true)
+  it('compares the digest returned by Cloud without catalog input', () => {
+    expect(matchesToolsIsoChecksum('{SHA-256}' + 'A'.repeat(64), 'a'.repeat(64))).toBe(true)
+    expect(matchesToolsIsoChecksum('sha512:' + 'B'.repeat(128), 'b'.repeat(128))).toBe(true)
+    expect(matchesToolsIsoChecksum('b'.repeat(128), 'b'.repeat(128))).toBe(true)
   })
 
-  it('rejects missing, malformed or mismatched metadata', () => {
-    expect(matchesToolsIsoChecksum('', catalog)).toBe(false)
-    expect(matchesToolsIsoChecksum('c'.repeat(128), catalog)).toBe(false)
-    expect(matchesToolsIsoChecksum('b'.repeat(128), { sha256: catalog.sha256 })).toBe(false)
-    expect(matchesToolsIsoChecksum('{SHA-512}' + 'f'.repeat(64), catalog)).toBe(false)
+  it('rejects changed or malformed metadata and permits an absent stored checksum', () => {
+    expect(matchesToolsIsoChecksum('', 'a'.repeat(64))).toBe(false)
+    expect(matchesToolsIsoChecksum('c'.repeat(128), 'b'.repeat(128))).toBe(false)
+    expect(matchesToolsIsoChecksum('b'.repeat(128), 'a'.repeat(64))).toBe(false)
+    expect(matchesToolsIsoChecksum('b'.repeat(128), 'invalid')).toBe(false)
+    expect(matchesToolsIsoChecksum('', null)).toBe(true)
   })
 })

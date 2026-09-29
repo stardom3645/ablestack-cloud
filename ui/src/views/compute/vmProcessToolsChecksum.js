@@ -15,11 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// Cloud ISO metadata may contain SHA-256 or SHA-512; the catalog records the
-// manifest SHA-256 and, when needed, SHA-512 calculated from the same ISO.
-export function matchesToolsIsoChecksum (checksum, catalog) {
-  const value = String(checksum || '').replace(/^\{SHA-(256|512)\}/i, '').replace(/^sha(256|512):/i, '').toLowerCase()
-  if (/^[0-9a-f]{64}$/.test(value)) return value === catalog?.sha256
-  if (/^[0-9a-f]{128}$/.test(value)) return value === catalog?.sha512
-  return false
+// Compare Cloud's ISO checksum at selection and attachment, without asking
+// administrators to enter a checksum in the global setting.
+const normalize = value => String(value || '').replace(/^\{SHA-(256|512)\}/i, '').replace(/^sha(256|512):/i, '').toLowerCase()
+
+export function matchesToolsIsoChecksum (checksum, expected) {
+  if (!expected) return true
+  const value = normalize(expected)
+  return (/^[0-9a-f]{64}$/.test(value) || /^[0-9a-f]{128}$/.test(value)) && normalize(checksum) === value
 }

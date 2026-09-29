@@ -19,38 +19,38 @@ under the License.
 
 # 프로세스 관리 ABLESTACK Tools ISO 연결
 
-Cloud #1173/#1194 / qemu-exec-tools #65/#79. 이 기능은 `vm.process.management.enabled=true`인 경우에만 이용한다.
+Cloud #1173/#1194 / qemu-exec-tools #65/#79. 이 기능은 Global 설정 `vm.process.management.enabled=true`인 경우에만 이용한다.
 
-관리자는 Global 설정 `vm.process.tools.iso.catalog`에 다음 JSON 배열을 등록한다. 각 항목은 한 영역과 **QGA에서 관측한 OS ID·제품 종류·버전 집합·아키텍처**에 한 ISO를 지정한다. Linux의 `productType`은 `none`, Windows는 `server` 또는 `client`이다. Rocky/RHEL·Debian의 `versions`에는 메이저 버전만 쓰고 Ubuntu/Windows에는 명시 버전을 쓴다. `zoneId`와 `isoId`는 Cloud UUID이다. `sha256`은 GitHub Actions ISO manifest의 값이며, 등록 ISO API가 SHA-512 메타데이터를 반환하는 환경에서는 같은 파일에서 계산한 `sha512`도 등록한다. 연결 직전 Cloud 메타데이터와 해당 길이의 digest를 비교한다.
+## ISO 등록과 설정
+
+Cloud의 일반 ISO 등록 화면에서 qemu-exec-tools가 만든 Tools ISO를 등록하고 Ready 상태를 확인한다. ISO 이름은 다음 중 한 가지 형식을 사용한다. 첫 번째는 기존 테스트 클러스터의 등록명이며, 두 번째는 qemu #79의 배포 파일명이다.
+
+- `ABLESTACK-Tools-Process-{rocky|ubuntu|debian|windows}-{빌드 커밋}`
+- `ABLESTACK-Tools-{rocky|ubuntu|debian|windows}-process-{패키지 번호}-{빌드 커밋}.iso`
+
+빌드 커밋은 소문자 16진수 7~40자리이다. ISO는 비부팅, x86_64로 등록한다. Cloud의 ISO OS 타입은 네 계열 모두 `None`이므로 OS 타입 필드로 계열을 추정하지 않는다. UUID로 조회한 ISO의 **등록명**을 위 형식과 대조하여 계열을 판별한다. 등록명은 관리자가 지정할 수 있으므로 신뢰한 빌드의 ISO를 정확한 이름으로 등록해야 한다. UUID는 ISO 객체의 유일성을 제공하지만 파일 내용의 출처를 증명하지는 않는다.
+
+그 뒤 Global 설정 `vm.process.tools.iso.catalog`에 사용할 ISO UUID만 JSON 문자열 배열로 입력한다. 영역, OS ID, 버전, SHA-256/512를 수동으로 쓰지 않는다. ISO가 여러 영역에 등록됐다면 UUID 하나만 입력해도 해당 영역에서 조회된다. 한 영역에는 계열별로 활성 ISO를 하나만 지정한다.
 
 ```json
 [
-  {
-    "zoneId": "<Cloud zone UUID>",
-    "isoFamily": "rocky",
-    "osId": "rocky",
-    "productType": "none",
-    "versions": ["8", "9", "10"],
-    "arch": "x86_64",
-    "isoId": "<registered ISO UUID>",
-    "version": "process-9-89806b1",
-    "sha256": "<64 lowercase hexadecimal characters>",
-    "sha512": "<128 lowercase hexadecimal characters, when Cloud returns SHA-512>"
-  }
+  "<Rocky Tools ISO UUID>",
+  "<Ubuntu Tools ISO UUID>",
+  "<Debian Tools ISO UUID>",
+  "<Windows Tools ISO UUID>"
 ]
 ```
 
-지원 **목표**는 Rocky Linux·RHEL 8.x/9.x/10.x, Ubuntu 22.04/24.04/26.04, Debian 12/13, Windows 11 및 Windows Server 2019/2022/2025의 x86_64이다. `isoFamily`는 qemu #79 manifest의 `rocky`·`ubuntu`·`debian`·`windows`와 일치해야 하며, `osId`는 `rocky`·`rhel`·`ubuntu`·`debian`·`mswindows` 중 하나이다. 실제 RHEL은 Rocky와 별도 `osId=rhel` selector로 등록하고 RHEL 게스트 설치 검증 전에는 등록하지 않는다. Windows 11은 `mswindows/client/11`, Server는 `mswindows/server/2019|2022|2025`로 서로 구분한다. 임의 문자열 wildcard와 파일명 추측은 허용하지 않는다.
-QGA가 `amd64` 또는 `x86-64`로 보고한 아키텍처는 catalog의 `x86_64`로 정규화하며 그 밖의 아키텍처에는 추천하지 않는다.
+기존 객체형 catalog를 사용 중이면 현재 값을 백업하고 UUID 배열로 교체한다. 이행을 위해 기존 객체형 항목에서는 `isoId`를 추출해 읽으며, 여러 버전이 같은 ISO를 가리키는 중복은 한 번만 사용한다. 객체형 항목과 UUID를 섞거나 새 UUID 배열에서 UUID를 중복 입력하면 `INVALID_CONFIG`로 추천을 거부한다. 문제가 있으면 백업한 설정으로 되돌린다. 기존에 VM에 연결된 ISO는 설정 변경으로 자동 분리되지 않는다.
 
-동일 selector의 중복이나 복수 ISO 매칭, 잘못된 UUID·SHA·버전은 추천을 거부한다. QGA OS 정보가 없거나 Cloud에 등록된 VM OS와 다르면 자동 추천을 보류한다. QGA 자체가 없는 게스트는 표준 ISO 탭에서 관리자가 OS를 확인한 뒤 수동 연결하고, 설치 후 QGA 관측을 다시 수행한다. `NOT_CONFIGURED`, `OS_UNKNOWN`, `OS_MISMATCH`, `UNSUPPORTED_OS`, `NO_MATCH`, `INVALID_CONFIG`는 각 원인을 별도로 반환한다. 기본값 `[]`은 ISO 추천만 비활성화한다.
+## 매칭과 검증
 
-기존 `osVersion` 정확 일치 항목은 전환 기간 동안 계속 읽는다. 새 `versions` 형식과 한 catalog에서 혼용할 수 있으나 같은 게스트에 두 selector가 겹치면 거부한다. 운영자는 기존 ISO를 삭제하거나 연결된 미디어를 교체하기 전에 새 ISO의 Ready·SHA를 확인하고, 새 catalog를 설정한 뒤 해당 게스트의 추천값을 검사한다. 문제가 있으면 이전 catalog JSON으로 되돌린다. 기존에 연결된 ISO는 자동 분리하지 않는다.
+QGA가 보고한 OS와 Cloud에 등록된 VM OS가 일치해야 한다. Rocky/RHEL 8.x/9.x/10.x는 Rocky ISO, Ubuntu 22.04/24.04/26.04는 Ubuntu ISO, Debian 12/13은 Debian ISO, Windows 11과 Windows Server 2019/2022/2025는 Windows ISO로 연결한다. 지원 범위는 Cloud 코드에 고정되어 있으며, 새 OS 버전 지원에는 코드·ISO 설치 검증이 필요하다. Debian 11은 대상이 아니다. RHEL은 Rocky ISO를 사용하도록 매칭 코드를 마련했지만 실제 RHEL 게스트 설치 검증이 없으므로 지원 확정 전에는 운영에 적용하지 않는다.
 
-qemu #79의 `process-9-89806b1` manifest는 Rocky `fe0c2707ea8ad7c758ea4e51431142851a1d1c072a80180774f52b5c78552a52`, Ubuntu `1fd0c01f113a9e059d0401ffa0739f9533b5d53ebc1d9f9db2b9c06073b466c1`, Debian `be90020bf5c382adea84a539bc970d48d84752452a57fd0d6602a4124898a796`, Windows `cb044eb84071e6fb921c4a8e5128ae70ebbca8e5ecfd224537795a76f9171579`의 네 ISO를 제공한다. 테스트 클러스터 Cloud의 `listIsos.checksum`은 SHA-512로 반환되었고, 원본 파일의 SHA-512 계산값과 일치했다. 이는 설치/설정 검증 증거이고 실제 QGA 실행·프로세스 작업의 제품 지원 승인은 Cloud #1177의 별도 gate다.
+Cloud는 UUID로 ISO를 조회해 등록명, ISO 형식, Active 상태, 비부팅 여부, x86_64, VM 영역과의 연결을 검사한다. 같은 영역에 같은 계열 ISO UUID가 두 개이면 어느 것을 추천할지 추측하지 않고 `INVALID_CONFIG`를 반환한다. ISO가 실제로 Ready인지와 현재 사용자의 ISO 접근 권한은 연결 직전 `listIsos`로 다시 확인한다. Cloud ISO 메타데이터에 체크섬이 있으면 capability 조회와 연결 시점의 값이 같은지 자동 비교한다. 관리자가 해시를 입력할 필요는 없다.
 
-프로세스 탭은 Cloud의 기존 `attachIso` 비동기 작업과 CD 슬롯 검사를 사용한다. 이미 연결된 ISO를 임의로 분리하지 않는다. 연결 전에 VM 상태·영역·접근 가능 여부·Ready·아키텍처·SHA-256을 다시 확인한다. 메타데이터 해시가 없으면 연결을 거부하고 관리자에게 ISO 등록값을 점검하도록 안내한다.
+Cloud 등록 OS가 실제 게스트 OS와 다르면 `OS_MISMATCH`, QGA가 없어 OS를 읽지 못하면 `OS_UNKNOWN`, 지원하지 않는 OS는 `UNSUPPORTED_OS`, 해당 영역의 계열 ISO가 없으면 `NO_MATCH`, UUID나 ISO 메타데이터가 잘못됐으면 `INVALID_CONFIG`를 반환한다. QGA가 없는 게스트는 관리자가 ISO 탭에서 실제 OS를 확인한 뒤 수동 연결하고, 설치 후 QGA 관측을 다시 수행한다. 기본값 `[]`은 ISO 자동 추천만 비활성화한다.
 
-ISO 연결 성공은 `게스트 설치 대기`이다. 게스트 콘솔에서 관리자 권한으로 설치하거나 복구한다. QGA 실행 RPC가 막힌 상태에서는 QGA로 QGA 자신을 고치려 하지 않는다. Linux는 ISO를 읽기 전용으로 마운트한 뒤 `bash /mnt/ablestack-tools/install-linux.sh --mode process-management`, Windows는 관리자 PowerShell에서 ISO 루트의 `install.bat`를 실행한다. 설치 결과가 재부팅을 요구하면 재부팅 후 다시 검사한다.
+프로세스 탭은 기존 `attachIso` 비동기 작업과 CD 슬롯 검사를 사용한다. 다른 ISO가 연결되어 있으면 자동 분리하지 않는다. ISO 연결 성공은 `게스트 설치 대기`이며 READY가 아니다. 게스트 콘솔에서 관리자 권한으로 설치하거나 복구한다. Linux는 ISO를 읽기 전용으로 마운트한 뒤 `bash /mnt/ablestack-tools/install-linux.sh --mode process-management`, Windows는 관리자 PowerShell에서 ISO 루트의 `install.bat`를 실행한다. 재부팅이 필요하면 재부팅한 뒤 재검사한다.
 
-`READY`는 재검사에서 필수 QGA RPC 8개가 모두 ENABLED이고, Cloud의 프로세스 읽기 작업이 실제 snapshot을 반환했을 때만 표시한다. 연결·설치 성공 메시지·DB 설정만으로 READY 처리하지 않는다. 확인 실패 시 기존 미디어를 유지하고, 사용자가 설치 결과를 점검한 후 재검사한다.
+`READY`는 필수 QGA RPC 8개가 모두 ENABLED이고 Cloud의 프로세스 읽기 작업이 실제 snapshot을 반환한 뒤에만 표시한다. QGA 실행 RPC가 막힌 상태에서 QGA로 자기 자신을 고치려 하지 않는다. 연결·설치 성공 메시지·DB 설정만으로 READY 처리하지 않는다.

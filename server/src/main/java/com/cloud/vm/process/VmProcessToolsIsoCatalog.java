@@ -16,11 +16,13 @@
 // under the License.
 package com.cloud.vm.process;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,21 +31,36 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-/** Selects a registered ISO only when observed and registered guest identities agree. */
+/** Selects a registered Tools ISO by UUID and its Cloud ISO metadata. */
 public final class VmProcessToolsIsoCatalog {
     private VmProcessToolsIsoCatalog() { }
 
     private static final Pattern REGISTERED_OS = Pattern.compile(
             "^(Rocky Linux|Red Hat Enterprise Linux(?: Server)?|Ubuntu|Debian(?: GNU/Linux)?|Windows(?: Server)?)\\s+(8|9|10|11|12|13|2019|2022|2025|22\\.04|24\\.04|26\\.04)(?=\\D|$)",
             Pattern.CASE_INSENSITIVE);
+    private static final Pattern CLOUD_ISO_NAME = Pattern.compile(
+            "^ABLESTACK-Tools-Process-(rocky|ubuntu|debian|windows)-[0-9a-f]{7,40}$");
+    private static final Pattern ARTIFACT_ISO_NAME = Pattern.compile(
+            "^ABLESTACK-Tools-(rocky|ubuntu|debian|windows)-process-[0-9]+-[0-9a-f]{7,40}(?:\\.iso)?$");
 
-    private static String value(JsonObject object, String name) {
-        JsonElement item = object.get(name);
-        if (item == null || !item.isJsonPrimitive() || !item.getAsJsonPrimitive().isString())
-            throw new IllegalArgumentException("Missing catalog field: " + name);
-        String text = item.getAsString();
-        if (text.isEmpty() || text.length() > 256) throw new IllegalArgumentException("Invalid catalog field: " + name);
-        return text;
+    public static final class IsoMetadata {
+        public final String name;
+        public final String arch;
+        public final String checksum;
+        public final boolean iso;
+        public final boolean active;
+        public final boolean bootable;
+        public final boolean inZone;
+
+        public IsoMetadata(String name, String arch, String checksum, boolean iso, boolean active, boolean bootable, boolean inZone) {
+            this.name = name;
+            this.arch = arch;
+            this.checksum = checksum;
+            this.iso = iso;
+            this.active = active;
+            this.bootable = bootable;
+            this.inZone = inZone;
+        }
     }
 
     private static String canonicalUuid(String value) {
@@ -94,18 +111,16 @@ public final class VmProcessToolsIsoCatalog {
                         ? registeredVersion.equals(major(version)) : registeredVersion.equals(version));
     }
 
-    private static boolean selectorVersion(String id, String product, String version) {
-        return supported(id, product, version)
-                && (Set.of("rocky", "rhel", "debian").contains(id) ? major(version).equals(version) : true);
+    private static String isoFamily(String name) {
+        if (name == null) return null;
+        Matcher cloud = CLOUD_ISO_NAME.matcher(name);
+        if (cloud.matches()) return cloud.group(1);
+        Matcher artifact = ARTIFACT_ISO_NAME.matcher(name);
+        return artifact.matches() ? artifact.group(1) : null;
     }
 
-    private static boolean matchesVersion(String id, String selectorVersion, String observedVersion, boolean legacy) {
-        return legacy ? selectorVersion.equals(observedVersion)
-                : Set.of("rocky", "rhel", "debian").contains(id)
-                        ? selectorVersion.equals(major(observedVersion)) : selectorVersion.equals(observedVersion);
-    }
-
-    public static Map<String, String> resolve(String raw, String zoneId, Map<?, ?> os, String registeredOsName) {
+    public static Map<String, String> resolve(String raw, String zoneId, Map<?, ?> os, String registeredOsName,
+            Function<String, IsoMetadata> isoLookup) {
         if (raw == null || raw.isBlank() || "[]".equals(raw.trim())) return Map.of("status", "NOT_CONFIGURED");
         if (zoneId == null || os == null) return Map.of("status", "OS_UNKNOWN");
         String id = os.get("id") instanceof String ? ((String) os.get("id")).toLowerCase(Locale.ROOT) : null;
@@ -123,79 +138,40 @@ public final class VmProcessToolsIsoCatalog {
             return Map.of("status", "OS_MISMATCH");
         try {
             if (raw.length() > 65536) throw new IllegalArgumentException("Catalog too large");
-            JsonArray entries = JsonParser.parseString(raw).getAsJsonArray();
-            if (entries.size() > 128) throw new IllegalArgumentException("Too many catalog entries");
+            JsonArray ids = JsonParser.parseString(raw).getAsJsonArray();
+            if (ids.size() > 128) throw new IllegalArgumentException("Too many catalog entries");
+            boolean legacy = ids.size() > 0 && ids.get(0).isJsonObject();
             Map<String, String> match = null;
-            Set<String> selectors = new HashSet<>();
-            Set<String> legacySelectors = new HashSet<>();
-            Set<String> majorSelectors = new HashSet<>();
-            for (JsonElement element : entries) {
-                JsonObject item = element.getAsJsonObject();
-                String configuredZone = canonicalUuid(value(item, "zoneId"));
-                String osId = value(item, "osId");
-                String isoFamily = familyFor(osId);
-                if (isoFamily == null) throw new IllegalArgumentException("Unsupported catalog OS");
-                String configuredArch = value(item, "arch");
-                String isoId = canonicalUuid(value(item, "isoId"));
-                String packageVersion = value(item, "version");
-                String sha = value(item, "sha256").toLowerCase(Locale.ROOT);
-                if (!sha.matches("[0-9a-f]{64}") || !"x86_64".equals(configuredArch))
-                    throw new IllegalArgumentException("Invalid Tools ISO identity");
-                String sha512 = item.has("sha512") ? value(item, "sha512").toLowerCase(Locale.ROOT) : null;
-                if (sha512 != null && !sha512.matches("[0-9a-f]{128}"))
-                    throw new IllegalArgumentException("Invalid Tools ISO SHA-512");
-                boolean legacy = item.has("osVersion");
-                String configuredProduct;
-                Set<String> versions = new HashSet<>();
+            Set<String> seenIds = new HashSet<>();
+            Set<String> zoneFamilies = new HashSet<>();
+            for (JsonElement element : ids) {
+                String isoId;
                 if (legacy) {
-                    if (item.has("versions") || item.has("isoFamily") || item.has("productType"))
-                        throw new IllegalArgumentException("Mixed catalog schema");
-                    configuredProduct = "mswindows".equals(osId) ? "server" : "none";
-                    String exact = value(item, "osVersion");
-                    if (!supported(osId, configuredProduct, exact)) throw new IllegalArgumentException("Invalid legacy version");
-                    versions.add(exact);
+                    if (!element.isJsonObject()) throw new IllegalArgumentException("Mixed catalog formats");
+                    JsonObject old = element.getAsJsonObject();
+                    if (!old.has("isoId") || !old.get("isoId").isJsonPrimitive()
+                            || !old.get("isoId").getAsJsonPrimitive().isString())
+                        throw new IllegalArgumentException("Legacy catalog ISO UUID missing");
+                    isoId = canonicalUuid(old.get("isoId").getAsString());
+                    if (!seenIds.add(isoId)) continue;
                 } else {
-                    if (!isoFamily.equals(value(item, "isoFamily")))
-                        throw new IllegalArgumentException("ISO family does not match guest OS");
-                    configuredProduct = value(item, "productType");
-                    if (!item.has("versions") || !item.get("versions").isJsonArray())
-                        throw new IllegalArgumentException("Missing versions");
-                    JsonArray configuredVersions = item.getAsJsonArray("versions");
-                    if (configuredVersions.size() == 0 || configuredVersions.size() > 16)
-                        throw new IllegalArgumentException("Invalid versions");
-                    for (JsonElement configuredVersion : configuredVersions) {
-                        if (!configuredVersion.isJsonPrimitive() || !configuredVersion.getAsJsonPrimitive().isString())
-                            throw new IllegalArgumentException("Invalid version");
-                        String v = configuredVersion.getAsString();
-                        if (!selectorVersion(osId, configuredProduct, v) || !versions.add(v))
-                            throw new IllegalArgumentException("Duplicate or unsupported version");
-                    }
+                    if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString())
+                        throw new IllegalArgumentException("Catalog entries must be ISO UUIDs");
+                    isoId = canonicalUuid(element.getAsString());
+                    if (!seenIds.add(isoId)) throw new IllegalArgumentException("Duplicate ISO UUID");
                 }
-                for (String v : versions) {
-                    String prefix = configuredZone + "/" + osId + "/" + configuredProduct + "/" + configuredArch + "/";
-                    String selector = prefix + v;
-                    if (!selectors.add(selector)) throw new IllegalArgumentException("Ambiguous Tools ISO mapping");
-                    if (legacy && Set.of("rocky", "rhel", "debian").contains(osId)) {
-                        if (majorSelectors.contains(prefix + major(v)))
-                            throw new IllegalArgumentException("Legacy selector overlaps a major selector");
-                        legacySelectors.add(selector);
-                    } else if (Set.of("rocky", "rhel", "debian").contains(osId)) {
-                        for (String exact : legacySelectors) {
-                            if (exact.equals(selector) || exact.startsWith(selector + "."))
-                                throw new IllegalArgumentException("Major selector overlaps a legacy selector");
-                        }
-                        majorSelectors.add(selector);
-                    }
-                    if (configuredZone.equals(zoneId) && osId.equals(id) && configuredProduct.equals(product)
-                            && configuredArch.equals(arch) && matchesVersion(id, v, version, legacy)) {
-                        if (match != null) throw new IllegalArgumentException("Ambiguous Tools ISO mapping");
-                        java.util.Map<String, String> selected = new java.util.HashMap<>(Map.of(
-                                "status", "MATCHED", "isoId", isoId, "version", packageVersion,
-                                "sha256", sha, "zoneId", configuredZone, "arch", configuredArch, "isoFamily", isoFamily));
-                        if (sha512 != null) selected.put("sha512", sha512);
-                        match = Map.copyOf(selected);
-                    }
-                }
+                IsoMetadata iso = isoLookup.apply(isoId);
+                String isoFamily = iso == null ? null : isoFamily(iso.name);
+                if (isoFamily == null || !iso.iso || !iso.active || iso.bootable || !"x86_64".equals(iso.arch))
+                    throw new IllegalArgumentException("Invalid Tools ISO metadata");
+                if (!iso.inZone) continue;
+                if (!zoneFamilies.add(isoFamily)) throw new IllegalArgumentException("Ambiguous Tools ISO family in zone");
+                if (!isoFamily.equals(familyFor(id))) continue;
+                Map<String, String> selected = new HashMap<>(Map.of(
+                        "status", "MATCHED", "isoId", isoId, "name", iso.name,
+                        "zoneId", zoneId, "arch", iso.arch, "isoFamily", isoFamily));
+                if (iso.checksum != null && !iso.checksum.isBlank()) selected.put("checksum", iso.checksum);
+                match = Map.copyOf(selected);
             }
             return match == null ? Map.of("status", "NO_MATCH") : match;
         } catch (RuntimeException ex) {

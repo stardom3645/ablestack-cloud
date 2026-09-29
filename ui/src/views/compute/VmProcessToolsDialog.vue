@@ -21,7 +21,7 @@ under the License.
     <a-descriptions bordered :column="1" size="small" class="tools-block">
       <a-descriptions-item :label="$t('label.vm')">{{ resource.displayname || resource.name }}</a-descriptions-item>
       <a-descriptions-item :label="$t('label.vmprocess.tools.stage')">{{ $t('label.vmprocess.tools.' + stage.toLowerCase()) }}</a-descriptions-item>
-      <a-descriptions-item v-if="catalog?.status === 'MATCHED'" :label="$t('label.vmprocess.tools.media')">{{ media?.displaytext || media?.name || catalog.isoId }} · {{ catalog.version }}</a-descriptions-item>
+      <a-descriptions-item v-if="catalog?.status === 'MATCHED'" :label="$t('label.vmprocess.tools.media')">{{ media?.displaytext || media?.name || catalog.name }}</a-descriptions-item>
     </a-descriptions>
     <a-alert v-if="error" class="tools-block" type="error" show-icon :message="error" />
     <a-alert v-if="stage === 'INSTALL_PENDING' || stage === 'REBOOT_REQUIRED'" class="tools-block" type="info" show-icon :message="$t('message.vmprocess.tools.install.pending')" :description="$t('message.vmprocess.tools.install.manual')" />
@@ -77,10 +77,10 @@ export default {
       if (!this.allowed) throw new Error(this.$t('message.vmprocess.tools.permission'))
       const current = result(await getAPI('getVirtualMachineProcessCapabilities', { virtualmachineid: this.resource.id }), 'getVirtualMachineProcessCapabilities')?.processcapability?.toolsiso
       if (current?.status !== 'MATCHED') throw new Error(this.$t('message.vmprocess.tools.catalog.' + (current?.status || 'OS_UNKNOWN').toLowerCase()))
-      if (current.isoId !== this.catalog.isoId || current.sha256 !== this.catalog.sha256 ||
-          current.sha512 !== this.catalog.sha512 ||
+      if (current.isoId !== this.catalog.isoId || current.name !== this.catalog.name ||
+          current.checksum !== this.catalog.checksum ||
           current.zoneId !== this.catalog.zoneId || current.arch !== this.catalog.arch ||
-          current.version !== this.catalog.version) throw new Error(this.$t('message.list.refresh.stale'))
+          current.isoFamily !== this.catalog.isoFamily) throw new Error(this.$t('message.list.refresh.stale'))
       const vmResponse = await getAPI('listVirtualMachines', { id: this.resource.id })
       const vm = result(vmResponse, 'listVirtualMachines')?.virtualmachine?.find(item => item.id === this.resource.id)
       if (!vm) throw new Error(this.$t('message.list.refresh.stale'))
@@ -89,9 +89,10 @@ export default {
       const iso = result(isoResponse, 'listIsos')?.iso?.find(item => item.id === this.catalog.isoId)
       if (!iso) throw new Error(this.$t('message.vmprocess.tools.missing'))
       if (iso.isready !== true) throw new Error(this.$t('message.vmprocess.tools.notready'))
+      if (iso.name !== this.catalog.name) throw new Error(this.$t('message.list.refresh.stale'))
       if (iso.zoneid && iso.zoneid !== vm.zoneid) throw new Error(this.$t('message.vmprocess.tools.zone'))
       if (iso.arch && iso.arch !== this.catalog.arch) throw new Error(this.$t('message.vmprocess.tools.arch'))
-      if (!matchesToolsIsoChecksum(iso.checksum, this.catalog)) throw new Error(this.$t('message.vmprocess.tools.checksum'))
+      if (!matchesToolsIsoChecksum(iso.checksum, this.catalog.checksum)) throw new Error(this.$t('message.vmprocess.tools.checksum'))
       this.vm = vm; this.media = iso
       return { vm, iso }
     },

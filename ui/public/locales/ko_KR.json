@@ -30,7 +30,7 @@
   "message.vmprocess.tools.missing": "등록된 Tools ISO에 접근할 수 없습니다. ISO 권한 또는 삭제 여부를 확인하세요.",
   "message.vmprocess.tools.notready": "Tools ISO의 다운로드가 완료되지 않았습니다.",
   "message.vmprocess.tools.arch": "ISO 아키텍처가 VM과 다릅니다.",
-  "message.vmprocess.tools.checksum": "ISO 체크섬(SHA-256/SHA-512)이 등록 정보와 일치하지 않거나 제공되지 않습니다. 연결하지 않았습니다.",
+  "message.vmprocess.tools.checksum": "ISO 확인 중 체크섬 정보가 변경되었거나 올바르지 않습니다. 연결하지 않았습니다.",
   "message.vmprocess.tools.install.pending": "ISO가 연결되었습니다. 게스트 OS 안에서 Tools를 설치해야 합니다.",
   "message.vmprocess.tools.install.manual": "ISO 연결 후 VM 콘솔에서 관리자 권한으로 Tools를 설치하세요.",
   "message.vmprocess.tools.console": "ISO 드라이브를 확인한 뒤 다음 명령을 게스트 관리자 셸에서 실행하세요. ISO 연결만으로 준비 완료가 되지 않습니다.",

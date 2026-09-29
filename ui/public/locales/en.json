@@ -30,7 +30,7 @@
   "message.vmprocess.tools.missing": "The registered Tools ISO is inaccessible. Check access permissions or whether it was removed.",
   "message.vmprocess.tools.notready": "The Tools ISO download is not complete.",
   "message.vmprocess.tools.arch": "The ISO architecture does not match the VM.",
-  "message.vmprocess.tools.checksum": "The ISO checksum (SHA-256/SHA-512) is missing or does not match the catalog. Nothing was attached.",
+  "message.vmprocess.tools.checksum": "The ISO checksum changed during verification or is invalid. Nothing was attached.",
   "message.vmprocess.tools.install.pending": "The ISO is attached. Install Tools inside the guest OS.",
   "message.vmprocess.tools.install.manual": "After attaching the ISO, install Tools from the VM console with administrator privileges.",
   "message.vmprocess.tools.console": "Find the ISO drive and run the command in an administrator shell inside the guest. Attaching alone does not make the VM ready.",
