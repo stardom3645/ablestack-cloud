@@ -58,7 +58,7 @@ size="small"
       class="process-table"
       @change="tableChanged">
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'select'"><a-radio :checked="rowKey(selected) === rowKey(record)" :disabled="stale || actionBusy" :aria-label="$t('label.vmprocess.select') + ' ' + record.name" @change="selectRow(record)" /></template>
+        <template v-if="column.key === 'select'"><a-radio :checked="rowKey(selected) === rowKey(record)" :disabled="actionBusy" :aria-label="$t('label.vmprocess.select') + ' ' + record.name" @change="selectRow(record)" /></template>
         <template v-else-if="column.key === 'pid'"><span class="process-mono">{{ record.identity.pid }}</span></template>
         <template v-else-if="column.key === 'cpuPercent'">{{ cpuText(record.cpuPercent) }}</template>
         <template v-else-if="column.key === 'memoryBytes'">{{ memoryText(record.memoryBytes) }}</template>
@@ -68,7 +68,7 @@ size="small"
         </template>
         <template v-else-if="column.key === 'actions'">
           <a-dropdown v-if="canAdminAction" :trigger="['click']" placement="bottomRight">
-            <a-button size="small" :disabled="stale || actionBusy" :aria-label="$t('label.actions')"><template #icon><down-outlined /></template></a-button>
+            <a-button size="small" :disabled="actionBusy" :aria-label="$t('label.actions')"><template #icon><down-outlined /></template></a-button>
             <template #overlay><a-menu>
               <a-menu-item v-for="service in record.services || []" :key="'service:' + service.name" :disabled="!actionAvailable('service.restart', record, service)" @click="openAction('service.restart', record, service)">{{ $t('label.vmprocess.restart') }} · {{ service.name }}</a-menu-item>
               <a-menu-item v-if="isLinux" key="terminate" :disabled="!actionAvailable('process.terminate', record)" @click="openAction('process.terminate', record)">{{ $t('label.vmprocess.terminate') }}</a-menu-item>
@@ -183,7 +183,7 @@ export default {
       try { this.operation = JSON.parse(sessionStorage.getItem(this.storageKey()) || 'null') } catch (_) { this.operation = null }
       this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0
       this.tickTimer = setInterval(() => { this.ageSeconds = this.receivedAt ? Math.floor((Date.now() - this.receivedAt) / 1000) : 0 }, 1000)
-      this.refreshTimer = setInterval(() => { if (this.active && !this.actionBusy && !this.loading) this.refreshAll() }, 9000)
+      this.refreshTimer = setInterval(() => { if (this.active && !this.actionBusy && !this.loading && !this.confirm) this.refreshAll() }, 9000)
       await this.checkCapability(false, token)
       if (this.current(token) && this.operation) await this.checkOperation()
       if (this.current(token) && !this.disabled && this.rpcsReady && !this.actionBusy) await this.refreshSnapshot(token)
@@ -244,9 +244,9 @@ export default {
         this.observedAt = state.observedAt
         this.receivedAt = Date.now()
         this.ageSeconds = 0
-        const selectedIdentity = this.selected?.identity
         const pageLoaded = await this.loadPage(token)
         if (this.current(token)) {
+          const selectedIdentity = this.selected?.identity
           this.selected = pageLoaded && selectedIdentity
             ? this.rows.find(row => row.identity?.pid === selectedIdentity.pid && row.identity?.bootId === selectedIdentity.bootId && row.identity?.startTicks === selectedIdentity.startTicks) || null
             : null
@@ -269,12 +269,12 @@ export default {
         return true
       } catch (error) { if (this.current(token) && this.pageRequest === key) this.errorText = errorMessage(error); return false }
     },
-    selectRow (row) { if (!this.stale && !this.actionBusy) this.selected = row },
+    selectRow (row) { if (!this.actionBusy) this.selected = row },
     searchRows () { this.keyword = this.search.trim(); this.page = 1; this.selected = null; if (this.stale) this.refreshSnapshot(); else this.loadPage() },
     tableChanged (_pagination, _filters, sorter) { if (!sorter?.columnKey) return; this.sortBy = sorter.columnKey; this.descending = sorter.order === 'descend'; this.page = 1; this.selected = null; this.loadPage() },
     pageChanged (page, size) { this.page = page; this.pageSize = size; this.selected = null; this.loadPage() },
     actionAvailable (action, row, service = null) {
-      if (!row || !this.canAdminAction || !(actionApis[action] in this.apiSet) || this.stale || this.actionBusy || this.disabled || !this.rpcsReady || this.resource.state !== 'Running') return false
+      if (!row || !this.canAdminAction || !(actionApis[action] in this.apiSet) || this.actionBusy || this.disabled || !this.rpcsReady || this.resource.state !== 'Running') return false
       if (row.identity?.pid <= 1 || row.identity?.vmUuid !== this.resource.id) return false
       if (action === 'process.terminate' && !this.isLinux) return false
       if (action === 'service.restart' && (!service || !(row.services || []).some(item => item.name === service.name))) return false
