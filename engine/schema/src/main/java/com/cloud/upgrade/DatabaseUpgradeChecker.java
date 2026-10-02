@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -420,6 +421,7 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
     protected void executeViewScripts() {
         LOGGER.info(String.format("Executing VIEW scripts that are under resource directory [%s].", VIEWS_DIRECTORY));
         List<String> filesPathUnderViewsDirectory = FileUtil.getFilesPathsUnderResourceDirectory(VIEWS_DIRECTORY);
+        orderViewScripts(filesPathUnderViewsDirectory);
 
         try (TransactionLegacy txn = TransactionLegacy.open("execute-view-scripts")) {
             Connection conn = txn.getConnection();
@@ -437,6 +439,20 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
             LOGGER.error(message, e);
             throw new CloudRuntimeException(message, e);
         }
+    }
+
+    @VisibleForTesting
+    static void orderViewScripts(List<String> viewScripts) {
+        viewScripts.sort(Comparator.comparingInt(DatabaseUpgradeChecker::getViewScriptPriority));
+    }
+
+    private static int getViewScriptPriority(String filePath) {
+        if (filePath.endsWith("cloud.account_netstats_view.sql")
+                || filePath.endsWith("cloud.account_vmstats_view.sql")
+                || filePath.endsWith("cloud.free_ip_view.sql")) {
+            return 0;
+        }
+        return 1;
     }
 
     @Override
@@ -483,7 +499,7 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 }
 
                 upgrade(dbVersion, currentVersion);
-            } finally {
+
                 ///////////////////// Ablestack 업그레이드 //////////////////////////
                 afterUpgradeAblestack("Bronto");
                 afterUpgradeAblestack("Cerato");
@@ -491,6 +507,7 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 ///////////////////// Ablestack 업그레이드 //////////////////////////
 
                 executeViewScripts();
+            } finally {
                 lock.unlock();
             }
         } finally {

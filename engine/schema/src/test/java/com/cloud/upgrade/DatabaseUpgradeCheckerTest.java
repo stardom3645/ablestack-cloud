@@ -20,7 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.cloudstack.utils.CloudStackVersion;
 import org.junit.Test;
@@ -44,6 +46,26 @@ import com.cloud.upgrade.dao.Upgrade480to481;
 import com.cloud.upgrade.dao.Upgrade490to4910;
 
 public class DatabaseUpgradeCheckerTest {
+
+    @Test
+    public void testOrderViewScriptsPlacesAccountViewDependenciesFirst() {
+        final String accountView = "META-INF/db/views/cloud.account_view.sql";
+        final String accountNetstatsView = "META-INF/db/views/cloud.account_netstats_view.sql";
+        final String accountVmstatsView = "META-INF/db/views/cloud.account_vmstats_view.sql";
+        final String freeIpView = "META-INF/db/views/cloud.free_ip_view.sql";
+        final List<String> viewScripts = new ArrayList<>(Arrays.asList(
+                accountView,
+                "META-INF/db/views/cloud.project_view.sql",
+                freeIpView,
+                accountVmstatsView,
+                accountNetstatsView));
+
+        DatabaseUpgradeChecker.orderViewScripts(viewScripts);
+
+        assertTrue(viewScripts.indexOf(accountNetstatsView) < viewScripts.indexOf(accountView));
+        assertTrue(viewScripts.indexOf(accountVmstatsView) < viewScripts.indexOf(accountView));
+        assertTrue(viewScripts.indexOf(freeIpView) < viewScripts.indexOf(accountView));
+    }
 
     @Test
     public void testCalculateUpgradePath480to481() {

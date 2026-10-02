@@ -18,6 +18,7 @@
 
 import xml.dom.minidom
 import json
+import keyword
 from optparse import OptionParser
 from textwrap import dedent
 import os
@@ -84,6 +85,12 @@ class CodeGenerator(object):
           """
         self.license = dedent(lic)
 
+    @staticmethod
+    def generateAttributeAssignment(name, value):
+        if keyword.iskeyword(name):
+            return "setattr(self, '%s', %s)\n" % (name, value)
+        return 'self.%s = %s\n' % (name, value)
+
     def addAttribute(self, attr, pro):
         value = pro.value
         if pro.required:
@@ -107,11 +114,11 @@ class CodeGenerator(object):
                 subclass += self.space + self.space + '""""%s"""\n' % pro.desc
             if len(pro.subProperties) > 0:
                 subclass += self.space + self.space
-                subclass += 'self.%s = []\n' % pro.name
+                subclass += self.generateAttributeAssignment(pro.name, '[]')
                 self.generateSubClass(pro.name, pro.subProperties)
             else:
                 subclass += self.space + self.space
-                subclass += 'self.%s = None\n' % pro.name
+                subclass += self.generateAttributeAssignment(pro.name, 'None')
 
         self.subclass.append(subclass)
 
@@ -143,7 +150,7 @@ class CodeGenerator(object):
                 value = "[]"
 
             self.code += self.space + self.space
-            self.code += 'self.%s = %s\n' % (req.name, value)
+            self.code += self.generateAttributeAssignment(req.name, value)
             if req.required == "true":
                 self.required.append(req.name)
             self.code += self.space + self.space
@@ -172,11 +179,11 @@ class CodeGenerator(object):
 
                 if len(res.subProperties) > 0:
                     self.code += self.space + self.space
-                    self.code += 'self.%s = []\n' % res.name
+                    self.code += self.generateAttributeAssignment(res.name, '[]')
                     self.generateSubClass(res.name, res.subProperties)
                 else:
                     self.code += self.space + self.space
-                    self.code += 'self.%s = None\n' % res.name
+                    self.code += self.generateAttributeAssignment(res.name, 'None')
                     if res.dataType is not None:
                         self.code += self.space + self.space
                         self.code += "self.typeInfo['%s'] = '%s'\n" % ( res.name, res.dataType )
