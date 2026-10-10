@@ -1,4 +1,5 @@
 {
+  "label.autoscalevmgroupid": "AutoScale VM group ID",
   "message.creation.source.upload.registered": "Volume registered",
   "message.creation.source.upload.registration.complete": "The volume is registered and the upload is being prepared. Check its upload status in the volume list before using it.",
   "message.kubernetes.scale.partial.recovery": "Recover the cluster using the {count} remaining workers and reconcile network rules. Review the previous failed job before continuing.",

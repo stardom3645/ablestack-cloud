@@ -1,4 +1,5 @@
 {
+  "label.autoscalevmgroupid": "오토스케일 VM 그룹 ID",
   "message.creation.source.upload.registered": "볼륨 등록 완료",
   "message.creation.source.upload.registration.complete": "볼륨이 등록되어 업로드를 준비합니다. 사용하기 전에 볼륨 목록에서 업로드 완료 상태를 확인하세요.",
   "message.kubernetes.scale.partial.recovery": "남은 워커 {count}개를 기준으로 클러스터와 네트워크 규칙을 복구합니다. 이전 작업의 실패 원인을 확인한 뒤 진행하세요.",
