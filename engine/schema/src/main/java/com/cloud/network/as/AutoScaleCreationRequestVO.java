@@ -85,12 +85,15 @@ public class AutoScaleCreationRequestVO {
     public String getCommand() { return command; }
     public String getFingerprint() { return fingerprint; }
     public String getStatus() { return status; }
-    public void setStatus(String value) { status = value; updated = new Date(); }
+    public void setStatus(String value) { status = value; setUpdated(new Date()); }
+    public void setUpdated(Date value) { updated = value; }
+    public void setResourceId(Long value) { resourceId = value; }
+    public void setResourceUuid(String value) { resourceUuid = value; }
     public Long getResourceId() { return resourceId; }
     public String getResourceUuid() { return resourceUuid; }
     public String getResourceType() { return resourceType; }
-    public void clearResource() { resourceId = null; resourceUuid = null; }
-    public void setResource(long id, String uuid) { resourceId = id; resourceUuid = uuid; setStatus("CREATED"); }
+    public void clearResource() { setResourceId(null); setResourceUuid(null); }
+    public void setResource(long id, String uuid) { setResourceId(id); setResourceUuid(uuid); setStatus("CREATED"); }
     public Date getCreated() { return created; }
     public Date getUpdated() { return updated; }
 }

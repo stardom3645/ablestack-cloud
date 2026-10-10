@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.network.as;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -24,6 +25,8 @@ import java.sql.PreparedStatement;
 import org.junit.Test;
 import com.cloud.network.as.dao.AutoScaleCreationRequestDaoImpl;
 import com.cloud.utils.db.SqlGenerator;
+import com.cloud.utils.db.GenericDaoBase;
+import com.cloud.utils.db.UpdateBuilder;
 
 public class AutoScaleCreationRequestVOTest {
     private static class Dao extends AutoScaleCreationRequestDaoImpl {
@@ -36,5 +39,19 @@ public class AutoScaleCreationRequestVOTest {
         AutoScaleCreationRequestVO row = new AutoScaleCreationRequestVO("request", 1L, 2L, "createCondition", "hash", "Condition");
         new Dao().bindUpdated(statement, row);
         verify(statement).setString(eq(1), anyString());
+    }
+    @Test public void resourceLinkAndRollbackAreTrackedByTheRealDaoUpdateBuilder() {
+        Dao dao = new Dao();
+        AutoScaleCreationRequestVO row = dao.createForUpdate(7L);
+        row.setResource(5L, "resource-uuid");
+        UpdateBuilder update = GenericDaoBase.getUpdateBuilder(row);
+        assertTrue(update.has("resourceId"));
+        assertTrue(update.has("resourceUuid"));
+        assertTrue(update.has("status"));
+        assertTrue(update.has("updated"));
+        update.clear();
+        row.clearResource();
+        assertTrue(update.has("resourceId"));
+        assertTrue(update.has("resourceUuid"));
     }
 }

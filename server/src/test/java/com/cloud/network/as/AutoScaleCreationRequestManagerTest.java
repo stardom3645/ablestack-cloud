@@ -148,7 +148,7 @@ public class AutoScaleCreationRequestManagerTest {
         when(manager.jobDao.findByUuidIncludingRemoved(id)).thenReturn(job);
         when(job.getStatus()).thenReturn(JobInfo.Status.IN_PROGRESS);
         assertTrue(new Gson().toJson(manager.query(id)).contains("PENDING"));
-        when(job.getStatus()).thenReturn(JobInfo.Status.SUCCEEDED);
+        when(job.getStatus()).thenReturn(JobInfo.Status.SUCCEEDED); when(job.getRemoved()).thenReturn(new java.util.Date());
         assertTrue(new Gson().toJson(manager.query(id)).contains("SUCCESS"));
         when(job.getStatus()).thenReturn(JobInfo.Status.FAILED);
         assertTrue(new Gson().toJson(manager.query(id)).contains("FAILED"));
@@ -156,6 +156,7 @@ public class AutoScaleCreationRequestManagerTest {
     @Test public void jobReplayRequiresCallerCommandAndResourceToMatch() {
         AsyncJobVO job = mock(AsyncJobVO.class); when(job.getUserId()).thenReturn(10L); when(job.getAccountId()).thenReturn(2L);
         when(job.getInstanceId()).thenReturn(5L); when(job.getCmd()).thenReturn(cmd.getClass().getName());
+        when(job.getStatus()).thenReturn(JobInfo.Status.SUCCEEDED); when(job.getRemoved()).thenReturn(new java.util.Date());
         when(manager.jobDao.findByUuidIncludingRemoved(id)).thenReturn(job);
         assertSame(job, manager.submittedJob(cmd, 5L, 10L, 2L));
         assertThrows(RuntimeException.class, () -> manager.submittedJob(cmd, 6L, 10L, 2L));

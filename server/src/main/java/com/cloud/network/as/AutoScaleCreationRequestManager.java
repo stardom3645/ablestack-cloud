@@ -247,7 +247,7 @@ public class AutoScaleCreationRequestManager implements PluggableService {
         AsyncJobVO job = jobDao.findByUuidIncludingRemoved(cmd.getInjectedJobId());
         if (job != null && (job.getUserId() != userId || job.getAccountId() != accountId
                 || !cmd.getClass().getName().equals(job.getCmd()) || !Objects.equals(resourceId, job.getInstanceId())
-                || job.getRemoved() != null)) {
+                || (job.getRemoved() != null && job.getStatus().ordinal() == 0))) {
             throw new InvalidParameterValueException("The async job of this AutoScale creation request is not available for replay");
         }
         return job;
@@ -306,7 +306,7 @@ public class AutoScaleCreationRequestManager implements PluggableService {
             response.setStatus("REMOVED");
         }
         AsyncJobVO job = jobDao.findByUuidIncludingRemoved(id);
-        if (job != null && job.getRemoved() == null && job.getUserId() == receipt.getUserId()
+        if (job != null && job.getUserId() == receipt.getUserId()
                 && Objects.equals(job.getInstanceId(), receipt.getResourceId())
                 && Objects.equals(job.getInstanceType(), receipt.getResourceType())) {
             response.setJobId(job.getUuid());
