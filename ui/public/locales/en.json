@@ -8527,5 +8527,6 @@
   "label.autoscale.creation.cleanup.removed": "Deletion verified",
   "label.autoscale.creation.cleanup.blocked": "Cleanup blocked: check resource ID",
   "message.autoscale.creation.responsibility": "Server jobs may continue after leaving this page. Lost responses are verified by request ID without duplicate submissions. Only confirmed failures trigger cleanup of resources owned by this operation; existing shared resources and load balancers are preserved.",
-  "message.autoscale.creation.storage": "The recovery record could not be saved or read. Check browser storage. No new request was sent, or an existing operation needs verification."
+  "message.autoscale.creation.storage": "The recovery record could not be saved or read. Check browser storage. No new request was sent, or an existing operation needs verification.",
+  "label.job.id": "Job ID"
 }

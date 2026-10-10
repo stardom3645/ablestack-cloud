@@ -116,3 +116,17 @@ test('an unreadable ledger cannot be treated as successful or safely cleaned', a
   const controller = f.controller(); expect((await controller.resume()).status).toBe('unknown'); expect((await controller.cleanup()).status).toBe('unknown')
   await controller.start(plan()); expect(f.api.post).not.toHaveBeenCalled()
 })
+
+test.each([1, 2])('terminal async job %s settles the workflow without overlapping polls', async status => {
+  const f = fixture({ pending: 'profile' }); const original = f.api.get.getMockImplementation()
+  f.api.get.mockImplementation(async (command, params) => {
+    if (command === 'queryAsyncJobResult') {
+      f.receipts[params.jobid].status = status === 1 ? 'SUCCESS' : 'FAILED'
+      return { response: { jobstatus: status } }
+    }
+    return original(command, params)
+  })
+  const result = await f.controller().start(plan())
+  expect(result.status).toBe(status === 1 ? 'success' : 'cleaned')
+  expect(f.api.post.mock.calls.filter(([c]) => c.startsWith('create'))).toHaveLength(status === 1 ? 6 : 1)
+})

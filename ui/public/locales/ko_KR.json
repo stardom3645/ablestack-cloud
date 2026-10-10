@@ -8492,5 +8492,6 @@
   "label.autoscale.creation.cleanup.removed": "삭제 확인 완료",
   "label.autoscale.creation.cleanup.blocked": "정리하지 못한 자원 · ID를 확인하세요",
   "message.autoscale.creation.responsibility": "이 화면을 나가도 서버 작업은 계속될 수 있습니다. 응답을 잃으면 중복 요청을 보내지 않고 작업 ID로 확인합니다. 확정된 실패만 이번 작업의 자원을 정리하며, 기존 공유 자원과 로드밸런서는 보존합니다.",
-  "message.autoscale.creation.storage": "복구 기록을 저장하거나 읽을 수 없습니다. 브라우저 저장소 상태를 확인하세요. 새 요청을 전송하지 않았거나, 기존 작업의 확인이 필요합니다."
+  "message.autoscale.creation.storage": "복구 기록을 저장하거나 읽을 수 없습니다. 브라우저 저장소 상태를 확인하세요. 새 요청을 전송하지 않았거나, 기존 작업의 확인이 필요합니다.",
+  "label.job.id": "작업 ID"
 }
