@@ -92,7 +92,11 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
   })
   try {
     const stored = JSON.parse(storage.getItem(storageKey) || 'null')
-    if (stored?.version === 1 && stored.scope === scope && Array.isArray(stored.stages)) operation = durable(stored)
+    if (stored?.version === 1 && stored.scope === scope && Array.isArray(stored.stages)) {
+      operation = durable(stored)
+      // The old page no longer owns a tracker after reload or navigation.
+      if (operation.status === 'running') { operation.status = 'unknown'; operation.failureKind = 'interrupted' }
+    }
   } catch (e) {
     // Do not overwrite an unreadable ledger and accidentally permit another POST.
     operation = { version: 1, id: '', scope, name: '', status: 'unknown', failureKind: 'storage', stages: [] }
@@ -151,6 +155,7 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
     try {
       check()
       const response = root(await api.post(resources[stage.type][0], params, { preserveOnFailure: true, timeout: 45000 }))
+      check()
       if (response.jobid) stage.jobId = response.jobid
       const resource = response[resources[stage.type][3]] || response
       if (resource.id) stage.resourceId = resource.id
@@ -232,7 +237,7 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
     if (busy) return
     busy = true; emit()
     try { check(); await action() } catch (error) {
-      if (operation) {
+      if (operation && active && getScope() === scope) {
         operation.status = 'unknown'
         operation.failureKind = operation.failureKind || error.message
         try { save() } catch (storageError) { operation.failureKind = 'storage' }
@@ -287,6 +292,12 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
       if (busy || !['cleaned', 'success'].includes(operation?.status)) return
       storage.removeItem(storageKey); operation = null; profileParams = null; emit()
     },
-    stop () { active = false; tracker.clear() }
+    stop () {
+      if (active && operation?.status === 'running' && getScope() === scope) {
+        operation.status = 'unknown'; operation.failureKind = 'interrupted'
+        try { save() } catch (e) { /* Keep the original ledger when storage is unavailable. */ }
+      }
+      active = false; tracker.clear()
+    }
   }
 }

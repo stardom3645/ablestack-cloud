@@ -130,3 +130,31 @@ test.each([1, 2])('terminal async job %s settles the workflow without overlappin
   expect(result.status).toBe(status === 1 ? 'success' : 'cleaned')
   expect(f.api.post.mock.calls.filter(([c]) => c.startsWith('create'))).toHaveLength(status === 1 ? 6 : 1)
 })
+
+test('a ledger saved while running restores as inspectable unknown without sending a POST', async () => {
+  const f = fixture(); const controller = f.controller()
+  await controller.start(plan())
+  const [key, value] = [...f.values.entries()][0]
+  f.values.set(key, JSON.stringify({ ...JSON.parse(value), status: 'running' }))
+  const calls = f.api.post.mock.calls.length
+  const restored = f.controller()
+  expect(restored.snapshot().status).toBe('unknown')
+  expect(f.api.post.mock.calls).toHaveLength(calls)
+  expect((await restored.resume()).status).toBe('success')
+})
+test('a late POST from a stopped page cannot overwrite the completed recovery ledger', async () => {
+  const f = fixture(); const originalPost = f.api.post.getMockImplementation(); let release
+  f.api.post.mockImplementationOnce(async (...args) => {
+    const response = await originalPost(...args)
+    await new Promise(resolve => { release = resolve })
+    return response
+  })
+  const old = f.controller(); const pending = old.start(plan()); await flush()
+  old.stop()
+  const restored = f.controller()
+  expect(restored.snapshot().status).toBe('unknown')
+  expect((await restored.resume()).status).toBe('success')
+  release(); await pending
+  expect(JSON.parse([...f.values.values()][0]).status).toBe('success')
+  expect(f.api.post.mock.calls.filter(([c]) => c.startsWith('create'))).toHaveLength(6)
+})
