@@ -23,6 +23,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = "autoscale_creation_requests")
@@ -53,8 +55,10 @@ public class AutoScaleCreationRequestVO {
     private String resourceUuid;
     @Column(name = "resource_type")
     private String resourceType;
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created")
     private Date created;
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated")
     private Date updated;
 
