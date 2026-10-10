@@ -22,6 +22,7 @@ import com.cloud.serializer.Param;
 
 /** A creation receipt contains identifiers only, never deployment credentials or UserData. */
 public class AutoScaleCreationRequestResponse extends BaseResponse {
+    public AutoScaleCreationRequestResponse() { super("autoscalecreationrequest"); }
     @SerializedName("requestid")
     @Param(description = "The customjobid supplied for this creation stage")
     private String requestId;

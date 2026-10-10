@@ -98,7 +98,8 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
     operation = { version: 1, id: '', scope, name: '', status: 'unknown', failureKind: 'storage', stages: [] }
   }
   const request = async stage => {
-    const receipt = await get('queryAutoScaleCreationRequest', { requestid: stage.requestId })
+    const response = await get('queryAutoScaleCreationRequest', { requestid: stage.requestId })
+    const receipt = response.autoscalecreationrequest || response
     if (receipt.status !== 'NOTFOUND' && (receipt.creationoperationid !== operation.id || receipt.creationstage !== stage.key || receipt.command !== resources[stage.type][0] || (stage.resourceId && receipt.resourceid !== stage.resourceId))) throw new Error('receipt')
     if (receipt.resourceid) stage.resourceId = receipt.resourceid
     if (receipt.jobid) stage.jobId = receipt.jobid

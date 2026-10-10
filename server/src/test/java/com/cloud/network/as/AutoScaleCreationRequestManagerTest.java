@@ -172,4 +172,15 @@ public class AutoScaleCreationRequestManagerTest {
         assertTrue(new Gson().toJson(manager.query(id)).contains("SUCCESS"));
     }
 
+    @Test public void receiptUsesTheCloudApiNamedObjectEnvelope() {
+        manager.create(cmd, ConditionVO.class, () -> condition);
+        org.apache.cloudstack.api.response.AutoScaleCreationRequestResponse response = manager.query(id);
+        response.setResponseName("autoscalecreationrequestresponse");
+        String json = com.cloud.api.response.ApiResponseSerializer.toSerializedString(response, "json");
+        com.google.gson.JsonObject receipt = new Gson().fromJson(json, com.google.gson.JsonObject.class)
+                .getAsJsonObject("autoscalecreationrequestresponse").getAsJsonObject("autoscalecreationrequest");
+        assertEquals(id, receipt.get("requestid").getAsString());
+        assertEquals("SUCCESS", receipt.get("status").getAsString());
+    }
+
 }

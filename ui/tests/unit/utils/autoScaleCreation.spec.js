@@ -35,7 +35,7 @@ function fixture ({ failAt, lostAt, blockDelete, getFailure, pending } = {}) {
     }),
     get: jest.fn(async (command, params) => {
       if (getFailure?.(command, params)) throw new Error('offline')
-      if (command === 'queryAutoScaleCreationRequest') return { response: receipts[params.requestid] || { status: 'NOTFOUND' } }
+      if (command === 'queryAutoScaleCreationRequest') return { response: { autoscalecreationrequest: receipts[params.requestid] || { status: 'NOTFOUND' } } }
       if (command === 'queryAsyncJobResult') return { response: { jobstatus: 0 } }
       const key = command === 'listConditions' ? 'condition' : command === 'listAutoScalePolicies' ? 'autoscalepolicy' : command === 'listAutoScaleVmProfiles' ? 'autoscalevmprofile' : 'autoscalevmgroup'
       return { response: { [key]: resources.has(params.id) ? [{ id: params.id }] : [] } }
