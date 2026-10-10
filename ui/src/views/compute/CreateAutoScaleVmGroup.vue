@@ -21,6 +21,9 @@
     <a-alert v-if="userDataLookupFailed" type="error" show-icon :message="$t('message.autoscale.userdata.unavailable')" style="margin-bottom: 16px">
       <template #description><a-button size="small" @click="retryUserDataLookup">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
+    <a-alert v-if="creationOperation" type="info" show-icon :message="$t('label.autoscale.creation.' + creationOperation.status)" style="margin-bottom: 16px">
+      <template #description><a-button @click="processStatusModalVisible = true">{{ $t('label.autoscale.creation.inspect') }}</a-button></template>
+    </a-alert>
     <a-row v-if="hasRequiredCreationApis" :gutter="12">
       <a-col :md="24" :lg="17">
         <a-card :bordered="true" :title="$t('label.new.autoscale.vmgroup')">
@@ -954,7 +957,8 @@
             </a-steps>
             <div class="card-footer" v-if="isMobile()">
               <deploy-buttons
-                :loading="loading.deploy"
+                :loading="loading.deploy || submitting || creationBusy"
+                :disabled="Boolean(hasUnresolvedCreation)"
                 :deployButtonText="$t('label.create')"
                 @handle-cancel="() => $router.back()"
                 @handle-deploy="handleSubmit" />
@@ -967,7 +971,8 @@
           <info-card :footerVisible="true" :resource="vm" :title="$t('label.your.autoscale.vmgroup')" @change-resource="(data) => resource = data">
             <template #footer-content>
               <deploy-buttons
-                :loading="loading.deploy"
+                :loading="loading.deploy || submitting || creationBusy"
+                :disabled="Boolean(hasUnresolvedCreation)"
                 :deployButtonText="$t('label.create')"
                 @handle-cancel="() => $router.back()"
                 @handle-deploy="handleSubmit" />
@@ -977,65 +982,24 @@
       </a-col>
     </a-row>
   </div>
-  <div>
-    <a-modal
-      :title="$t('message.creating.autoscale.vmgroup')"
-      :visible="processStatusModalVisible"
-      :afterClose="closeModal"
-      :maskClosable="false"
-      :closable="false"
-      :footer="null"
-      @cancel="processStatusModalVisible = false">
-
-      <div class="form">
-        <a-card class="ant-form-text card-launch-description">
-          {{ $t('message.please.wait.while.autoscale.vmgroup.is.being.created') }}
-        </a-card>
-      </div>
-      <div class="form">
-        <a-card
-          id="launch-content"
-          class="ant-form-text card-launch-content">
-          <a-steps
-            size="small"
-            direction="vertical"
-            :current="currentStep"
-          >
-            <a-step
-              v-for="(step, index) in steps"
-              :key="index"
-              :title="$t(step.title) + (step.detail ? ' (' + step.detail + ')' : '')"
-              :status="step.status">
-              <template #icon>
-                <LoadingOutlined v-if="step.status===status.PROCESS" />
-                <CloseCircleOutlined v-else-if="step.status===status.FAILED" />
-              </template>
-              <template #description>
-                <a-card
-                  class="step-error"
-                  v-if="step.status===status.FAILED"
-                >
-                  <div><strong>{{ $t('label.error.something.went.wrong.please.correct.the.following') }}:</strong></div>
-                  <div>{{ messageError }}</div>
-                </a-card>
-              </template>
-            </a-step>
-          </a-steps>
-        </a-card>
-      </div>
-      <div class="form-action" v-if="processStatus">
-        <a-button
-          type="primary"
-          @click="closeModal"
-        >{{ $t('label.close') }}</a-button>
-      </div>
-    </a-modal>
-  </div>
+  <auto-scale-creation-progress
+:visible="processStatusModalVisible"
+:operation="creationOperation"
+:busy="creationBusy"
+:canQuery="canQueryCreation"
+:canCleanup="canCleanupCreation"
+    @close="processStatusModalVisible = false"
+@resume="resumeCreation"
+@cleanup="cleanupCreation"
+@forget="forgetCreation"
+@open-group="openCreatedGroup" />
 </template>
 
 <script>
-import { ref, reactive, toRaw } from 'vue'
+import { ref, reactive, toRaw, markRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { createAutoScaleCreation, autoScaleCreationScope } from '@/utils/autoScaleCreation'
+import AutoScaleCreationProgress from './AutoScaleCreationProgress.vue'
 import _ from 'lodash'
 import { mixin, mixinDevice } from '@/utils/mixin.js'
 import store from '@/store'
@@ -1071,6 +1035,7 @@ const STATUS_FAILED = 'error'
 export default {
   name: 'Wizard',
   components: {
+    AutoScaleCreationProgress,
     InfoCard,
     DeployButtons,
     ResourceIcon,
@@ -1105,6 +1070,10 @@ export default {
   mixins: [mixin, mixinDevice],
   data () {
     return {
+      creationController: null,
+      creationOperation: null,
+      creationBusy: false,
+      submitting: false,
       checkingEligibility: false,
       userDataLookupErrors: { userDataParams: false, templateUserDataParams: false },
       userDataLookupVersions: { userDataParams: 0, templateUserDataParams: 0 },
@@ -1305,8 +1274,12 @@ export default {
     }
   },
   computed: {
+    creationScope () { return autoScaleCreationScope(window.location.origin, this.$store.getters.userInfo, this.$store.getters.project) },
+    canQueryCreation () { return Boolean(this.$store.getters.apis.queryAutoScaleCreationRequest && this.$store.getters.apis.queryAsyncJobResult) },
+    canCleanupCreation () { return ['deleteAutoScaleVmProfile', 'deleteCondition', 'deleteAutoScalePolicy', 'deleteAutoScaleVmGroup', 'listAutoScaleVmProfiles', 'listConditions', 'listAutoScalePolicies', 'listAutoScaleVmGroups'].every(name => Boolean(this.$store.getters.apis[name])) },
+    hasUnresolvedCreation () { return this.creationOperation && !['success', 'cleaned'].includes(this.creationOperation.status) },
     hasRequiredCreationApis () {
-      return autoScaleCreationApis.every(name => Boolean(this.$store.getters.apis[name]))
+      return this.canQueryCreation && autoScaleCreationApis.every(name => Boolean(this.$store.getters.apis[name]))
     },
     userDataLookupFailed () {
       return Object.values(this.userDataLookupErrors).some(Boolean)
@@ -1513,6 +1486,7 @@ export default {
     }
   },
   watch: {
+    creationScope () { this.stopCreationTracking(); this.initCreationTracking() },
     '$route' (to, from) {
       if (to.name === 'createAutoScaleVmGroup') {
         this.resetData()
@@ -1645,10 +1619,14 @@ export default {
   },
   created () {
     this.initForm()
+    this.initCreationTracking()
     if (!this.hasRequiredCreationApis) return
     this.dataPreFill = this.preFillContent && Object.keys(this.preFillContent).length > 0 ? this.preFillContent : {}
     this.fetchData()
   },
+  beforeUnmount () { this.stopCreationTracking() },
+  deactivated () { this.stopCreationTracking() },
+  activated () { if (!this.creationController) this.initCreationTracking() },
   provide () {
     return {
       vmFetchTemplates: this.fetchAllTemplates,
@@ -1657,6 +1635,33 @@ export default {
     }
   },
   methods: {
+    initCreationTracking () {
+      this.creationController = markRaw(createAutoScaleCreation({
+        api: { get: getAPI, post: postAPI },
+        storage: window.localStorage,
+        scope: this.creationScope,
+        getScope: () => this.creationScope,
+        onChange: (operation, busy) => { this.creationOperation = operation; this.creationBusy = busy }
+      }))
+      this.creationOperation = this.creationController.snapshot()
+      this.creationBusy = false
+    },
+    stopCreationTracking () {
+      if (this.creationController) this.creationController.stop()
+      this.creationController = null
+      this.creationBusy = false
+      this.processStatusModalVisible = false
+    },
+    async resumeCreation () { if (this.canQueryCreation && this.creationController) await this.creationController.resume() },
+    async cleanupCreation () { if (this.canCleanupCreation && this.creationController) await this.creationController.cleanup() },
+    forgetCreation () { if (this.creationController) this.creationController.forget(); this.processStatusModalVisible = false },
+    openCreatedGroup () {
+      const id = this.creationOperation?.stages.find(stage => stage.type === 'group')?.resourceId
+      if (this.creationOperation?.status === 'success' && id) {
+        this.creationController.forget()
+        this.$router.push('/autoscalevmgroup/' + id)
+      }
+    },
     addStep (title, step) {
       this.steps.push({
         index: this.currentStep,
@@ -2339,164 +2344,75 @@ export default {
     updateAffinityGroups (ids) {
       this.form.affinitygroupids = ids
     },
-    async pollJob (jobId) {
-      return new Promise(resolve => {
-        const asyncJobInterval = setInterval(() => {
-          getAPI('queryAsyncJobResult', { jobId }).then(async json => {
-            const result = json.queryasyncjobresultresponse
-            if (result.jobstatus === 0) {
-              return
-            }
+    buildVmProfileParams (createVmGroupData, createVmGroupUserDataDetails) {
+      const params = {
+        ...createVmGroupUserDataDetails,
+        ...{
+          expungevmgraceperiod: createVmGroupData.expungevmgraceperiod,
+          serviceofferingid: createVmGroupData.serviceofferingid,
+          templateid: createVmGroupData.templateid,
+          userdata: createVmGroupData.userdata,
+          userdataid: createVmGroupData.userdataid,
+          zoneid: createVmGroupData.zoneid
+        }
+      }
+      if (createVmGroupData.autoscaleuserid) {
+        params.autoscaleuserid = createVmGroupData.autoscaleuserid
+      }
+      var i = 0
+      if (createVmGroupData.snmpcommunity) {
+        params['counterparam[' + i + '].name'] = 'snmpcommunity'
+        params['counterparam[' + i + '].value'] = createVmGroupData.snmpcommunity
+        i++
+      }
+      if (createVmGroupData.snmpport) {
+        params['counterparam[' + i + '].name'] = 'snmpport'
+        params['counterparam[' + i + '].value'] = createVmGroupData.snmpport
+        i++
+      }
+      var j = 0
+      if (createVmGroupData.rootdisksize) {
+        params['otherdeployparams[' + j + '].name'] = 'rootdisksize'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.rootdisksize
+        j++
+      }
+      if (createVmGroupData.overridediskofferingid) {
+        params['otherdeployparams[' + j + '].name'] = 'overridediskofferingid'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.overridediskofferingid
+        j++
+      }
+      if (createVmGroupData.diskofferingid) {
+        params['otherdeployparams[' + j + '].name'] = 'diskofferingid'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.diskofferingid
+        j++
+      }
+      if (createVmGroupData.size) {
+        params['otherdeployparams[' + j + '].name'] = 'disksize'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.size
+        j++
+      }
+      if (createVmGroupData.securitygroupids) {
+        params['otherdeployparams[' + j + '].name'] = 'securitygroupids'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.securitygroupids
+        j++
+      }
+      if (createVmGroupData.keypairs) {
+        params['otherdeployparams[' + j + '].name'] = 'keypairs'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.keypairs
+        j++
+      }
+      if (createVmGroupData.affinitygroupids) {
+        params['otherdeployparams[' + j + '].name'] = 'affinitygroupids'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.affinitygroupids
+        j++
+      }
+      if (createVmGroupData.networkids) {
+        params['otherdeployparams[' + j + '].name'] = 'networkids'
+        params['otherdeployparams[' + j + '].value'] = createVmGroupData.networkids
+        j++
+      }
 
-            clearInterval(asyncJobInterval)
-            resolve(result)
-          })
-        }, 1000)
-      })
-    },
-    createVmProfile (createVmGroupData, createVmGroupUserDataDetails) {
-      this.addStep('message.creating.autoscale.vmprofile', 'createVmProfile')
-
-      return new Promise((resolve, reject) => {
-        const params = {
-          ...createVmGroupUserDataDetails,
-          ...{
-            expungevmgraceperiod: createVmGroupData.expungevmgraceperiod,
-            serviceofferingid: createVmGroupData.serviceofferingid,
-            templateid: createVmGroupData.templateid,
-            userdata: createVmGroupData.userdata,
-            userdataid: createVmGroupData.userdataid,
-            zoneid: createVmGroupData.zoneid
-          }
-        }
-        if (createVmGroupData.autoscaleuserid) {
-          params.autoscaleuserid = createVmGroupData.autoscaleuserid
-        }
-        var i = 0
-        if (createVmGroupData.snmpcommunity) {
-          params['counterparam[' + i + '].name'] = 'snmpcommunity'
-          params['counterparam[' + i + '].value'] = createVmGroupData.snmpcommunity
-          i++
-        }
-        if (createVmGroupData.snmpport) {
-          params['counterparam[' + i + '].name'] = 'snmpport'
-          params['counterparam[' + i + '].value'] = createVmGroupData.snmpport
-          i++
-        }
-        var j = 0
-        if (createVmGroupData.rootdisksize) {
-          params['otherdeployparams[' + j + '].name'] = 'rootdisksize'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.rootdisksize
-          j++
-        }
-        if (createVmGroupData.overridediskofferingid) {
-          params['otherdeployparams[' + j + '].name'] = 'overridediskofferingid'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.overridediskofferingid
-          j++
-        }
-        if (createVmGroupData.diskofferingid) {
-          params['otherdeployparams[' + j + '].name'] = 'diskofferingid'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.diskofferingid
-          j++
-        }
-        if (createVmGroupData.size) {
-          params['otherdeployparams[' + j + '].name'] = 'disksize'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.size
-          j++
-        }
-        if (createVmGroupData.securitygroupids) {
-          params['otherdeployparams[' + j + '].name'] = 'securitygroupids'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.securitygroupids
-          j++
-        }
-        if (createVmGroupData.keypairs) {
-          params['otherdeployparams[' + j + '].name'] = 'keypairs'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.keypairs
-          j++
-        }
-        if (createVmGroupData.affinitygroupids) {
-          params['otherdeployparams[' + j + '].name'] = 'affinitygroupids'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.affinitygroupids
-          j++
-        }
-        if (createVmGroupData.networkids) {
-          params['otherdeployparams[' + j + '].name'] = 'networkids'
-          params['otherdeployparams[' + j + '].value'] = createVmGroupData.networkids
-          j++
-        }
-
-        postAPI('createAutoScaleVmProfile', params).then(async json => {
-          const jobId = json.autoscalevmprofileresponse.jobid
-          if (jobId) {
-            const result = await this.pollJob(jobId)
-            if (result.jobstatus === 2) {
-              this.messageError = result.jobresult.errortext
-              this.processStatus = STATUS_FAILED
-              this.setStepStatus(STATUS_FAILED)
-              return
-            }
-            resolve(result.jobresult.autoscalevmprofile)
-          }
-        }).catch(error => {
-          this.messageError = error.response.headers['x-description']
-          this.processStatus = STATUS_FAILED
-          this.setStepStatus(STATUS_FAILED)
-        })
-      })
-    },
-    createCondition (counterid, relationaloperator, threshold) {
-      return new Promise((resolve, reject) => {
-        const params = {
-          counterid: counterid,
-          relationaloperator: relationaloperator,
-          threshold: threshold
-        }
-        postAPI('createCondition', params).then(async json => {
-          const jobId = json.conditionresponse.jobid
-          if (jobId) {
-            const result = await this.pollJob(jobId)
-            if (result.jobstatus === 2) {
-              this.messageError = result.jobresult.errortext
-              this.processStatus = STATUS_FAILED
-              this.setStepStatus(STATUS_FAILED)
-              return
-            }
-            resolve(result.jobresult.condition)
-          }
-        }).catch(error => {
-          this.messageError = error.response.headers['x-description']
-          this.processStatus = STATUS_FAILED
-          this.setStepStatus(STATUS_FAILED)
-        })
-      })
-    },
-    createScalePolicy (action, name, conditionIds, duration, quiettime) {
-      return new Promise((resolve, reject) => {
-        const params = {
-          name: name,
-          action: action,
-          duration: duration,
-          quiettime: quiettime,
-          conditionids: conditionIds
-        }
-        postAPI('createAutoScalePolicy', params).then(async json => {
-          const jobId = json.autoscalepolicyresponse.jobid
-          if (jobId) {
-            const result = await this.pollJob(jobId)
-            if (result.jobstatus === 2) {
-              this.messageError = result.jobresult.errortext
-              this.processStatus = STATUS_FAILED
-              this.setStepStatus(STATUS_FAILED)
-              return
-            }
-            resolve(result.jobresult.autoscalepolicy)
-          }
-        }).catch(error => {
-          this.messageError = error.response.headers['x-description']
-          this.processStatus = STATUS_FAILED
-          this.setStepStatus(STATUS_FAILED)
-        })
-      })
+      return params
     },
     getText (option) {
       return _.get(option, 'displaytext', _.get(option, 'name'))
@@ -2554,10 +2470,10 @@ export default {
       this.fetchAllTemplates()
     },
     async handleSubmit (e) {
-      console.log('wizard submit')
-      e.preventDefault()
-      if (this.loading.deploy || this.checkingEligibility) return
-      this.formRef.value.validate().then(async () => {
+      if (e && e.preventDefault) e.preventDefault()
+      if (this.submitting || this.creationBusy || this.hasUnresolvedCreation || this.loading.deploy || this.checkingEligibility) return
+      this.submitting = true
+      return this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
 
         if (!values.templateid) {
@@ -2831,91 +2747,17 @@ export default {
         }
 
         this.processStatusModalVisible = true
-        this.processStatus = null
-
-        // create autoscale vm profile
-        const vmprofile = await this.createVmProfile(createVmGroupData, createVmGroupUserDataDetails)
-
-        // create scaleup conditions and policy
-        const scaleUpPolicyIds = []
-        for (const policy of this.scaleUpPolicies) {
-          this.setStepStatus(STATUS_FINISH)
-          this.currentStep++
-          this.addStepDetail('message.creating.autoscale.scaleup.conditions', 'createScaleUpConditions', policy.name)
-          var scaleUpConditionIds = []
-          for (const condition of policy.conditions) {
-            const newCondition = await this.createCondition(condition.counterid, condition.relationaloperator, condition.threshold)
-            scaleUpConditionIds.push(newCondition.id)
-          }
-          this.setStepStatus(STATUS_FINISH)
-          this.currentStep++
-          this.addStepDetail('message.creating.autoscale.scaleup.policy', 'createScaleUpPolicy', policy.name)
-          const scaleUpPolicy = await this.createScalePolicy('ScaleUp', policy.name, scaleUpConditionIds.join(','), policy.scaleupduration, policy.scaleupquiettime)
-          scaleUpPolicyIds.push(scaleUpPolicy.id)
-        }
-
-        // create scaledown conditions and policy
-        const scaleDownPolicyIds = []
-        for (const policy of this.scaleDownPolicies) {
-          this.setStepStatus(STATUS_FINISH)
-          this.currentStep++
-          this.addStepDetail('message.creating.autoscale.scaledown.conditions', 'createScaleDownConditions', policy.name)
-          var scaleDownConditionIds = []
-          for (const condition of policy.conditions) {
-            const newCondition = await this.createCondition(condition.counterid, condition.relationaloperator, condition.threshold)
-            scaleDownConditionIds.push(newCondition.id)
-          }
-          this.setStepStatus(STATUS_FINISH)
-          this.currentStep++
-          this.addStepDetail('message.creating.autoscale.scaledown.policy', 'createScaleDownPolicy', policy.name)
-          const scaleDownPolicy = await this.createScalePolicy('ScaleDown', policy.name, scaleDownConditionIds.join(','), policy.scaledownduration, policy.scaledownquiettime)
-          scaleDownPolicyIds.push(scaleDownPolicy.id)
-        }
-
-        this.setStepStatus(STATUS_FINISH)
-        this.currentStep++
-        this.addStep('message.creating.autoscale.vmgroup', 'createVmGroup')
-
-        // create autoscale vmgroup
-        const params = {
-          vmprofileid: vmprofile.id,
-          scaleuppolicyids: scaleUpPolicyIds.join(','),
-          scaledownpolicyids: scaleDownPolicyIds.join(','),
-          lbruleid: values.loadbalancerid,
+        const result = await this.creationController.start({
           name: values.name,
-          maxmembers: values.maxmembers,
-          minmembers: values.minmembers,
-          interval: values.interval
-        }
-        postAPI('createAutoScaleVmGroup', params).then(async response => {
-          const jobId = response.autoscalevmgroupresponse.jobid
-          const result = await this.pollJob(jobId)
-          if (result.jobstatus === 2) {
-            this.messageError = result.jobresult.errortext
-            this.processStatus = STATUS_FAILED
-            this.setStepStatus(STATUS_FAILED)
-            return
-          } else {
-            this.setStepStatus(STATUS_FINISH)
-            const vmgroup = result.jobresult.autoscalevmgroup
-            this.$notification.success({
-              message: this.$t('label.new.autoscale.vmgroup'),
-              description: vmgroup.name,
-              duration: 0
-            })
-            eventBus.emit('vm-refresh-data')
-          }
-          // Back to previous page
-          this.processStatusModalVisible = false
-          this.$router.back()
-        }).catch(error => {
-          this.messageError = error.response.headers['x-description']
-          this.processStatus = STATUS_FAILED
-          this.setStepStatus(STATUS_FAILED)
-          this.loading.deploy = false
-        }).finally(() => {
-          this.loading.deploy = false
+          group: { lbruleid: values.loadbalancerid, minmembers: values.minmembers, maxmembers: values.maxmembers, interval: values.interval },
+          up: this.scaleUpPolicies,
+          down: this.scaleDownPolicies,
+          profile: this.buildVmProfileParams(createVmGroupData, createVmGroupUserDataDetails)
         })
+        if (result?.status === 'success') {
+          this.$notification.success({ message: this.$t('label.new.autoscale.vmgroup'), description: values.name })
+          eventBus.emit('vm-refresh-data')
+        }
       }).catch(err => {
         if (err) {
           if (err.errorFields) {
@@ -2934,7 +2776,7 @@ export default {
             description: this.$t('error.form.message')
           })
         }
-      })
+      }).finally(() => { this.submitting = false; this.loading.deploy = false })
     },
     fetchZones (zoneId, listZoneAllow) {
       this.zones = []

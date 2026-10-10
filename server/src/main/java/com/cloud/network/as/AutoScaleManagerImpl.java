@@ -202,6 +202,14 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManager, AutoScaleService, Configurable {
+    @Inject
+    private AutoScaleCreationRequestManager creationRequests;
+
+    @Override
+    public org.apache.cloudstack.api.response.AutoScaleCreationRequestResponse queryAutoScaleCreationRequest(String requestId) {
+        return creationRequests.query(requestId);
+    }
+
 
     @Inject
     protected DispatchChainFactory dispatchChainFactory = null;
@@ -559,6 +567,13 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE, eventDescription = "creating autoscale vm profile", create = true)
     public AutoScaleVmProfile createAutoScaleVmProfile(CreateAutoScaleVmProfileCmd cmd) {
+        if (cmd.getInjectedJobId() == null) {
+            return createAutoScaleVmProfileInternal(cmd);
+        }
+        return creationRequests.create(cmd, AutoScaleVmProfileVO.class, () -> createAutoScaleVmProfileInternal(cmd));
+    }
+
+    protected AutoScaleVmProfile createAutoScaleVmProfileInternal(CreateAutoScaleVmProfileCmd cmd) {
 
         Account caller = CallContext.current().getCallingAccount();
         Account owner = accountMgr.finalizeOwner(caller, cmd.getAccountName(), cmd.getDomainId(), cmd.getProjectId());
@@ -838,6 +853,13 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_CREATE, eventDescription = "creating autoscale policy", create = true)
     public AutoScalePolicy createAutoScalePolicy(CreateAutoScalePolicyCmd cmd) {
+        if (cmd.getInjectedJobId() == null) {
+            return createAutoScalePolicyInternal(cmd);
+        }
+        return creationRequests.create(cmd, AutoScalePolicyVO.class, () -> createAutoScalePolicyInternal(cmd));
+    }
+
+    protected AutoScalePolicy createAutoScalePolicyInternal(CreateAutoScalePolicyCmd cmd) {
 
         int duration = cmd.getDuration();
         Integer quietTime = cmd.getQuietTime();
@@ -1054,6 +1076,13 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMGROUP_CREATE, eventDescription = "creating autoscale vm group", create = true)
     public AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd) {
+        if (cmd.getInjectedJobId() == null) {
+            return createAutoScaleVmGroupInternal(cmd);
+        }
+        return creationRequests.create(cmd, AutoScaleVmGroupVO.class, () -> createAutoScaleVmGroupInternal(cmd));
+    }
+
+    protected AutoScaleVmGroup createAutoScaleVmGroupInternal(CreateAutoScaleVmGroupCmd cmd) {
         String name = cmd.getName();
         int minMembers = cmd.getMinMembers();
         int maxMembers = cmd.getMaxMembers();
@@ -1132,11 +1161,21 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     public boolean deleteAutoScaleVmGroup(final long id, final Boolean cleanup) {
         AutoScaleVmGroupVO autoScaleVmGroupVO = getEntityInDatabase(CallContext.current().getCallingAccount(), "AutoScale Vm Group", id, autoScaleVmGroupDao);
 
-        if (autoScaleVmGroupVO.getState().equals(AutoScaleVmGroup.State.NEW)) {
-            /* This condition is for handling failures during creation command */
-            boolean removed = autoScaleVmGroupDao.remove(id);
-            if (removed) {
+        if (autoScaleVmGroupVO.getState().equals(AutoScaleVmGroup.State.NEW) && autoScaleVmGroupVmMapDao.countByGroup(id) == 0) {
+            // A failed creation has no members. Remove its dependent records too so
+            // owned policies/conditions can be compensated and no monitor remains.
+            boolean removed = Transaction.execute((TransactionCallback<Boolean>) status -> {
+                if (!autoScaleVmGroupDao.remove(id)) {
+                    return false;
+                }
+                autoScaleVmGroupPolicyMapDao.removeByGroupId(id);
+                autoScaleVmGroupVmMapDao.removeByGroup(id);
+                asGroupStatisticsDao.removeByGroupId(id);
                 resourceScheduleManager.removeSchedulesForResource(ApiCommandResourceType.AutoScaleVmGroup, id);
+                return true;
+            });
+            if (removed) {
+                cancelMonitorTask(id);
             }
             return removed;
         }
@@ -1542,6 +1581,13 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_CONDITION_CREATE, eventDescription = "Condition", create = true)
     public Condition createCondition(CreateConditionCmd cmd) {
+        if (cmd.getInjectedJobId() == null) {
+            return createConditionInternal(cmd);
+        }
+        return creationRequests.create(cmd, ConditionVO.class, () -> createConditionInternal(cmd));
+    }
+
+    protected Condition createConditionInternal(CreateConditionCmd cmd) {
         Account caller = CallContext.current().getCallingAccount();
         Account owner = accountMgr.finalizeOwner(caller, cmd.getAccountName(), cmd.getDomainId(), cmd.getProjectId());
         accountMgr.checkAccess(caller, null, true, owner);
