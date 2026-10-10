@@ -120,6 +120,13 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
       check()
       return reconcile(stage)
     }
+    // Only an explicit recovery action may replay an unaccepted request. The
+    // original UUID is retained, so a late server acceptance is deduplicated.
+    if (allowConfirmedReplay && receipt.status === 'NOTFOUND' && !stage.resourceId && !stage.jobId) {
+      allowConfirmedReplay = false
+      stage.status = 'new'; save()
+      return execute(stage)
+    }
     if (receipt.status === 'PENDING' && receipt.jobid) {
       stage.status = 'pending'; save()
       const result = await tracker.track(receipt.jobid, {}, true)
@@ -165,7 +172,10 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
       check()
       try {
         const receipt = await request(stage)
-        if (receipt.status === 'NOTFOUND' && error?.response?.status >= 400 && error.response.status < 500 && ![401, 403, 408, 429].includes(error.response.status)) {
+        if (receipt.status === 'NOTFOUND' && (
+          (error?.response?.status >= 400 && error.response.status < 500 && ![401, 403, 408, 429].includes(error.response.status)) ||
+          ([530, 531, 532, 533, 534, 535, 536, 537].includes(error?.response?.status) && Number(root(error.response.data).errorcode) === error.response.status)
+        )) {
           stage.status = 'failed'; save(); return
         }
       } catch (queryError) {
@@ -286,7 +296,11 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
       // Failure to persist is settled by guarded; no API request has been sent.
       return guarded(run)
     },
-    resume: () => { allowConfirmedReplay = true; return guarded(run) },
+    resume: ({ profile } = {}) => {
+      if (profile) profileParams = { ...profile }
+      allowConfirmedReplay = true
+      return guarded(run)
+    },
     cleanup: () => guarded(clean),
     forget () {
       if (busy || !['cleaned', 'success'].includes(operation?.status)) return

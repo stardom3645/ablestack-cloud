@@ -158,3 +158,28 @@ test('a late POST from a stopped page cannot overwrite the completed recovery le
   expect(JSON.parse([...f.values.values()][0]).status).toBe('success')
   expect(f.api.post.mock.calls.filter(([c]) => c.startsWith('create'))).toHaveLength(6)
 })
+
+test('explicit recovery of an unaccepted request reuses its UUID; automatic recovery never replays', async () => {
+  const f = fixture(); f.api.post.mockImplementationOnce(async () => { throw new Error('offline before acceptance') })
+  const controller = f.controller(); expect((await controller.start(plan())).status).toBe('unknown')
+  expect(f.api.post).toHaveBeenCalledTimes(1)
+  const request = controller.snapshot().stages[0].requestId
+  controller.stop()
+  const restored = f.controller()
+  expect((await restored.resume()).status).toBe('unknown')
+  expect(f.api.post).toHaveBeenCalledTimes(1)
+  expect((await restored.resume({ profile: plan().profile })).status).toBe('success')
+  expect(f.api.post.mock.calls[1][1].customjobid).toBe(request)
+})
+test.each([530, 531, 532, 533, 534, 535, 536, 537])('an authoritative Cloud %s rejection with no receipt settles safely', async status => {
+  const f = fixture()
+  f.api.post.mockImplementationOnce(async () => { throw Object.assign(new Error('Cloud rejected'), { response: { status, data: { response: { errorcode: status } } } }) })
+  expect((await f.controller().start(plan())).status).toBe('cleaned')
+  expect(f.api.post).toHaveBeenCalledTimes(1)
+})
+test('a proxy 530 without a Cloud API error remains unknown', async () => {
+  const f = fixture()
+  f.api.post.mockImplementationOnce(async () => { throw Object.assign(new Error('proxy'), { response: { status: 530, data: 'proxy response' } }) })
+  expect((await f.controller().start(plan())).status).toBe('unknown')
+  expect(f.api.post).toHaveBeenCalledTimes(1)
+})

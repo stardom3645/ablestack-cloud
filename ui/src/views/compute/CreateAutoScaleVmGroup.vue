@@ -1652,7 +1652,12 @@ export default {
       this.creationBusy = false
       this.processStatusModalVisible = false
     },
-    async resumeCreation () { if (this.canQueryCreation && this.creationController) await this.creationController.resume() },
+    async resumeCreation () {
+      if (!this.canQueryCreation || !this.creationController) return
+      const profile = this.creationOperation?.stages.find(stage => stage.type === 'profile')
+      if (profile && !profile.resourceId && !profile.jobId) await this.handleSubmit(null, true)
+      else await this.creationController.resume()
+    },
     async cleanupCreation () { if (this.canCleanupCreation && this.creationController) await this.creationController.cleanup() },
     forgetCreation () { if (this.creationController) this.creationController.forget(); this.processStatusModalVisible = false },
     openCreatedGroup () {
@@ -2469,9 +2474,9 @@ export default {
       }
       this.fetchAllTemplates()
     },
-    async handleSubmit (e) {
+    async handleSubmit (e, recovery = false) {
       if (e && e.preventDefault) e.preventDefault()
-      if (this.submitting || this.creationBusy || this.hasUnresolvedCreation || this.loading.deploy || this.checkingEligibility) return
+      if (this.submitting || this.creationBusy || (this.hasUnresolvedCreation && !recovery) || this.loading.deploy || this.checkingEligibility) return
       this.submitting = true
       return this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
@@ -2747,13 +2752,14 @@ export default {
         }
 
         this.processStatusModalVisible = true
-        const result = await this.creationController.start({
+        const plan = {
           name: values.name,
           group: { lbruleid: values.loadbalancerid, minmembers: values.minmembers, maxmembers: values.maxmembers, interval: values.interval },
           up: this.scaleUpPolicies,
           down: this.scaleDownPolicies,
           profile: this.buildVmProfileParams(createVmGroupData, createVmGroupUserDataDetails)
-        })
+        }
+        const result = recovery ? await this.creationController.resume({ profile: plan.profile }) : await this.creationController.start(plan)
         if (result?.status === 'success') {
           this.$notification.success({ message: this.$t('label.new.autoscale.vmgroup'), description: values.name })
           eventBus.emit('vm-refresh-data')
