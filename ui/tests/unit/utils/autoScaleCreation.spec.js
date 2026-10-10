@@ -110,3 +110,9 @@ test('receipt operation mismatch prevents both continuation and deletion', async
   Object.values(f.receipts)[0].creationoperationid = 'another-operation'
   const next = f.controller(); expect((await next.resume()).status).toBe('unknown'); await next.cleanup(); expect(f.api.post).toHaveBeenCalledTimes(1)
 })
+
+test('an unreadable ledger cannot be treated as successful or safely cleaned', async () => {
+  const f = fixture(); f.storage.getItem = () => '{invalid-json'
+  const controller = f.controller(); expect((await controller.resume()).status).toBe('unknown'); expect((await controller.cleanup()).status).toBe('unknown')
+  await controller.start(plan()); expect(f.api.post).not.toHaveBeenCalled()
+})

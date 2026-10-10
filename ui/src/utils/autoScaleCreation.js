@@ -174,6 +174,7 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
     return (result[resources[stage.type][3]] || []).some(item => item.id === stage.resourceId)
   }
   const clean = async () => {
+    if (!operation?.id || !operation.stages.length) throw new Error('storage')
     if (!operation || operation.status === 'success') return
     // All attempted stages must have a definitive outcome before deleting anything.
     for (const stage of operation.stages) {
@@ -239,6 +240,7 @@ export function createAutoScaleCreation ({ api, storage, scope, getScope = () =>
     return operation ? copy(durable(operation)) : null
   }
   const run = async () => {
+    if (!operation?.id || !operation.stages.length) throw new Error('storage')
     operation.status = 'running'; operation.failureKind = null; save()
     for (const stage of operation.stages) {
       check()
