@@ -1654,9 +1654,10 @@ export default {
     },
     async resumeCreation () {
       if (!this.canQueryCreation || !this.creationController) return
-      const profile = this.creationOperation?.stages.find(stage => stage.type === 'profile')
-      if (profile && !profile.resourceId && !profile.jobId) await this.handleSubmit(null, true)
-      else await this.creationController.resume()
+      const result = await this.creationController.resume()
+      // Accepted requests recover from receipts without needing profile secrets.
+      // Only an unaccepted profile requires the operator to refill the form.
+      if (result?.failureKind === 'profile') await this.handleSubmit(null, true)
     },
     async cleanupCreation () { if (this.canCleanupCreation && this.creationController) await this.creationController.cleanup() },
     forgetCreation () { if (this.creationController) this.creationController.forget(); this.processStatusModalVisible = false },

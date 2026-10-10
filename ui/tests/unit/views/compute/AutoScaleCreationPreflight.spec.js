@@ -197,3 +197,12 @@ test('authorized available-IP query retains network and finishes loading on empt
   expect(ctx.ipOptionsLoading.network).toBe(false)
   expect(ctx.$notifyError).not.toHaveBeenCalled()
 })
+
+test.each([['success', false], ['profile', true]])('recovery queries accepted receipts before requesting profile input: %s', async (failureKind, refill) => {
+  const ctx = context(); ctx.canQueryCreation = true
+  ctx.creationController = { resume: jest.fn().mockResolvedValue({ failureKind }) }
+  ctx.handleSubmit = jest.fn()
+  await ctx.resumeCreation()
+  expect(ctx.creationController.resume).toHaveBeenCalledTimes(1)
+  expect(ctx.handleSubmit).toHaveBeenCalledTimes(refill ? 1 : 0)
+})
