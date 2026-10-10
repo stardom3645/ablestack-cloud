@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 <template>
-  <a-modal :visible="visible" :title="$t('message.creating.autoscale.vmgroup')" :footer="null" :maskClosable="false" @cancel="$emit('close')" width="680px">
+  <a-modal wrapClassName="autoscale-creation-modal" :visible="visible" :title="$t('message.creating.autoscale.vmgroup')" :footer="null" :maskClosable="false" @cancel="$emit('close')" width="680px">
     <a-alert show-icon :type="alertType" :message="$t('label.autoscale.creation.' + (operation?.status || 'unknown'))" :description="$t('message.autoscale.creation.' + (operation?.failureKind === 'storage' ? 'storage' : 'responsibility'))" />
     <p class="operation-id">{{ $t('label.autoscale.creation.operation') }}: {{ operation?.id }}</p>
     <div class="creation-stages">
@@ -60,4 +60,13 @@ export default {
 <style lang="less" scoped>
 .creation-stages { max-height: 48vh; overflow-y: auto; margin: 16px 0; }
 .operation-id, .resource-id { overflow-wrap: anywhere; }
+</style>
+
+<style lang="less">
+body.dark-mode .autoscale-creation-modal {
+  .ant-steps-item-title,
+  .ant-steps-item-description,
+  .operation-id,
+  .resource-id { color: #d9e2ec !important; }
+}
 </style>
