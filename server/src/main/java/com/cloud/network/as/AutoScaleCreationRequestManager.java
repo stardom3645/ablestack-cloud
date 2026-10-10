@@ -18,6 +18,8 @@ package com.cloud.network.as;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.List;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -48,6 +50,7 @@ import com.cloud.exception.PermissionDeniedException;
 import com.cloud.network.as.dao.AutoScaleCreationRequestDao;
 import com.cloud.user.AccountManager;
 import com.cloud.utils.db.EntityManager;
+import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
@@ -57,7 +60,12 @@ import com.google.gson.Gson;
 
 /** Durable, user-scoped receipts for the existing Cloud async creation APIs. */
 @Component
-public class AutoScaleCreationRequestManager {
+public class AutoScaleCreationRequestManager implements PluggableService {
+    @Override
+    public List<Class<?>> getCommands() {
+        return Collections.singletonList(org.apache.cloudstack.api.command.user.autoscale.QueryAutoScaleCreationRequestCmd.class);
+    }
+
     @Inject AutoScaleCreationRequestDao requestDao;
     @Inject AsyncJobDao jobDao;
     @Inject EntityManager entityMgr;

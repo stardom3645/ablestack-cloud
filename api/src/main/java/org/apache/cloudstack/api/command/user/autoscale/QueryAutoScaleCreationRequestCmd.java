@@ -17,12 +17,13 @@
 package org.apache.cloudstack.api.command.user.autoscale;
 
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.AutoScaleCreationRequestResponse;
 
 @APICommand(name = "queryAutoScaleCreationRequest", description = "Finds a creation stage submitted by the current user using customjobid",
-        responseObject = AutoScaleCreationRequestResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
+        responseObject = AutoScaleCreationRequestResponse.class, authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User}, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QueryAutoScaleCreationRequestCmd extends BaseCmd {
     @Parameter(name = "requestid", type = CommandType.STRING, required = true, description = "The customjobid of the creation stage")
     private String requestId;
