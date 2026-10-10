@@ -58,7 +58,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.creation-stages { max-height: 48vh; overflow-y: auto; margin: 16px 0; }
+.creation-stages { flex: 1 1 auto; min-height: 0; max-height: 48vh; overflow-y: auto; margin: 16px 0; }
 .operation-id, .resource-id { overflow-wrap: anywhere; }
 </style>
 
@@ -68,5 +68,14 @@ body.dark-mode .autoscale-creation-modal {
   .ant-steps-item-description,
   .operation-id,
   .resource-id { color: #d9e2ec !important; }
+}
+</style>
+
+<style lang="less">
+.autoscale-creation-modal {
+  .ant-modal { top: 24px; padding-bottom: 24px; }
+  .ant-modal-body { display: flex; flex-direction: column; max-height: calc(100vh - 125px); overflow-y: auto; }
+  .ant-alert, .operation-id, .form-action { flex: 0 0 auto; }
+  .form-action { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 }
 </style>
