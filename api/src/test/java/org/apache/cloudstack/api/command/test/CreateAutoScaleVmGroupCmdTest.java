@@ -33,7 +33,7 @@ import com.cloud.network.as.AutoScaleVmGroup;
 import com.cloud.utils.db.EntityManager;
 
 public class CreateAutoScaleVmGroupCmdTest {
-    @Test public void replayOfConfiguredGroupDoesNotReconfigureOrDeleteIt() {
+    @Test public void replayOfConfiguredGroupDoesNotReconfigureOrDeleteIt() throws Exception {
         for (AutoScaleVmGroup.State state : new AutoScaleVmGroup.State[] {AutoScaleVmGroup.State.ENABLED, AutoScaleVmGroup.State.SCALING, AutoScaleVmGroup.State.DISABLED}) {
             CreateAutoScaleVmGroupCmd cmd = new CreateAutoScaleVmGroupCmd();
             EntityManager entities = mock(EntityManager.class); AutoScaleService service = mock(AutoScaleService.class);
