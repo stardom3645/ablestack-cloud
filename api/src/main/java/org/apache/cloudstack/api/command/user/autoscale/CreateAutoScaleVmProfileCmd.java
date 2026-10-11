@@ -191,6 +191,13 @@ public class CreateAutoScaleVmProfileCmd extends BaseAutoScaleCreateCmd {
         deployParams.put("zoneId", zoneId.toString());
         deployParams.put("serviceOfferingId", serviceOfferingId.toString());
         deployParams.put("templateId", templateId.toString());
+        // Validate template access in the same project as the profile owner.
+        // Deployment parameters supplied by a client cannot override that scope.
+        if (projectId != null) {
+            deployParams.put(ApiConstants.PROJECT_ID, projectId.toString());
+            deployParams.remove(ApiConstants.ACCOUNT);
+            deployParams.remove(ApiConstants.DOMAIN_ID);
+        }
         return deployParams;
     }
 
