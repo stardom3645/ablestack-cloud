@@ -24,9 +24,24 @@ export function autoScaleVisibleColumns (columns) {
   return [...new Set(mapped.filter(key => ['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'project'].includes(key)))]
 }
 
-// The executable filter excludes some project-shared private images. Query the
-// dedicated shared filter only when an exact, scoped image lookup is empty.
+// Exact-ID template listing evaluates the caller's personal account, even for
+// project-shared images. Revalidate against fresh scoped, ready image lists in
+// project mode; profile creation still performs server-side owner access checks.
 export async function autoScaleTemplateById (request, params) {
+  if (params.projectid) {
+    const { id, ...scope } = params
+    for (const templatefilter of ['executable', 'sharedexecutable']) {
+      for (let page = 1; page <= 50; page++) {
+        const json = await request('listTemplates', { ...scope, templatefilter, page, pagesize: 100 })
+        const result = json.listtemplatesresponse || {}
+        const images = result.template || []
+        const image = images.find(item => item.id === id)
+        if (image) return { listtemplatesresponse: { count: 1, template: [image] } }
+        if (!images.length || page * 100 >= (result.count ?? images.length)) break
+      }
+    }
+    return { listtemplatesresponse: { count: 0, template: [] } }
+  }
   const response = await request('listTemplates', { ...params, templatefilter: 'executable' })
   if (response.listtemplatesresponse?.template?.some(item => item.id === params.id)) return response
   return request('listTemplates', { ...params, templatefilter: 'sharedexecutable' })

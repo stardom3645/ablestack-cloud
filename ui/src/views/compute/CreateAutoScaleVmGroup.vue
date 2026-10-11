@@ -2910,6 +2910,7 @@ export default {
       if (this.isZoneSelectedMultiArch) {
         args.arch = this.selectedArchitecture
       }
+      if (this.$store.getters.project?.id) args.projectid = this.$store.getters.project.id
       args.templatefilter = templateFilter
       args.isready = true
       args.details = 'all'

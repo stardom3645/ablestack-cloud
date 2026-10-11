@@ -85,7 +85,8 @@ test('shared exact image lookup preserves project, zone and ready scope', async 
   const request = jest.fn().mockResolvedValueOnce({ listtemplatesresponse: { template: [] } }).mockResolvedValueOnce({ listtemplatesresponse: { template: [{ id: 'shared-image' }] } })
   const scope = { id: 'shared-image', projectid: 'project', zoneid: 'zone', isready: true }
   const response = await autoScaleTemplateById(request, scope)
-  expect(request.mock.calls).toEqual([['listTemplates', { ...scope, templatefilter: 'executable' }], ['listTemplates', { ...scope, templatefilter: 'sharedexecutable' }]])
+  const { id, ...projectScope } = scope
+  expect(request.mock.calls).toEqual([['listTemplates', { ...projectScope, templatefilter: 'executable', page: 1, pagesize: 100 }], ['listTemplates', { ...projectScope, templatefilter: 'sharedexecutable', page: 1, pagesize: 100 }]])
   expect(response.listtemplatesresponse.template[0].id).toBe('shared-image')
 })
 test('existing executable image never triggers a shared query', async () => {
@@ -112,4 +113,19 @@ test('owner cell identifies project ownership when account is absent, and keeps 
   const project = cell({ project: '한글 프로젝트' }, 'account'); const account = cell({ account: 'owner' }, 'account'); const absent = cell({}, 'account')
   expect(project.text()).toBe('한글 프로젝트'); expect(account.text()).toBe('owner'); expect(absent.text()).toBe('—')
   project.unmount(); account.unmount(); absent.unmount()
+})
+
+test('project image recheck follows pagination and never accepts an image outside the allowed lists', async () => {
+  const request = jest.fn().mockResolvedValueOnce({ listtemplatesresponse: { count: 101, template: Array.from({ length: 100 }, (_, index) => ({ id: `other-${index}` })) } }).mockResolvedValueOnce({ listtemplatesresponse: { count: 101, template: [{ id: 'shared' }] } })
+  const response = await autoScaleTemplateById(request, { id: 'shared', projectid: 'project', zoneid: 'zone', isready: true })
+  expect(response.listtemplatesresponse.template[0].id).toBe('shared')
+  expect(request.mock.calls[1][1].page).toBe(2)
+  expect(request.mock.calls.every(([, args]) => args.id === undefined && args.projectid === 'project' && args.isready)).toBe(true)
+  request.mockReset().mockResolvedValue({ listtemplatesresponse: {} })
+  expect((await autoScaleTemplateById(request, { id: 'not-shared', projectid: 'project' })).listtemplatesresponse.template).toEqual([])
+})
+test('project list permission failure is surfaced without a broader lookup', async () => {
+  const request = jest.fn().mockRejectedValue(new Error('permission'))
+  await expect(autoScaleTemplateById(request, { id: 'image', projectid: 'project' })).rejects.toThrow('permission')
+  expect(request).toHaveBeenCalledTimes(1)
 })
