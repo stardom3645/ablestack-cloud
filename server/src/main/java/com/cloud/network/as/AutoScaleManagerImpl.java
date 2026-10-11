@@ -702,7 +702,13 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
          * For ex. if projectId is given as a string instead of an long value, this
          * will be throwing an error.
          */
-        dispatchChainFactory.getStandardDispatchChain().dispatch(new DispatchTask(ComponentContext.inject(DeployVMCmd.class), deployParams));
+        // The generic VM dispatch ACL checks the personal caller, even when a
+        // template is shared exclusively with the profile's project account.
+        // Project creation uses the owner-scoped source and deploy-parameter
+        // validation in checkValidityAndPersist; it must not widen launch access.
+        if (owner.getType() != Account.Type.PROJECT) {
+            dispatchChainFactory.getStandardDispatchChain().dispatch(new DispatchTask(ComponentContext.inject(DeployVMCmd.class), deployParams));
+        }
 
         AutoScaleVmProfileVO profileVO =
             new AutoScaleVmProfileVO(cmd.getZoneId(), owner.getDomainId(), owner.getAccountId(), cmd.getServiceOfferingId(), cmd.getTemplateId(), cmd.getOtherDeployParams(),

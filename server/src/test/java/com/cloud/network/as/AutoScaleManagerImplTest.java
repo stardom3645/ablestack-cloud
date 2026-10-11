@@ -823,6 +823,24 @@ public class AutoScaleManagerImplTest {
         }
     }
 
+    @Test
+    public void projectProfileUsesOwnerValidationWithoutPersonalVmDispatch() {
+        when(account.getType()).thenReturn(Account.Type.PROJECT);
+        testCreateAutoScaleVmProfile();
+        Mockito.verify(dispatchChainFactory, never()).getStandardDispatchChain();
+        Mockito.verify(accountManager, Mockito.atLeastOnce()).checkAccess(eq(account), eq(AccessType.UseEntry), eq(false), eq(templateMock));
+    }
+
+    @Test
+    public void projectProfileStillRejectsTemplateWithoutOwnerPermission() {
+        when(account.getType()).thenReturn(Account.Type.PROJECT);
+        Mockito.doThrow(new PermissionDeniedException("project template access denied")).when(accountManager)
+                .checkAccess(eq(account), eq(AccessType.UseEntry), eq(false), eq(templateMock));
+        Assert.assertThrows(PermissionDeniedException.class, this::testCreateAutoScaleVmProfile);
+        Mockito.verify(autoScaleVmProfileDao, never()).persist(any());
+        Mockito.verify(dispatchChainFactory, never()).getStandardDispatchChain();
+    }
+
     @Test(expected = InvalidParameterValueException.class)
     public void testCreateAutoScaleVmProfileFail() {
         when(entityManager.findById(DataCenter.class, zoneId)).thenReturn(zoneMock);
