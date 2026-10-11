@@ -39,7 +39,7 @@
             <strong>{{ counterLabel(metric.countername) }}</strong>
             <div>{{ $t('label.autoscale.observed.value') }}: {{ formatValue(metric.value) }} {{ metric.unit === 'connections/VM' ? $t('label.autoscale.connections.per.vm') : metric.unit }} · {{ metric.operator }} {{ metric.threshold }}</div>
             <div>{{ $t('label.autoscale.samples') }}: {{ metric.samples }} · {{ $t('label.autoscale.resources') }}: {{ metric.resources }} · {{ formatTime(metric.collectedat) }}</div>
-            <div>{{ metric.reason || policy.reason ? $t('message.autoscale.evaluation.' + (metric.reason || policy.reason)) : $t(metric.matched ? 'label.autoscale.evaluation.MATCHED' : 'label.autoscale.evaluation.NOT_MATCHED') }}</div>
+            <div>{{ metric.reason ? $t('message.autoscale.evaluation.' + metric.reason) : $t(metric.matched ? 'label.autoscale.evaluation.MATCHED' : 'label.autoscale.evaluation.NOT_MATCHED') }}</div>
           </li>
         </ul>
       </div>
