@@ -19,11 +19,11 @@ under the License.
 
 # 오토스케일 VM 그룹 검토·테스트·프로덕션 보완 계획
 
-검토일: 2026-10-10. 기준 소스: `b274443dadefd9d802f42d136ef04fc85b1c1a25` (최신 upstream/ablestack-europa). 2026-10-11 AS-01(#1347)·AS-02(#1348)·AS-03(#1349)·AS-04(#1350)·AS-05(#1351)·AS-06(#1352)의 구현·변경 모듈 빌드·31/32 배포·해당 범위 UI 검증을 완료했다. [AS-02 검증 기록](AS-02-validation.ko.md), [AS-03 검증 기록](AS-03-validation.ko.md), [AS-04 검증 기록](AS-04-validation.ko.md), [AS-05 검증 기록](AS-05-validation.ko.md)을 함께 참조한다. [검증 기록](AS-01-validation.ko.md)에 실제 환경·해시·제한을 기록했다. Epic 전체 프로덕션 판정은 후속 이슈 완료 후 수행한다.
+검토일: 2026-10-10. 기준 소스: `b274443dadefd9d802f42d136ef04fc85b1c1a25` (최신 upstream/ablestack-europa). 2026-10-11 AS-01(#1347)·AS-02(#1348)·AS-03(#1349)·AS-04(#1350)·AS-05(#1351)·AS-06(#1352)·AS-07(#1353)의 구현·변경 모듈 빌드·31/32 배포·해당 범위 UI 검증을 완료했다. [AS-02 검증 기록](AS-02-validation.ko.md), [AS-03 검증 기록](AS-03-validation.ko.md), [AS-04 검증 기록](AS-04-validation.ko.md), [AS-05 검증 기록](AS-05-validation.ko.md)을 함께 참조한다. [검증 기록](AS-01-validation.ko.md)에 실제 환경·해시·제한을 기록했다. Epic 전체 프로덕션 판정은 후속 이슈 완료 후 수행한다.
 
 ## Epic 및 하위 이슈 추적
 
-Epic: [#1346](https://github.com/ablecloud-team/ablestack-cloud/issues/1346). 하위 이슈 9개에 GitHub의 실제 부모/하위 이슈 및 blocked-by 관계를 연결했다. AS-01/AS-02/AS-03/AS-04/AS-05/AS-06는 완료했으며 나머지 3개는 Open이다. 이 문서는 현재 이슈 범위를 기준으로 구현·검증 결과를 갱신하는 계획이다.
+Epic: [#1346](https://github.com/ablecloud-team/ablestack-cloud/issues/1346). 하위 이슈 9개에 GitHub의 실제 부모/하위 이슈 및 blocked-by 관계를 연결했다. AS-01/AS-02/AS-03/AS-04/AS-05/AS-06/AS-07는 완료했으며 나머지 2개는 Open이다. 이 문서는 현재 이슈 범위를 기준으로 구현·검증 결과를 갱신하는 계획이다.
 
 | 순서/키 | 이슈 | 우선순위 | 범위 | 직접 선행 이슈 | 상태 |
 |---|---|---|---|---|---|
@@ -33,7 +33,7 @@ Epic: [#1346](https://github.com/ablecloud-team/ablestack-cloud/issues/1346). �
 | AS-03 | [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349) | P1 | 카운터·기간·쿨다운·정책 평가 | [#1347](https://github.com/ablecloud-team/ablestack-cloud/issues/1347) | 완료 / [검증 기록](AS-03-validation.ko.md) |
 | AS-05 | [#1351](https://github.com/ablecloud-team/ablestack-cloud/issues/1351) | P0 | VM/LB 수명주기·드레인·삭제 보상 | [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1350](https://github.com/ablecloud-team/ablestack-cloud/issues/1350) | 완료 / [검증 기록](AS-05-validation.ko.md) |
 | AS-06 | [#1352](https://github.com/ablecloud-team/ablestack-cloud/issues/1352) | P1 | 정책·프로필·예약 변경 계약 | [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1350](https://github.com/ablecloud-team/ablestack-cloud/issues/1350) | 완료 / 검증 기록 참조 |
-| AS-07 | [#1353](https://github.com/ablecloud-team/ablestack-cloud/issues/1353) | P1 | 멤버·최근 평가·실패 운영 가시성 | [#1348](https://github.com/ablecloud-team/ablestack-cloud/issues/1348), [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1351](https://github.com/ablecloud-team/ablestack-cloud/issues/1351) | Open / 계획 |
+| AS-07 | [#1353](https://github.com/ablecloud-team/ablestack-cloud/issues/1353) | P1 | 멤버·최근 평가·실패 운영 가시성 | [#1348](https://github.com/ablecloud-team/ablestack-cloud/issues/1348), [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1351](https://github.com/ablecloud-team/ablestack-cloud/issues/1351) | 완료 / [검증 기록](AS-07-validation.ko.md) |
 | AS-09 | [#1355](https://github.com/ablecloud-team/ablestack-cloud/issues/1355) | P1 | 마지막 구현 단계: 현재 Mold VM UI 표준 통합 | [#1352](https://github.com/ablecloud-team/ablestack-cloud/issues/1352), [#1353](https://github.com/ablecloud-team/ablestack-cloud/issues/1353) | Open / 계획 |
 | AS-08 | [#1354](https://github.com/ablecloud-team/ablestack-cloud/issues/1354) | P1 | GFS2/krbd 최종 UI E2E·프로덕션 판정 | [#1355](https://github.com/ablecloud-team/ablestack-cloud/issues/1355) | Open / 계획 |
 
@@ -46,7 +46,7 @@ Epic: [#1346](https://github.com/ablecloud-team/ablestack-cloud/issues/1346). �
 - 장시간 운영 확인은 모든 기능 구현·기능 검증·최종 UI 통합 및 통합 기능 검증을 완료한 뒤 #1354의 마지막 단계에서만 수행한다. 앞선 개별 이슈의 완료 조건에 장시간 운영을 요구하지 않는다.
 - 장시간 단계는 이미 검증한 기능의 안정성 관찰 및 잔여 자원·인원 범위·반복 오류 확인을 수행한다. 장애 주입·경쟁·재시작·반복 확장/축소 기능 테스트는 그 전에 완료한다. 제안 24시간의 실제 관찰 기간은 최종 실행 계획에 명시한다.
 - 우선순위와 선행 관계에 따른 권장 단일 진행 순서는 **#1347 → #1348 → #1350 → #1349 → #1351 → #1352 → #1353 → #1355 → #1354**다. #1351(P0)은 #1349의 정책 평가 검증이 필요하므로 이를 먼저 완료한다.
-- 현재 완료 대상은 #1351이며 다음 진행 대상은 #1352이다. 다음 이슈는 사용자 지시까지 대기한다.
+- 현재 완료 대상은 #1353이며 다음 진행 대상은 #1355이다. 다음 이슈는 사용자 지시까지 대기한다.
 
 ## 초기 검토 시 실제 확인 범위 (2026-10-10)
 
@@ -109,7 +109,7 @@ Mold UI → Cloud API → AutoScaleManagerImpl → 상태/프로필/정책/통�
 
 ## 테스트 계획 (60개)
 
-아래 표는 초기 60개 테스트 계획이다. AS-01·AS-02·AS-03·AS-04·AS-05·AS-06의 수행 결과는 각각의 검증 기록을 따르며, 나머지 이슈의 행은 **계획/미수행**이다. 초기 UI 관찰을 전체 테스트의 PASS로 표현하지 않는다. 각 사례는 UI 입력/명령 또는 자동 조정 결과를 UI에서 확인하고 API/DB/Agent/VR/libvirt·애플리케이션 트래픽으로 입증한다.
+아래 표는 초기 60개 테스트 계획이다. AS-01·AS-02·AS-03·AS-04·AS-05·AS-06·AS-07의 수행 결과는 각각의 검증 기록을 따르며, 나머지 이슈의 행은 **계획/미수행**이다. 초기 UI 관찰을 전체 테스트의 PASS로 표현하지 않는다. 각 사례는 UI 입력/명령 또는 자동 조정 결과를 UI에서 확인하고 API/DB/Agent/VR/libvirt·애플리케이션 트래픽으로 입증한다.
 
 | ID | 실행/조건 | 합격 기준 |
 |---|---|---|
@@ -191,7 +191,7 @@ Mold UI → Cloud API → AutoScaleManagerImpl → 상태/프로필/정책/통�
 - P0 전부 및 필수 기능/최종 UI 테스트 통과, 고아 자원/권한 우회/인원 범위 이탈/실패 은폐 0건. 지원 환경·미검증 provider·관찰 기간을 명시한다.
 - 수정한 Maven 모듈은 WSL ext4 소스에서 집중 테스트·패키징·필수 Checkstyle/RAT를 수행한다. UI 집중 테스트/린트/프로덕션 번들을 검증한다. 전체 Cloud 빌드/RPM은 명시 요청이 있을 때만 Actions로 수행하고 그 전에는 전체 CI 성공으로 보고하지 않는다.
 - 관리 JAR/필요 Agent 모듈과 UI는 검증한 동일 소스로 빌드한다. UI는 `/usr/share/cloudstack-management/webapp` 정적 자산만 갱신하며 WEB-INF/META-INF/config와 rollback 백업을 보존한다. 전후 서비스/HTTP200·hash·실제 브라우저 경로를 확인한다.
-- Epic은 UI 통합 및 최종 E2E까지 완료한 뒤 닫는다. 현재 AS-01·AS-02·AS-03·AS-04·AS-05·AS-06를 완료했으며 Epic 및 나머지 3개 하위 이슈는 Open으로 관리한다.
+- Epic은 UI 통합 및 최종 E2E까지 완료한 뒤 닫는다. 현재 AS-01·AS-02·AS-03·AS-04·AS-05·AS-06·AS-07를 완료했으며 Epic 및 나머지 2개 하위 이슈는 Open으로 관리한다.
 
 ## 참고 근거
 
@@ -205,3 +205,8 @@ Mold UI → Cloud API → AutoScaleManagerImpl → 상태/프로필/정책/통�
 ## AS-06 최신 진행 (2026-10-11)
 
 #1352의 정책·프로필·예약 계약을 구현하고 Java254건/UI162건, 변경 api/schema/server 모듈 install·Checkstyle·RAT, UI lint/build와 31 GFS2 Sparse/32 krbd 실제 UI 검증을 완료했다. UTC/KST 동일 시각의 단일 실행, Disabled 범위 저장, Enabled VM2→3/LB3, 향후 VM ROOT/DATA/SSH/UserData/affinity 반영, 공유 정책과 권한·한글·라이트/다크를 확인했다. 승인된 신규4VM/ROOT와 분리 DATA4개를 UI에서 정리하고 실제520GiB 이미지·6호스트 매핑 부재와 기존 그룹/원본 VM 보존을 확인했다. #1352 완료, Epic 진행6/9. [AS-06 검증 기록](AS-06-validation.ko.md)을 참조한다. 다음 #1353은 사용자 지시까지 대기한다.
+
+
+## AS-07 완료 (2026-10-12)
+
+#1353 운영 가시성의 설계·구현·변경 모듈/UI 빌드·31 GFS2 Sparse/32 krbd 배포·실제 UI 검증 및4VM/ROOT400GiB 정리를 완료했다. [검증·배포·제한](AS-07-validation.ko.md)과 [공개 근거](evidence/AS-07/README.ko.md)를 참조한다. Epic 진행7/9, PR #1356 Draft 유지. 다음 #1355 UI 표준 통합은 사용자 지시까지 대기하며 #1354 최종 통합/장시간 운영이 마지막 단계다.
