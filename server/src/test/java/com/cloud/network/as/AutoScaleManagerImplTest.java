@@ -61,6 +61,7 @@ import org.apache.cloudstack.api.command.user.autoscale.CreateConditionCmd;
 import org.apache.cloudstack.api.command.user.autoscale.ListCountersCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScaleVmGroupCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScaleVmProfileCmd;
+import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScalePolicyCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateConditionCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
 import org.apache.cloudstack.config.ApiServiceConfiguration;
@@ -2785,6 +2786,41 @@ public class AutoScaleManagerImplTest {
         autoScaleManagerImplSpy.cancelMonitorTask(vmGroupId);
         Assert.assertSame(executor, monitors.get(vmGroupId));
         Mockito.verify(executor, never()).shutdown();
+    }
+
+    @Test public void testPendingDisabledOperationBlocksProfileUpdate() {
+        when(autoScaleVmGroupDao.listByAll(null, vmProfileId)).thenReturn(java.util.Collections.singletonList(asVmGroupMock));
+        when(asVmGroupMock.getId()).thenReturn(vmGroupId);
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.isOperationInProgress()).thenReturn(true);
+        UpdateAutoScaleVmProfileCmd cmd = new UpdateAutoScaleVmProfileCmd();
+        ReflectionTestUtils.setField(cmd, "id", vmProfileId);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.updateAutoScaleVmProfile(cmd));
+        Mockito.verify(autoScaleVmProfileDao, never()).persist(any());
+    }
+
+    @Test public void testPendingDisabledOperationBlocksPolicyUpdate() {
+        AutoScaleVmGroupPolicyMapVO map = Mockito.mock(AutoScaleVmGroupPolicyMapVO.class);
+        when(map.getVmGroupId()).thenReturn(vmGroupId);
+        when(autoScaleVmGroupPolicyMapDao.listByPolicyId(scaleUpPolicyId)).thenReturn(java.util.Collections.singletonList(map));
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.isOperationInProgress()).thenReturn(true);
+        UpdateAutoScalePolicyCmd cmd = new UpdateAutoScalePolicyCmd();
+        ReflectionTestUtils.setField(cmd, "id", scaleUpPolicyId);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.updateAutoScalePolicy(cmd));
+        Mockito.verify(asPolicyDao, never()).persist(any());
+    }
+
+    @Test public void testAssociatedConfigurationCannotMutateWhileWorkerOwnsGroup() {
+        com.cloud.utils.db.GlobalLock work = Mockito.mock(com.cloud.utils.db.GlobalLock.class);
+        when(work.lock(1)).thenReturn(false);
+        Mockito.doReturn(work).when(autoScaleManagerImplSpy).getGroupWorkLock(vmGroupId);
+        java.util.concurrent.atomic.AtomicBoolean changed = new java.util.concurrent.atomic.AtomicBoolean();
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.withAssociatedGroupControls(
+                java.util.Collections.singletonList(vmGroupId), () -> { changed.set(true); return true; }));
+        Assert.assertFalse(changed.get());
+        Mockito.verify(work).releaseRef();
+        Mockito.verify(work, never()).unlock();
     }
 
 }

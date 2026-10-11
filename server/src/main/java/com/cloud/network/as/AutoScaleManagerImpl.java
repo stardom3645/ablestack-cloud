@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -649,6 +650,11 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_UPDATE, eventDescription = "updating autoscale vm profile")
     public AutoScaleVmProfile updateAutoScaleVmProfile(UpdateAutoScaleVmProfileCmd cmd) {
+        List<Long> groupIds = autoScaleVmGroupDao.listByAll(null, cmd.getId()).stream().map(AutoScaleVmGroupVO::getId).collect(Collectors.toList());
+        return withAssociatedGroupControls(groupIds, () -> updateAutoScaleVmProfileInternal(cmd));
+    }
+
+    protected AutoScaleVmProfile updateAutoScaleVmProfileInternal(UpdateAutoScaleVmProfileCmd cmd) {
         Long profileId = cmd.getId();
         Long serviceOfferingId = cmd.getServiceOfferingId();
         Long templateId = cmd.getTemplateId();
@@ -1027,6 +1033,11 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_UPDATE, eventDescription = "updating autoscale policy")
     public AutoScalePolicy updateAutoScalePolicy(UpdateAutoScalePolicyCmd cmd) {
+        List<Long> groupIds = autoScaleVmGroupPolicyMapDao.listByPolicyId(cmd.getId()).stream().map(AutoScaleVmGroupPolicyMapVO::getVmGroupId).collect(Collectors.toList());
+        return withAssociatedGroupControls(groupIds, () -> updateAutoScalePolicyInternal(cmd));
+    }
+
+    protected AutoScalePolicy updateAutoScalePolicyInternal(UpdateAutoScalePolicyCmd cmd) {
         Long policyId = cmd.getId();
         String name = cmd.getName();
         Integer duration = cmd.getDuration();
@@ -1792,17 +1803,29 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             }
         }
 
-        condition.setRelationalOperator(op);
-        condition.setThreshold(threshold);
-        boolean success = conditionDao.update(conditionId, condition);
-        if (success) {
-            logger.info("Successfully updated condition {}", condition);
-
-            for (Long policyId : policyIds) {
-                markStatisticsAsInactive(null, policyId);
-            }
+        List<Long> groupIds = new ArrayList<>();
+        for (Long policyId : policyIds) {
+            autoScaleVmGroupPolicyMapDao.listByPolicyId(policyId).forEach(map -> groupIds.add(map.getVmGroupId()));
         }
-        return condition;
+        return withAssociatedGroupControls(groupIds, () -> {
+            for (Long groupId : groupIds) {
+                AutoScaleVmGroupVO group = autoScaleVmGroupDao.findById(groupId);
+                if (group != null && group.getState() != AutoScaleVmGroup.State.DISABLED) {
+                    throw new InvalidParameterValueException("Conditions can only be updated while associated AutoScale VM groups are disabled");
+                }
+            }
+            condition.setRelationalOperator(op);
+            condition.setThreshold(threshold);
+            boolean success = conditionDao.update(conditionId, condition);
+            if (success) {
+                logger.info("Successfully updated condition {}", condition);
+
+                for (Long policyId : policyIds) {
+                    markStatisticsAsInactive(null, policyId);
+                }
+            }
+            return condition;
+        });
     }
 
     @Override
@@ -2219,6 +2242,25 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             if (controlHeld) { control.unlock(); }
             control.releaseRef();
         }
+    }
+
+    protected <T> T withAssociatedGroupControls(List<Long> groupIds, java.util.function.Supplier<T> action) {
+        List<Long> orderedIds = groupIds.stream().distinct().sorted().collect(Collectors.toList());
+        return withAssociatedGroupControls(orderedIds, 0, action);
+    }
+
+    private <T> T withAssociatedGroupControls(List<Long> groupIds, int index, java.util.function.Supplier<T> action) {
+        if (index == groupIds.size()) {
+            return action.get();
+        }
+        long id = groupIds.get(index);
+        return withGroupControl(id, true, () -> {
+            AutoScaleVmGroupVO group = autoScaleVmGroupDao.findById(id);
+            if (group != null) {
+                requireNoOperation(group);
+            }
+            return withAssociatedGroupControls(groupIds, index + 1, action);
+        });
     }
 
     protected void requireNoOperation(AutoScaleVmGroupVO group) {

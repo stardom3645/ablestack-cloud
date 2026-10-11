@@ -18,10 +18,10 @@
 <template>
   <div>
     <div>
-      <a-alert type="info" v-if="resource.state !== 'DISABLED'">
+      <a-alert type="info" v-if="(resource.state !== 'DISABLED' || resource.operationinprogress)">
         <template #message>
         <div
-          v-html="$t('message.autoscale.vmprofile.update')" />
+          v-html="$t(resource.operationinprogress ? 'message.autoscale.operation.wait' : 'message.autoscale.vmprofile.update')" />
         </template>
       </a-alert>
 
@@ -116,13 +116,13 @@
       </div>
       <div class="form">
         <div class="form__item">
-          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED'" type="primary" @click="editProfileModalVisible = true">
+          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="editProfileModalVisible = true">
             <template #icon><edit-outlined /></template>
             {{ $t('label.edit.autoscale.vmprofile') }}
           </a-button>
         </div>
         <div class="form__item">
-          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED'" type="primary" @click="showUpdateUserDataForm = true">
+          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="showUpdateUserDataForm = true">
             <template #icon><solution-outlined /></template>
             {{ $t('label.reset.user.data.on.autoscale.vm.group') }}
           </a-button>
@@ -160,7 +160,7 @@
         </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.action') }}</div>
-          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED'" type="primary" @click="addParam">
+          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addParam">
             <template #icon><plus-outlined /></template>
             {{ $t('label.add.param') }}
           </a-button>
@@ -187,7 +187,7 @@
         >
           <tooltip-button
             :tooltip="$t('label.delete')"
-            :disabled="!('deleteCondition' in $store.getters.apis) || resource.state !== 'DISABLED'"
+            :disabled="!('deleteCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
             type="primary"
             :danger="true"
             icon="delete-outlined" />
