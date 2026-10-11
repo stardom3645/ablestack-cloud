@@ -2775,4 +2775,16 @@ public class AutoScaleManagerImplTest {
         Mockito.verify(autoScaleVmGroupDao, never()).updateState(vmGroupId, AutoScaleVmGroup.State.DISABLED, AutoScaleVmGroup.State.ENABLED);
     }
 
+    @Test public void testStaleDisabledMonitorCannotCancelAReenabledGroup() {
+        Map<Long, ScheduledExecutorService> monitors = new java.util.concurrent.ConcurrentHashMap<>();
+        ScheduledExecutorService executor = Mockito.mock(ScheduledExecutorService.class);
+        monitors.put(vmGroupId, executor);
+        ReflectionTestUtils.setField(autoScaleManagerImplSpy, "vmGroupMonitorMaps", monitors);
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
+        autoScaleManagerImplSpy.cancelMonitorTask(vmGroupId);
+        Assert.assertSame(executor, monitors.get(vmGroupId));
+        Mockito.verify(executor, never()).shutdown();
+    }
+
 }

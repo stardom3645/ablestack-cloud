@@ -3237,6 +3237,10 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
 
     protected void cancelMonitorTask(Long groupId) {
         vmGroupMonitorMaps.computeIfPresent(groupId, (id, executor) -> {
+            AutoScaleVmGroupVO current = autoScaleVmGroupDao.findById(id);
+            if (current != null && (current.getState() == AutoScaleVmGroup.State.ENABLED || current.isOperationInProgress())) {
+                return executor;
+            }
             executor.shutdown();
             return null;
         });
