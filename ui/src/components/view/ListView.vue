@@ -1737,7 +1737,7 @@ export default {
       }
     },
     generateHumanReadableSchedule (schedule) {
-      return cronstrue.toString(schedule, { locale: this.$i18n.locale })
+      return cronstrue.toString(schedule, { locale: this.$i18n.locale === 'ko_KR' ? 'ko' : this.$i18n.locale })
     },
     entityTypeToPath (entitytype) {
       switch (entitytype) {

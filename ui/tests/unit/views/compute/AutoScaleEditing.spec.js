@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import ListView from '@/components/view/ListView.vue'
 import Schedules from '@/views/compute/ResourceSchedules.vue'
 import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import Up from '@/views/compute/AutoScaleUpPolicyTab.vue'
@@ -80,8 +81,8 @@ test.each(['14 9 11 10 *', '*/5 9-17 * * 1-5', '0 0 1 */2 *'])('opening an exist
   expect(ctx.form.useCronFormat).toBe(true)
   expect(ctx.form.startDate.format('YYYY-MM-DD HH:mm:ss')).toBe('2026-10-11 18:00:00')
 })
-test('Mold Korean locale uses the supported Korean cron description', () => {
-  const value = Schedules.methods.generateHumanReadableSchedule.call({ $i18n: { locale: 'ko_KR' } }, '14 9 11 10 *')
+test.each([Schedules, ListView])('Mold Korean locale uses Korean in both schedule editor and list', component => {
+  const value = component.methods.generateHumanReadableSchedule.call({ $i18n: { locale: 'ko_KR' } }, '14 9 11 10 *')
   expect(value).toMatch(/[가-힣]/)
   expect(value).not.toMatch(/At |October/)
 })
