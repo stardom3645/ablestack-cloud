@@ -18,6 +18,8 @@
 // Preserve a user's saved visibility choices when former single-value columns
 // are consolidated. A selection consisting only of removed columns stays useful.
 export function autoScaleVisibleColumns (columns) {
+  const oldDefault = ['name', 'state', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'publicip', 'publicport', 'privateport', 'associatednetworkname', 'account'].every(key => columns.includes(key))
+  if (oldDefault) return ['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', ...(columns.includes('project') ? ['project'] : [])]
   const mapped = columns.map(key => ['minmembers', 'maxmembers'].includes(key) ? 'availablevirtualmachinecount' : ['publicip', 'publicport', 'privateport'].includes(key) ? 'associatednetworkname' : key)
   return [...new Set(mapped.filter(key => ['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'project'].includes(key)))]
 }

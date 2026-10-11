@@ -66,3 +66,8 @@ test.each(['vm', 'volume', 'template', 'autoscalevmgroup'])('common info card sl
   })
   expect(wrapper.text().includes('autoscale-only-summary')).toBe(name === 'autoscalevmgroup'); expect(wrapper.text()).toContain('details'); wrapper.unmount()
 })
+
+test('the saved old default gains the new status clock and retains project ownership', () => {
+  const old = ['name', 'state', 'associatednetworkname', 'publicip', 'publicport', 'privateport', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'account', 'project']
+  expect(autoScaleVisibleColumns(old)).toEqual(['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'project'])
+})

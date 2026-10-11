@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div class="list-view-table-wrapper" @contextmenu="handleGlobalContextMenu">
+  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup' }" @contextmenu="handleGlobalContextMenu">
     <a-table
       size="middle"
       :loading="loading"

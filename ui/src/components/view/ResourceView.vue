@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <resource-layout :wide="wideLayout">
+  <resource-layout :wide="wideLayout" :class="{ 'autoscale-resource': $route.meta?.name === 'autoscalevmgroup' }">
     <template #left>
       <slot name="info-card">
         <info-card
@@ -24,7 +24,7 @@
           :loading="loading"
           :actions="actions"
           @exec-action="$emit('exec-action', $event)">
-          <template #details><auto-scale-info-summary v-if="$route.meta.name === 'autoscalevmgroup'" :resource="resource" /></template>
+          <template #details><auto-scale-info-summary v-if="$route.meta?.name === 'autoscalevmgroup'" :resource="resource" /></template>
         </info-card>
       </slot>
     </template>

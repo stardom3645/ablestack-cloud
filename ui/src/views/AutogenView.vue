@@ -177,6 +177,7 @@
       <keep-alive v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
         <a-modal
           class="mold-dialog"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           centered
           :visible="showAction"
           :closable="true"
@@ -218,6 +219,7 @@
       </keep-alive>
       <a-modal
           class="mold-dialog"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           v-else-if="currentAction.label === 'label.download.events'"
         :visible="showAction"
         :closable="true"
@@ -449,6 +451,7 @@
       </a-modal>
       <a-modal
           class="mold-dialog"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           v-else
         :visible="showAction"
         :closable="true"

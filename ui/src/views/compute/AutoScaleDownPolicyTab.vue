@@ -771,19 +771,19 @@ export default {
 
   &__required {
     margin-right: 5px;
-    color: red;
+    color: var(--ui-error-text);
   }
 
   .error-text {
     display: none;
-    color: red;
+    color: var(--ui-error-text);
     font-size: 0.8rem;
   }
 
   .error {
 
     input {
-      border-color: red;
+      border-color: var(--ui-error-text);
     }
 
     .error-text {

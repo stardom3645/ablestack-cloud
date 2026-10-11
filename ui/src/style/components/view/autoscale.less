@@ -50,3 +50,20 @@
   .autoscale-create .form__item { width: 100%; padding-right: 0; }
   .autoscale-dialog .ant-modal-footer .action-button { width: 100%; }
 }
+
+.autoscale-list a, .autoscale-resource .resource-detail-item a {
+  color: var(--ui-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.autoscale-tab, .autoscale-create, .autoscale-dialog {
+  .ant-input, .ant-input-number, .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    border-color: var(--ui-text-muted);
+    color: var(--ui-text-primary);
+  }
+  .ant-input:disabled, .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    color: var(--ui-text-secondary);
+    -webkit-text-fill-color: var(--ui-text-secondary);
+  }
+  .ant-input::placeholder { color: var(--ui-text-muted); }
+}
