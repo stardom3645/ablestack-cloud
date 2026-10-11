@@ -123,12 +123,14 @@ body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
 body .autoscale-screen .ant-switch {
   &:not(.ant-switch-checked) {
     background-color: var(--ui-bg-elevated) !important;
-    border: 1px solid var(--ui-border-strong);
+    border: 1px solid var(--ui-text-muted);
     .ant-switch-inner { color: var(--ui-text-primary) !important; }
+    .ant-switch-handle::before { background-color: var(--ui-text-primary) !important; }
   }
   &.ant-switch-checked {
     background-color: var(--ui-action-primary-bg) !important;
     .ant-switch-inner { color: var(--ui-action-primary-text) !important; }
+    .ant-switch-handle::before { background-color: var(--ui-action-primary-text) !important; }
   }
   &:focus-visible { outline: 2px solid var(--ui-link); outline-offset: 2px; }
 }
