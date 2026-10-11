@@ -16,6 +16,7 @@
 // under the License.
 
 <template>
+  <auto-scale-operational-summary v-if="$route.meta.name === 'autoscalevmgroup'" :resource="resource" />
   <auto-scale-evaluation v-if="$route.meta.name === 'autoscalevmgroup'" :resource="resource" />
     <a-alert
       v-if="resource.operationinprogress"
@@ -358,6 +359,7 @@
 <script>
 import { autoScaleLifecycleNotice } from '@/utils/autoScaleLifecycle'
 import AutoScaleEvaluation from '@/views/compute/AutoScaleEvaluation'
+import AutoScaleOperationalSummary from '@/views/compute/AutoScaleOperationalSummary'
 import { creationVmDetails } from '@/utils/creationVmPresentation'
 import DedicateData from './DedicateData'
 import HostInfo from '@/views/infra/HostInfo'
@@ -374,6 +376,7 @@ export default {
   name: 'DetailsTab',
   components: {
     AutoScaleEvaluation,
+    AutoScaleOperationalSummary,
     DedicateData,
     HostInfo,
     VmwareData,
