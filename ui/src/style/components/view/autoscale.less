@@ -80,3 +80,13 @@ body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
   .ant-btn:disabled { background: var(--ui-bg-disabled) !important; color: var(--ui-text-secondary) !important; border-color: var(--ui-border-strong) !important; }
   .ant-input:disabled, .ant-select-disabled .ant-select-selection-item { color: var(--ui-text-secondary) !important; -webkit-text-fill-color: var(--ui-text-secondary) !important; }
 }
+
+body .autoscale-list a, body .autoscale-resource .resource-detail-item a,
+body .autoscale-create .vm-info-card .resource-detail-item__details a {
+  color: var(--ui-text-primary) !important;
+}
+body .autoscale-resource .ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--ui-link) !important; }
+body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
+  .ant-input::placeholder, .ant-select-selection-placeholder { color: var(--ui-text-muted) !important; }
+  .form__required, .error-text { color: var(--ui-error-text) !important; }
+}
