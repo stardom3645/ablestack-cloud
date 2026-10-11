@@ -19,6 +19,7 @@ import { mount } from '@vue/test-utils'
 import { h, reactive } from 'vue'
 import fs from 'fs'
 import path from 'path'
+import NetworkSelection from '@/views/compute/wizard/NetworkSelection.vue'
 import Cell from '@/views/compute/AutoScaleListCell.vue'
 import ResourceView from '@/components/view/ResourceView.vue'
 import { autoScaleVisibleColumns } from '@/utils/autoScaleUi'
@@ -70,4 +71,11 @@ test.each(['vm', 'volume', 'template', 'autoscalevmgroup'])('common info card sl
 test('the saved old default gains the new status clock and retains project ownership', () => {
   const old = ['name', 'state', 'associatednetworkname', 'publicip', 'publicport', 'privateport', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'account', 'project']
   expect(autoScaleVisibleColumns(old)).toEqual(['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'project'])
+})
+
+test.each([true, false])('network support labels localize only when the autoscale wizard opts in: %s', supported => {
+  const context = { items: [{ id: 'network', supportsvmautoscaling: supported }], vpcs: [], $t: translate, localizeAutoScaleSupport: true }
+  expect(NetworkSelection.computed.networkItems.call(context)[0].supportsvmautoscaling).toBe(supported ? 'label.yes' : 'label.no')
+  context.localizeAutoScaleSupport = false
+  expect(NetworkSelection.computed.networkItems.call(context)[0].supportsvmautoscaling).toBe(supported ? 'Yes' : 'No')
 })

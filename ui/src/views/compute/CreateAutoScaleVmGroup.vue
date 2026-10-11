@@ -346,6 +346,7 @@
                     </div>
                     <div v-show="!(vm.templateid && templateNics && templateNics.length > 0)" >
                       <network-selection
+                        :localize-auto-scale-support="true"
                         :items="options.networks"
                         :row-count="rowCount.networks"
                         :value="networkOfferingIds"
