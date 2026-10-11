@@ -826,7 +826,7 @@ public class AutoScaleManagerImplTest {
 
     @Test
     public void projectProfileUsesOwnerValidationWithoutPersonalVmDispatch() {
-        when(account.getType()).thenReturn(Account.Type.PROJECT);
+        account.setType(Account.Type.PROJECT);
         testCreateAutoScaleVmProfile();
         Mockito.verify(dispatchChainFactory, never()).getStandardDispatchChain();
         Mockito.verify(accountManager, Mockito.atLeastOnce()).checkAccess(eq(account), eq(AccessType.UseEntry), eq(false), eq(templateMock));
@@ -834,7 +834,7 @@ public class AutoScaleManagerImplTest {
 
     @Test
     public void projectProfileStillRejectsTemplateWithoutOwnerPermission() {
-        when(account.getType()).thenReturn(Account.Type.PROJECT);
+        account.setType(Account.Type.PROJECT);
         Mockito.doThrow(new PermissionDeniedException("project template access denied")).when(accountManager)
                 .checkAccess(eq(account), eq(AccessType.UseEntry), eq(false), eq(templateMock));
         Assert.assertThrows(PermissionDeniedException.class, this::testCreateAutoScaleVmProfile);
