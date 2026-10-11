@@ -877,6 +877,7 @@
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
 import { autoScaleVisibleColumns } from '@/utils/autoScaleUi'
 import { createListRefresh, listRowKey, canRefreshList } from '@/utils/listRefresh'
 import { ref, reactive, toRaw, h } from 'vue'
