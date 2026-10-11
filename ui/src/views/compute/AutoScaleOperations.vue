@@ -150,6 +150,7 @@ export default {
   .source-status { margin-bottom: 6px; }
   .ant-card { margin: 16px 0; background: var(--ui-bg-surface); }
   .member-search { width: min(100%, 320px); margin: 12px 0; }
+  a { color: var(--ui-text-primary); text-decoration: underline; text-underline-offset: 2px; }
   .recent-events { padding-left: 20px; }
   .recent-events li { margin-bottom: 16px; }
   details { margin-top: 8px; } summary { cursor: pointer; }
