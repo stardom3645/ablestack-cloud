@@ -70,7 +70,7 @@ export default {
   methods: {
     formatValue: autoScaleEvaluationValue,
     counterLabel (name) { return autoScaleCounterLabel(name, this.$t) },
-    formatTime (time) { return autoScaleTime(time, this.$toLocaleDate, this.$t) },
+    formatTime (time) { return autoScaleTime(time, value => this.$toLocaleDate(value), key => this.$t(key)) },
     statusLabel (status) { const key = 'label.autoscale.evaluation.' + status; return this.$te(key) ? this.$t(key) : this.$t('label.autoscale.evaluation.unknown') + ' (' + (status || '—') + ')' },
     policyName (policy) {
       const configured = [...(this.resource.scaleuppolicies || []), ...(this.resource.scaledownpolicies || [])].find(item => item.id === policy.id)

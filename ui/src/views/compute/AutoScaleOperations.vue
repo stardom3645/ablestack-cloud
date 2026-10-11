@@ -93,7 +93,7 @@ export default {
   created () { this.fetchData() },
   beforeUnmount () { this.active = false; Object.values(this.parts).forEach(item => item.sequence++) },
   methods: {
-    time (value) { return autoScaleTime(value, this.$toLocaleDate, this.$t) },
+    time (value) { return autoScaleTime(value, value => this.$toLocaleDate(value), key => this.$t(key)) },
     lbLabel (vm) {
       const state = autoScaleLbState(vm, this.parts.lb)
       const key = 'label.autoscale.lb.' + state

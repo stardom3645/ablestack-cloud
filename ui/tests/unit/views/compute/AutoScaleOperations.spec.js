@@ -17,6 +17,7 @@
 
 import Operations from '@/views/compute/AutoScaleOperations.vue'
 import Evaluation from '@/views/compute/AutoScaleEvaluation.vue'
+import Summary from '@/views/compute/AutoScaleOperationalSummary.vue'
 import { autoScaleStateSummary, autoScaleTime, autoScaleEvaluationChanged, autoScaleLbState } from '@/utils/autoScaleOperations'
 import { getAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn() }))
@@ -107,4 +108,17 @@ test('a different parent group invalidates old parts and resets only the group-s
   const ctx = context(); const old = ctx.parts.members; ctx.page = 2; ctx.keyword = 'old'; ctx.fetchData = jest.fn()
   Operations.watch.resource.handler.call(ctx, { id: 'other' }, { id: 'group' })
   expect(old.sequence).toBe(1); expect(ctx.parts.members).not.toBe(old); expect(ctx.page).toBe(1); expect(ctx.keyword).toBe('')
+})
+
+// Mold date/i18n plugins use the component store as their receiver.
+test.each(['Operations', 'Summary', 'Evaluation'])('date plugins retain their component receiver: %s', name => {
+  const component = { Operations, Summary, Evaluation }[name]
+  const method = name === 'Evaluation' ? 'formatTime' : 'time'
+  const ctx = {
+    $store: { getters: { timezoneoffset: '+09:00' } },
+    $toLocaleDate: function (value) { return this.$store.getters.timezoneoffset + ' ' + value },
+    $t: function (key) { return this.$store.getters.timezoneoffset + ' ' + key }
+  }
+  expect(component.methods[method].call(ctx, 1791712345678)).toContain('+09:00 2026-')
+  expect(component.methods[method].call(ctx, null)).toBe('+09:00 label.autoscale.not.recorded')
 })

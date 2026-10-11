@@ -48,7 +48,7 @@ export default {
     summary () { return autoScaleStateSummary(this.resource.memberstatecounts) },
     retry () { return (this.resource.scalingphase || '').endsWith('_RETRY') }
   },
-  methods: { time (value) { return autoScaleTime(value, this.$toLocaleDate, this.$t) } }
+  methods: { time (value) { return autoScaleTime(value, value => this.$toLocaleDate(value), key => this.$t(key)) } }
 }
 </script>
 <style scoped lang="scss">
