@@ -97,13 +97,13 @@ export default {
     lbLabel (vm) {
       const state = autoScaleLbState(vm, this.parts.lb)
       const key = 'label.autoscale.lb.' + state
-      return this.$te(key) ? this.$t(key) : this.$t('label.autoscale.lb.REGISTERED') + ' (' + state + ')'
+      const label = this.$t(key); return label !== key ? label : this.$t('label.autoscale.lb.REGISTERED') + ' (' + state + ')'
     },
-    eventState (state) { const key = 'label.autoscale.event.state.' + state; return this.$te(key) ? this.$t(key) : state || this.$t('label.autoscale.not.recorded') },
+    eventState (state) { const key = 'label.autoscale.event.state.' + state; const label = this.$t(key); return label !== key ? label : state || this.$t('label.autoscale.not.recorded') },
     eventLabel (event) {
       if ((event.description || '').includes('AutoScale lifecycle failed at')) return this.$t('message.autoscale.operational.retry')
       const key = 'label.autoscale.event.' + event.type
-      return this.$te(key) ? this.$t(key) : event.type
+      const label = this.$t(key); return label !== key ? label : event.type
     },
     async readPart (name, api, params, extract) {
       const item = this.parts[name]; const sequence = ++item.sequence

@@ -96,7 +96,7 @@ test('resource replacement cannot apply a prior resource response', async () => 
   expect(ctx.parts.members.rows).toEqual([])
 })
 test('unknown evaluation status has a readable fallback', () => {
-  expect(Evaluation.methods.statusLabel.call({ $te: () => false, $t: key => key }, 'FUTURE')).toContain('(FUTURE)')
+  expect(Evaluation.methods.statusLabel.call({ $t: key => key }, 'FUTURE')).toContain('(FUTURE)')
 })
 
 test('standard parent refresh updates all operational sources and preserves member page and search', () => {
@@ -121,4 +121,24 @@ test.each(['Operations', 'Summary', 'Evaluation'])('date plugins retain their co
   }
   expect(component.methods[method].call(ctx, 1791712345678)).toContain('+09:00 2026-')
   expect(component.methods[method].call(ctx, null)).toBe('+09:00 label.autoscale.not.recorded')
+})
+
+const translated = key => ({
+  'label.autoscale.evaluation.MIN_MEMBERS': '최소 멤버 수 유지',
+  'label.autoscale.lb.Active': '등록·적용 완료',
+  'label.autoscale.lb.UNREGISTERED': '미등록',
+  'label.autoscale.event.state.Completed': '완료',
+  'label.autoscale.event.AUTOSCALEVMGROUP.UPDATE': '그룹 변경'
+}[key] || key)
+test('flat Mold translations resolve known evaluation states without a separate existence check', () => {
+  expect(Evaluation.methods.statusLabel.call({ $t: translated }, 'MIN_MEMBERS')).toBe('최소 멤버 수 유지')
+})
+test('LB unregistered and applied states retain their distinct Korean labels', () => {
+  const ctx = { $t: translated, parts: { lb: { loaded: true, rows: [{ id: 'vm', servicestate: 'Active' }] } } }
+  expect(Operations.methods.lbLabel.call(ctx, { id: 'vm' })).toBe('등록·적용 완료')
+  expect(Operations.methods.lbLabel.call(ctx, { id: 'absent' })).toBe('미등록')
+})
+test('flat event state and event type translations remain Korean', () => {
+  expect(Operations.methods.eventState.call({ $t: translated }, 'Completed')).toBe('완료')
+  expect(Operations.methods.eventLabel.call({ $t: translated }, { type: 'AUTOSCALEVMGROUP.UPDATE' })).toBe('그룹 변경')
 })
