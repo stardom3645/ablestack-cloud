@@ -27,7 +27,13 @@ under the License.
 - `schedule-db-audit-31.tsv`, `schedule-db-audit-32.tsv`: 동일 시각 예약 승자·충돌의 async ID, Started/Completed, 활성 그룹 예약 성공, 예약6개 Disabled.
 - `host-storage-audit.json`: 대표31 GFS2 Sparse QCOW2·대표32 krbd block/raw의 실제 mount/libvirt/크기.
 - `guest-key-userdata-long.json`: 새 VM SSH key 인증·UserData marker·120/10GiB 디스크 및 cloud-init 경고/exit 구분.
-- `final-fixture-state.json`: Disabled/min1/max3/VM3/LB3 및 프로필 원본 완전 일치·Disabled 예약·HTTP20/20. 최종4VM 영구 삭제는 승인 대기.
+- `final-fixture-state.json`: Disabled/min1/max3/VM1/LB1 및 원본 프로필 완전 일치·Disabled 예약·HTTP20/20.
+- `cleanup-db-before.json`/`cleanup-db-final.json`: 승인된4VM/8볼륨, 축소 전후 멤버·LB·2차 복사 참조 및 실제 삭제 상태.
+- `cleanup-timeline.json`: 3→2→1, 대상476→475/152→151, DRAINING/DESTROYING과 최종 Disabled·범위 복원의 DB 전이.
+- `cleanup-physical-final.json`: 6호스트의 삭제 VM 도메인·GFS2 파일·RBD 이미지·krbd 매핑 부재와 원본 도메인/ROOT 보존.
+- `cleanup-baseline-resources-31.json`/`32.json`: 기존 그룹/VM·ROOT 자원 및 quota 사용량300/400GiB·고아 매핑0.
+- `cleanup-management-health.json`: 최종 JAR SHA256/PID·mold active·WEB-INF·client HTTP200.
+- `31/32-cleanup-*.png`/`.txt`: 축소 진행·최종 원본 VM1 및 ROOT100GiB의 실제 UI 증거.
 - 기타 JSON: 서버 입력·권한 거절과 공유 정책 복원.
 - UI PNG/텍스트: 실제 Cloud UI 입력·값·오류·한글·테마 증거. 최종 목록은 r3; 날짜/DST는 r2; 신규 VM 적용은 최초 r1.
 
