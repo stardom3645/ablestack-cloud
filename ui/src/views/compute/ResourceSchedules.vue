@@ -489,6 +489,7 @@ export default {
       this.isEdit = true
       this.originalSchedule = { ...schedule }
       Object.assign(this.form, schedule)
+      this.form.useCronFormat = true
       this.form.minMembers = schedule?.details?.minmembers ? Number(schedule.details.minmembers) : null
       this.form.maxMembers = schedule?.details?.maxmembers ? Number(schedule.details.maxmembers) : null
       this.form.startDate = schedulePickerDate(schedule.startdate, schedule.timezone)
@@ -639,7 +640,7 @@ export default {
       this.updateColumns()
     },
     generateHumanReadableSchedule (schedule) {
-      return cronstrue.toString(schedule, { locale: this.$i18n.locale, throwExceptionOnParseError: false, verbose: true })
+      return cronstrue.toString(schedule, { locale: this.$i18n.locale === 'ko_KR' ? 'ko' : this.$i18n.locale, throwExceptionOnParseError: false, verbose: true })
     },
     updateColumns () {
       this.columns = []

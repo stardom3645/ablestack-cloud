@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import Schedules from '@/views/compute/ResourceSchedules.vue'
 import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import Up from '@/views/compute/AutoScaleUpPolicyTab.vue'
 import Down from '@/views/compute/AutoScaleDownPolicyTab.vue'
@@ -70,4 +71,17 @@ test('custom data disk offering and size are sent in the same profile update', a
     'otherdeployparams[1].name': 'disksize',
     'otherdeployparams[1].value': '10'
   })
+})
+
+test.each(['14 9 11 10 *', '*/5 9-17 * * 1-5', '0 0 1 */2 *'])('opening an existing schedule preserves all cron fields: %s', cron => {
+  const ctx = { resetForm: jest.fn(), form: { useCronFormat: false }, showAddModal: jest.fn() }
+  Schedules.methods.updateSchedule.call(ctx, { schedule: cron, timezone: 'Asia/Seoul', details: { minmembers: '1', maxmembers: '3' }, startdate: '2026-10-11T09:00:00Z' })
+  expect(ctx.form.schedule).toBe(cron)
+  expect(ctx.form.useCronFormat).toBe(true)
+  expect(ctx.form.startDate.format('YYYY-MM-DD HH:mm:ss')).toBe('2026-10-11 18:00:00')
+})
+test('Mold Korean locale uses the supported Korean cron description', () => {
+  const value = Schedules.methods.generateHumanReadableSchedule.call({ $i18n: { locale: 'ko_KR' } }, '14 9 11 10 *')
+  expect(value).toMatch(/[가-힣]/)
+  expect(value).not.toMatch(/At |October/)
 })
