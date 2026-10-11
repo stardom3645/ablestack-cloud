@@ -115,24 +115,25 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup, InternalIdentity, I
     @Temporal(TemporalType.TIMESTAMP)
     private Date operationDeadline;
 
-    @Column(name = "evaluation")
+    @Column(name = "evaluation", length = 16777215)
     private String evaluation;
 
-    @Column(name = "last_scaled")
-    @Temporal(value = TemporalType.TIMESTAMP)
-    private Date lastScaled;
+    @Column(name = "last_scaled_ms")
+    private Long lastScaledMillis;
 
     @Override
     public String getEvaluation() { return evaluation; }
     public void setEvaluation(String value) { evaluation = value; }
-    @Column(name = "evaluation_time")
-    @Temporal(value = TemporalType.TIMESTAMP)
-    private Date evaluationTime;
+    @Column(name = "evaluation_time_ms")
+    private Long evaluationTimeMillis;
 
-    public Date getEvaluationTime() { return evaluationTime; }
-    public void setEvaluationTime(Date value) { evaluationTime = value; }
-    public Date getLastScaled() { return lastScaled; }
-    public void setLastScaled(Date value) { lastScaled = value; }
+    public void setEvaluationTimeMillis(Long value) { evaluationTimeMillis = value; }
+    public void setLastScaledMillis(Long value) { lastScaledMillis = value; }
+
+    public Date getEvaluationTime() { return evaluationTimeMillis == null ? null : new Date(evaluationTimeMillis); }
+    public void setEvaluationTime(Date value) { setEvaluationTimeMillis(value == null ? null : value.getTime()); }
+    public Date getLastScaled() { return lastScaledMillis == null ? null : new Date(lastScaledMillis); }
+    public void setLastScaled(Date value) { setLastScaledMillis(value == null ? null : value.getTime()); }
 
     public String getOperationUuid() { return operationUuid; }
     public void setOperationUuid(String value) { operationUuid = value; }

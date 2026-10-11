@@ -26,7 +26,26 @@ public final class EuropaAutoScaleEvaluationUpgrade {
     private EuropaAutoScaleEvaluationUpgrade() { }
 
     public static void migrate(Connection conn) {
-        String[][] columns = {{"evaluation", "mediumtext NULL"}, {"evaluation_time", "datetime(3) NULL"}, {"last_scaled", "datetime(3) NULL"}};
+        addColumns(conn, new String[][] {{"evaluation", "mediumtext NULL"}, {"evaluation_time", "datetime(3) NULL"}, {"last_scaled", "datetime(3) NULL"}});
+    }
+
+    public static void migratePrecision(Connection conn) {
+        addColumns(conn, new String[][] {{"evaluation_time_ms", "bigint NULL"}, {"last_scaled_ms", "bigint NULL"}});
+        try (Statement statement = conn.createStatement()) {
+            // Cloud GenericDao stores Date columns as UTC strings truncated to seconds.
+            // Round legacy times up so migration cannot shorten an active cooldown.
+            for (String name : new String[] {"evaluation_time", "last_scaled"}) {
+                statement.executeUpdate("UPDATE cloud.autoscale_vmgroups SET " + name + "_ms = " +
+                        "TIMESTAMPDIFF(MICROSECOND, '1970-01-01 00:00:00', " + name + ") DIV 1000 + 999 " +
+                        "WHERE " + name + "_ms IS NULL AND " + name + " IS NOT NULL");
+            }
+            statement.executeUpdate("UPDATE cloud.autoscale_vmgroups SET evaluation=NULL WHERE evaluation IS NOT NULL AND JSON_VALID(evaluation)=0");
+        } catch (Exception e) {
+            throw new CloudRuntimeException("Unable to preserve Europa AutoScale evaluation precision", e);
+        }
+    }
+
+    private static void addColumns(Connection conn, String[][] columns) {
         try {
             for (String[] column : columns) {
                 try (PreparedStatement query = conn.prepareStatement("SELECT 1 FROM information_schema.columns " +

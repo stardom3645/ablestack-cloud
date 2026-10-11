@@ -32,6 +32,10 @@ public class AutoScaleVmGroupOperationTest {
         AutoScaleVmGroupVO updated;
         SearchCriteria<AutoScaleVmGroupVO> criteria;
         int affected = 1;
+        void bind(java.sql.PreparedStatement statement, String field, Object value) throws Exception {
+            prepareAttribute(1, statement, new com.cloud.utils.db.Attribute(AutoScaleVmGroupVO.class, null,
+                    AutoScaleVmGroupVO.class.getDeclaredField(field), "autoscale_vmgroups", false, false), value);
+        }
         @Override public int update(AutoScaleVmGroupVO row, SearchCriteria<AutoScaleVmGroupVO> sc) {
             updated = row; criteria = sc; return affected;
         }
@@ -93,10 +97,27 @@ public class AutoScaleVmGroupOperationTest {
         assertNull(dao.updated);
         assertTrue(dao.updateEvaluation(1, "new", new java.util.Date(2001)));
         UpdateBuilder update = GenericDaoBase.getUpdateBuilder(dao.updated);
-        assertTrue(update.has("evaluation")); assertTrue(update.has("evaluationTime"));
-        assertFalse(update.has("state")); assertFalse(update.has("lastScaled"));
+        assertTrue(update.has("evaluation")); assertTrue(update.has("evaluationTimeMillis"));
+        assertTrue(update.getChanges().stream().anyMatch(change -> Long.valueOf(2001).equals(change.third())));
+        assertFalse(update.has("state")); assertFalse(update.has("lastScaledMillis"));
         assertTrue(dao.updateLastScaled(1, new java.util.Date(3000)));
         update = GenericDaoBase.getUpdateBuilder(dao.updated);
-        assertTrue(update.has("lastScaled")); assertFalse(update.has("evaluation")); assertFalse(update.has("state"));
+        assertTrue(update.has("lastScaledMillis"));
+        assertTrue(update.getChanges().stream().anyMatch(change -> Long.valueOf(3000).equals(change.third())));
+        assertFalse(update.has("evaluation")); assertFalse(update.has("state"));
     }
+    @Test public void jdbcBindingPreservesFullEvaluationAndMillisecondTimestamps() throws Exception {
+        Dao dao = new Dao(); dao.init();
+        java.sql.PreparedStatement statement = org.mockito.Mockito.mock(java.sql.PreparedStatement.class);
+        String json = "{\"countername\":\"" + String.join("", java.util.Collections.nCopies(1000, "메모리")) + "\"}";
+        dao.bind(statement, "evaluation", json);
+        org.mockito.Mockito.verify(statement).setBytes(1, json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        dao.bind(statement, "lastScaledMillis", 1791693120508L);
+        org.mockito.Mockito.verify(statement).setObject(1, 1791693120508L);
+        dao.current.setLastScaled(new java.util.Date(1791693120508L));
+        assertEquals(1791693120508L, dao.current.getLastScaled().getTime());
+        dao.current.setEvaluationTime(new java.util.Date(1791693120509L));
+        assertEquals(1791693120509L, dao.current.getEvaluationTime().getTime());
+    }
+
 }

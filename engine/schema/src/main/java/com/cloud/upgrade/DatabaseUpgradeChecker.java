@@ -575,6 +575,7 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 runEuropaPhase(conn, "europa-4.23-autoscale-creation-v1", () -> com.cloud.upgrade.dao.EuropaAutoScaleCreationUpgrade.migrate(conn));
                 runEuropaPhase(conn, "europa-4.23-autoscale-operation-v1", () -> com.cloud.upgrade.dao.EuropaAutoScaleOperationUpgrade.migrate(conn));
                 runEuropaPhase(conn, "europa-4.23-autoscale-evaluation-v1", () -> com.cloud.upgrade.dao.EuropaAutoScaleEvaluationUpgrade.migrate(conn));
+                runEuropaPhase(conn, "europa-4.23-autoscale-evaluation-precision-v2", () -> com.cloud.upgrade.dao.EuropaAutoScaleEvaluationUpgrade.migratePrecision(conn));
                 // Completed phase markers do not guarantee views match the running binary.
                 try {
                     EuropaVolumeViewReconciler.reconcile(conn);
