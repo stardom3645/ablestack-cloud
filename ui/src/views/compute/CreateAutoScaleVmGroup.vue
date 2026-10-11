@@ -532,8 +532,8 @@
                           v-for="(counter, index) in countersList"
                           :value="counter.id"
                           :key="index"
-                          :label="counter.name">
-                          {{ counter.name }}
+                          :label="counterLabel(counter.name)">
+                          {{ counterLabel(counter.name) }}
                         </a-select-option>
                       </a-select>
                       <span class="error-text">{{ $t('label.required') }}</span>
@@ -581,6 +581,9 @@
                       :pagination="false"
                       :rowKey="record => record.counterid">
                       <template #bodyCell="{ column, record }">
+                        <template v-if="column.key === 'countername'">
+                          {{ counterLabel(record.countername) }}
+                        </template>
                         <template v-if="column.key === 'relationaloperator'">
                           {{ getOperator(record.relationaloperator) }}
                         </template>
@@ -673,8 +676,8 @@
                           v-for="(counter, index) in countersList"
                           :value="counter.id"
                           :key="index"
-                          :label="counter.name">
-                          {{ counter.name }}
+                          :label="counterLabel(counter.name)">
+                          {{ counterLabel(counter.name) }}
                         </a-select-option>
                       </a-select>
                       <span class="error-text">{{ $t('label.required') }}</span>
@@ -722,6 +725,9 @@
                       :pagination="false"
                       :rowKey="record => record.counterid">
                       <template #bodyCell="{ column, record }">
+                        <template v-if="column.key === 'countername'">
+                          {{ counterLabel(record.countername) }}
+                        </template>
                         <template v-if="column.key === 'relationaloperator'">
                           {{ getOperator(record.relationaloperator) }}
                         </template>
@@ -1005,6 +1011,7 @@ import { mixin, mixinDevice } from '@/utils/mixin.js'
 import store from '@/store'
 import eventBus from '@/config/eventBus'
 import { autoScaleInteger, autoScaleOfferingEligible, autoScaleCreationApis } from '@/utils/autoscaleValidation'
+import { autoScaleCounterLabel } from '@/utils/autoScalePolicyEvaluation'
 
 import InfoCard from '@/components/view/InfoCard'
 import DeployButtons from '@views/compute/wizard/DeployButtons'
@@ -1635,6 +1642,9 @@ export default {
     }
   },
   methods: {
+    counterLabel (name) {
+      return autoScaleCounterLabel(name, this.$t)
+    },
     initCreationTracking () {
       this.creationController = markRaw(createAutoScaleCreation({
         api: { get: getAPI, post: postAPI },
