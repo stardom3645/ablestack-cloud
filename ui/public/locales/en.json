@@ -8593,5 +8593,8 @@
   "label.autoscale.phase.STARTING_RETRY": "Retrying VM start",
   "label.autoscale.phase.ASSIGNING_RETRY": "Retrying LB registration",
   "label.autoscale.phase.EXCLUDING_RETRY": "Retrying LB exclusion",
-  "label.autoscale.phase.DESTROYING_RETRY": "Retrying VM deletion"
+  "label.autoscale.phase.DESTROYING_RETRY": "Retrying VM deletion",
+  "message.autoscale.lifecycle.delete.members": "A group with VM members cannot be deleted without cleanup. Select cleanup only after confirming permanent deletion of its VMs and ROOT volumes.",
+  "message.autoscale.lifecycle.delete.failed": "Group deletion did not complete. Review the remaining VM and LB work in group details. Retry group deletion after pending cleanup finishes.",
+  "message.autoscale.lifecycle.vm.action.blocked": "The AutoScale group is enabled or VM work is still in progress. Disable the group and wait for current work to finish before retrying the manual VM action."
 }

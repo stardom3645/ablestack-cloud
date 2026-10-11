@@ -24,3 +24,13 @@ export function autoScaleLifecycleNotice (resource) {
     description: cleanup ? 'message.autoscale.lifecycle.cleanup.retry' : 'message.autoscale.lifecycle.members.retained'
   }
 }
+
+// Match only known lifecycle API failures; preserve unrelated provider diagnostics.
+export function autoScaleLifecycleErrorKey (description) {
+  if (typeof description !== 'string') return null
+  if (description.startsWith('Cannot delete autoscale vm group') && description.includes('because there are') && description.includes('VMs')) return 'message.autoscale.lifecycle.delete.members'
+  if (description === 'Failed to delete autoscale vm group') return 'message.autoscale.lifecycle.delete.failed'
+  if (description.startsWith('Cannot perform actions on VM in an AutoScale VM group')) return 'message.autoscale.lifecycle.vm.action.blocked'
+  if (description.startsWith('AutoScale VM group has an operation in progress.')) return 'message.autoscale.operation.wait'
+  return null
+}

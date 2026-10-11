@@ -8558,5 +8558,8 @@
   "label.autoscale.phase.STARTING_RETRY": "VM 시작 재시도",
   "label.autoscale.phase.ASSIGNING_RETRY": "LB 연결 재시도",
   "label.autoscale.phase.EXCLUDING_RETRY": "LB 제외 재시도",
-  "label.autoscale.phase.DESTROYING_RETRY": "VM 삭제 재시도"
+  "label.autoscale.phase.DESTROYING_RETRY": "VM 삭제 재시도",
+  "message.autoscale.lifecycle.delete.members": "멤버 VM이 있는 그룹은 VM 정리 없이 삭제할 수 없습니다. VM과 ROOT 볼륨을 삭제하려면 정리 옵션을 선택하고 영구 삭제 범위를 확인하십시오.",
+  "message.autoscale.lifecycle.delete.failed": "그룹 삭제를 완료하지 못했습니다. 그룹 상세에서 남은 VM과 LB 처리 상태를 확인하십시오. 진행 중인 정리가 끝나면 그룹 삭제를 다시 실행하십시오.",
+  "message.autoscale.lifecycle.vm.action.blocked": "오토스케일 그룹이 활성화되어 있거나 VM 처리가 진행 중입니다. 그룹을 비활성화하고 현재 처리가 끝난 뒤 수동 VM 작업을 다시 실행하십시오."
 }

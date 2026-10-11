@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { autoScaleLifecycleNotice } from '@/utils/autoScaleLifecycle'
+import { autoScaleLifecycleNotice, autoScaleLifecycleErrorKey } from '@/utils/autoScaleLifecycle'
 
 describe('AutoScale lifecycle notices', () => {
   it('keeps accepted scale work visible after disable', () => {
@@ -33,5 +33,19 @@ describe('AutoScale lifecycle notices', () => {
   })
   it('distinguishes normal group cleanup from scale down', () => {
     expect(autoScaleLifecycleNotice({ state: 'DISABLED', scalingaction: 'CLEANUP', scalingphase: 'DRAINING' }).message).toBe('message.autoscale.lifecycle.cleanup')
+  })
+})
+
+describe('AutoScale lifecycle API error localization', () => {
+  it.each([
+    ['Cannot delete autoscale vm group : internal details. because there are 2 VMs. Please remove the VMs or pass cleanup=true flag which will destroy all VMs.', 'message.autoscale.lifecycle.delete.members'],
+    ['Failed to delete autoscale vm group', 'message.autoscale.lifecycle.delete.failed'],
+    ['Cannot perform actions on VM in an AutoScale VM group, Please disable the VM group and retry.', 'message.autoscale.lifecycle.vm.action.blocked'],
+    ['AutoScale VM group has an operation in progress. Wait for it to finish and retry', 'message.autoscale.operation.wait']
+  ])('localizes a known API failure without exposing internal objects', (description, key) => {
+    expect(autoScaleLifecycleErrorKey(description)).toBe(key)
+  })
+  it.each([undefined, '', 'unrelated storage failure'])('preserves unrelated diagnostics: %s', description => {
+    expect(autoScaleLifecycleErrorKey(description)).toBeNull()
   })
 })
