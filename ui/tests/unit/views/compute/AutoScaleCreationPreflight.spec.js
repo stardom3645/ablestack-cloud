@@ -206,3 +206,11 @@ test.each([['success', false], ['profile', true]])('recovery queries accepted re
   expect(ctx.creationController.resume).toHaveBeenCalledTimes(1)
   expect(ctx.handleSubmit).toHaveBeenCalledTimes(refill ? 1 : 0)
 })
+
+test('modern shared template category uses the dedicated filter and existing image layout', () => {
+  const ctx = context(); ctx.isModernImageSelection = true; ctx.isNormalAndDomainUser = true
+  ctx.form.guestoscategoryid = '-2'; ctx.options.templates = { sharedexecutable: { count: 1, template: [{ id: 'shared' }] } }
+  expect(ctx.getImageFilters({ keyword: 'image', page: 2 })).toEqual(['sharedexecutable'])
+  expect(Wizard.computed.autoScaleImageItems.call(ctx).executable).toEqual(ctx.options.templates.sharedexecutable)
+  ctx.form.guestoscategoryid = '0'; expect(ctx.getImageFilters({})).toEqual(['self'])
+})

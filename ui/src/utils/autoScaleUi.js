@@ -23,3 +23,11 @@ export function autoScaleVisibleColumns (columns) {
   const mapped = columns.map(key => ['minmembers', 'maxmembers'].includes(key) ? 'availablevirtualmachinecount' : ['publicip', 'publicport', 'privateport'].includes(key) ? 'associatednetworkname' : key)
   return [...new Set(mapped.filter(key => ['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'project'].includes(key)))]
 }
+
+// The executable filter excludes some project-shared private images. Query the
+// dedicated shared filter only when an exact, scoped image lookup is empty.
+export async function autoScaleTemplateById (request, params) {
+  const response = await request('listTemplates', { ...params, templatefilter: 'executable' })
+  if (response.listtemplatesresponse?.template?.some(item => item.id === params.id)) return response
+  return request('listTemplates', { ...params, templatefilter: 'sharedexecutable' })
+}

@@ -84,7 +84,7 @@
                       :guestOsCategories="options.guestOsCategories"
                       :guestOsCategoriesLoading="loading.guestOsCategories"
                       :selectedGuestOsCategoryId="form.guestoscategoryid"
-                      :imageItems="options.templates"
+                      :imageItems="autoScaleImageItems"
                       :imagesLoading="loading.templates"
                       :diskSizeSelectionDeployAsIsMessageVisible="template && template.deployasis"
                       :rootDiskOverrideDisabled="rootDiskSizeFixed > 0 || (template && template.deployasis) || showOverrideDiskOfferingOption"
@@ -1028,6 +1028,7 @@ import ComputeSelection from '@views/compute/wizard/ComputeSelection'
 import DiskOfferingSelection from '@views/compute/wizard/DiskOfferingSelection'
 import DiskSizeSelection from '@views/compute/wizard/DiskSizeSelection'
 import MultiDiskSelection from '@views/compute/wizard/MultiDiskSelection'
+import { autoScaleTemplateById } from '@/utils/autoScaleUi'
 import TemplateIsoSelection from '@views/compute/wizard/TemplateIsoSelection'
 import OsBasedImageSelection from '@views/compute/wizard/OsBasedImageSelection'
 import AffinityGroupSelection from '@views/compute/wizard/AffinityGroupSelection'
@@ -1437,6 +1438,10 @@ export default {
     queryArchId () {
       return this.$route.query.arch || null
     },
+    autoScaleImageItems () {
+      if (this.form.guestoscategoryid !== '-2') return this.options.templates
+      return { [this.isNormalAndDomainUser ? 'executable' : 'all']: this.options.templates.sharedexecutable || { count: 0, template: [] } }
+    },
     queryTemplateId () {
       return this.$route.query.templateid || null
     },
@@ -1840,6 +1845,7 @@ export default {
     },
     getImageFilters (params, forReset) {
       if (this.isModernImageSelection) {
+        if (this.form.guestoscategoryid === '-2') return ['sharedexecutable']
         if (this.form.guestoscategoryid === '0') {
           return ['self']
         }
@@ -2331,7 +2337,7 @@ export default {
           if (parameterKeys !== JSON.stringify([this.userDataParams.map(item => item.key), this.templateUserDataParams.map(item => item.key)])) throw new Error('changed UserData parameters')
         }
         const [templates, offerings, networks, rules, instances, groups] = await Promise.all([
-          getAPI('listTemplates', { ...scope, id: values.templateid, zoneid: values.zoneid, templatefilter: 'executable', isready: true }),
+          autoScaleTemplateById(getAPI, { ...scope, id: values.templateid, zoneid: values.zoneid, isready: true }),
           getAPI('listServiceOfferings', { ...scope, id: values.computeofferingid, zoneid: values.zoneid, issystem: false }),
           getAPI('listNetworks', { ...scope, id: this.defaultNetworkId, canusefordeploy: true }),
           getAPI('listLoadBalancerRules', { ...scope, id: values.loadbalancerid, networkid: this.defaultNetworkId }),
@@ -2472,6 +2478,9 @@ export default {
                 name: this.$t('label.all')
               })
             }
+          }
+          if (!this.queryGuestOsCategoryId) {
+            this.options.guestOsCategories.push({ id: '-2', name: this.$t('label.sharedexecutable'), disableimagefilters: true })
           }
           this.form.guestoscategoryid = this.options.guestOsCategories[0].id
           if (skipFetchImages) {
@@ -2889,7 +2898,7 @@ export default {
     },
     fetchTemplates (templateFilter, params) {
       const args = Object.assign({}, params)
-      if (this.isModernImageSelection && this.form.guestoscategoryid && !['-1', '0'].includes(this.form.guestoscategoryid)) {
+      if (this.isModernImageSelection && this.form.guestoscategoryid && !['-1', '0', '-2'].includes(this.form.guestoscategoryid)) {
         args.oscategoryid = this.form.guestoscategoryid
       }
       if (!args.page || args.keyword || (args.category && args.category !== templateFilter)) {
@@ -2912,7 +2921,8 @@ export default {
       delete args.featured
 
       return new Promise((resolve, reject) => {
-        getAPI('listTemplates', args).then((response) => {
+        const lookup = args.id && ['executable', 'all'].includes(templateFilter) ? autoScaleTemplateById(getAPI, args) : getAPI('listTemplates', args)
+        lookup.then((response) => {
           resolve(response)
         }).catch((reason) => {
           // ToDo: Handle errors

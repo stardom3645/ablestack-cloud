@@ -22,7 +22,7 @@ import path from 'path'
 import NetworkSelection from '@/views/compute/wizard/NetworkSelection.vue'
 import Cell from '@/views/compute/AutoScaleListCell.vue'
 import ResourceView from '@/components/view/ResourceView.vue'
-import { autoScaleVisibleColumns } from '@/utils/autoScaleUi'
+import { autoScaleVisibleColumns, autoScaleTemplateById } from '@/utils/autoScaleUi'
 import { getAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn() }))
 const translate = (key, params) => params ? `${key}:${params.min}/${params.max}` : key
@@ -78,4 +78,22 @@ test.each([true, false])('network support labels localize only when the autoscal
   expect(NetworkSelection.computed.networkItems.call(context)[0].supportsvmautoscaling).toBe(supported ? 'label.yes' : 'label.no')
   context.localizeAutoScaleSupport = false
   expect(NetworkSelection.computed.networkItems.call(context)[0].supportsvmautoscaling).toBe(supported ? 'Yes' : 'No')
+})
+
+test('shared exact image lookup preserves project, zone and ready scope', async () => {
+  const request = jest.fn().mockResolvedValueOnce({ listtemplatesresponse: { template: [] } }).mockResolvedValueOnce({ listtemplatesresponse: { template: [{ id: 'shared-image' }] } })
+  const scope = { id: 'shared-image', projectid: 'project', zoneid: 'zone', isready: true }
+  const response = await autoScaleTemplateById(request, scope)
+  expect(request.mock.calls).toEqual([['listTemplates', { ...scope, templatefilter: 'executable' }], ['listTemplates', { ...scope, templatefilter: 'sharedexecutable' }]])
+  expect(response.listtemplatesresponse.template[0].id).toBe('shared-image')
+})
+test('existing executable image never triggers a shared query', async () => {
+  const response = { listtemplatesresponse: { template: [{ id: 'owned' }] } }; const request = jest.fn().mockResolvedValue(response)
+  expect(await autoScaleTemplateById(request, { id: 'owned' })).toBe(response)
+  expect(request).toHaveBeenCalledTimes(1)
+})
+test('permission/query failure is surfaced without attempting a different filter', async () => {
+  const request = jest.fn().mockRejectedValue(new Error('permission'))
+  await expect(autoScaleTemplateById(request, { id: 'image' })).rejects.toThrow('permission')
+  expect(request).toHaveBeenCalledTimes(1)
 })
