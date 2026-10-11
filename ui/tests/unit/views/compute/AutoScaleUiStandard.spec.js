@@ -19,6 +19,7 @@ import { mount } from '@vue/test-utils'
 import { h, reactive } from 'vue'
 import fs from 'fs'
 import path from 'path'
+import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import NetworkSelection from '@/views/compute/wizard/NetworkSelection.vue'
 import Cell from '@/views/compute/AutoScaleListCell.vue'
 import ResourceView from '@/components/view/ResourceView.vue'
@@ -96,4 +97,13 @@ test('permission/query failure is surfaced without attempting a different filter
   const request = jest.fn().mockRejectedValue(new Error('permission'))
   await expect(autoScaleTemplateById(request, { id: 'image' })).rejects.toThrow('permission')
   expect(request).toHaveBeenCalledTimes(1)
+})
+
+test('profile includes scoped private shared templates and excludes non-boot image types', async () => {
+  getAPI.mockResolvedValueOnce({ listtemplatesresponse: { template: [{ id: 'owned', format: 'QCOW2', templatetype: 'USER' }] } }).mockResolvedValueOnce({ listtemplatesresponse: { template: [{ id: 'shared', format: 'QCOW2', templatetype: 'USER' }, { id: 'owned', format: 'QCOW2', templatetype: 'USER' }, { id: 'data', format: 'QCOW2', templatetype: 'DATADISK' }] } })
+  const ctx = { resource: { projectid: 'project' }, zoneid: 'zone', templatesList: [], $notifyError: jest.fn() }
+  await Profile.methods.fetchTemplateData.call(ctx)
+  expect(ctx.templatesList.map(image => image.id)).toEqual(['owned', 'shared'])
+  expect(getAPI.mock.calls.slice(-2).every(([, params]) => params.projectid === 'project' && params.zoneid === 'zone' && params.isready === true)).toBe(true)
+  expect(ctx.$notifyError).not.toHaveBeenCalled()
 })

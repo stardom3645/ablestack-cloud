@@ -441,15 +441,18 @@ export default {
       })
     },
     fetchTemplateData () {
-      return getAPI('listTemplates', {
+      const params = {
         ...autoScaleOwnerParams(this.resource),
         listall: true,
-        templatefilter: 'executable',
         isready: true,
         zoneid: this.zoneid
-      }).then(json => {
-        this.templatesList = (json.listtemplatesresponse?.template || []).filter(template =>
-          template.format !== 'ISO' && !['SYSTEM', 'ROUTING', 'DATADISK', 'ISODISK'].includes(template.templatetype))
+      }
+      return Promise.all(['executable', 'sharedexecutable'].map(templatefilter => getAPI('listTemplates', { ...params, templatefilter }))).then(responses => {
+        const byId = new Map()
+        responses.flatMap(json => json.listtemplatesresponse?.template || []).forEach(template => {
+          if (template.format !== 'ISO' && !['SYSTEM', 'ROUTING', 'DATADISK', 'ISODISK'].includes(template.templatetype)) byId.set(template.id, template)
+        })
+        this.templatesList = [...byId.values()]
       }).catch(error => this.$notifyError(error))
     },
     fetchServiceOfferingData () {
