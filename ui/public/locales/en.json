@@ -8576,5 +8576,11 @@
   "message.autoscale.evaluation.INSUFFICIENT_DURATION": "The configured duration is not yet fully covered.",
   "message.autoscale.evaluation.MEMBERS_CHANGED": "Waiting for a complete window after a membership change.",
   "message.autoscale.evaluation.COLLECTION_UNAVAILABLE": "Failed or unavailable collection prevents evaluation.",
-  "message.autoscale.policy.time.invalid": "Duration and cooldown must be integer seconds up to 2,147,483,647. Duration must be at least the interval ({interval}s); cooldown must be non-negative."
+  "message.autoscale.policy.time.invalid": "Duration and cooldown must be integer seconds up to 2,147,483,647. Duration must be at least the interval ({interval}s); cooldown must be non-negative.",
+  "label.autoscale.counter.cpu": "VM CPU average usage",
+  "label.autoscale.counter.memory": "VM memory average usage",
+  "label.autoscale.counter.network.rx": "Average public network receive per VM",
+  "label.autoscale.counter.network.tx": "Average public network transmit per VM",
+  "label.autoscale.counter.connections": "Average load balancer connections per VM",
+  "label.autoscale.connections.per.vm": "connections/VM"
 }

@@ -26,3 +26,15 @@ export function validAutoScalePolicyTiming (policy, interval) {
 export function autoScaleEvaluationValue (value) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString(undefined, { maximumFractionDigits: 3 }) : '—'
 }
+
+const counterLabels = {
+  'VM CPU - average percentage': 'cpu',
+  'VM Memory - average percentage': 'memory',
+  'Public Network - mbps received per vm': 'network.rx',
+  'Public Network - mbps transmit per vm': 'network.tx',
+  'Load Balancer - average connections per vm': 'connections'
+}
+
+export function autoScaleCounterLabel (name, translate) {
+  return counterLabels[name] ? translate('label.autoscale.counter.' + counterLabels[name]) : name
+}

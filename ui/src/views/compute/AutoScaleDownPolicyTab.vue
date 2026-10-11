@@ -112,6 +112,7 @@
       :pagination="false"
       :rowKey="record => record.id">
       <template #bodyCell="{ column, record }">
+        <template v-if="column.dataIndex === 'countername'">{{ counterLabel(record.countername) }}</template>
         <template v-if="column.key === 'relationaloperator'">
           {{ getOperator(record.relationaloperator) }}
         </template>
@@ -153,8 +154,8 @@
               v-for="(counter, index) in countersList"
               :value="counter.id"
               :key="index"
-              :label="counter.name" >
-              {{ counter.name }}
+              :label="counterLabel(counter.name)" >
+              {{ counterLabel(counter.name) }}
             </a-select-option>
           </a-select>
           <span class="error-text">{{ $t('label.required') }}</span>
@@ -208,7 +209,7 @@
       <div class="update-condition" v-if="selectedCondition" v-ctrl-enter="handleSubmitUpdateConditionForm">
         <div class="update-condition__item">
           <p class="update-condition__label"><span class="form__required">*</span>{{ $t('label.counter') }}</p>
-          {{ updateConditionDetails.countername }}
+          {{ counterLabel(updateConditionDetails.countername) }}
         </div>
         <div class="update-condition__item">
           <div class="update-condition__label">
@@ -286,8 +287,8 @@
               v-for="(counter, index) in countersList"
               :value="counter.id"
               :key="index"
-              :label="counter.name">
-              {{ counter.name }}
+              :label="counterLabel(counter.name)">
+              {{ counterLabel(counter.name) }}
             </a-select-option>
           </a-select>
         </div>
@@ -324,7 +325,7 @@
 </template>
 
 <script>
-import { autoScaleOperators, validAutoScalePolicyTiming } from '@/utils/autoScalePolicyEvaluation'
+import { autoScaleOperators, validAutoScalePolicyTiming, autoScaleCounterLabel } from '@/utils/autoScalePolicyEvaluation'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { getAPI, postAPI } from '@/api'
@@ -429,6 +430,7 @@ export default {
   },
   inject: ['parentFetchData'],
   methods: {
+    counterLabel (name) { return autoScaleCounterLabel(name, this.$t) },
     fetchInitData () {
       this.loading = true
       getAPI('listAutoScaleVmGroups', {

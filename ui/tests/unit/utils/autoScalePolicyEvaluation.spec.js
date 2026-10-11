@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { autoScaleOperators, validAutoScalePolicyTiming, autoScaleEvaluationValue } from '@/utils/autoScalePolicyEvaluation'
+import { autoScaleOperators, validAutoScalePolicyTiming, autoScaleEvaluationValue, autoScaleCounterLabel } from '@/utils/autoScalePolicyEvaluation'
 import Evaluation from '@/views/compute/AutoScaleEvaluation.vue'
 import ko from '../../../public/locales/ko_KR.json'
 import en from '../../../public/locales/en.json'
@@ -55,4 +55,11 @@ test('all evaluation status/reason labels exist in Korean and English', () => {
     for (const status of statuses) expect(locale['label.autoscale.evaluation.' + status]).toBeTruthy()
     for (const reason of reasons) expect(locale['message.autoscale.evaluation.' + reason]).toBeTruthy()
   }
+})
+
+test('known counters use translated labels and custom names are preserved', () => {
+  const translate = key => ko[key]
+  expect(autoScaleCounterLabel('VM CPU - average percentage', translate)).toBe('VM CPU 평균 사용률')
+  expect(autoScaleCounterLabel('Load Balancer - average connections per vm', translate)).toBe('VM당 부하 분산 평균 연결 수')
+  expect(autoScaleCounterLabel('관리자 카운터', translate)).toBe('관리자 카운터')
 })

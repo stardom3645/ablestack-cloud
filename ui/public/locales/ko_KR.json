@@ -8541,5 +8541,11 @@
   "message.autoscale.evaluation.INSUFFICIENT_DURATION": "설정 기간 전체의 표본이 아직 확보되지 않았습니다.",
   "message.autoscale.evaluation.MEMBERS_CHANGED": "멤버 변경 후 새 기간의 표본을 기다립니다.",
   "message.autoscale.evaluation.COLLECTION_UNAVAILABLE": "수집 실패 또는 미수집 표본이 있어 평가를 보류합니다.",
-  "message.autoscale.policy.time.invalid": "기간과 쿨다운은 2,147,483,647 이하의 정수 초여야 합니다. 기간은 평가 주기({interval}초) 이상, 쿨다운은 0 이상이어야 합니다."
+  "message.autoscale.policy.time.invalid": "기간과 쿨다운은 2,147,483,647 이하의 정수 초여야 합니다. 기간은 평가 주기({interval}초) 이상, 쿨다운은 0 이상이어야 합니다.",
+  "label.autoscale.counter.cpu": "VM CPU 평균 사용률",
+  "label.autoscale.counter.memory": "VM 메모리 평균 사용률",
+  "label.autoscale.counter.network.rx": "VM당 공인 네트워크 평균 수신량",
+  "label.autoscale.counter.network.tx": "VM당 공인 네트워크 평균 송신량",
+  "label.autoscale.counter.connections": "VM당 부하 분산 평균 연결 수",
+  "label.autoscale.connections.per.vm": "연결/VM"
 }

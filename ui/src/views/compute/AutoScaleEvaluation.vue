@@ -36,8 +36,8 @@
         <p>{{ $t('label.duration') }}: {{ policy.duration }} {{ $t('label.seconds') }}</p>
         <ul>
           <li v-for="(metric, index) in policy.conditions || []" :key="metric.id || index">
-            <strong>{{ metric.countername }}</strong>
-            <div>{{ $t('label.autoscale.observed.value') }}: {{ formatValue(metric.value) }} {{ metric.unit }} · {{ metric.operator }} {{ metric.threshold }}</div>
+            <strong>{{ counterLabel(metric.countername) }}</strong>
+            <div>{{ $t('label.autoscale.observed.value') }}: {{ formatValue(metric.value) }} {{ metric.unit === 'connections/VM' ? $t('label.autoscale.connections.per.vm') : metric.unit }} · {{ metric.operator }} {{ metric.threshold }}</div>
             <div>{{ $t('label.autoscale.samples') }}: {{ metric.samples }} · {{ $t('label.autoscale.resources') }}: {{ metric.resources }} · {{ formatTime(metric.collectedat) }}</div>
             <div>{{ metric.reason || policy.reason ? $t('message.autoscale.evaluation.' + (metric.reason || policy.reason)) : $t(metric.matched ? 'label.autoscale.evaluation.MATCHED' : 'label.autoscale.evaluation.NOT_MATCHED') }}</div>
           </li>
@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import { autoScaleEvaluationValue } from '@/utils/autoScalePolicyEvaluation'
+import { autoScaleEvaluationValue, autoScaleCounterLabel } from '@/utils/autoScalePolicyEvaluation'
 
 export default {
   name: 'AutoScaleEvaluation',
@@ -63,6 +63,7 @@ export default {
   },
   methods: {
     formatValue: autoScaleEvaluationValue,
+    counterLabel (name) { return autoScaleCounterLabel(name, this.$t) },
     formatTime (time) { return time ? this.$toLocaleDate(new Date(time).toISOString()) : this.$t('label.autoscale.not.collected') },
     policyName (policy) {
       const configured = [...(this.resource.scaleuppolicies || []), ...(this.resource.scaledownpolicies || [])].find(item => item.id === policy.id)
