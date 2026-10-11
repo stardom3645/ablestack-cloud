@@ -3993,6 +3993,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         _accountMgr.checkAccess(caller, null, true, vmInstance);
 
+        autoScaleManager.checkIfVmActionAllowed(vmId);
+
         checkIfHostOfVMIsInPrepareForMaintenanceState(vmInstance, "Reboot");
 
         // If the VM is Volatile in nature, on reboot discard the VM's root disk and create a new root disk for it: by calling restoreVM
