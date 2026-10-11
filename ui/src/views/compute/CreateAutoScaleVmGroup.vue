@@ -581,7 +581,7 @@
                       :pagination="false"
                       :rowKey="record => record.counterid">
                       <template #bodyCell="{ column, record }">
-                        <template v-if="column.key === 'countername'">
+                        <template v-if="column.dataIndex === 'countername'">
                           {{ counterLabel(record.countername) }}
                         </template>
                         <template v-if="column.key === 'relationaloperator'">
@@ -725,7 +725,7 @@
                       :pagination="false"
                       :rowKey="record => record.counterid">
                       <template #bodyCell="{ column, record }">
-                        <template v-if="column.key === 'countername'">
+                        <template v-if="column.dataIndex === 'countername'">
                           {{ counterLabel(record.countername) }}
                         </template>
                         <template v-if="column.key === 'relationaloperator'">
