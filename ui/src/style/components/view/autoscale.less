@@ -118,3 +118,17 @@ body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
   .ant-pagination-item-active { border-color: var(--ui-link) !important; }
   .ant-pagination-item-active a { color: var(--ui-link) !important; }
 }
+
+// Keep the project scope switch readable in both themes without changing other resources.
+body .autoscale-screen .ant-switch {
+  &:not(.ant-switch-checked) {
+    background-color: var(--ui-bg-elevated) !important;
+    border: 1px solid var(--ui-border-strong);
+    .ant-switch-inner { color: var(--ui-text-primary) !important; }
+  }
+  &.ant-switch-checked {
+    background-color: var(--ui-action-primary-bg) !important;
+    .ant-switch-inner { color: var(--ui-action-primary-text) !important; }
+  }
+  &:focus-visible { outline: 2px solid var(--ui-link); outline-offset: 2px; }
+}
