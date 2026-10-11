@@ -103,3 +103,12 @@ body .autoscale-create .ant-steps-item-process .ant-steps-item-icon {
   .ant-steps-icon { color: var(--ui-action-primary-text) !important; }
 }
 body .autoscale-create .ant-steps-item-wait .ant-steps-item-icon .ant-steps-icon { color: var(--ui-text-secondary) !important; }
+
+body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
+  .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):not(:disabled):hover,
+  .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):not(:disabled):focus {
+    color: var(--ui-link) !important;
+    border-color: var(--ui-link) !important;
+    > span, .anticon { color: inherit !important; }
+  }
+}

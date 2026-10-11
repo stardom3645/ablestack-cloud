@@ -140,3 +140,16 @@ test('legacy LB edit provides TCP and preserves explicitly configured protocols'
   LoadBalancing.methods.openEditRuleModal.call(ctx, { id: 'explicit', name: 'rule', algorithm: 'roundrobin', protocol: 'ssl' })
   expect(ctx.editRuleDetails.protocol).toBe('ssl')
 })
+
+test('AutoScale network initialization uses flat API parameters without altering default VM requests', async () => {
+  getAPI.mockResolvedValue({ listvpcsresponse: { vpc: [] } })
+  getAPI.mockClear()
+  NetworkSelection.created.call({ localizeAutoScaleSupport: true, vpcs: [] })
+  await Promise.resolve()
+  expect(getAPI.mock.calls[0][0]).toBe('listVPCs')
+  expect(getAPI.mock.calls[0][1]).not.toHaveProperty('params')
+  getAPI.mockClear()
+  NetworkSelection.created.call({ localizeAutoScaleSupport: false, vpcs: [] })
+  await Promise.resolve()
+  expect(getAPI.mock.calls[0][1]).toHaveProperty('params')
+})

@@ -326,9 +326,7 @@ export default {
     if (projectId) {
       params.projectid = projectId
     }
-    getAPI('listVPCs', {
-      params
-    }).then((response) => {
+    getAPI('listVPCs', this.localizeAutoScaleSupport ? params : { params }).then((response) => {
       this.vpcs = _.get(response, 'listvpcsresponse.vpc')
     })
   },
