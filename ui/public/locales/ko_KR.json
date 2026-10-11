@@ -8670,5 +8670,6 @@
   "label.autoscale.cooldown.seconds": "재조정 대기 시간(초)",
   "label.autoscale.condition.add": "조건 추가",
   "label.autoscale.creation.summary": "생성 전 그룹 설정 확인",
-  "message.autoscale.name.ascii": "그룹 이름은 게스트 호스트 이름에 사용되므로 영문·숫자·하이픈으로 입력하세요. 정책 이름과 설명은 한글을 사용할 수 있습니다."
+  "message.autoscale.name.ascii": "그룹 이름은 게스트 호스트 이름에 사용되므로 영문·숫자·하이픈으로 입력하세요. 정책 이름과 설명은 한글을 사용할 수 있습니다.",
+  "label.autoscale.owner": "소유자"
 }

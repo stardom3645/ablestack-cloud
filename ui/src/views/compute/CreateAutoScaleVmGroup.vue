@@ -375,8 +375,9 @@
                 <template #description>
                   <load-balancer-selection
                     :items="options.loadbalancers"
+                    :rowCount="rowCount.loadbalancers"
                     :zoneId="zoneId"
-                    :loading="loading.networks"
+                    :loading="loading.loadbalancers"
                     :preFillContent="dataPreFill"
                     @select-load-balancer-item="($event) => updateLoadBalancers($event)"
                     @handle-search-filter="($event) => handleSearchFilter('loadbalancers', $event)"

@@ -107,3 +107,9 @@ test('profile includes scoped private shared templates and excludes non-boot ima
   expect(getAPI.mock.calls.slice(-2).every(([, params]) => params.projectid === 'project' && params.zoneid === 'zone' && params.isready === true)).toBe(true)
   expect(ctx.$notifyError).not.toHaveBeenCalled()
 })
+
+test('owner cell identifies project ownership when account is absent, and keeps normal account names', () => {
+  const project = cell({ project: '한글 프로젝트' }, 'account'); const account = cell({ account: 'owner' }, 'account'); const absent = cell({}, 'account')
+  expect(project.text()).toBe('한글 프로젝트'); expect(account.text()).toBe('owner'); expect(absent.text()).toBe('—')
+  project.unmount(); account.unmount(); absent.unmount()
+})

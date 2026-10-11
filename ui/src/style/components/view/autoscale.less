@@ -77,6 +77,7 @@ body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
     &:hover, &:focus { background-color: var(--ui-action-primary-hover) !important; border-color: var(--ui-action-primary-hover) !important; }
     &.ant-btn-dangerous { background-color: var(--ui-action-danger-bg) !important; border-color: var(--ui-action-danger-bg) !important; }
   }
+  .ant-btn:disabled > span, .ant-btn:disabled .anticon { color: var(--ui-text-secondary) !important; }
   .ant-btn:disabled { background: var(--ui-bg-disabled) !important; color: var(--ui-text-secondary) !important; border-color: var(--ui-border-strong) !important; }
   .ant-input:disabled, .ant-select-disabled .ant-select-selection-item { color: var(--ui-text-secondary) !important; -webkit-text-fill-color: var(--ui-text-secondary) !important; }
 }
@@ -90,3 +91,15 @@ body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
   .ant-input::placeholder, .ant-select-selection-placeholder { color: var(--ui-text-muted) !important; }
   .form__required, .error-text { color: var(--ui-error-text) !important; }
 }
+
+body .autoscale-screen .ant-breadcrumb, body .autoscale-screen .ant-breadcrumb a,
+body .autoscale-screen .ant-breadcrumb span { color: var(--ui-text-secondary) !important; }
+
+body .autoscale-create, body .autoscale-dialog, body .autoscale-screen {
+  .ant-form-item-explain-error, .ant-form-item-label > label.ant-form-item-required::before { color: var(--ui-error-text) !important; }
+}
+body .autoscale-create .ant-steps-item-process .ant-steps-item-icon {
+  background: var(--ui-action-primary-bg) !important; border-color: var(--ui-action-primary-bg) !important;
+  .ant-steps-icon { color: var(--ui-action-primary-text) !important; }
+}
+body .autoscale-create .ant-steps-item-wait .ant-steps-item-icon .ant-steps-icon { color: var(--ui-text-secondary) !important; }

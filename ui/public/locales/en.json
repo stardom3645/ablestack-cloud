@@ -8705,5 +8705,6 @@
   "label.autoscale.cooldown.seconds": "Cooldown (seconds)",
   "label.autoscale.condition.add": "Add condition",
   "label.autoscale.creation.summary": "Review group settings",
-  "message.autoscale.name.ascii": "The group name is used in guest hostnames. Use ASCII letters, digits and hyphens; policy names and descriptions may use Unicode."
+  "message.autoscale.name.ascii": "The group name is used in guest hostnames. Use ASCII letters, digits and hyphens; policy names and descriptions may use Unicode.",
+  "label.autoscale.owner": "Owner"
 }

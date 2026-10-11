@@ -26,6 +26,9 @@
       <span v-else>{{ resource.associatednetworkname || '—' }}</span>
       <div>{{ resource.publicip || '—' }}:{{ resource.publicport ?? '—' }} → {{ resource.privateport ?? '—' }}</div>
     </template>
+    <template v-else-if="column === 'account'">
+      <span>{{ resource.account || resource.project || '—' }}</span>
+    </template>
     <template v-else>
       <div>{{ time(resource.lastcheckedat) }}</div>
       <span v-if="resource.operationinprogress" role="status">{{ $t('label.autoscale.operation.' + (resource.scalingaction || 'RECOVERY')) }} · {{ $t('label.autoscale.phase.' + (resource.scalingphase || 'RECOVERY')) }}</span>

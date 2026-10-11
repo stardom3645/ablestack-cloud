@@ -54,7 +54,7 @@
       </div>
     </template>
     <template #bodyCell="{ column, text, record }">
-      <template v-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat'].includes(column.key)">
+      <template v-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account'].includes(column.key)">
         <auto-scale-list-cell :resource="record" :column="column.key" />
       </template>
       <template v-else-if="['name', 'provider'].includes(column.key)">
@@ -653,7 +653,7 @@
           <span v-if="idx < (record.network.length - 1)">, </span>
         </template>
       </template>
-      <template v-if="column.key === 'associatednetworkname'">
+      <template v-if="column.key === 'associatednetworkname' && $route.name !== 'autoscalevmgroup'">
         <router-link :to="{ path: '/guestnetwork/' + record.associatednetworkid }">{{ text }}</router-link>
       </template>
       <template v-if="column.key === 'vpcname'">
@@ -734,7 +734,7 @@
       <template v-if="column.key === 'podname'">
         <router-link :to="{ path: '/pod/' + record.podid }">{{ text }}</router-link>
       </template>
-      <template v-if="column.key === 'account'">
+      <template v-if="column.key === 'account' && $route.name !== 'autoscalevmgroup'">
         <template v-if="record.owner">
           <template
             v-for="(item, idx) in record.owner"

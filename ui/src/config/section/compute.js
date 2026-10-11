@@ -1152,7 +1152,7 @@ export default {
       permission: ['listAutoScaleVmGroups'],
       searchFilters: ['name', 'zoneid', 'domainid', 'account'],
       columns: (store) => {
-        var fields = ['name', 'state', { field: 'availablevirtualmachinecount', customTitle: 'autoscale.members.range' }, { field: 'associatednetworkname', customTitle: 'autoscale.network.lb' }, { field: 'lastcheckedat', customTitle: 'autoscale.last.checked' }, 'account']
+        var fields = ['name', 'state', { field: 'availablevirtualmachinecount', customTitle: 'autoscale.members.range' }, { field: 'associatednetworkname', customTitle: 'autoscale.network.lb' }, { field: 'lastcheckedat', customTitle: 'autoscale.last.checked' }, { field: 'account', customTitle: 'autoscale.owner' }]
         if (store.listAllProjects) {
           fields.push('project')
         }
