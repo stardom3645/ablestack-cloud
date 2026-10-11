@@ -2416,8 +2416,11 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             if (vm.getState() == VirtualMachine.State.Stopped) {
                 if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "STARTING", vmId, null)) { return false; }
                 try {
-                    UserVmVO started = startNewVM(vmId);
-                    if (started == null || started.getState() != VirtualMachine.State.Running) {
+                    startNewVM(vmId);
+                    // The start service may return its pre-start VO. Only persisted state confirms readiness.
+                    UserVmVO current = userVmDao.findById(vmId);
+                    if (current == null || current.getState() != VirtualMachine.State.Running) {
+                        if (current != null && isTransientVm(current)) { return false; }
                         recordLifecycleFailure(group, token, "STARTING", vmId);
                         return false;
                     }

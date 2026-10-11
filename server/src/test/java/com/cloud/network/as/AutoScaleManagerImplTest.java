@@ -2880,6 +2880,49 @@ public class AutoScaleManagerImplTest {
         }
     }
 
+    @Test public void testStaleStartResultUsesPersistedRunningStateWithoutFalseFailure() {
+        try (MockedStatic<ActionEventUtils> ignored = Mockito.mockStatic(ActionEventUtils.class)) {
+            AutoScaleVmGroupVO group = lifecycleGroup("SCALEUP", "STARTING", AutoScaleVmGroup.State.SCALING);
+            UserVmVO current = Mockito.mock(UserVmVO.class);
+            when(userVmMock.getState()).thenReturn(VirtualMachine.State.Stopped);
+            when(current.getState()).thenReturn(VirtualMachine.State.Running);
+            when(userVmDao.findById(virtualMachineId)).thenReturn(userVmMock, current);
+            Mockito.doReturn(userVmMock).when(autoScaleManagerImplSpy).startNewVM(virtualMachineId);
+            Mockito.doReturn(true).when(autoScaleManagerImplSpy).assignLBruleToNewVm(virtualMachineId, group);
+            Mockito.doNothing().when(autoScaleManagerImplSpy).updateOperationQuietTime(group, AutoScalePolicy.Action.SCALEUP);
+            when(autoScaleVmGroupDao.finishOperation(vmGroupId, "owner")).thenReturn(true);
+            Assert.assertTrue(autoScaleManagerImplSpy.resumeOperation(group));
+            Mockito.verify(autoScaleManagerImplSpy).assignLBruleToNewVm(virtualMachineId, group);
+            Mockito.verify(autoScaleManagerImplSpy, never()).recordLifecycleFailure(group, "owner", "STARTING", virtualMachineId);
+        }
+    }
+
+    @Test public void testPersistedStartingVmWaitsWithoutFalseFailureOrLbRegistration() {
+        AutoScaleVmGroupVO group = lifecycleGroup("SCALEUP", "STARTING", AutoScaleVmGroup.State.SCALING);
+        UserVmVO current = Mockito.mock(UserVmVO.class);
+        when(userVmMock.getState()).thenReturn(VirtualMachine.State.Stopped);
+        when(current.getState()).thenReturn(VirtualMachine.State.Starting);
+        when(userVmDao.findById(virtualMachineId)).thenReturn(userVmMock, current);
+        Mockito.doReturn(userVmMock).when(autoScaleManagerImplSpy).startNewVM(virtualMachineId);
+        Assert.assertFalse(autoScaleManagerImplSpy.resumeOperation(group));
+        Mockito.verify(autoScaleManagerImplSpy, never()).assignLBruleToNewVm(anyLong(), any());
+        Mockito.verify(autoScaleManagerImplSpy, never()).recordLifecycleFailure(group, "owner", "STARTING", virtualMachineId);
+        Mockito.verify(autoScaleVmGroupVmMapDao, never()).remove(anyLong(), anyLong());
+    }
+
+    @Test public void testStaleRunningStartResultCannotOverridePersistedStoppedVm() {
+        try (MockedStatic<ActionEventUtils> ignored = Mockito.mockStatic(ActionEventUtils.class)) {
+            AutoScaleVmGroupVO group = lifecycleGroup("SCALEUP", "STARTING", AutoScaleVmGroup.State.SCALING);
+            UserVmVO stale = Mockito.mock(UserVmVO.class);
+            when(userVmMock.getState()).thenReturn(VirtualMachine.State.Stopped);
+
+            Mockito.doReturn(stale).when(autoScaleManagerImplSpy).startNewVM(virtualMachineId);
+            Assert.assertFalse(autoScaleManagerImplSpy.resumeOperation(group));
+            Mockito.verify(autoScaleManagerImplSpy, never()).assignLBruleToNewVm(anyLong(), any());
+            Mockito.verify(autoScaleVmGroupDao).checkpointOperation(vmGroupId, "owner", "STARTING_RETRY", virtualMachineId, null);
+        }
+    }
+
     @Test public void testStartFailureAndFailedCompensationRetainTheAllocatedVm() {
         try (MockedStatic<ActionEventUtils> ignored = Mockito.mockStatic(ActionEventUtils.class)) {
             AutoScaleVmGroupVO group = lifecycleGroup("SCALEUP", "STARTING", AutoScaleVmGroup.State.SCALING);
