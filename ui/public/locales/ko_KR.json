@@ -387,7 +387,7 @@
   "label.add.ciscoasa1000v": "CiscoASA1000v 리소스 추가",
   "label.add.cluster": "클러스터 추가",
   "label.add.compute.offering": "컴퓨트 오퍼링 추가",
-  "label.add.condition": "상태 추가",
+  "label.add.condition": "조건 추가",
   "label.add.disk.offering": "디스크 오퍼링 추가",
   "label.add.domain": "도메인 추가",
   "label.add.egress.rule": "송신 규칙 추가",

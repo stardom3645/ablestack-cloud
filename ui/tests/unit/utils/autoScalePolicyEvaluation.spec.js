@@ -16,9 +16,13 @@
 // under the License.
 
 import { autoScaleOperators, validAutoScalePolicyTiming, autoScaleEvaluationValue, autoScaleCounterLabel } from '@/utils/autoScalePolicyEvaluation'
+import UpPolicy from '@/views/compute/AutoScaleUpPolicyTab.vue'
+import DownPolicy from '@/views/compute/AutoScaleDownPolicyTab.vue'
 import Evaluation from '@/views/compute/AutoScaleEvaluation.vue'
 import ko from '../../../public/locales/ko_KR.json'
 import en from '../../../public/locales/en.json'
+jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
+jest.mock('@/store', () => ({ getters: { apis: {}, userInfo: {}, project: null } }))
 
 test('all supported comparison operators are available', () => {
   expect(autoScaleOperators).toEqual(['GT', 'GE', 'LT', 'LE', 'EQ'])
@@ -62,4 +66,21 @@ test('known counters use translated labels and custom names are preserved', () =
   expect(autoScaleCounterLabel('VM CPU - average percentage', translate)).toBe('VM CPU 평균 사용률')
   expect(autoScaleCounterLabel('Load Balancer - average connections per vm', translate)).toBe('VM당 부하 분산 평균 연결 수')
   expect(autoScaleCounterLabel('관리자 카운터', translate)).toBe('관리자 카운터')
+})
+
+test.each([UpPolicy, DownPolicy])('condition editor accepts actual numeric zero', async component => {
+  const field = () => ({ classList: { add: jest.fn(), remove: jest.fn() } })
+  const ctx = {
+    loading: false,
+    newCondition: { counterid: 'cpu', relationaloperator: 'GE', threshold: 0 },
+    resource: { account: 'owner', domainid: 'domain' },
+    $refs: { newConditionCounterId: field(), newConditionRelationalOperator: field(), newConditionThreshold: field() },
+    isNumber: component.methods.isNumber,
+    addCondition: jest.fn().mockResolvedValue({ id: 'new' }),
+    updateAutoScalePolicy: jest.fn().mockResolvedValue(),
+    $notification: { error: jest.fn() }
+  }
+  await component.methods.addConditionToPolicy.call(ctx)
+  expect(ctx.addCondition).toHaveBeenCalledWith(expect.objectContaining({ threshold: 0 }))
+  expect(ctx.updateAutoScalePolicy).toHaveBeenCalledWith('new', null)
 })

@@ -650,13 +650,13 @@ export default {
         this.$refs.newConditionRelationalOperator.classList.remove('error')
       }
 
-      if (!this.newCondition.threshold) {
+      if (this.newCondition.threshold === null || this.newCondition.threshold === undefined || this.newCondition.threshold === '') {
         this.$refs.newConditionThreshold.classList.add('error')
       } else {
         this.$refs.newConditionThreshold.classList.remove('error')
       }
 
-      if (!this.newCondition.counterid || !this.newCondition.relationaloperator || !this.newCondition.threshold) {
+      if (!this.newCondition.counterid || !this.newCondition.relationaloperator || this.newCondition.threshold === null || this.newCondition.threshold === undefined || this.newCondition.threshold === '') {
         return
       }
 
