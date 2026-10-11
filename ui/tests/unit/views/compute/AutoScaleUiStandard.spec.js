@@ -19,6 +19,7 @@ import { mount } from '@vue/test-utils'
 import { h, reactive } from 'vue'
 import fs from 'fs'
 import path from 'path'
+import LoadBalancing from '@/views/compute/AutoScaleLoadBalancing.vue'
 import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import NetworkSelection from '@/views/compute/wizard/NetworkSelection.vue'
 import Cell from '@/views/compute/AutoScaleListCell.vue'
@@ -128,4 +129,14 @@ test('project list permission failure is surfaced without a broader lookup', asy
   const request = jest.fn().mockRejectedValue(new Error('permission'))
   await expect(autoScaleTemplateById(request, { id: 'image', projectid: 'project' })).rejects.toThrow('permission')
   expect(request).toHaveBeenCalledTimes(1)
+})
+
+// Legacy API rules omit the LB protocol; the edit dialog must submit an explicit
+// TCP protocol to prevent the server from leaving an algorithm change partially applied.
+test('legacy LB edit provides TCP and preserves explicitly configured protocols', () => {
+  const ctx = { editRuleDetails: {} }
+  LoadBalancing.methods.openEditRuleModal.call(ctx, { id: 'legacy', name: 'rule', algorithm: 'roundrobin' })
+  expect(ctx.editRuleDetails.protocol).toBe('tcp')
+  LoadBalancing.methods.openEditRuleModal.call(ctx, { id: 'explicit', name: 'rule', algorithm: 'roundrobin', protocol: 'ssl' })
+  expect(ctx.editRuleDetails.protocol).toBe('ssl')
 })

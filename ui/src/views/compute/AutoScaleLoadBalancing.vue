@@ -862,7 +862,7 @@ export default {
       this.editRuleModalVisible = true
       this.editRuleDetails.name = this.selectedRule.name
       this.editRuleDetails.algorithm = this.selectedRule.algorithm
-      this.editRuleDetails.protocol = this.selectedRule.protocol
+      this.editRuleDetails.protocol = this.selectedRule.protocol || 'tcp'
     },
     handleSubmitEditForm () {
       if (this.editRuleModalLoading) return
