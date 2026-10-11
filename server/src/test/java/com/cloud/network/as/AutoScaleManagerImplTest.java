@@ -1987,8 +1987,7 @@ public class AutoScaleManagerImplTest {
         AutoScaleVmGroupTO groupTO = Mockito.mock(AutoScaleVmGroupTO.class);
         when(lbRulesMgr.toAutoScaleVmGroupTO(asVmGroupMock)).thenReturn(groupTO);
 
-        Mockito.doReturn(true).when(autoScaleManagerImplSpy).updateCountersMap(any(), any(), any());
-        Mockito.doReturn(AutoScalePolicy.Action.SCALEUP).when(autoScaleManagerImplSpy).getAutoscaleAction(any(), any(), any());
+        Mockito.doReturn(AutoScalePolicy.Action.SCALEUP).when(autoScaleManagerImplSpy).evaluateAutoScalePolicies(any());
         Mockito.doNothing().when(autoScaleManagerImplSpy).doScaleUp(vmGroupId, 1);
         Mockito.doNothing().when(autoScaleManagerImplSpy).cleanupAsVmGroupStatistics(groupTO);
 
@@ -2003,8 +2002,7 @@ public class AutoScaleManagerImplTest {
         AutoScaleVmGroupTO groupTO = Mockito.mock(AutoScaleVmGroupTO.class);
         when(lbRulesMgr.toAutoScaleVmGroupTO(asVmGroupMock)).thenReturn(groupTO);
 
-        Mockito.doReturn(true).when(autoScaleManagerImplSpy).updateCountersMap(any(), any(), any());
-        Mockito.doReturn(AutoScalePolicy.Action.SCALEDOWN).when(autoScaleManagerImplSpy).getAutoscaleAction(any(), any(), any());
+        Mockito.doReturn(AutoScalePolicy.Action.SCALEDOWN).when(autoScaleManagerImplSpy).evaluateAutoScalePolicies(any());
         Mockito.doNothing().when(autoScaleManagerImplSpy).doScaleDown(vmGroupId);
         Mockito.doNothing().when(autoScaleManagerImplSpy).cleanupAsVmGroupStatistics(groupTO);
 

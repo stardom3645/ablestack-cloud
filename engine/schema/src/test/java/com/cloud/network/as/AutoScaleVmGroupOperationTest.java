@@ -86,4 +86,17 @@ public class AutoScaleVmGroupOperationTest {
         update = GenericDaoBase.getUpdateBuilder(dao.updated);
         assertTrue(update.has("nextVmSeq")); assertFalse(update.has("state")); assertFalse(update.has("operationUuid"));
     }
+    @Test public void olderEvaluationCannotOverwriteLatestAndOnlyEvaluationFieldsChange() {
+        Dao dao = new Dao(); dao.init();
+        dao.current.setEvaluationTime(new java.util.Date(2000));
+        assertFalse(dao.updateEvaluation(1, "old", new java.util.Date(1999)));
+        assertNull(dao.updated);
+        assertTrue(dao.updateEvaluation(1, "new", new java.util.Date(2001)));
+        UpdateBuilder update = GenericDaoBase.getUpdateBuilder(dao.updated);
+        assertTrue(update.has("evaluation")); assertTrue(update.has("evaluationTime"));
+        assertFalse(update.has("state")); assertFalse(update.has("lastScaled"));
+        assertTrue(dao.updateLastScaled(1, new java.util.Date(3000)));
+        update = GenericDaoBase.getUpdateBuilder(dao.updated);
+        assertTrue(update.has("lastScaled")); assertFalse(update.has("evaluation")); assertFalse(update.has("state"));
+    }
 }

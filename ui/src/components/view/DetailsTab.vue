@@ -16,6 +16,7 @@
 // under the License.
 
 <template>
+  <auto-scale-evaluation v-if="$route.meta.name === 'autoscalevmgroup'" :resource="resource" />
     <a-alert
       v-if="resource.operationinprogress"
       class="autoscale-operation-status"
@@ -355,6 +356,7 @@
 </template>
 
 <script>
+import AutoScaleEvaluation from '@/views/compute/AutoScaleEvaluation'
 import { creationVmDetails } from '@/utils/creationVmPresentation'
 import DedicateData from './DedicateData'
 import HostInfo from '@/views/infra/HostInfo'
@@ -370,6 +372,7 @@ import 'vue-code-highlight/themes/prism-okaidia.css'
 export default {
   name: 'DetailsTab',
   components: {
+    AutoScaleEvaluation,
     DedicateData,
     HostInfo,
     VmwareData,

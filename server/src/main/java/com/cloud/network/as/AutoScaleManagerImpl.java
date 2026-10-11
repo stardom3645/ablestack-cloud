@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Comparator;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,8 @@ import java.util.UUID;
 import com.cloud.utils.db.GlobalLock;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 
 import javax.inject.Inject;
 
@@ -799,7 +803,7 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
         final int duration = autoScalePolicyVOFinal.getDuration();
         final int quietTime = autoScalePolicyVOFinal.getQuietTime();
 
-        if (duration < 0) {
+        if (duration <= 0) {
             throw new InvalidParameterValueException("duration is an invalid value: " + duration);
         }
 
@@ -2461,10 +2465,12 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     }
 
     protected void updateOperationQuietTime(AutoScaleVmGroupVO group, AutoScalePolicy.Action action) {
+        Date completed = new Date(currentTimeMillis());
+        autoScaleVmGroupDao.updateLastScaled(group.getId(), completed);
         for (AutoScaleVmGroupPolicyMapVO mapping : autoScaleVmGroupPolicyMapDao.listByVmGroupId(group.getId())) {
             AutoScalePolicyVO policy = autoScalePolicyDao.findById(mapping.getPolicyId());
-            if (policy.getAction() == action) {
-                policy.setLastQuietTime(new Date());
+            if (policy != null) {
+                policy.setLastQuietTime(completed);
                 autoScalePolicyDao.persist(policy);
             }
         }
@@ -2618,7 +2624,7 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
 
         Network.Provider provider = getLoadBalancerServiceProvider(groupTO.getLoadBalancerId());
 
-        for (AutoScalePolicyTO policyTO : groupTO.getPolicies()) {
+        for (AutoScalePolicyTO policyTO : groupTO.getPolicies().stream().sorted(Comparator.comparing(p -> p.getAction() != AutoScalePolicy.Action.SCALEUP)).collect(Collectors.toList())) {
             if (isQuitTimePassForPolicy(policyTO)) {
                 AutoScalePolicy.Action determinedAction = checkConditionsForPolicy(countersMap, countersNumberMap, policyTO, provider);
                 if (determinedAction != null) {
@@ -2641,7 +2647,7 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     }
 
     protected AutoScalePolicy.Action checkConditionsForPolicy(Map<String, Double> countersMap, Map<String, Integer> countersNumberMap, AutoScalePolicyTO policyTO, Network.Provider provider) {
-        boolean bValid = true;
+        boolean bValid = CollectionUtils.isNotEmpty(policyTO.getConditions());
         for (ConditionTO conditionTO : policyTO.getConditions()) {
             CounterTO counter = conditionTO.getCounter();
             long thresholdValue = conditionTO.getThreshold();
@@ -2655,7 +2661,7 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             Integer number = countersNumberMap.get(key);
             logger.debug("Checking policy [id: {}, uuid: {}], condition [id: {}, uuid: {}], counter = \"{}\", sum = {}, number = {}",
                     policyTO.getId(), policyTO.getUuid(), conditionTO.getId(), conditionTO.getUuid(), counter.getName(), sum, number);
-            if (number == null || number == 0) {
+            if (number == null || number <= 0 || sum == null || !Double.isFinite(sum)) {
                 bValid = false;
                 logger.debug("Skipping policy [id: {}, uuid: {}], condition [id: {}, uuid: {}], counter = \"{}\" because the number is {}",
                         policyTO.getId(), policyTO.getUuid(), conditionTO.getId(), conditionTO.getUuid(), counter.getName(), number);
@@ -2770,13 +2776,13 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
         }
 
         //check interval
-        long now = (new Date()).getTime();
-        if (asGroup.getLastInterval() != null && (now - asGroup.getLastInterval().getTime()) < asGroup.getInterval()) {
+        long now = currentTimeMillis();
+        if (asGroup.getLastInterval() != null && (now - asGroup.getLastInterval().getTime()) < TimeUnit.SECONDS.toMillis(asGroup.getInterval())) {
             return;
         }
 
         // update last_interval
-        asGroup.setLastInterval(new Date());
+        asGroup.setLastInterval(new Date(now));
         if (!autoScaleVmGroupDao.updateLastInterval(asGroup.getId(), asGroup.getLastInterval())) {
             return;
         }
@@ -2932,13 +2938,13 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
         }
 
         //check interval
-        long now = (new Date()).getTime();
-        if (asGroup.getLastInterval() != null && (now - asGroup.getLastInterval().getTime()) < asGroup.getInterval()) {
+        long now = currentTimeMillis();
+        if (asGroup.getLastInterval() != null && (now - asGroup.getLastInterval().getTime()) < TimeUnit.SECONDS.toMillis(asGroup.getInterval())) {
             return;
         }
 
         // update last_interval
-        asGroup.setLastInterval(new Date());
+        asGroup.setLastInterval(new Date(now));
         if (!autoScaleVmGroupDao.updateLastInterval(asGroup.getId(), asGroup.getLastInterval())) {
             return;
         }
@@ -2958,32 +2964,117 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
         }
     }
 
+    protected long currentTimeMillis() { return System.currentTimeMillis(); }
+
     protected void checkAutoscalingGroup(AutoScaleVmGroupVO asGroup) {
         AutoScaleVmGroupTO groupTO = lbRulesMgr.toAutoScaleVmGroupTO(asGroup);
-
-        Map<String, Double> countersMap = new HashMap<>();
-        Map<String, Integer> countersNumberMap = new HashMap<>();
-
+        AutoScalePolicy.Action scaleAction;
         try {
-            // update counter maps in memory
-            if (!updateCountersMap(groupTO, countersMap, countersNumberMap)) {
-                return;
-            }
+            scaleAction = evaluateAutoScalePolicies(groupTO);
         } finally {
-            // Remove old statistics from database
             cleanupAsVmGroupStatistics(groupTO);
         }
+        if (scaleAction == AutoScalePolicy.Action.SCALEUP) { doScaleUp(asGroup.getId(), 1); }
+        else if (scaleAction == AutoScalePolicy.Action.SCALEDOWN) { doScaleDown(asGroup.getId()); }
+    }
 
-        // get scale action
-        AutoScalePolicy.Action scaleAction = getAutoscaleAction(countersMap, countersNumberMap, groupTO);
-        if (scaleAction != null) {
-            logger.debug("[AutoScale] Doing scale action: {} for group {}", scaleAction, asGroup);
-            if (AutoScalePolicy.Action.SCALEUP.equals(scaleAction)) {
-                doScaleUp(asGroup.getId(), 1);
-            } else {
-                doScaleDown(asGroup.getId());
+    protected AutoScalePolicy.Action evaluateAutoScalePolicies(AutoScaleVmGroupTO group) {
+        long now = currentTimeMillis();
+        AutoScaleVmGroupVO current = autoScaleVmGroupDao.findById(group.getId());
+        Set<Long> members = getHostAndVmIdsMap(group).values().stream().flatMap(List::stream).collect(Collectors.toSet());
+        int memberCount = members.size();
+        List<AutoScalePolicyTO> policies = group.getPolicies();
+        long quietMs = policies.stream().mapToLong(p -> TimeUnit.SECONDS.toMillis(Math.max(0, p.getQuietTime()))).max().orElse(0);
+        long cooldownUntil = current == null || current.getLastScaled() == null ? 0 : current.getLastScaled().getTime() + quietMs;
+        JsonObject evaluation = new JsonObject();
+        evaluation.addProperty("evaluatedat", now);
+        evaluation.addProperty("cooldownuntil", cooldownUntil);
+        JsonArray policyResults = new JsonArray();
+        evaluation.add("policies", policyResults);
+        boolean up = false;
+        boolean down = false;
+        boolean upBlocked = false;
+        boolean anyBlocked = false;
+        Long latestCollection = null;
+        for (AutoScalePolicyTO policy : policies) {
+            JsonObject result = new JsonObject();
+            result.addProperty("id", policy.getUuid());
+            result.addProperty("action", policy.getAction() == null ? null : policy.getAction().name());
+            result.addProperty("duration", policy.getDuration());
+            JsonArray conditions = new JsonArray();
+            result.add("conditions", conditions);
+            String reason = null;
+            boolean matched = CollectionUtils.isNotEmpty(policy.getConditions());
+            long start = now - TimeUnit.SECONDS.toMillis(policy.getDuration());
+            Date queryStart = new Date(start - TimeUnit.SECONDS.toMillis(group.getInterval()) * 2);
+            List<AutoScaleVmGroupStatisticsVO> dummy = asGroupStatisticsDao.listDummyRecordsByVmGroup(group.getId(), queryStart);
+            List<AutoScaleVmGroupStatisticsVO> inactive = asGroupStatisticsDao.listInactiveByVmGroupAndPolicy(group.getId(), policy.getId(), queryStart);
+            for (ConditionTO condition : policy.getConditions()) {
+                CounterTO counter = condition.getCounter();
+                boolean nativeCounter = Counter.NativeSources.contains(counter.getSource());
+                Set<Long> resources = members;
+                if (!nativeCounter) {
+                    Network network = getNetwork(group.getLoadBalancerId());
+                    resources = routerDao.listByNetworkAndRole(network.getId(), VirtualRouter.Role.VIRTUAL_ROUTER).stream()
+                            .filter(this::isActiveMetricsRouter).map(DomainRouterVO::getId).collect(Collectors.toSet());
+                }
+                double multiplier = 1;
+                if (counter.getSource() == Counter.Source.CPU) { multiplier = 100; }
+                if (counter.getSource() == Counter.Source.MEMORY) {
+                    ServiceOfferingVO offering = serviceOfferingDao.findByUuidIncludingRemoved(group.getProfile().getServiceOfferingId());
+                    multiplier = offering == null || offering.getRamSize() <= 0 ? 0 : 100d / offering.getRamSize();
+                }
+                List<AutoScaleVmGroupStatisticsVO> records = asGroupStatisticsDao.listByVmGroupAndPolicyAndCounter(group.getId(), policy.getId(), counter.getId(), queryStart);
+                AutoScaleMetricWindow.Result window = AutoScaleMetricWindow.evaluate(records, resources, policy.getDuration(), group.getInterval(), now,
+                        multiplier, !nativeCounter, memberCount);
+                long observedStart = (window.getCollectedAt() == null ? now : window.getCollectedAt()) - TimeUnit.SECONDS.toMillis(policy.getDuration());
+                if (dummy.stream().anyMatch(r -> r.getCreated() == null || r.getCreated().getTime() > observedStart)) { reason = "MEMBERS_CHANGED"; }
+                if (inactive.stream().anyMatch(r -> r.getCreated() == null || r.getCreated().getTime() >= observedStart)) { reason = "COLLECTION_UNAVAILABLE"; }
+                if (!window.isReady()) { reason = reason == null ? window.getReason() : reason; }
+                boolean holds = window.isReady() && !window.getPoints().isEmpty() && window.getPoints().stream()
+                        .allMatch(value -> AutoScaleMetricWindow.compare(value, condition.getRelationalOperator(), condition.getThreshold()));
+                matched &= holds;
+                JsonObject metric = new JsonObject();
+                metric.addProperty("id", condition.getUuid());
+                metric.addProperty("countername", counter.getName());
+                metric.addProperty("source", nativeCounter ? counter.getSource().name() : "VIRTUALROUTER");
+                metric.addProperty("unit", nativeCounter ? "%" : counter.getValue().contains("mbps") ? "Mbps/VM" : "connections/VM");
+                metric.addProperty("operator", condition.getRelationalOperator() == null ? null : condition.getRelationalOperator().name());
+                metric.addProperty("threshold", condition.getThreshold());
+                metric.addProperty("value", window.getValue());
+                metric.addProperty("samples", window.getSamples());
+                metric.addProperty("resources", resources.size());
+                metric.addProperty("collectedat", window.getCollectedAt());
+                metric.addProperty("reason", window.getReason());
+                metric.addProperty("matched", holds);
+                conditions.add(metric);
+                if (window.getCollectedAt() != null) { latestCollection = latestCollection == null ? window.getCollectedAt() : Math.max(latestCollection, window.getCollectedAt()); }
             }
+            if (CollectionUtils.isEmpty(policy.getConditions())) { reason = "INVALID_CONFIGURATION"; }
+            boolean blocked = reason != null;
+            result.addProperty("status", blocked ? "BLOCKED" : matched ? "MATCHED" : "NOT_MATCHED");
+            result.addProperty("reason", reason);
+            policyResults.add(result);
+            anyBlocked |= blocked;
+            if (policy.getAction() == AutoScalePolicy.Action.SCALEUP) { up |= matched && !blocked; upBlocked |= blocked; }
+            else if (policy.getAction() == AutoScalePolicy.Action.SCALEDOWN) { down |= matched && !blocked; }
         }
+        AutoScalePolicy.Action action = up ? AutoScalePolicy.Action.SCALEUP : down && !upBlocked ? AutoScalePolicy.Action.SCALEDOWN : null;
+        String reason = upBlocked && down && !up ? "SCALEUP_UNCERTAIN" : null;
+        if (now < cooldownUntil) { action = null; reason = "COOLDOWN"; }
+        if (action == AutoScalePolicy.Action.SCALEUP && memberCount >= group.getMaxMembers()) { action = null; reason = "MAX_MEMBERS"; }
+        if (action == AutoScalePolicy.Action.SCALEDOWN && memberCount <= group.getMinMembers()) { action = null; reason = "MIN_MEMBERS"; }
+        evaluation.addProperty("collectedat", latestCollection);
+        evaluation.addProperty("action", action == null ? null : action.name());
+        evaluation.addProperty("status", reason != null ? reason : action != null ? action.name() : anyBlocked ? "WAITING" : "NO_ACTION");
+        evaluation.addProperty("reason", reason);
+        autoScaleVmGroupDao.updateEvaluation(group.getId(), evaluation.toString(), new Date(now));
+        return action;
+    }
+
+    protected boolean isActiveMetricsRouter(DomainRouterVO router) {
+        return router.getState() == VirtualMachine.State.Running && (!router.getIsRedundantRouter() ||
+                router.getRedundantState() == VirtualRouter.RedundantState.PRIMARY);
     }
 
     protected void getVmStatsFromHosts(AutoScaleVmGroupTO groupTO) {
@@ -3000,6 +3091,8 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             if (!DEFAULT_HOST_ID.equals(hostId)) {
                 Map<Long, ? extends VmStats> vmStatsById = getVmStatsByIdFromHost(hostId, vmIds);
                 processVmStatsByIdFromHost(groupTO, vmIds, vmStatsById, policyCountersMap);
+            } else {
+                processVmStatsByIdFromHost(groupTO, vmIds, null, policyCountersMap);
             }
         }
     }
@@ -3036,9 +3129,11 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
                     Double counterValue = null;
                     if (vmStats != null) {
                         if (Counter.Source.CPU.equals(counter.getSource())) {
-                            counterValue = vmStats.getCPUUtilization() / 100;
+                            if (Double.isFinite(vmStats.getCPUUtilization()) && vmStats.getCPUUtilization() >= 0 && vmStats.getCPUUtilization() <= 100) {
+                                counterValue = vmStats.getCPUUtilization() / 100;
+                            }
                         } else if (Counter.Source.MEMORY.equals(counter.getSource())) {
-                            if (vmStats.getIntFreeMemoryKBs() >= 0 && vmStats.getIntFreeMemoryKBs() <= vmStats.getMemoryKBs()) {
+                            if (Double.isFinite(vmStats.getMemoryKBs()) && vmStats.getMemoryKBs() > 0 && Double.isFinite(vmStats.getIntFreeMemoryKBs()) && vmStats.getIntFreeMemoryKBs() >= 0 && vmStats.getIntFreeMemoryKBs() <= vmStats.getMemoryKBs()) {
                                 counterValue = (vmStats.getMemoryKBs() - vmStats.getIntFreeMemoryKBs()) / 1024;
                             } else {
                                 // In some scenarios, the free memory is greater than VM memory
@@ -3062,14 +3157,15 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     protected void getNetworkStatsFromVirtualRouter(AutoScaleVmGroupTO groupTO) {
         Network network = getNetwork(groupTO.getLoadBalancerId());
         Pair<String, Integer> publicIpAddr = getPublicIpAndPort(groupTO.getLoadBalancerId());
-        List<DomainRouterVO> routers = routerDao.listByNetworkAndRole(network.getId(), VirtualRouter.Role.VIRTUAL_ROUTER);
+        List<DomainRouterVO> routers = routerDao.listByNetworkAndRole(network.getId(), VirtualRouter.Role.VIRTUAL_ROUTER).stream()
+                .filter(this::isActiveMetricsRouter).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(routers)) {
             processGetAutoScaleMetricsAnswer(groupTO, new ArrayList<>(), null);
             return;
         }
         List<AutoScaleMetrics> metrics = setGetAutoScaleMetricsCommandMetrics(groupTO);
         for (DomainRouterVO router : routers) {
-            if (VirtualMachine.State.Running.equals(router.getState())) {
+            if (isActiveMetricsRouter(router)) {
                 final GetAutoScaleMetricsCommand command = new GetAutoScaleMetricsCommand(router.getPrivateIpAddress(), network.getVpcId() != null, publicIpAddr.first(), publicIpAddr.second(), metrics);
                 command.setWait(30);
                 GetAutoScaleMetricsAnswer answer = (GetAutoScaleMetricsAnswer) agentMgr.easySend(router.getHostId(), command);
@@ -3117,7 +3213,7 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
                 boolean found = false;
                 for (AutoScaleMetricsValue value : values) {
                     AutoScaleMetrics metrics = value.getMetrics();
-                    if (policyId.equals(metrics.getPolicyId()) && counter.getId().equals(metrics.getCounterId())) {
+                    if (policyId.equals(metrics.getPolicyId()) && counter.getId().equals(metrics.getCounterId()) && value.getValue() != null && Double.isFinite(value.getValue()) && value.getValue() >= 0) {
                         asGroupStatisticsDao.persist(new AutoScaleVmGroupStatisticsVO(groupTO.getId(), policyId, counter.getId(), routerId,
                                 ResourceTag.ResourceObjectType.DomainRouter, value.getValue(), value.getType(), timestamp));
                         found = true;
@@ -3135,7 +3231,7 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     protected boolean updateCountersMap(AutoScaleVmGroupTO groupTO, Map<String, Double> countersMap, Map<String, Integer> countersNumberMap) {
         logger.debug("Updating countersMap for as group [id={}, uuid={}]", groupTO.getId(), groupTO.getUuid());
         for (AutoScalePolicyTO policyTO : groupTO.getPolicies()) {
-            Date afterDate = new Date(System.currentTimeMillis() - ((long)policyTO.getDuration() << 10));
+            Date afterDate = new Date(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(policyTO.getDuration()));
             List<AutoScaleVmGroupStatisticsVO> dummyStats = asGroupStatisticsDao.listDummyRecordsByVmGroup(groupTO.getId(), afterDate);
             if (CollectionUtils.isNotEmpty(dummyStats)) {
                 logger.error("Failed to update counters map as there are {} dummy statistics in as group {}", dummyStats.size(), groupTO.getId());
@@ -3240,11 +3336,11 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
 
     protected void cleanupAsVmGroupStatistics(AutoScaleVmGroupTO groupTO) {
         Integer cleanupDelay = AutoScaleStatsCleanupDelay.value();
-        Integer maxDelaySecs = cleanupDelay;
+        long maxDelaySecs = cleanupDelay;
         for (AutoScalePolicyTO policyTO : groupTO.getPolicies()) {
             Integer duration = policyTO.getDuration();
-            Integer delaySecs = cleanupDelay >= duration ?  cleanupDelay : duration;
-            Date beforeDate = new Date(System.currentTimeMillis() - ((long)delaySecs * 1000));
+            long delaySecs = Math.max(cleanupDelay, (long) duration + 2L * groupTO.getInterval());
+            Date beforeDate = new Date(currentTimeMillis() - TimeUnit.SECONDS.toMillis(delaySecs));
             logger.debug("Removing stats for policy [id={}, uuid={}] in as group [id={}, uuid={}], before {}",
                     policyTO.getId(), policyTO.getUuid(), groupTO.getId(), groupTO.getUuid(), beforeDate);
             asGroupStatisticsDao.removeByGroupAndPolicy(groupTO.getId(), policyTO.getId(), beforeDate);
@@ -3252,7 +3348,7 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
                 maxDelaySecs = delaySecs;
             }
         }
-        Date beforeDate = new Date(System.currentTimeMillis() - ((long)maxDelaySecs * 1000));
+        Date beforeDate = new Date(currentTimeMillis() - TimeUnit.SECONDS.toMillis(maxDelaySecs));
         logger.debug(String.format("Removing stats for other policies in as group [id=%d, uuid=%s], before %s", groupTO.getId(), groupTO.getUuid(), beforeDate));
         asGroupStatisticsDao.removeByGroupId(groupTO.getId(), beforeDate);
     }

@@ -152,6 +152,25 @@ public class AutoScaleVmGroupDaoImpl extends GenericDaoBase<AutoScaleVmGroupVO, 
     }
 
     @Override
+    public boolean updateEvaluation(long groupId, String evaluation, Date timestamp) {
+        return Transaction.execute((TransactionCallback<Boolean>) status -> {
+            AutoScaleVmGroupVO current = lockRow(groupId, true);
+            if (current == null || (current.getEvaluationTime() != null && current.getEvaluationTime().after(timestamp))) { return false; }
+            AutoScaleVmGroupVO update = createForUpdate(groupId);
+            update.setEvaluation(evaluation);
+            update.setEvaluationTime(timestamp);
+            return update(groupId, update);
+        });
+    }
+
+    @Override
+    public boolean updateLastScaled(long groupId, Date timestamp) {
+        AutoScaleVmGroupVO update = createForUpdate(groupId);
+        update.setLastScaled(timestamp);
+        return update(groupId, update);
+    }
+
+    @Override
     public boolean updateLastInterval(long groupId, Date interval) {
         SearchCriteria<AutoScaleVmGroupVO> sc = IdleSearch.create();
         sc.setParameters("id", groupId);

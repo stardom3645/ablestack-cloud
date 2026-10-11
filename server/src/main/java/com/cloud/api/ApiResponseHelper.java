@@ -3871,6 +3871,7 @@ public class ApiResponseHelper implements ResponseGenerator, ResourceIdSupport {
         response.setMaxMembers(vmGroup.getMaxMembers());
         response.setState(vmGroup.getState().toString());
         response.setOperationInProgress(vmGroup.isOperationInProgress());
+        response.setEvaluation(vmGroup.getEvaluation());
         response.setScalingAction(vmGroup.getOperationAction());
         response.setScalingPhase(vmGroup.getOperationPhase());
         response.setInterval(vmGroup.getInterval());

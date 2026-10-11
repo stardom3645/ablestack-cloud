@@ -171,7 +171,7 @@
             :filterOption="(input, option) => {
               return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }" >
-            <a-select-option value="GT">{{ getOperator('GT') }}</a-select-option>
+            <a-select-option v-for="operator in operators" :key="operator" :value="operator">{{ getOperator(operator) }}</a-select-option>
           </a-select>
           <span class="error-text">{{ $t('label.required') }}</span>
         </div>
@@ -222,7 +222,7 @@
             :filterOption="(input, option) => {
               return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }" >
-            <a-select-option value="GT">{{ getOperator('GT') }}</a-select-option>
+            <a-select-option v-for="operator in operators" :key="operator" :value="operator">{{ getOperator(operator) }}</a-select-option>
           </a-select>
         </div>
         <div class="update-condition__item">
@@ -303,7 +303,7 @@
             :filterOption="(input, option) => {
               return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }" >
-            <a-select-option value="GT">{{ getOperator('GT') }}</a-select-option>
+            <a-select-option v-for="operator in operators" :key="operator" :value="operator">{{ getOperator(operator) }}</a-select-option>
           </a-select>
         </div>
         <div class="update-condition__item">
@@ -324,6 +324,7 @@
 </template>
 
 <script>
+import { autoScaleOperators, validAutoScalePolicyTiming } from '@/utils/autoScalePolicyEvaluation'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { getAPI, postAPI } from '@/api'
@@ -347,6 +348,7 @@ export default {
   },
   data () {
     return {
+      operators: autoScaleOperators,
       filterColumns: ['Actions'],
       loading: true,
       policies: [],
@@ -676,7 +678,7 @@ export default {
     async addNewScalePolicyToGroup () {
       if (this.loading) return
 
-      if (!this.newPolicy.duration || !this.newPolicy.counterid || !this.newPolicy.relationaloperator || !this.newPolicy.threshold) {
+      if (!this.newPolicy.counterid || !this.newPolicy.relationaloperator || this.newPolicy.threshold === null || this.newPolicy.threshold === '') {
         this.$notification.error({
           message: this.$t('message.request.failed'),
           description: this.$t('message.please.enter.valid.value')
@@ -684,10 +686,10 @@ export default {
         return
       }
 
-      if (!this.isPositiveNumber(this.newPolicy.duration)) {
+      if (!validAutoScalePolicyTiming(this.newPolicy, this.resource.interval)) {
         this.$notification.error({
           message: this.$t('label.duration'),
-          description: this.$t('message.validate.positive.number')
+          description: this.$t('message.autoscale.policy.time.invalid', { interval: this.resource.interval || 1 })
         })
         return
       }
@@ -769,6 +771,10 @@ export default {
         return
       }
       if (this.loading) return
+      if (!validAutoScalePolicyTiming(this.policy, this.resource.interval)) {
+        this.$notification.error({ message: this.$t('message.request.failed'), description: this.$t('message.autoscale.policy.time.invalid', { interval: this.resource.interval || 1 }) })
+        return
+      }
       this.loading = true
 
       let newConditionIds
@@ -789,7 +795,9 @@ export default {
           this.$pollJob({
             jobId: response.updateautoscalepolicyresponse.jobid,
             successMethod: (result) => {
-              resolve(result.jobresult.autoscalepolicy)
+              this.policy = result.jobresult.autoscalepolicy
+              this.isEditable = false
+              resolve(this.policy)
             },
             errorMessage: this.$t('message.update.autoscale.policy.failed'),
             errorMethod: (result) => {

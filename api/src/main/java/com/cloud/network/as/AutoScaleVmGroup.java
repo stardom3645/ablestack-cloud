@@ -72,6 +72,8 @@ public interface AutoScaleVmGroup extends ControlledEntity, InternalIdentity, Di
 
     State getState();
 
+    default String getEvaluation() { return null; }
+
     String getUuid();
 
     default boolean isOperationInProgress() { return false; }

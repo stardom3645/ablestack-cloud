@@ -115,6 +115,25 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup, InternalIdentity, I
     @Temporal(TemporalType.TIMESTAMP)
     private Date operationDeadline;
 
+    @Column(name = "evaluation")
+    private String evaluation;
+
+    @Column(name = "last_scaled")
+    @Temporal(value = TemporalType.TIMESTAMP)
+    private Date lastScaled;
+
+    @Override
+    public String getEvaluation() { return evaluation; }
+    public void setEvaluation(String value) { evaluation = value; }
+    @Column(name = "evaluation_time")
+    @Temporal(value = TemporalType.TIMESTAMP)
+    private Date evaluationTime;
+
+    public Date getEvaluationTime() { return evaluationTime; }
+    public void setEvaluationTime(Date value) { evaluationTime = value; }
+    public Date getLastScaled() { return lastScaled; }
+    public void setLastScaled(Date value) { lastScaled = value; }
+
     public String getOperationUuid() { return operationUuid; }
     public void setOperationUuid(String value) { operationUuid = value; }
     @Override

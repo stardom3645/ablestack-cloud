@@ -147,6 +147,14 @@ public class AutoScaleVmGroupResponse extends BaseResponseWithAnnotations implem
     @Param(description = "Persistent phase of the accepted scaling operation")
     private String scalingPhase;
 
+    @SerializedName("evaluation")
+    @Param(description = "Latest policy evaluation, collection times, normalized counters and reasons for deferring an action")
+    private com.google.gson.JsonObject evaluation;
+
+    public void setEvaluation(String value) {
+        if (value != null) { evaluation = com.google.gson.JsonParser.parseString(value).getAsJsonObject(); }
+    }
+
     public void setOperationInProgress(boolean value) { operationInProgress = value; }
     public void setScalingAction(String value) { scalingAction = value; }
     public void setScalingPhase(String value) { scalingPhase = value; }
