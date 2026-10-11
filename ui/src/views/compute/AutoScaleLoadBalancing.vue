@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div>
+  <div class="autoscale-tab">
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
     <div>
       <a-alert type="info" v-if="resource.state !== 'DISABLED'">
@@ -92,6 +92,9 @@
       </template>
     </a-table>
     <a-modal
+class="mold-dialog autoscale-dialog tags-modal"
+centered
+:width="760"
       v-if="tagsModalVisible"
       :title="$t('label.edit.tags')"
       :visible="tagsModalVisible"
@@ -99,7 +102,6 @@
       :closable="true"
       :afterClose="closeModal"
       :maskClosable="false"
-      class="tags-modal"
       @cancel="tagsModalVisible = false">
       <span v-show="tagsModalLoading" class="modal-loading">
         <loading-outlined />
@@ -144,9 +146,11 @@
     </a-modal>
 
     <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
       :title="$t('label.configure.sticky.policy')"
       :visible="stickinessModalVisible"
-      :footer="null"
       :afterClose="closeModal"
       :maskClosable="false"
       :closable="true"
@@ -236,20 +240,24 @@
           <a-input v-model:value="form.expire" />
         </a-form-item>
 
+      </a-form>
+      <template #footer>
         <div :span="24" class="action-button">
           <a-button @click="stickinessModalVisible = false">{{ $t('label.cancel') }}</a-button>
           <a-button type="primary" ref="submit" @click="handleSubmitStickinessForm">{{ $t('label.ok') }}</a-button>
         </div>
-      </a-form>
+      </template>
     </a-modal>
 
     <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
       :title="$t('label.edit.rule')"
       :visible="editRuleModalVisible"
       :afterClose="closeModal"
       :maskClosable="false"
       :closable="true"
-      :footer="null"
       @cancel="editRuleModalVisible = false">
       <span v-show="editRuleModalLoading" class="modal-loading">
         <loading-outlined />
@@ -290,16 +298,20 @@
             <a-select-option value="http">{{ $t('label.lb.protocol.http') }}</a-select-option>
           </a-select>
         </div>
+
+      </div>
+      <template #footer>
         <div :span="24" class="action-button">
           <a-button @click="() => editRuleModalVisible = false">{{ $t('label.cancel') }}</a-button>
           <a-button type="primary" @click="handleSubmitEditForm">{{ $t('label.ok') }}</a-button>
         </div>
-      </div>
+      </template>
     </a-modal>
   </div>
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { ref, reactive, toRaw, nextTick } from 'vue'

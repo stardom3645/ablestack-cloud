@@ -16,16 +16,6 @@
 // under the License.
 
 <template>
-  <auto-scale-operational-summary v-if="$route.meta.name === 'autoscalevmgroup'" :resource="resource" />
-  <auto-scale-evaluation v-if="$route.meta.name === 'autoscalevmgroup'" :resource="resource" />
-    <a-alert
-      v-if="resource.operationinprogress"
-      class="autoscale-operation-status"
-      :type="autoScaleLifecycleNotice.type"
-      show-icon
-      role="status"
-      :message="$t(autoScaleLifecycleNotice.message)"
-      :description="$t('label.autoscale.operation.' + (resource.scalingaction || 'RECOVERY')) + ' · ' + $t('label.autoscale.phase.' + (resource.scalingphase || 'RECOVERY')) + '. ' + $t(autoScaleLifecycleNotice.description)" />
   <a-alert type="error" v-if="['vm', 'systemvm', 'router', 'ilbvm'].includes($route.meta.name) && 'hostcontrolstate' in resource && resource.hostcontrolstate !== 'Enabled'">
     <template #message>
       <div class="title">
@@ -357,9 +347,6 @@
 </template>
 
 <script>
-import { autoScaleLifecycleNotice } from '@/utils/autoScaleLifecycle'
-import AutoScaleEvaluation from '@/views/compute/AutoScaleEvaluation'
-import AutoScaleOperationalSummary from '@/views/compute/AutoScaleOperationalSummary'
 import { creationVmDetails } from '@/utils/creationVmPresentation'
 import DedicateData from './DedicateData'
 import HostInfo from '@/views/infra/HostInfo'
@@ -375,8 +362,6 @@ import 'vue-code-highlight/themes/prism-okaidia.css'
 export default {
   name: 'DetailsTab',
   components: {
-    AutoScaleEvaluation,
-    AutoScaleOperationalSummary,
     DedicateData,
     HostInfo,
     VmwareData,
@@ -425,9 +410,6 @@ export default {
     this.dedicatedSectionActive = this.dedicatedRoutes.includes(this.$route.meta.name)
   },
   computed: {
-    autoScaleLifecycleNotice () {
-      return autoScaleLifecycleNotice(this.resource)
-    },
     customDisplayItems () {
       var items = ['ip4routes', 'ip6routes', 'privatemtu', 'publicmtu', 'provider', 'migrationip', 'details', 'parameters', 'secretkey', 'backupofferingdetails']
       if (this.$route.meta.name === 'webhookdeliveries' || this.$route.meta.name === 'quotasummary') {

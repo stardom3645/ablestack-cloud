@@ -36,7 +36,7 @@
       <div v-for="policy in evaluation.policies || []" :key="policy.id" class="evaluation-policy">
         <strong>{{ policyName(policy) }} · {{ statusLabel(policy.status) }}</strong>
         <p v-if="policy.reason">{{ $t('message.autoscale.evaluation.' + policy.reason) }}</p>
-        <p>{{ $t('label.duration') }}: {{ policy.duration }} {{ $t('label.seconds') }}</p>
+        <p>{{ $t('label.duration') }}: {{ policy.duration }}</p>
         <ul>
           <li v-for="(metric, index) in policy.conditions || []" :key="metric.id || index">
             <strong>{{ counterLabel(metric.countername) }}</strong>

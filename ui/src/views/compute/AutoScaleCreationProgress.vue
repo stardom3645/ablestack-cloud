@@ -17,7 +17,15 @@ specific language governing permissions and limitations
 under the License.
 -->
 <template>
-  <a-modal wrapClassName="autoscale-creation-modal" :visible="visible" :title="$t('message.creating.autoscale.vmgroup')" :footer="null" :maskClosable="false" @cancel="$emit('close')" width="680px">
+  <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+wrapClassName="autoscale-creation-modal"
+:visible="visible"
+:title="$t('message.creating.autoscale.vmgroup')"
+:maskClosable="false"
+@cancel="$emit('close')"
+width="680px">
     <a-alert show-icon :type="alertType" :message="$t('label.autoscale.creation.' + (operation?.status || 'unknown'))" :description="$t('message.autoscale.creation.' + (operation?.failureKind === 'storage' ? 'storage' : 'responsibility'))" />
     <p class="operation-id">{{ $t('label.autoscale.creation.operation') }}: {{ operation?.id }}</p>
     <div class="creation-stages">
@@ -32,17 +40,18 @@ under the License.
         </a-step>
       </a-steps>
     </div>
-    <div class="form-action">
+    <template #footer><div class="form-action">
       <a-button @click="$emit('close')">{{ $t('label.close') }}</a-button>
       <a-button v-if="operation?.status === 'unknown'" type="primary" :loading="busy" :disabled="busy || !canQuery" @click="$emit('resume')">{{ $t('label.autoscale.creation.resume') }}</a-button>
       <a-button v-if="['failed', 'residual', 'unknown'].includes(operation?.status)" :disabled="busy || !canCleanup" @click="$emit('cleanup')">{{ $t('label.autoscale.creation.cleanup.retry') }}</a-button>
       <a-button v-if="operation?.status === 'cleaned'" type="primary" @click="$emit('forget')">{{ $t('label.autoscale.creation.new') }}</a-button>
       <a-button v-if="operation?.status === 'success'" type="primary" @click="$emit('open-group')">{{ $t('label.autoscale.creation.open') }}</a-button>
-    </div>
+    </div></template>
   </a-modal>
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
 import { creationStageLabel } from '@/utils/autoScaleCreation'
 export default {
   props: { visible: Boolean, operation: Object, busy: Boolean, canQuery: Boolean, canCleanup: Boolean },

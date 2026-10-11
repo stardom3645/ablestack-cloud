@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div>
+  <div class="autoscale-create">
     <a-alert v-if="!hasRequiredCreationApis" type="error" show-icon :message="$t('message.autoscale.apis.required')" style="margin-bottom: 16px" />
     <a-alert v-if="userDataLookupFailed" type="error" show-icon :message="$t('message.autoscale.userdata.unavailable')" style="margin-bottom: 16px">
       <template #description><a-button size="small" @click="retryUserDataLookup">{{ $t('label.retry') }}</a-button></template>
@@ -507,7 +507,7 @@
                     </a-form-item>
                     <a-form-item name="scaleupquiettime" ref="scaleupquiettime">
                       <template #label>
-                        <tooltip-label :title="$t('label.quiettime')" :tooltip="createAutoScalePolicyApiParams.quiettime.description"/>
+                        <tooltip-label :title="$t('label.autoscale.cooldown.seconds')" :tooltip="createAutoScalePolicyApiParams.quiettime.description"/>
                       </template>
                       <a-input v-model:value="selectedScaleUpPolicy.scaleupquiettime" type="number"></a-input>
                     </a-form-item>
@@ -566,7 +566,7 @@
                       <div class="form__label">{{ $t('label.action') }}</div>
                       <a-button ref="submit" type="primary" @click="addScaleUpCondition">
                         <template #icon><plus-outlined /></template>
-                        {{ $t('label.add.condition') }}
+                        {{ $t('label.autoscale.condition.add') }}
                       </a-button>
                     </div>
                   </div>
@@ -651,7 +651,7 @@
                     </a-form-item>
                     <a-form-item name="scaledownquiettime" ref="scaledownquiettime">
                       <template #label>
-                        <tooltip-label :title="$t('label.quiettime')" :tooltip="createAutoScalePolicyApiParams.quiettime.description"/>
+                        <tooltip-label :title="$t('label.autoscale.cooldown.seconds')" :tooltip="createAutoScalePolicyApiParams.quiettime.description"/>
                       </template>
                       <a-input v-model:value="selectedScaleDownPolicy.scaledownquiettime" type="number"></a-input>
                     </a-form-item>
@@ -710,7 +710,7 @@
                       <div class="form__label">{{ $t('label.action') }}</div>
                       <a-button ref="submit" type="primary" @click="addScaleDownCondition">
                         <template #icon><plus-outlined /></template>
-                        {{ $t('label.add.condition') }}
+                        {{ $t('label.autoscale.condition.add') }}
                       </a-button>
                     </div>
                   </div>
@@ -962,6 +962,7 @@
               </a-step>
             </a-steps>
             <div class="card-footer" v-if="isMobile()">
+              <auto-scale-creation-summary :form="form" :loadbalancer="loadbalancer || {}" />
               <deploy-buttons
                 :loading="loading.deploy || submitting || creationBusy"
                 :disabled="Boolean(hasUnresolvedCreation)"
@@ -975,6 +976,7 @@
       <a-col :md="24" :lg="7" v-if="!isMobile()">
         <div class="vm-info-card">
           <info-card :footerVisible="true" :resource="vm" :title="$t('label.your.autoscale.vmgroup')" @change-resource="(data) => resource = data">
+            <template #details><auto-scale-creation-summary :form="form" :loadbalancer="loadbalancer || {}" /></template>
             <template #footer-content>
               <deploy-buttons
                 :loading="loading.deploy || submitting || creationBusy"
@@ -1002,6 +1004,8 @@
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
+import AutoScaleCreationSummary from '@/views/compute/AutoScaleCreationSummary'
 import { ref, reactive, toRaw, markRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import { createAutoScaleCreation, autoScaleCreationScope } from '@/utils/autoScaleCreation'
@@ -1042,6 +1046,7 @@ const STATUS_FAILED = 'error'
 export default {
   name: 'Wizard',
   components: {
+    AutoScaleCreationSummary,
     AutoScaleCreationProgress,
     InfoCard,
     DeployButtons,

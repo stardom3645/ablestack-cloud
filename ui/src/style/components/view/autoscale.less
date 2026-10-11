@@ -1,0 +1,52 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+.autoscale-tab, .autoscale-create {
+  color: var(--ui-text-primary);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  .ant-card, .ant-card-head, .ant-steps-item-title, .ant-steps-item-description { color: var(--ui-text-primary); }
+  .form__label, .update-condition__label { color: var(--ui-text-primary); font-weight: 600; }
+  .form__required { color: var(--ui-error-text); }
+  .form { display: flex; flex-wrap: wrap; gap: 12px; margin-right: 0; align-items: center; }
+  .form > .ant-select { width: min(100%, 320px) !important; }
+  .form > .ant-btn { margin-left: 0 !important; }
+  .ant-table-wrapper { max-width: 100%; overflow-x: auto; }
+  .ant-input, .ant-select { max-width: 100%; }
+  .ant-alert { margin-bottom: 12px; }
+  .zone-radio-button { min-width: 0; }
+  .ant-radio-wrapper { white-space: normal; }
+  .vm-info-card .resource-detail-item__details a { color: var(--ui-text-primary); }
+}
+.autoscale-dialog {
+  color: var(--ui-text-primary);
+  .form, .update-condition { width: 100%; min-width: 0; margin-right: 0; }
+  .form__label, .update-condition__label { color: var(--ui-text-primary); font-weight: 600; }
+  .action-button { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .action-button button { margin-left: 0; }
+  .form__required { color: var(--ui-error-text); }
+}
+.autoscale-operations .operations-toolbar { justify-content: flex-start; }
+.autoscale-operations .operations-toolbar > p { flex-basis: 100%; }
+.autoscale-operations .operations-toolbar .ant-btn { flex: 0 0 auto; }
+@media (max-width: 768px) {
+  .autoscale-tab .form__item, .autoscale-dialog .form__item { width: 100%; flex-basis: 100%; padding-right: 0; }
+  .autoscale-create .ant-card-body { padding: 16px 12px; }
+  .autoscale-create .form { margin-right: 0; }
+  .autoscale-create .form__item { width: 100%; padding-right: 0; }
+  .autoscale-dialog .ant-modal-footer .action-button { width: 100%; }
+}

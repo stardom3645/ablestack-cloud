@@ -8697,5 +8697,13 @@
   "label.autoscale.event.state.Scheduled": "Scheduled",
   "label.autoscale.event.state.Started": "Started",
   "label.autoscale.event.state.Completed": "Completed",
-  "label.autoscale.event.state.Created": "Recorded"
+  "label.autoscale.event.state.Created": "Recorded",
+  "label.autoscale.members.range": "Managed VMs · range",
+  "label.autoscale.range": "Min {min} · max {max}",
+  "label.autoscale.network.lb": "Network · LB",
+  "label.autoscale.port.mapping": "Public → guest port",
+  "label.autoscale.cooldown.seconds": "Cooldown (seconds)",
+  "label.autoscale.condition.add": "Add condition",
+  "label.autoscale.creation.summary": "Review group settings",
+  "message.autoscale.name.ascii": "The group name is used in guest hostnames. Use ASCII letters, digits and hyphens; policy names and descriptions may use Unicode."
 }

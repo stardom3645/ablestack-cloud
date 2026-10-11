@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div>
+  <div class="autoscale-tab">
     <div>
       <a-alert type="info" v-if="(resource.state !== 'DISABLED' || resource.operationinprogress)">
         <template #message>
@@ -204,12 +204,14 @@
     </a-table>
 
     <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
       :title="$t('label.edit.autoscale.vmprofile')"
       :visible="editProfileModalVisible"
       :afterClose="closeModal"
       :maskClosable="false"
       :closable="true"
-      :footer="null"
       @cancel="editProfileModalVisible = false">
 
       <div class="form">
@@ -290,21 +292,26 @@
           </a-select>
         </div>
       </div>
-      <div :span="24" class="action-button">
+
+      <template #footer>
+        <div :span="24" class="action-button">
         <a-button :disabled="saving" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button :loading="saving" ref="submit" type="primary" @click="updateAutoScaleVmProfile">{{ $t('label.ok') }}</a-button>
       </div>
+      </template>
     </a-modal>
 
     <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
       :visible="showUpdateUserDataForm"
       :title="$t('label.reset.user.data.on.autoscale.vm.group')"
       :closable="true"
       :maskClosable="false"
       :footer="null"
       @cancel="showUpdateUserDataForm = false"
-      centered
-      width="auto">
+>
       <reset-user-data
         :resource="{ ...resource, ...{ resetUserDataApiName: 'updateAutoScaleVmProfile', resetUserDataResourceId: this.resource.vmprofileid, templateid: this.templateid}}"
         @close-action="onUserDataClose"
@@ -314,6 +321,7 @@
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
 import { getAPI, postAPI } from '@/api'
 import { isAdminOrDomainAdmin } from '@/role'
 import { autoScaleOfferingEligible, autoScaleInteger } from '@/utils/autoscaleValidation'

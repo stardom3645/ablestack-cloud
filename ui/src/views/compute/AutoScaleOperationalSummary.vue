@@ -28,25 +28,26 @@
       <div><dt>{{ $t('label.autoscale.last.scaled') }}</dt><dd>{{ time(resource.lastscaledat) }}</dd></div>
       <div v-if="resource.operationdeadline"><dt>{{ $t('label.autoscale.drain.deadline') }}</dt><dd>{{ time(resource.operationdeadline) }}</dd></div>
     </dl>
-    <a-alert v-if="resource.state === 'DISABLED'" type="info" show-icon :message="$t('message.autoscale.operational.disabled')" />
+    <a-alert v-if="resource.state === 'DISABLED' && !resource.operationinprogress" type="info" show-icon :message="$t('message.autoscale.operational.disabled')" />
     <a-alert
 v-if="resource.operationinprogress"
-:type="retry ? 'warning' : 'info'"
+:type="notice.type"
 show-icon
 role="status"
-      :message="$t('label.autoscale.operation.' + (resource.scalingaction || 'RECOVERY')) + ' · ' + $t('label.autoscale.phase.' + (resource.scalingphase || 'RECOVERY'))"
-      :description="$t(retry ? 'message.autoscale.operational.retry' : 'message.autoscale.operation.wait')" />
+      :message="$t(notice.message)"
+      :description="$t('label.autoscale.operation.' + (resource.scalingaction || 'RECOVERY')) + ' · ' + $t('label.autoscale.phase.' + (resource.scalingphase || 'RECOVERY')) + '. ' + $t(notice.description)" />
     <p v-if="summary?.cleanup || summary?.error" role="status">{{ $t('message.autoscale.operational.inspect') }}</p>
   </a-card>
 </template>
 <script>
+import { autoScaleLifecycleNotice } from '@/utils/autoScaleLifecycle'
 import { autoScaleStateSummary, autoScaleTime } from '@/utils/autoScaleOperations'
 export default {
   name: 'AutoScaleOperationalSummary',
   props: { resource: { type: Object, required: true } },
   computed: {
     summary () { return autoScaleStateSummary(this.resource.memberstatecounts) },
-    retry () { return (this.resource.scalingphase || '').endsWith('_RETRY') }
+    notice () { return autoScaleLifecycleNotice(this.resource) }
   },
   methods: { time (value) { return autoScaleTime(value, value => this.$toLocaleDate(value), key => this.$t(key)) } }
 }

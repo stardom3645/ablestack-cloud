@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div>
+  <div class="autoscale-tab">
     <a-alert v-if="affectedGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedGroups.join(', ') })" />
     <a-alert v-if="mutationError" type="error" show-icon :message="mutationError" />
     <a-alert v-if="retainedResources" type="warning" show-icon :message="$t('message.autoscale.edit.retained', { ids: retainedResources })" />
@@ -86,7 +86,7 @@
         <div class="form__item">
           <div class="form__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.quiettime')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
+            <tooltip-label :title="$t('label.autoscale.cooldown.seconds')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
           </div>
           <a-input v-model:value="policy.quiettime" type="number" :disabled="!this.isEditable"></a-input>
         </div>
@@ -191,19 +191,21 @@
           <div class="form__label">{{ $t('label.action') }}</div>
           <a-button ref="submit" :disabled="saving || !('createCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addConditionToPolicy">
             <template #icon><plus-outlined /></template>
-            {{ $t('label.add.condition') }}
+            {{ $t('label.autoscale.condition.add') }}
           </a-button>
         </div>
       </div>
     </div>
 
     <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
       :title="$t('label.update.condition')"
       :visible="updateConditionModalVisible"
       :afterClose="closeModal"
       :maskClosable="false"
       :closable="true"
-      :footer="null"
       @cancel="updateConditionModalVisible = false">
       <a-alert v-if="affectedConditionGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedConditionGroups.join(', ') })" />
       <span v-show="updateConditionModalLoading" class="modal-loading">
@@ -237,20 +239,25 @@
           </div>
           <a-input v-focus="true" v-model:value="updateConditionDetails.threshold" type="number" />
         </div>
+
+      </div>
+      <template #footer>
         <div :span="24" class="action-button">
           <a-button @click="() => updateConditionModalVisible = false">{{ $t('label.cancel') }}</a-button>
           <a-button type="primary" @click="handleSubmitUpdateConditionForm">{{ $t('label.ok') }}</a-button>
         </div>
-      </div>
+      </template>
     </a-modal>
 
     <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
       :title="$t('label.add.policy')"
       :visible="addPolicyModalVisible"
       :afterClose="closeModal"
       :maskClosable="false"
       :closable="true"
-      :footer="null"
       @cancel="addPolicyModalVisible = false">
 
       <div class="update-condition">
@@ -270,7 +277,7 @@
         <div class="update-condition__item">
           <div class="update-condition__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.quiettime')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
+            <tooltip-label :title="$t('label.autoscale.cooldown.seconds')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
           </div>
           <a-input v-model:value="newPolicy.quiettime" type="number"></a-input>
         </div>
@@ -319,16 +326,20 @@
           <a-input v-model:value="newPolicy.threshold" type="number"></a-input>
         </div>
       </div>
-      <div :span="24" class="action-button">
+
+      <template #footer>
+        <div :span="24" class="action-button">
         <a-button :loading="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button :loading="loading" ref="submit" type="primary" @click="addNewScalePolicyToGroup">{{ $t('label.ok') }}</a-button>
       </div>
+      </template>
     </a-modal>
 
   </div>
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
 import { autoScaleOperators, validAutoScalePolicyTiming, autoScaleCounterLabel } from '@/utils/autoScalePolicyEvaluation'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 import { autoScaleInteger } from '@/utils/autoscaleValidation'

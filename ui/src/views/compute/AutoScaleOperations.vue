@@ -17,7 +17,7 @@
 
 <template>
   <section class="autoscale-operations">
-    <div class="operations-toolbar"><p>{{ $t('message.autoscale.operational.source') }}</p><a-button @click="fetchData" :loading="loading">{{ $t('label.autoscale.operational.refresh') }}</a-button></div>
+    <div class="operations-toolbar"><p>{{ $t('message.autoscale.operational.source') }}</p><a-button @click="fetchData" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.autoscale.operational.refresh') }}</a-button></div>
     <div v-for="(part, key) in parts" :key="key" class="source-status" role="status">
       <strong>{{ $t('label.autoscale.source.' + key) }}</strong> · {{ time(part.time) }}
       <span v-if="part.denied"> · {{ $t('message.autoscale.source.denied') }}</span>
@@ -61,6 +61,7 @@ row-key="id"
   </section>
 </template>
 <script>
+import '@/style/components/view/autoscale.less'
 import { getAPI } from '@/api'
 import Status from '@/components/widgets/Status'
 import AutoScaleEvaluation from '@/views/compute/AutoScaleEvaluation'

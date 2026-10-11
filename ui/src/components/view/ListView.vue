@@ -23,6 +23,7 @@
       :locale="emptyText ? { emptyText } : undefined"
       :columns="isOrderUpdatable() ? columns : columns.filter(x => x.dataIndex !== 'order')"
       :dataSource="items"
+      :scroll="$route.name === 'autoscalevmgroup' ? { x: 980 } : undefined"
       :rowKey="listRowKey"
       :pagination="false"
       :rowSelection="explicitlyAllowRowSelection || enableGroupAction() || $route.name === 'event' ? {selectedRowKeys: selectedRowKeys, onChange: onSelectChange, columnWidth: 30} : null"
@@ -53,7 +54,10 @@
       </div>
     </template>
     <template #bodyCell="{ column, text, record }">
-      <template v-if="['name', 'provider'].includes(column.key)">
+      <template v-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat'].includes(column.key)">
+        <auto-scale-list-cell :resource="record" :column="column.key" />
+      </template>
+      <template v-else-if="['name', 'provider'].includes(column.key)">
         <span
           v-if="['vm', 'vnfapp'].includes($route.path.split('/')[1])"
           style="margin-right: 5px"
@@ -1178,6 +1182,7 @@
 </template>
 
 <script>
+import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import { listRowKey } from '@/utils/listRefresh'
 import { getAPI, postAPI } from '@/api'
 import OsLogo from '@/components/widgets/OsLogo'
@@ -1200,6 +1205,7 @@ import { FileTextOutlined } from '@ant-design/icons-vue'
 export default {
   name: 'ListView',
   components: {
+    AutoScaleListCell,
     OsLogo,
     Status,
     CloneFlattenControl,

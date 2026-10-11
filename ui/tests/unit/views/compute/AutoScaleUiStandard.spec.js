@@ -1,0 +1,68 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+import { mount } from '@vue/test-utils'
+import { h, reactive } from 'vue'
+import fs from 'fs'
+import path from 'path'
+import Cell from '@/views/compute/AutoScaleListCell.vue'
+import ResourceView from '@/components/view/ResourceView.vue'
+import { autoScaleVisibleColumns } from '@/utils/autoScaleUi'
+import { getAPI } from '@/api'
+jest.mock('@/api', () => ({ getAPI: jest.fn() }))
+const translate = (key, params) => params ? `${key}:${params.min}/${params.max}` : key
+function cell (resource, column) {
+  return mount(Cell, { props: { resource, column }, global: { mocks: { $t: translate, $toLocaleDate: value => value }, stubs: { RouterLink: { props: ['to'], render () { return h('a', { href: this.to }, this.$slots.default()) } } } } })
+}
+test('member counts include zero and bounds independently; missing is not zero', () => {
+  const wrapper = cell({ availablevirtualmachinecount: 0, minmembers: 1, maxmembers: 4 }, 'availablevirtualmachinecount')
+  expect(wrapper.text()).toContain('0'); expect(wrapper.text()).toContain('1/4')
+  const absent = cell({}, 'availablevirtualmachinecount'); expect(absent.text()).toContain('—/—')
+  wrapper.unmount(); absent.unmount()
+})
+test('network/LB is rendered as safe text and links to its own network only', () => {
+  const wrapper = cell({ associatednetworkid: 'network', associatednetworkname: '<img onerror=x>', publicip: '10.0.0.1', publicport: 80, privateport: 8080 }, 'associatednetworkname')
+  expect(wrapper.find('img').exists()).toBe(false); expect(wrapper.get('a').attributes('href')).toBe('/guestnetwork/network')
+  expect(wrapper.text()).toContain('<img onerror=x>'); expect(wrapper.text()).toContain('10.0.0.1:80 → 8080'); wrapper.unmount()
+})
+test('operation state takes precedence over stale evaluation and invalid dates remain readable', () => {
+  const wrapper = cell({ lastcheckedat: 'bad', operationinprogress: true, scalingaction: 'CLEANUP', scalingphase: 'CLEANUP_RETRY', evaluation: { status: 'MATCHED' } }, 'lastcheckedat')
+  expect(wrapper.text()).toContain('label.autoscale.not.recorded'); expect(wrapper.text()).toContain('CLEANUP_RETRY'); expect(wrapper.text()).not.toContain('MATCHED'); wrapper.unmount()
+})
+test('future evaluation status is visible without exposing a missing translation key', () => {
+  const wrapper = cell({ evaluation: { status: 'FUTURE' } }, 'lastcheckedat')
+  expect(wrapper.text()).toContain('label.autoscale.evaluation.unknown (FUTURE)'); wrapper.unmount()
+})
+test('saved columns consolidate old port/range choices without duplicates or lost owner scope', () => {
+  expect(autoScaleVisibleColumns(['name', 'minmembers', 'maxmembers', 'publicip', 'publicport', 'privateport', 'account', 'project'])).toEqual(['name', 'availablevirtualmachinecount', 'associatednetworkname', 'account', 'project'])
+  expect(autoScaleVisibleColumns(['state', 'publicport'])).toEqual(['state', 'associatednetworkname'])
+})
+const source = file => fs.readFileSync(path.resolve(__dirname, '../../../../src', file), 'utf8')
+test('common DetailsTab cannot show autoscale cards or operation alerts on any resource', () => {
+  expect(source('components/view/DetailsTab.vue')).not.toMatch(/auto-scale|autoScale|autoscale/)
+})
+test.each(['vm', 'volume', 'template', 'autoscalevmgroup'])('common info card slot remains isolated for %s', name => {
+  getAPI.mockResolvedValue({})
+  const wrapper = mount(ResourceView, {
+    props: { resource: { id: 'resource' }, tabs: [{ name: 'details', component: { render: () => h('span', 'details') } }] },
+    global: {
+      mocks: { $route: { path: '/' + name + '/resource', meta: { name }, query: {} }, $t: translate, $store: reactive({ state: { app: { device: 'desktop' } }, getters: { userInfo: {} } }) },
+      stubs: { ResourceLayout: { render () { return h('div', [this.$slots.left(), this.$slots.right()]) } }, InfoCard: { render () { return h('div', this.$slots.details()) } }, AutoScaleInfoSummary: { render: () => h('span', 'autoscale-only-summary') }, ACard: { render () { return h('div', this.$slots.default()) } } }
+    }
+  })
+  expect(wrapper.text().includes('autoscale-only-summary')).toBe(name === 'autoscalevmgroup'); expect(wrapper.text()).toContain('details'); wrapper.unmount()
+})
