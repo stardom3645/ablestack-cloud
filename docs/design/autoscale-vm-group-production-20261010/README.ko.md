@@ -32,7 +32,7 @@ Epic: [#1346](https://github.com/ablecloud-team/ablestack-cloud/issues/1346). �
 | AS-04 | [#1350](https://github.com/ablecloud-team/ablestack-cloud/issues/1350) | P0 | 동시성·중지 경쟁·재시작 복구 | [#1348](https://github.com/ablecloud-team/ablestack-cloud/issues/1348) | 완료 / [검증 기록](AS-04-validation.ko.md) |
 | AS-03 | [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349) | P1 | 카운터·기간·쿨다운·정책 평가 | [#1347](https://github.com/ablecloud-team/ablestack-cloud/issues/1347) | 완료 / [검증 기록](AS-03-validation.ko.md) |
 | AS-05 | [#1351](https://github.com/ablecloud-team/ablestack-cloud/issues/1351) | P0 | VM/LB 수명주기·드레인·삭제 보상 | [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1350](https://github.com/ablecloud-team/ablestack-cloud/issues/1350) | 완료 / [검증 기록](AS-05-validation.ko.md) |
-| AS-06 | [#1352](https://github.com/ablecloud-team/ablestack-cloud/issues/1352) | P1 | 정책·프로필·예약 변경 계약 | [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1350](https://github.com/ablecloud-team/ablestack-cloud/issues/1350) | Open / 계획 |
+| AS-06 | [#1352](https://github.com/ablecloud-team/ablestack-cloud/issues/1352) | P1 | 정책·프로필·예약 변경 계약 | [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1350](https://github.com/ablecloud-team/ablestack-cloud/issues/1350) | 구현·배포·핵심 UI 검증 완료 / 최종 정리 승인 대기 |
 | AS-07 | [#1353](https://github.com/ablecloud-team/ablestack-cloud/issues/1353) | P1 | 멤버·최근 평가·실패 운영 가시성 | [#1348](https://github.com/ablecloud-team/ablestack-cloud/issues/1348), [#1349](https://github.com/ablecloud-team/ablestack-cloud/issues/1349), [#1351](https://github.com/ablecloud-team/ablestack-cloud/issues/1351) | Open / 계획 |
 | AS-09 | [#1355](https://github.com/ablecloud-team/ablestack-cloud/issues/1355) | P1 | 마지막 구현 단계: 현재 Mold VM UI 표준 통합 | [#1352](https://github.com/ablecloud-team/ablestack-cloud/issues/1352), [#1353](https://github.com/ablecloud-team/ablestack-cloud/issues/1353) | Open / 계획 |
 | AS-08 | [#1354](https://github.com/ablecloud-team/ablestack-cloud/issues/1354) | P1 | GFS2/krbd 최종 UI E2E·프로덕션 판정 | [#1355](https://github.com/ablecloud-team/ablestack-cloud/issues/1355) | Open / 계획 |
@@ -200,3 +200,8 @@ Mold UI → Cloud API → AutoScaleManagerImpl → 상태/프로필/정책/통�
 접근성 검증 목표는 [W3C WCAG 2.2 텍스트 대비 설명](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)과 [비텍스트 대비 설명](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)을 참고한다. 비활성 컴포넌트는 WCAG 대비 의무의 예외이나 본 제품에서는 값과 비활성 사유의 읽기 가능성을 별도 검토한다.
 
 권한은 프로젝트의 SECURITY.md/THREAT_MODEL.md를 참고하여 회귀 검증 항목으로 다룬다. 이번 검토에서 권한 우회가 재현되었다는 의미는 아니다.
+
+
+## AS-06 최신 진행 (2026-10-11)
+
+#1352의 정책·프로필·예약 계약을 구현하고 Java254건/UI162건, 변경 api/schema/server 모듈 install·Checkstyle·RAT, UI lint/build와 31 GFS2 Sparse/32 krbd 실제 UI 검증을 완료했다. UTC/KST 동일 시각의 단일 실행, Disabled 범위 저장, Enabled VM2→3/LB3, 향후 VM ROOT/DATA/SSH/UserData/affinity 반영, 공유 정책과 권한·한글·라이트/다크를 확인했다. 최종 신규4VM/520GiB의 UI 축소·정리는 영구 삭제 승인을 기다리며 #1352는 Open, Epic 완료 집계는5/9로 유지한다. [AS-06 검증 기록](AS-06-validation.ko.md)을 참조한다. 다음 #1353은 #1352 완료 보고 후 사용자 지시까지 대기한다.
