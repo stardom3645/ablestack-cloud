@@ -77,10 +77,17 @@ export default {
     columns () { return ['name', 'state', 'lb'].map(key => ({ key, dataIndex: key, title: this.$t('label.autoscale.member.' + key) })) }
   },
   watch: {
-    'resource.id' () {
-      Object.values(this.parts).forEach(item => item.sequence++)
-      this.parts = { group: part(this.resource), members: part([]), lb: part([]), events: part([]) }
-      this.page = 1; this.total = 0; this.keyword = ''; this.fetchData()
+    resource: {
+      handler (next, previous) {
+        if (next.id !== previous.id) {
+          Object.values(this.parts).forEach(item => item.sequence++)
+          this.parts = { group: part(next), members: part([]), lb: part([]), events: part([]) }
+          this.page = 1; this.total = 0; this.keyword = ''
+        }
+        // The standard ResourceLayout refresh/action completion also refreshes
+        // these independent reads, without resetting the current member query.
+        this.fetchData()
+      }
     }
   },
   created () { this.fetchData() },

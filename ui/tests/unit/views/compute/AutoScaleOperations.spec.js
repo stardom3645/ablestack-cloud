@@ -97,3 +97,14 @@ test('resource replacement cannot apply a prior resource response', async () => 
 test('unknown evaluation status has a readable fallback', () => {
   expect(Evaluation.methods.statusLabel.call({ $te: () => false, $t: key => key }, 'FUTURE')).toContain('(FUTURE)')
 })
+
+test('standard parent refresh updates all operational sources and preserves member page and search', () => {
+  const ctx = context(); ctx.page = 2; ctx.keyword = 'kept'; ctx.fetchData = jest.fn()
+  Operations.watch.resource.handler.call(ctx, { id: 'group' }, { id: 'group' })
+  expect(ctx.fetchData).toHaveBeenCalledTimes(1); expect(ctx.page).toBe(2); expect(ctx.keyword).toBe('kept')
+})
+test('a different parent group invalidates old parts and resets only the group-specific query', () => {
+  const ctx = context(); const old = ctx.parts.members; ctx.page = 2; ctx.keyword = 'old'; ctx.fetchData = jest.fn()
+  Operations.watch.resource.handler.call(ctx, { id: 'other' }, { id: 'group' })
+  expect(old.sequence).toBe(1); expect(ctx.parts.members).not.toBe(old); expect(ctx.page).toBe(1); expect(ctx.keyword).toBe('')
+})
