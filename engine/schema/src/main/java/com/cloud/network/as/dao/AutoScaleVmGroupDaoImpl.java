@@ -120,6 +120,22 @@ public class AutoScaleVmGroupDaoImpl extends GenericDaoBase<AutoScaleVmGroupVO, 
     }
 
     @Override
+    public boolean beginCleanupOperation(long groupId, String token) {
+        return Transaction.execute((TransactionCallback<Boolean>) status -> {
+            AutoScaleVmGroupVO current = lockRow(groupId, true);
+            if (current == null || current.isOperationInProgress()) { return false; }
+            AutoScaleVmGroupVO update = createForUpdate(groupId);
+            update.setState(AutoScaleVmGroup.State.DISABLED);
+            update.setOperationUuid(token);
+            update.setOperationAction("CLEANUP");
+            update.setOperationPhase("ACCEPTED");
+            update.setOperationVmId(null);
+            update.setOperationDeadline(null);
+            return update(groupId, update);
+        });
+    }
+
+    @Override
     public boolean checkpointOperation(long groupId, String token, String phase, Long vmId, Date deadline) {
         SearchCriteria<AutoScaleVmGroupVO> sc = OperationSearch.create();
         sc.setParameters("id", groupId);

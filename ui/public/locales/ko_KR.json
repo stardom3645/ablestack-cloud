@@ -2890,7 +2890,7 @@
   "message.action.cancel.maintenance.mode": "현재 유지 보수 모드를 취소하시겠습니까?",
   "message.action.create.snapshot.from.vmsnapshot": "VM 스냅샷에서 스냅샷을 생성할 것인지 확인하십시오.",
   "message.action.delete.asnrange": "삭제하려는 AS 범위를 확인해 주세요",
-  "message.action.delete.autoscale.vmgroup": "이 오토스케일 VM 그룹을 삭제할 것인지 확인하십시오.",
+  "message.action.delete.autoscale.vmgroup": "VM 정리를 선택하면 연결된 VM과 ROOT 볼륨을 영구 삭제합니다. 먼저 LB에서 제외하고 삭제 유예를 기다립니다. 일부 정리에 실패하면 비활성 그룹과 미삭제 VM을 보존하며 자동 정리를 재시도합니다. 정리가 끝나면 그룹 삭제를 다시 실행하십시오. VM 정리를 선택하지 않으면 멤버가 있는 그룹은 삭제할 수 없습니다.",
   "message.action.delete.backup.offering": "이 백업 오퍼링을 삭제할 것인지 확인하십시오.",
   "message.action.delete.backup.repository": "이 백업 저장소를 삭제하시겠습니까?",
   "message.action.delete.backup.schedule": "이 백업 스케줄을 삭제하시겠습니까?",
@@ -8547,5 +8547,16 @@
   "label.autoscale.counter.network.rx": "VM당 공인 네트워크 평균 수신량",
   "label.autoscale.counter.network.tx": "VM당 공인 네트워크 평균 송신량",
   "label.autoscale.counter.connections": "VM당 부하 분산 평균 연결 수",
-  "label.autoscale.connections.per.vm": "연결/VM"
+  "label.autoscale.connections.per.vm": "연결/VM",
+  "message.autoscale.lifecycle.retry": "VM/LB 처리에 실패했습니다. 추적 중인 대상의 복구를 재시도합니다.",
+  "message.autoscale.lifecycle.cleanup": "그룹의 VM과 볼륨을 정리하고 있습니다.",
+  "message.autoscale.lifecycle.cleanup.retry": "미삭제 VM은 그룹에 남습니다. 자동 정리 완료 후 비활성 그룹 삭제를 다시 실행하십시오.",
+  "message.autoscale.lifecycle.members.retained": "대상 VM은 처리 완료까지 그룹에 남습니다. 새 조정은 복구가 끝난 뒤 진행됩니다.",
+  "message.autoscale.lifecycle.grace": "LB에서 제외한 후 VM을 삭제하기까지 기다리는 최대 시간(초)입니다. 기존 연결은 이 시간 동안 마무리할 수 있으며, 유예보다 긴 연결은 VM 삭제 시 종료될 수 있습니다.",
+  "label.autoscale.operation.CLEANUP": "그룹 VM 정리",
+  "label.autoscale.phase.ALLOCATING_RETRY": "VM 할당 실패",
+  "label.autoscale.phase.STARTING_RETRY": "VM 시작 재시도",
+  "label.autoscale.phase.ASSIGNING_RETRY": "LB 연결 재시도",
+  "label.autoscale.phase.EXCLUDING_RETRY": "LB 제외 재시도",
+  "label.autoscale.phase.DESTROYING_RETRY": "VM 삭제 재시도"
 }

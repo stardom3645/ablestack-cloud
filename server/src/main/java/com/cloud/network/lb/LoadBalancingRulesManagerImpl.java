@@ -1245,8 +1245,7 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
         try {
             loadBalancer.setState(FirewallRule.State.Add);
             _lbDao.persist(loadBalancer);
-            applyLoadBalancerConfig(loadBalancerId);
-            success = true;
+            success = applyLoadBalancerConfig(loadBalancerId);
         } catch (ResourceUnavailableException e) {
             logger.warn("Unable to apply the load balancer config because resource is unavailable.", e);
             success = false;

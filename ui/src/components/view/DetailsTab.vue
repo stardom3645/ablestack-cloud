@@ -20,11 +20,11 @@
     <a-alert
       v-if="resource.operationinprogress"
       class="autoscale-operation-status"
-      :type="resource.state === 'DISABLED' ? 'warning' : 'info'"
+      :type="autoScaleLifecycleNotice.type"
       show-icon
       role="status"
-      :message="$t(resource.state === 'DISABLED' ? 'message.autoscale.operation.stopping' : 'message.autoscale.operation.running')"
-      :description="$t('label.autoscale.operation.' + (resource.scalingaction || 'RECOVERY')) + ' · ' + $t('label.autoscale.phase.' + (resource.scalingphase || 'RECOVERY'))" />
+      :message="$t(autoScaleLifecycleNotice.message)"
+      :description="$t('label.autoscale.operation.' + (resource.scalingaction || 'RECOVERY')) + ' · ' + $t('label.autoscale.phase.' + (resource.scalingphase || 'RECOVERY')) + '. ' + $t(autoScaleLifecycleNotice.description)" />
   <a-alert type="error" v-if="['vm', 'systemvm', 'router', 'ilbvm'].includes($route.meta.name) && 'hostcontrolstate' in resource && resource.hostcontrolstate !== 'Enabled'">
     <template #message>
       <div class="title">
@@ -356,6 +356,7 @@
 </template>
 
 <script>
+import { autoScaleLifecycleNotice } from '@/utils/autoScaleLifecycle'
 import AutoScaleEvaluation from '@/views/compute/AutoScaleEvaluation'
 import { creationVmDetails } from '@/utils/creationVmPresentation'
 import DedicateData from './DedicateData'
@@ -421,6 +422,9 @@ export default {
     this.dedicatedSectionActive = this.dedicatedRoutes.includes(this.$route.meta.name)
   },
   computed: {
+    autoScaleLifecycleNotice () {
+      return autoScaleLifecycleNotice(this.resource)
+    },
     customDisplayItems () {
       var items = ['ip4routes', 'ip6routes', 'privatemtu', 'publicmtu', 'provider', 'migrationip', 'details', 'parameters', 'secretkey', 'backupofferingdetails']
       if (this.$route.meta.name === 'webhookdeliveries' || this.$route.meta.name === 'quotasummary') {

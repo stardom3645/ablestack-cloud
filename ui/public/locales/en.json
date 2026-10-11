@@ -2923,7 +2923,7 @@
   "message.action.cancel.maintenance.mode": "Please confirm that you want to cancel this maintenance.",
   "message.action.create.snapshot.from.vmsnapshot": "Please confirm that you want to create Snapshot from Instance Snapshot",
   "message.action.delete.asnrange": "Please confirm the AS range that you want to delete",
-  "message.action.delete.autoscale.vmgroup": "Please confirm that you want to delete this autoscaling group.",
+  "message.action.delete.autoscale.vmgroup": "VM cleanup permanently deletes the member VMs and ROOT volumes after LB exclusion and the configured grace period. If cleanup fails, the disabled group and remaining members are retained for automatic cleanup retry. Retry group deletion after cleanup finishes. Without VM cleanup, a group with members cannot be deleted.",
   "message.action.delete.backup.offering": "Please confirm that you want to delete this backup offering?",
   "message.action.delete.backup.repository": "Please confirm that you want to delete this backup repository?",
   "message.action.delete.backup.schedule": "Please confirm that you want to delete this backup schedule?",
@@ -8582,5 +8582,16 @@
   "label.autoscale.counter.network.rx": "Average public network receive per VM",
   "label.autoscale.counter.network.tx": "Average public network transmit per VM",
   "label.autoscale.counter.connections": "Average load balancer connections per VM",
-  "label.autoscale.connections.per.vm": "connections/VM"
+  "label.autoscale.connections.per.vm": "connections/VM",
+  "message.autoscale.lifecycle.retry": "VM/LB processing failed. Reconciliation of the recorded target will retry.",
+  "message.autoscale.lifecycle.cleanup": "Cleaning up the group VMs and volumes.",
+  "message.autoscale.lifecycle.cleanup.retry": "Remaining VMs stay tracked. Retry deletion of the disabled group after automatic cleanup finishes.",
+  "message.autoscale.lifecycle.members.retained": "The target remains tracked until processing completes. New scaling waits for reconciliation.",
+  "message.autoscale.lifecycle.grace": "Maximum time in seconds between LB exclusion and VM deletion. Existing connections can finish within this period; longer connections may close when the VM is deleted.",
+  "label.autoscale.operation.CLEANUP": "Group VM cleanup",
+  "label.autoscale.phase.ALLOCATING_RETRY": "VM allocation failed",
+  "label.autoscale.phase.STARTING_RETRY": "Retrying VM start",
+  "label.autoscale.phase.ASSIGNING_RETRY": "Retrying LB registration",
+  "label.autoscale.phase.EXCLUDING_RETRY": "Retrying LB exclusion",
+  "label.autoscale.phase.DESTROYING_RETRY": "Retrying VM deletion"
 }

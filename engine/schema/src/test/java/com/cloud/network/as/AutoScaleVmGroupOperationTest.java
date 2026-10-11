@@ -120,4 +120,18 @@ public class AutoScaleVmGroupOperationTest {
         assertEquals(1791693120509L, dao.current.getEvaluationTime().getTime());
     }
 
+
+    @Test public void cleanupClaimDisablesEvaluationAndPreservesUnrelatedConfiguration() {
+        Dao dao = new Dao(); dao.init();
+        dao.current.setState(AutoScaleVmGroup.State.ENABLED);
+        assertTrue(dao.beginCleanupOperation(1, "cleanup-owner"));
+        assertEquals(AutoScaleVmGroup.State.DISABLED, dao.updated.getState());
+        assertEquals("CLEANUP", dao.updated.getOperationAction());
+        UpdateBuilder update = GenericDaoBase.getUpdateBuilder(dao.updated);
+        assertTrue(update.has("operationUuid")); assertTrue(update.has("operationDeadline"));
+        assertFalse(update.has("evaluation")); assertFalse(update.has("minMembers"));
+        dao.current.setOperationUuid("other-owner"); dao.updated = null;
+        assertFalse(dao.beginCleanupOperation(1, "cleanup-owner"));
+        assertNull(dao.updated);
+    }
 }

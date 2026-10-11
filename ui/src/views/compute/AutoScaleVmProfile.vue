@@ -52,7 +52,7 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.expungevmgraceperiod')" :tooltip="createAutoScaleVmProfileApiParams.expungevmgraceperiod.description"/>
+            <tooltip-label :title="$t('label.expungevmgraceperiod')" :tooltip="$t('message.autoscale.lifecycle.grace')"/>
           </div>
           {{ expungevmgraceperiod }}
         </div>
@@ -230,7 +230,7 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.expungevmgraceperiod')" :tooltip="createAutoScaleVmProfileApiParams.expungevmgraceperiod.description"/>
+            <tooltip-label :title="$t('label.expungevmgraceperiod')" :tooltip="$t('message.autoscale.lifecycle.grace')"/>
           </div>
           <a-input v-model:value="expungevmgraceperiod" type="number"></a-input>
         </div>

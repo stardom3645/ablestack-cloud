@@ -1209,71 +1209,58 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             throw new InvalidParameterValueException(String.format("Cannot delete autoscale vm group : %s because there are %d VMs. Please remove the VMs or pass cleanup=true flag which will destroy all VMs.", autoScaleVmGroupVO, currentVM));
         }
 
-        AutoScaleVmGroup.State bakupState = autoScaleVmGroupVO.getState();
-        autoScaleVmGroupVO.setState(AutoScaleVmGroup.State.REVOKE);
-        autoScaleVmGroupDao.persist(autoScaleVmGroupVO);
-        boolean success = false;
-
-        if (Boolean.TRUE.equals(cleanup)) {
-            List<AutoScaleVmGroupVmMapVO> asGroupVmVOs = autoScaleVmGroupVmMapDao.listByGroup(id);
-            for (AutoScaleVmGroupVmMapVO asGroupVmVO : asGroupVmVOs) {
-                Long vmId = asGroupVmVO.getInstanceId();
-                destroyVm(vmId);
+        // A failed cleanup must never resume policy evaluation or forget its members.
+        AutoScaleVmGroup.State previousState = autoScaleVmGroupVO.getState();
+        if (Boolean.TRUE.equals(cleanup) && currentVM > 0) {
+            String token = UUID.randomUUID().toString();
+            if (!autoScaleVmGroupDao.beginCleanupOperation(id, token)) { return false; }
+            scheduleMonitorTask(id);
+            AutoScaleVmGroupVO current = autoScaleVmGroupDao.findById(id);
+            while (!resumeCleanupOperation(current)) {
+                current = autoScaleVmGroupDao.findById(id);
+                if (current == null || !"DRAINING".equals(current.getOperationPhase()) || current.getOperationDeadline() == null) {
+                    return false;
+                }
+                long remaining = current.getOperationDeadline().getTime() - currentTimeMillis();
+                if (remaining <= 0) { continue; }
+                try {
+                    Thread.sleep(Math.min(1000L, remaining));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
             }
         }
-
+        AutoScaleVmGroupVO current = autoScaleVmGroupDao.findById(id);
+        current.setState(AutoScaleVmGroup.State.REVOKE);
+        autoScaleVmGroupDao.persist(current);
         try {
-            success = configureAutoScaleVmGroup(id, bakupState);
-        } catch (ResourceUnavailableException e) {
-            autoScaleVmGroupVO.setState(bakupState);
-            autoScaleVmGroupDao.persist(autoScaleVmGroupVO);
-        } finally {
-            if (!success) {
-                logger.warn("Could not delete AutoScale Vm Group : {}", autoScaleVmGroupVO);
+            if (!configureAutoScaleVmGroup(id, previousState)) {
+                autoScaleVmGroupDao.updateState(id, AutoScaleVmGroup.State.REVOKE, AutoScaleVmGroup.State.DISABLED);
                 return false;
             }
+        } catch (Exception e) {
+            autoScaleVmGroupDao.updateState(id, AutoScaleVmGroup.State.REVOKE, AutoScaleVmGroup.State.DISABLED);
+            logger.warn("AutoScale group {} LB removal failed; the disabled group is retained for retry", id, e);
+            return false;
         }
-
-        // Remove comments (if any)
-        annotationDao.removeByEntityType(AnnotationService.EntityType.AUTOSCALE_VM_GROUP.name(), autoScaleVmGroupVO.getUuid());
-
-        return Transaction.execute(new TransactionCallback<Boolean>() {
-            @Override
-            public Boolean doInTransaction(TransactionStatus status) {
-                boolean success = autoScaleVmGroupDao.remove(id);
-
-                if (!success) {
-                    logger.warn("Failed to remove AutoScale Group db object");
-                    return false;
-                }
-
-                cancelMonitorTask(id);
-
-                success = autoScaleVmGroupPolicyMapDao.removeByGroupId(id);
-                if (!success) {
-                    logger.warn("Failed to remove AutoScale Group Policy mappings");
-                    return false;
-                }
-
-                success = autoScaleVmGroupVmMapDao.removeByGroup(id);
-                if (!success) {
-                    logger.warn("Failed to remove AutoScale Group VM mappings");
-                    return false;
-                }
-
-                success = asGroupStatisticsDao.removeByGroupId(id);
-                if (!success) {
-                    logger.warn("Failed to remove AutoScale Group statistics");
-                    return false;
-                }
-
-                resourceScheduleManager.removeSchedulesForResource(ApiCommandResourceType.AutoScaleVmGroup, id);
-
-                logger.info("Successfully deleted autoscale vm group: {}", autoScaleVmGroupVO);
-                return success; // Successfull
+        boolean removed;
+        try {
+            removed = Transaction.execute((TransactionCallback<Boolean>) status -> {
+            if (!autoScaleVmGroupDao.remove(id) || !autoScaleVmGroupPolicyMapDao.removeByGroupId(id) ||
+                    !autoScaleVmGroupVmMapDao.removeByGroup(id) || !asGroupStatisticsDao.removeByGroupId(id)) {
+                throw new CloudRuntimeException("Failed to remove AutoScale group records; retry the retained group");
             }
-        });
-
+            resourceScheduleManager.removeSchedulesForResource(ApiCommandResourceType.AutoScaleVmGroup, id);
+            annotationDao.removeByEntityType(AnnotationService.EntityType.AUTOSCALE_VM_GROUP.name(), autoScaleVmGroupVO.getUuid());
+            return true;
+            });
+        } catch (RuntimeException e) {
+            autoScaleVmGroupDao.updateState(id, AutoScaleVmGroup.State.REVOKE, AutoScaleVmGroup.State.DISABLED);
+            throw e;
+        }
+        if (removed) { cancelMonitorTask(id); }
+        return removed;
     }
 
     @Override
@@ -1839,7 +1826,10 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
         for (AutoScaleVmGroupVO group : groups) {
             logger.debug("Deleting AutoScale Vm Group {} for account: {}", group, account);
             try {
-                deleteAutoScaleVmGroup(group.getId(), true);
+                if (!deleteAutoScaleVmGroup(group.getId(), true)) {
+                    success = false;
+                    continue;
+                }
                 logger.debug("AutoScale Vm Group {} has been successfully deleted for account: {}", group, account);
             } catch (Exception e) {
                 logger.warn("Failed to delete AutoScale Vm Group {} for account: {} due to: ", group, account, e);
@@ -1851,6 +1841,10 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
 
     @Override
     public void cleanUpAutoScaleResources(Account account) {
+        // Do not remove dependencies of a group whose VM/LB cleanup is still incomplete.
+        if (!autoScaleVmGroupDao.listByAccount(account.getId()).isEmpty()) {
+            throw new CloudRuntimeException("AutoScale groups remain; retry account cleanup after VM/LB reconciliation completes");
+        }
         // cleans Autoscale VmProfiles, AutoScale Policies and Conditions belonging to an account
         int count = 0;
         count = autoScaleVmProfileDao.removeByAccountId(account.getId());
@@ -1884,13 +1878,22 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     }
 
     private boolean checkConditionDown(AutoScaleVmGroupVO asGroup) {
-        Integer currentVM = autoScaleVmGroupVmMapDao.countAvailableVmsByGroup(asGroup.getId());
+        Integer currentVM = countServingMembers(asGroup);
         Integer minVm = asGroup.getMinMembers();
         if (currentVM - 1 < minVm) {
             logger.warn("number of VM will less than the minimum in this group if scaling down, so do nothing more");
             return false;
         }
         return true;
+    }
+
+    protected int countServingMembers(AutoScaleVmGroupVO group) {
+        Set<Long> registered = lbVmMapDao.listByLoadBalancerId(group.getLoadBalancerId()).stream()
+                .filter(mapping -> !mapping.isRevoke()).map(LoadBalancerVMMapVO::getInstanceId).collect(Collectors.toSet());
+        return (int) autoScaleVmGroupVmMapDao.listByGroup(group.getId()).stream().filter(member -> {
+            UserVmVO vm = userVmDao.findById(member.getInstanceId());
+            return vm != null && vm.getState() == VirtualMachine.State.Running && registered.contains(vm.getId());
+        }).count();
     }
 
     protected Map<String, String> getDeployParams (String otherDeployParams) {
@@ -2185,37 +2188,22 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             for (LoadBalancerVMMapVO LbVmMapVo : lbVmMapVos) {
                 long instanceId = LbVmMapVo.getInstanceId();
                 if (instanceId == vmId && !LbVmMapVo.isRevoke()) {
-                    logger.warn("the new VM is already mapped to LB rule. What's wrong?");
-                    return true;
+                    try {
+                        // DB membership alone does not prove that the previous VR apply succeeded.
+                        return loadBalancingRulesService.applyLoadBalancerConfig(lbId);
+                    } catch (ResourceUnavailableException | RuntimeException e) {
+                        return false;
+                    }
                 }
             }
         }
         lstVmId.add(new Long(vmId));
         try {
             return loadBalancingRulesService.assignToLoadBalancer(lbId, lstVmId, new HashMap<>(), null, true);
-        } catch (CloudRuntimeException ex) {
+        } catch (RuntimeException ex) {
             logger.warn("Caught exception: ", ex);
             return false;
         }
-    }
-
-    private long removeLBrule(AutoScaleVmGroupVO asGroup) {
-        long lbId = asGroup.getLoadBalancerId();
-        long instanceId = -1;
-        List<LoadBalancerVMMapVO> lbVmMapVos = lbVmMapDao.listByLoadBalancerId(lbId);
-        if (CollectionUtils.isNotEmpty(lbVmMapVos)) {
-            for (LoadBalancerVMMapVO LbVmMapVo : lbVmMapVos) {
-                instanceId = LbVmMapVo.getInstanceId();
-            }
-        }
-        // take last VM out of the list
-        List<Long> lstVmId = new ArrayList<Long>();
-        if (instanceId != -1)
-            lstVmId.add(instanceId);
-        if (loadBalancingRulesService.removeFromLoadBalancer(lbId, lstVmId, new HashMap<>(), true))
-            return instanceId;
-        else
-            return -1;
     }
 
     protected GlobalLock getGroupWorkLock(long id) {
@@ -2289,7 +2277,9 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
                 if (!autoScaleVmGroupDao.beginOperation(groupId, token, "SCALEUP")) { return; }
                 ActionEventUtils.onStartedActionEvent(User.UID_SYSTEM, group.getAccountId(), EventTypes.EVENT_AUTOSCALEVMGROUP_SCALEUP,
                         "Scaling up AutoScale VM group " + groupId, groupId, ApiCommandResourceType.AutoScaleVmGroup.toString(), true, 0);
-                UserVm vm = Transaction.execute((TransactionCallback<UserVm>) status -> {
+                UserVm vm;
+                try {
+                    vm = Transaction.execute((TransactionCallback<UserVm>) status -> {
                     AutoScaleVmGroupVO current = autoScaleVmGroupDao.lockRow(groupId, true);
                     if (current == null || current.getState() != AutoScaleVmGroup.State.SCALING || !token.equals(current.getOperationUuid())) {
                         return null;
@@ -2303,8 +2293,15 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
                         }
                     }
                     return allocated;
-                });
+                    });
+                } catch (RuntimeException e) {
+                    recordLifecycleFailure(group, token, "ALLOCATING", null);
+                    autoScaleVmGroupDao.finishOperation(groupId, token);
+                    logger.warn("AutoScale group {} allocation failed before membership committed", groupId, e);
+                    return;
+                }
                 if (vm == null) {
+                    recordLifecycleFailure(group, token, "ALLOCATING", null);
                     autoScaleVmGroupDao.finishOperation(groupId, token);
                     return;
                 }
@@ -2389,6 +2386,9 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
     protected boolean resumeOperation(AutoScaleVmGroupVO group) {
         String token = group.getOperationUuid();
         if (token == null) { return false; }
+        if ("CLEANUP".equals(group.getOperationAction())) {
+            return resumeCleanupOperation(group);
+        }
         if ("RECOVERY".equals(group.getOperationAction())) {
             for (AutoScaleVmGroupVmMapVO member : autoScaleVmGroupVmMapDao.listByGroup(group.getId())) {
                 UserVmVO existing = userVmDao.findById(member.getInstanceId());
@@ -2410,14 +2410,20 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
         }
         UserVmVO vm = userVmDao.findById(vmId);
         if (vm != null && isTransientVm(vm)) { return false; }
-        boolean remove = "SCALEDOWN".equals(group.getOperationAction()) || "DESTROYING".equals(group.getOperationPhase());
+        boolean remove = "SCALEDOWN".equals(group.getOperationAction()) ||
+                (group.getOperationPhase() != null && group.getOperationPhase().startsWith("DESTROYING"));
         if (!remove && vm != null && vm.getState() != VirtualMachine.State.Destroyed && vm.getState() != VirtualMachine.State.Expunging) {
             if (vm.getState() == VirtualMachine.State.Stopped) {
                 if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "STARTING", vmId, null)) { return false; }
                 try {
-                    startNewVM(vmId);
-                } catch (ServerApiException e) {
+                    UserVmVO started = startNewVM(vmId);
+                    if (started == null || started.getState() != VirtualMachine.State.Running) {
+                        recordLifecycleFailure(group, token, "STARTING", vmId);
+                        return false;
+                    }
+                } catch (RuntimeException e) {
                     // Do not forget a failed allocation before its cleanup is confirmed.
+                    recordLifecycleFailure(group, token, "STARTING", vmId);
                     autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "DESTROYING", vmId, null);
                     logger.warn("AutoScale start failed for recorded VM {}", vmId, e);
                     return cleanupOperationVm(group, token, vmId);
@@ -2425,8 +2431,11 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             } else if (vm.getState() != VirtualMachine.State.Running) {
                 return false;
             }
-            if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "ASSIGNING", vmId, null) ||
-                    !assignLBruleToNewVm(vmId, group)) { return false; }
+            if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "ASSIGNING", vmId, null)) { return false; }
+            if (!assignLBruleToNewVm(vmId, group)) {
+                recordLifecycleFailure(group, token, "ASSIGNING", vmId);
+                return false;
+            }
             updateOperationQuietTime(group, AutoScalePolicy.Action.SCALEUP);
             createInactiveDummyRecord(group.getId());
             ActionEventUtils.onCompletedActionEvent(User.UID_SYSTEM, group.getAccountId(), EventVO.LEVEL_INFO,
@@ -2434,23 +2443,24 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
                     group.getId(), ApiCommandResourceType.AutoScaleVmGroup.toString(), 0);
             return autoScaleVmGroupDao.finishOperation(group.getId(), token);
         }
-        if ("SCALEDOWN".equals(group.getOperationAction())) {
-            if (!loadBalancingRulesService.removeFromLoadBalancer(group.getLoadBalancerId(), Collections.singletonList(vmId), new HashMap<>(), true)) {
-                return false;
-            }
+        if ("SCALEDOWN".equals(group.getOperationAction()) &&
+                (group.getOperationPhase() == null || !group.getOperationPhase().startsWith("DESTROYING"))) {
             Date deadline = group.getOperationDeadline();
             if (deadline == null) {
+                if (!excludeLifecycleMembers(group, token, Collections.singletonList(vmId))) { return false; }
                 AutoScaleVmProfileVO profile = autoScaleVmProfileDao.findById(group.getProfileId());
-                deadline = new Date(System.currentTimeMillis() + Math.max(0, profile.getExpungeVmGracePeriod()) * 1000L);
+                deadline = new Date(currentTimeMillis() + Math.max(0, profile.getExpungeVmGracePeriod()) * 1000L);
                 if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "DRAINING", vmId, deadline)) { return false; }
             }
-            if (deadline.after(new Date())) { return false; }
+            if (deadline.getTime() > currentTimeMillis()) { return false; }
         }
         return cleanupOperationVm(group, token, vmId);
     }
 
     protected boolean cleanupOperationVm(AutoScaleVmGroupVO group, String token, Long vmId) {
-        if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "DESTROYING", vmId, group.getOperationDeadline()) || !destroyVm(vmId)) {
+        if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "DESTROYING", vmId, group.getOperationDeadline())) { return false; }
+        if (!destroyVm(vmId)) {
+            recordLifecycleFailure(group, token, "DESTROYING", vmId);
             return false;
         }
         autoScaleVmGroupVmMapDao.remove(group.getId(), vmId);
@@ -2461,6 +2471,52 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
                     group.getId(), ApiCommandResourceType.AutoScaleVmGroup.toString(), 0);
         }
         createInactiveDummyRecord(group.getId());
+        return autoScaleVmGroupDao.finishOperation(group.getId(), token);
+    }
+
+    protected boolean excludeLifecycleMembers(AutoScaleVmGroupVO group, String token, List<Long> vmIds) {
+        try {
+            if (loadBalancingRulesService.removeFromLoadBalancer(group.getLoadBalancerId(), vmIds, new HashMap<>(), true)) { return true; }
+        } catch (RuntimeException e) {
+            logger.warn("AutoScale group {} LB exclusion will retry its recorded members", group.getId(), e);
+        }
+        recordLifecycleFailure(group, token, "EXCLUDING", group.getOperationVmId());
+        return false;
+    }
+
+    protected void recordLifecycleFailure(AutoScaleVmGroupVO group, String token, String phase, Long vmId) {
+        autoScaleVmGroupDao.checkpointOperation(group.getId(), token, phase + "_RETRY", vmId, group.getOperationDeadline());
+        if (!(phase + "_RETRY").equals(group.getOperationPhase())) {
+            String event = "SCALEDOWN".equals(group.getOperationAction()) ? EventTypes.EVENT_AUTOSCALEVMGROUP_SCALEDOWN :
+                    "CLEANUP".equals(group.getOperationAction()) ? EventTypes.EVENT_AUTOSCALEVMGROUP_DELETE : EventTypes.EVENT_AUTOSCALEVMGROUP_SCALEUP;
+            ActionEventUtils.onCompletedActionEvent(User.UID_SYSTEM, group.getAccountId(), EventVO.LEVEL_ERROR, event,
+                    "AutoScale lifecycle failed at " + phase + "; recorded members are retained for reconciliation",
+                    group.getId(), ApiCommandResourceType.AutoScaleVmGroup.toString(), 0);
+        }
+    }
+
+    protected boolean resumeCleanupOperation(AutoScaleVmGroupVO group) {
+        String token = group.getOperationUuid();
+        List<AutoScaleVmGroupVmMapVO> members = autoScaleVmGroupVmMapDao.listByGroup(group.getId());
+        Date deadline = group.getOperationDeadline();
+        if (!members.isEmpty() && deadline == null) {
+            List<Long> ids = members.stream().map(AutoScaleVmGroupVmMapVO::getInstanceId).collect(Collectors.toList());
+            if (!excludeLifecycleMembers(group, token, ids)) { return false; }
+            AutoScaleVmProfileVO profile = autoScaleVmProfileDao.findById(group.getProfileId());
+            deadline = new Date(currentTimeMillis() + Math.max(0, profile.getExpungeVmGracePeriod()) * 1000L);
+            if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "DRAINING", null, deadline)) { return false; }
+        }
+        if (deadline != null && deadline.getTime() > currentTimeMillis()) { return false; }
+        group.setOperationDeadline(deadline);
+        for (AutoScaleVmGroupVmMapVO member : members) {
+            long vmId = member.getInstanceId();
+            if (!autoScaleVmGroupDao.checkpointOperation(group.getId(), token, "DESTROYING", vmId, deadline)) { return false; }
+            if (!destroyVm(vmId)) {
+                recordLifecycleFailure(group, token, "DESTROYING", vmId);
+                return false;
+            }
+            autoScaleVmGroupVmMapDao.remove(group.getId(), vmId);
+        }
         return autoScaleVmGroupDao.finishOperation(group.getId(), token);
     }
 
@@ -3440,17 +3496,30 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
 
     @Override
     public void removeVmFromVmGroup(Long vmId) {
-        autoScaleVmGroupVmMapDao.removeByVm(vmId);
+        for (AutoScaleVmGroupVmMapVO member : autoScaleVmGroupVmMapDao.listByVm(vmId)) {
+            AutoScaleVmGroupVO group = autoScaleVmGroupDao.findById(member.getVmGroupId());
+            // Autoscale owns removal only after expunge has confirmed success.
+            if (group == null || !group.isOperationInProgress()) {
+                autoScaleVmGroupVmMapDao.remove(member.getVmGroupId(), vmId);
+            }
+        }
     }
 
     protected boolean destroyVm(Long vmId) {
         UserVmVO vm = userVmDao.findById(vmId);
         try {
             if (vm != null) {
+                if (vm.isDeleteProtection()) {
+                    logger.warn("AutoScale VM {} has delete protection; cleanup will retain and retry it", vmId);
+                    return false;
+                }
                 if (vm.getState() != VirtualMachine.State.Destroyed && vm.getState() != VirtualMachine.State.Expunging) {
-                    userVmMgr.destroyVm(vmId, true);
+                    UserVm destroyed = userVmMgr.destroyVm(vmId, true);
+                    if (destroyed == null) { return false; }
                     UserVmVO current = userVmDao.findById(vmId);
-                    if (current != null) { vm = current; }
+                    if (current == null) { return true; }
+                    vm = current;
+                    if (vm.getState() != VirtualMachine.State.Destroyed && vm.getState() != VirtualMachine.State.Expunging) { return false; }
                 }
                 return userVmMgr.expunge(vm);
             }

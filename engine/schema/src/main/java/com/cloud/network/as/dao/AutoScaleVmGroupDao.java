@@ -32,6 +32,8 @@ public interface AutoScaleVmGroupDao extends GenericDao<AutoScaleVmGroupVO, Long
 
     boolean beginOperation(long groupId, String token, String action);
 
+    boolean beginCleanupOperation(long groupId, String token);
+
     boolean checkpointOperation(long groupId, String token, String phase, Long vmId, java.util.Date deadline);
 
     boolean finishOperation(long groupId, String token);
