@@ -80,7 +80,7 @@
               </div>
               <div>{{ ip }}</div>
               <tooltip-button
-                :disabled='record.autoscalevmgroup && record.autoscalevmgroup.state != "DISABLED"'
+                :disabled='record.autoscalevmgroup && (record.autoscalevmgroup.state !== "DISABLED" || record.autoscalevmgroup.operationinprogress)'
                 :tooltip="$t('label.remove.vm.from.lb')"
                 type="primary"
                 :danger="true"

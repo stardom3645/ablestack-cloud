@@ -8529,5 +8529,17 @@
   "label.autoscale.creation.cleanup.blocked": "Cleanup blocked: check resource ID",
   "message.autoscale.creation.responsibility": "Server jobs may continue after leaving this page. Lost responses are verified by request ID without duplicate submissions. Only confirmed failures trigger cleanup of resources owned by this operation; existing shared resources and load balancers are preserved.",
   "message.autoscale.creation.storage": "The recovery record could not be saved or read. Check browser storage. No new request was sent, or an existing operation needs verification.",
-  "label.job.id": "Job ID"
+  "label.job.id": "Job ID",
+  "message.autoscale.operation.wait": "Wait until the accepted VM operation finishes, then retry.",
+  "message.autoscale.operation.stopping": "Automatic scaling is disabled. The accepted VM operation is finishing.",
+  "message.autoscale.operation.running": "A VM operation is in progress. Disabling stops new work and lets the accepted VM operation finish.",
+  "label.autoscale.operation.SCALEUP": "Scale up",
+  "label.autoscale.operation.SCALEDOWN": "Scale down",
+  "label.autoscale.operation.RECOVERY": "Restart recovery",
+  "label.autoscale.phase.ACCEPTED": "Accepted",
+  "label.autoscale.phase.STARTING": "Starting VM",
+  "label.autoscale.phase.ASSIGNING": "Assigning load balancer",
+  "label.autoscale.phase.DRAINING": "Draining connections",
+  "label.autoscale.phase.DESTROYING": "Destroying VM",
+  "label.autoscale.phase.RECOVERY": "Reconciling existing VM"
 }

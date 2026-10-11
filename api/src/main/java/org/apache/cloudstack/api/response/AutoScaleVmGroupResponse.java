@@ -135,6 +135,22 @@ public class AutoScaleVmGroupResponse extends BaseResponseWithAnnotations implem
     @Param(description = "The date when this Instance group was created")
     private Date created;
 
+    @SerializedName("operationinprogress")
+    @Param(description = "Whether an accepted scaling operation is still in progress")
+    private boolean operationInProgress;
+
+    @SerializedName("scalingaction")
+    @Param(description = "Direction of the accepted scaling operation")
+    private String scalingAction;
+
+    @SerializedName("scalingphase")
+    @Param(description = "Persistent phase of the accepted scaling operation")
+    private String scalingPhase;
+
+    public void setOperationInProgress(boolean value) { operationInProgress = value; }
+    public void setScalingAction(String value) { scalingAction = value; }
+    public void setScalingPhase(String value) { scalingPhase = value; }
+
     public AutoScaleVmGroupResponse() {
         // Empty constructor
     }

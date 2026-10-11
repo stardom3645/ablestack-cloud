@@ -29,6 +29,16 @@ public interface AutoScaleVmGroupDao extends GenericDao<AutoScaleVmGroupVO, Long
 
     boolean isAutoScaleLoadBalancer(Long loadBalancerId);
 
+    boolean beginOperation(long groupId, String token, String action);
+
+    boolean checkpointOperation(long groupId, String token, String phase, Long vmId, java.util.Date deadline);
+
+    boolean finishOperation(long groupId, String token);
+
+    boolean updateLastInterval(long groupId, java.util.Date interval);
+
+    boolean updateNextVmSeq(long groupId, long sequence);
+
     boolean updateState(long groupId, AutoScaleVmGroup.State oldState, AutoScaleVmGroup.State newState);
 
     List<AutoScaleVmGroupVO> listByLoadBalancer(Long loadBalancerId);

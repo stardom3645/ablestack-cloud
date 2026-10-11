@@ -1213,6 +1213,8 @@ export default {
         },
         {
           api: 'enableAutoScaleVmGroup',
+          disabled: (record) => !!record.operationinprogress,
+          disabledMessage: (record) => record.operationinprogress ? 'message.autoscale.operation.wait' : '',
           icon: 'play-circle-outlined',
           label: 'label.enable.autoscale.vmgroup',
           message: 'message.confirm.enable.autoscale.vmgroup',
@@ -1235,6 +1237,8 @@ export default {
         },
         {
           api: 'updateAutoScaleVmGroup',
+          disabled: (record) => !!record.operationinprogress,
+          disabledMessage: (record) => record.operationinprogress ? 'message.autoscale.operation.wait' : '',
           icon: 'edit-outlined',
           label: 'label.update.autoscale.vmgroup',
           dataView: true,
@@ -1250,6 +1254,8 @@ export default {
         },
         {
           api: 'deleteAutoScaleVmGroup',
+          disabled: (record) => !!record.operationinprogress,
+          disabledMessage: (record) => record.operationinprogress ? 'message.autoscale.operation.wait' : '',
           icon: 'delete-outlined',
           label: 'label.delete.autoscale.vmgroup',
           message: 'message.action.delete.autoscale.vmgroup',

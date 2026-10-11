@@ -74,6 +74,12 @@ public interface AutoScaleVmGroup extends ControlledEntity, InternalIdentity, Di
 
     String getUuid();
 
+    default boolean isOperationInProgress() { return false; }
+
+    default String getOperationAction() { return null; }
+
+    default String getOperationPhase() { return null; }
+
     @Override
     boolean isDisplay();
 

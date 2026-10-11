@@ -37,8 +37,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -174,7 +172,6 @@ import com.cloud.vm.UserVmService;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineManager;
-import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.VmStats;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.UserVmDao;
@@ -428,6 +425,13 @@ public class AutoScaleManagerImplTest {
         user = new UserVO(1, "testuser", "password", "firstname", "lastName", "email", "timezone",
                 UUID.randomUUID().toString(), User.Source.UNKNOWN);
         CallContext.register(user, account);
+        com.cloud.utils.db.GlobalLock groupLock = Mockito.mock(com.cloud.utils.db.GlobalLock.class);
+        when(groupLock.lock(Mockito.anyInt())).thenReturn(true);
+        Mockito.doReturn(groupLock).when(autoScaleManagerImplSpy).getGroupWorkLock(anyLong());
+        Mockito.doReturn(groupLock).when(autoScaleManagerImplSpy).getGroupControlLock(anyLong());
+        when(autoScaleVmGroupDao.lockRow(anyLong(), eq(true))).thenAnswer(invocation -> autoScaleVmGroupDao.findById(invocation.getArgument(0)));
+        when(autoScaleVmGroupDao.updateLastInterval(anyLong(), any())).thenReturn(true);
+
 
         when(counterDao.persist(any(CounterVO.class))).thenReturn(counterMock);
         when(counterDao.findById(anyLong())).thenReturn(counterMock);
@@ -450,6 +454,7 @@ public class AutoScaleManagerImplTest {
         Mockito.doReturn(userDataFinal).when(userVmMgr).finalizeUserData(any(), any(), any());
         Mockito.doReturn(userDataFinal).when(userDataMgr).validateUserData(eq(userDataFinal), nullable(BaseCmd.HTTPMethod.class));
 
+        when(lbDao.lockRow(anyLong(), eq(true))).thenReturn(loadBalancerMock);
         when(templateMock.getState()).thenReturn(VirtualMachineTemplate.State.Active);
         when(autoScaleTemplateStoreDao.findByTemplateZoneReady(anyLong(), any())).thenReturn(Mockito.mock(TemplateDataStoreVO.class));
         when(asVmProfileMock.getZoneId()).thenReturn(zoneId);
@@ -1146,9 +1151,8 @@ public class AutoScaleManagerImplTest {
     @Test
     public void testEnableAutoScaleVmGroupInDisabledState() throws ResourceUnavailableException {
         when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
-        when(asVmGroupMock.getId()).thenReturn(vmGroupId);
         when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.DISABLED);
-        when(autoScaleVmGroupDao.persist(any())).thenReturn(asVmGroupMock);
+        when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.DISABLED, AutoScaleVmGroup.State.ENABLED)).thenReturn(true);
         Mockito.doReturn(true).when(autoScaleManagerImplSpy).configureAutoScaleVmGroup(vmGroupId, AutoScaleVmGroup.State.DISABLED);
         Mockito.doNothing().when(autoScaleManagerImplSpy).scheduleMonitorTask(anyLong());
 
@@ -1183,7 +1187,7 @@ public class AutoScaleManagerImplTest {
     public void testDisableAutoScaleVmGroupInEnabledState() throws ResourceUnavailableException {
         when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
         when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
-        when(autoScaleVmGroupDao.persist(any())).thenReturn(asVmGroupMock);
+        when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.ENABLED, AutoScaleVmGroup.State.DISABLED)).thenReturn(true);
         Mockito.doReturn(true).when(autoScaleManagerImplSpy).configureAutoScaleVmGroup(vmGroupId, AutoScaleVmGroup.State.ENABLED);
 
         AutoScaleVmGroup vmGroup = autoScaleManagerImplSpy.disableAutoScaleVmGroup(vmGroupId);
@@ -1508,86 +1512,68 @@ public class AutoScaleManagerImplTest {
     }
 
     @Test
-    public void testDoScaleUp() throws ResourceUnavailableException, InsufficientCapacityException, ResourceAllocationException {
+    public void testDoScaleUp() {
         try (MockedStatic<ActionEventUtils> ignored = Mockito.mockStatic(ActionEventUtils.class)) {
-            when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
-            when(asVmGroupMock.getId()).thenReturn(vmGroupId);
-            when(asVmGroupMock.getMaxMembers()).thenReturn(maxMembers);
-            when(autoScaleVmGroupVmMapDao.countAvailableVmsByGroup(vmGroupId)).thenReturn(maxMembers - 1);
-            when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
-
-            when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.ENABLED, AutoScaleVmGroup.State.SCALING)).thenReturn(true);
-            when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.SCALING, AutoScaleVmGroup.State.ENABLED)).thenReturn(true);
-            Mockito.doReturn(userVmMock).when(autoScaleManagerImplSpy).createNewVM(asVmGroupMock);
+            AutoScaleVmGroupVO group = new AutoScaleVmGroupVO(loadBalancerId, zoneId, 1, accountId, "test", 1, 3, 8080, 30, null, vmProfileId, AutoScaleVmGroup.State.ENABLED);
+            ReflectionTestUtils.setField(group, "id", vmGroupId);
+            when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(group);
+            when(autoScaleVmGroupVmMapDao.countByGroup(vmGroupId)).thenReturn(1);
+            when(autoScaleVmGroupDao.beginOperation(eq(vmGroupId), any(), eq("SCALEUP"))).thenAnswer(invocation -> {
+                group.setState(AutoScaleVmGroup.State.SCALING);
+                group.setOperationUuid(invocation.getArgument(1));
+                return true;
+            });
+            when(autoScaleVmGroupDao.checkpointOperation(eq(vmGroupId), any(), eq("STARTING"), eq(virtualMachineId), Mockito.isNull())).thenReturn(true);
+            Mockito.doReturn(userVmMock).when(autoScaleManagerImplSpy).createNewVM(group);
             when(userVmMock.getId()).thenReturn(virtualMachineId);
-
-            when(asVmGroupMock.getLoadBalancerId()).thenReturn(loadBalancerId);
-            when(lbVmMapDao.listByLoadBalancerId(loadBalancerId)).thenReturn(Arrays.asList(loadBalancerVMMapMock));
-            when(loadBalancerVMMapMock.getInstanceId()).thenReturn(virtualMachineId + 1);
-
-            when(loadBalancingRulesService.assignToLoadBalancer(anyLong(), any(), any(), any(), eq(true))).thenReturn(true);
-            Mockito.doReturn(new Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>>(userVmMock, null)).when(userVmMgr).startVirtualMachine(virtualMachineId, null,
-                    new HashMap<>(), null, false);
-
+            Mockito.doReturn(true).when(autoScaleManagerImplSpy).resumeOperation(group);
             autoScaleManagerImplSpy.doScaleUp(vmGroupId, 1);
-
-            Mockito.verify(autoScaleManagerImplSpy).createNewVM(asVmGroupMock);
-            Mockito.verify(loadBalancingRulesService).assignToLoadBalancer(anyLong(), any(), any(), any(), eq(true));
-            Mockito.verify(userVmMgr).startVirtualMachine(virtualMachineId, null, new HashMap<>(), null, false);
+            Mockito.verify(autoScaleManagerImplSpy).createNewVM(group);
+            Mockito.verify(autoScaleVmGroupVmMapDao).persist(any());
+            Mockito.verify(autoScaleVmGroupDao).checkpointOperation(eq(vmGroupId), any(), eq("STARTING"), eq(virtualMachineId), Mockito.isNull());
+            Mockito.verify(autoScaleManagerImplSpy).resumeOperation(group);
         }
     }
 
     @Test
     public void testDoScaleDown() {
         try (MockedStatic<ActionEventUtils> ignored = Mockito.mockStatic(ActionEventUtils.class)) {
-
             when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
             when(asVmGroupMock.getId()).thenReturn(vmGroupId);
-
             when(asVmGroupMock.getMinMembers()).thenReturn(minMembers);
-            when(autoScaleVmGroupVmMapDao.countAvailableVmsByGroup(vmGroupId)).thenReturn(minMembers + 1);
             when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
-
-            when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.ENABLED, AutoScaleVmGroup.State.SCALING)).thenReturn(true);
-            when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.SCALING, AutoScaleVmGroup.State.ENABLED)).thenReturn(true);
-
-            when(asVmGroupMock.getLoadBalancerId()).thenReturn(loadBalancerId);
-            when(lbVmMapDao.listByLoadBalancerId(loadBalancerId)).thenReturn(Arrays.asList(loadBalancerVMMapMock));
-            when(loadBalancerVMMapMock.getInstanceId()).thenReturn(virtualMachineId);
-
-            when(loadBalancingRulesService.removeFromLoadBalancer(anyLong(), any(), any(), eq(true))).thenReturn(true);
-
-            when(asVmGroupMock.getProfileId()).thenReturn(vmProfileId);
-            when(autoScaleVmProfileDao.findById(vmProfileId)).thenReturn(asVmProfileMock);
-            when(asVmProfileMock.getExpungeVmGracePeriod()).thenReturn(expungeVmGracePeriod);
-
+            when(autoScaleVmGroupVmMapDao.countAvailableVmsByGroup(vmGroupId)).thenReturn(minMembers + 1);
+            when(autoScaleVmGroupVmMapDao.listByGroup(vmGroupId)).thenReturn(Arrays.asList(autoScaleVmGroupVmMapVOMock));
+            when(autoScaleVmGroupVmMapVOMock.getInstanceId()).thenReturn(virtualMachineId);
+            when(userVmDao.findById(virtualMachineId)).thenReturn(userVmMock);
+            when(userVmMock.getId()).thenReturn(virtualMachineId);
+            when(userVmMock.getState()).thenReturn(VirtualMachine.State.Running);
+            when(autoScaleVmGroupDao.beginOperation(eq(vmGroupId), any(), eq("SCALEDOWN"))).thenReturn(true);
+            when(autoScaleVmGroupDao.checkpointOperation(eq(vmGroupId), any(), eq("DRAINING"), eq(virtualMachineId), Mockito.isNull())).thenReturn(true);
+            Mockito.doReturn(true).when(autoScaleManagerImplSpy).resumeOperation(asVmGroupMock);
             autoScaleManagerImplSpy.doScaleDown(vmGroupId);
-
-            Mockito.verify(loadBalancingRulesService).removeFromLoadBalancer(anyLong(), any(), any(), eq(true));
+            Mockito.verify(autoScaleVmGroupDao).checkpointOperation(eq(vmGroupId), any(), eq("DRAINING"), eq(virtualMachineId), Mockito.isNull());
+            Mockito.verify(autoScaleVmGroupVmMapDao, never()).remove(anyLong(), anyLong());
         }
     }
 
     @Test
-    public void checkAllAutoScaleVmGroups() throws InterruptedException, ExecutionException {
-        CompletionService<Pair<Long, Boolean>> completionService = Mockito.mock(CompletionService.class);
-        ReflectionTestUtils.setField(autoScaleManagerImplSpy, "completionService", completionService);
-
+    public void checkAllAutoScaleVmGroups() {
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        ReflectionTestUtils.setField(autoScaleManagerImplSpy, "groupExecutor", executor);
         when(autoScaleVmGroupDao.listAll()).thenReturn(Arrays.asList(asVmGroupMock));
-
-        Future<Pair<Long, Boolean>> future = Mockito.mock(Future.class);
-        Pair<Long, Boolean> result = Mockito.mock(Pair.class);
-        when(completionService.take()).thenReturn(future);
-        when(future.get()).thenReturn(result);
-
-        autoScaleManagerImplSpy.checkAllAutoScaleVmGroups();
-
-        Mockito.verify(completionService, Mockito.times(1)).submit(any());
-        Mockito.verify(completionService, Mockito.times(1)).take();
-        Mockito.verify(future, Mockito.times(1)).get();
+        Mockito.doNothing().when(autoScaleManagerImplSpy).checkAutoScaleVmGroup(asVmGroupMock);
+        try {
+            autoScaleManagerImplSpy.checkAllAutoScaleVmGroups();
+            Mockito.verify(autoScaleManagerImplSpy).checkAutoScaleVmGroup(asVmGroupMock);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     @Test
     public void checkAutoScaleVmGroup1() {
+        when(autoScaleVmGroupDao.findById(asVmGroupMock.getId())).thenReturn(asVmGroupMock);
         when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
         when(asVmGroupMock.getLoadBalancerId()).thenReturn(loadBalancerId);
         Mockito.doReturn(Network.Provider.VirtualRouter).when(autoScaleManagerImplSpy).getLoadBalancerServiceProvider(loadBalancerId);
@@ -1601,6 +1587,7 @@ public class AutoScaleManagerImplTest {
 
     @Test
     public void checkAutoScaleVmGroup2() {
+        when(autoScaleVmGroupDao.findById(asVmGroupMock.getId())).thenReturn(asVmGroupMock);
         when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
         when(asVmGroupMock.getLoadBalancerId()).thenReturn(loadBalancerId);
         Mockito.doReturn(Network.Provider.VPCVirtualRouter).when(autoScaleManagerImplSpy).getLoadBalancerServiceProvider(loadBalancerId);
@@ -1614,6 +1601,7 @@ public class AutoScaleManagerImplTest {
 
     @Test
     public void checkAutoScaleVmGroup3() {
+        when(autoScaleVmGroupDao.findById(asVmGroupMock.getId())).thenReturn(asVmGroupMock);
         when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
         when(asVmGroupMock.getLoadBalancerId()).thenReturn(loadBalancerId);
         Mockito.doReturn(Network.Provider.Netscaler).when(autoScaleManagerImplSpy).getLoadBalancerServiceProvider(loadBalancerId);
@@ -2690,6 +2678,101 @@ public class AutoScaleManagerImplTest {
         } finally {
             Mockito.verify(autoScaleVmGroupDao, never()).persist(any());
         }
+    }
+
+    @Test public void testPendingDisabledOperationRejectsEnableUpdateDeleteAndVmActions() {
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.isOperationInProgress()).thenReturn(true);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.enableAutoScaleVmGroup(vmGroupId));
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.deleteAutoScaleVmGroup(vmGroupId, true));
+        UpdateAutoScaleVmGroupCmd cmd = new UpdateAutoScaleVmGroupCmd();
+        ReflectionTestUtils.setField(cmd, "id", vmGroupId);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.updateAutoScaleVmGroup(cmd));
+        when(autoScaleVmGroupVmMapDao.listByVm(virtualMachineId)).thenReturn(Arrays.asList(autoScaleVmGroupVmMapVOMock));
+        when(autoScaleVmGroupVmMapVOMock.getVmGroupId()).thenReturn(vmGroupId);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.checkIfVmActionAllowed(virtualMachineId));
+    }
+
+    @Test public void testStoppedAndScalingGroupsCannotAcceptNewScaleWork() {
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.DISABLED, AutoScaleVmGroup.State.SCALING);
+        autoScaleManagerImplSpy.doScaleUp(vmGroupId, 3);
+        autoScaleManagerImplSpy.doScaleDown(vmGroupId);
+        Mockito.verify(autoScaleVmGroupDao, never()).beginOperation(anyLong(), any(), any());
+        Mockito.verify(autoScaleManagerImplSpy, never()).createNewVM(any());
+    }
+
+    @Test public void testRestartRecoversRecordedRunningVmInsteadOfAllocatingAnother() {
+        try (MockedStatic<ActionEventUtils> ignored = Mockito.mockStatic(ActionEventUtils.class)) {
+            when(asVmGroupMock.getId()).thenReturn(vmGroupId);
+            when(asVmGroupMock.getOperationUuid()).thenReturn("owner");
+            when(asVmGroupMock.getOperationAction()).thenReturn("SCALEUP");
+            when(asVmGroupMock.getOperationVmId()).thenReturn(virtualMachineId);
+            when(userVmDao.findById(virtualMachineId)).thenReturn(userVmMock);
+            when(userVmMock.getState()).thenReturn(VirtualMachine.State.Running);
+            when(autoScaleVmGroupDao.checkpointOperation(vmGroupId, "owner", "ASSIGNING", virtualMachineId, null)).thenReturn(true);
+            Mockito.doReturn(true).when(autoScaleManagerImplSpy).assignLBruleToNewVm(virtualMachineId, asVmGroupMock);
+            when(autoScaleVmGroupDao.finishOperation(vmGroupId, "owner")).thenReturn(true);
+            Assert.assertTrue(autoScaleManagerImplSpy.resumeOperation(asVmGroupMock));
+            Mockito.verify(autoScaleManagerImplSpy, never()).createNewVM(any());
+            Mockito.verify(autoScaleManagerImplSpy, never()).startNewVM(anyLong());
+            Mockito.verify(autoScaleVmGroupDao).finishOperation(vmGroupId, "owner");
+        }
+    }
+
+    @Test public void testRestartWaitsForTransientVmAndPreservesDrainDeadlineAndMembership() {
+        when(asVmGroupMock.getOperationUuid()).thenReturn("owner");
+        when(asVmGroupMock.getOperationVmId()).thenReturn(virtualMachineId);
+        when(userVmDao.findById(virtualMachineId)).thenReturn(userVmMock);
+        when(userVmMock.getState()).thenReturn(VirtualMachine.State.Starting);
+        Assert.assertFalse(autoScaleManagerImplSpy.resumeOperation(asVmGroupMock));
+        Mockito.verify(loadBalancingRulesService, never()).assignToLoadBalancer(anyLong(), any(), any(), any(), Mockito.anyBoolean());
+        when(userVmMock.getState()).thenReturn(VirtualMachine.State.Running);
+        when(asVmGroupMock.getOperationAction()).thenReturn("SCALEDOWN");
+        when(asVmGroupMock.getOperationDeadline()).thenReturn(new Date(System.currentTimeMillis() + 60000));
+        when(loadBalancingRulesService.removeFromLoadBalancer(anyLong(), any(), any(), eq(true))).thenReturn(true);
+        Assert.assertFalse(autoScaleManagerImplSpy.resumeOperation(asVmGroupMock));
+        Mockito.verify(autoScaleVmGroupVmMapDao, never()).remove(anyLong(), anyLong());
+        Mockito.verify(autoScaleManagerImplSpy, never()).destroyVm(anyLong());
+        Mockito.verify(autoScaleVmGroupDao, never()).checkpointOperation(anyLong(), any(), any(), any(), any());
+    }
+
+    @Test public void testRecoveryHasOneWorkOwnerAcrossConcurrentEvaluators() throws Exception {
+        com.cloud.utils.db.GlobalLock lock = Mockito.mock(com.cloud.utils.db.GlobalLock.class);
+        java.util.concurrent.Semaphore ownership = new java.util.concurrent.Semaphore(1);
+        when(lock.lock(Mockito.anyInt())).thenAnswer(invocation -> ownership.tryAcquire());
+        Mockito.doAnswer(invocation -> { ownership.release(); return null; }).when(lock).unlock();
+        Mockito.doReturn(lock).when(autoScaleManagerImplSpy).getGroupWorkLock(vmGroupId);
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.isOperationInProgress()).thenReturn(true);
+        when(asVmGroupMock.getOperationUuid()).thenReturn("owner");
+        java.util.concurrent.CountDownLatch entered = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+        Mockito.doAnswer(invocation -> { entered.countDown(); release.await(5, java.util.concurrent.TimeUnit.SECONDS); return false; })
+                .when(autoScaleManagerImplSpy).resumeOperation(asVmGroupMock);
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            java.util.concurrent.Future<?> first = pool.submit(() -> autoScaleManagerImplSpy.recoverGroupOperation(vmGroupId));
+            Assert.assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            pool.submit(() -> autoScaleManagerImplSpy.recoverGroupOperation(vmGroupId)).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            Mockito.verify(autoScaleManagerImplSpy, times(1)).resumeOperation(asVmGroupMock);
+            release.countDown(); first.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        } finally { release.countDown(); pool.shutdownNow(); }
+    }
+
+    @Test public void testConfigureFalseRollsBackEnableButNeverRestartsAfterDisableFailure() throws Exception {
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.DISABLED);
+        when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.DISABLED, AutoScaleVmGroup.State.ENABLED)).thenReturn(true);
+        Mockito.doReturn(false).when(autoScaleManagerImplSpy).configureAutoScaleVmGroup(vmGroupId, AutoScaleVmGroup.State.DISABLED);
+        Assert.assertNull(autoScaleManagerImplSpy.enableAutoScaleVmGroup(vmGroupId));
+        Mockito.verify(autoScaleVmGroupDao).updateState(vmGroupId, AutoScaleVmGroup.State.ENABLED, AutoScaleVmGroup.State.DISABLED);
+        Mockito.clearInvocations(autoScaleVmGroupDao);
+        when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.SCALING);
+        when(autoScaleVmGroupDao.updateState(vmGroupId, AutoScaleVmGroup.State.SCALING, AutoScaleVmGroup.State.DISABLED)).thenReturn(true);
+        Mockito.doReturn(false).when(autoScaleManagerImplSpy).configureAutoScaleVmGroup(vmGroupId, AutoScaleVmGroup.State.ENABLED);
+        Assert.assertNull(autoScaleManagerImplSpy.disableAutoScaleVmGroup(vmGroupId));
+        Mockito.verify(autoScaleVmGroupDao, never()).updateState(vmGroupId, AutoScaleVmGroup.State.DISABLED, AutoScaleVmGroup.State.ENABLED);
     }
 
 }

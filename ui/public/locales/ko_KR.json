@@ -8494,5 +8494,17 @@
   "label.autoscale.creation.cleanup.blocked": "정리하지 못한 자원 · ID를 확인하세요",
   "message.autoscale.creation.responsibility": "이 화면을 나가도 서버 작업은 계속될 수 있습니다. 응답을 잃으면 중복 요청을 보내지 않고 작업 ID로 확인합니다. 확정된 실패만 이번 작업의 자원을 정리하며, 기존 공유 자원과 로드밸런서는 보존합니다.",
   "message.autoscale.creation.storage": "복구 기록을 저장하거나 읽을 수 없습니다. 브라우저 저장소 상태를 확인하세요. 새 요청을 전송하지 않았거나, 기존 작업의 확인이 필요합니다.",
-  "label.job.id": "작업 ID"
+  "label.job.id": "작업 ID",
+  "message.autoscale.operation.wait": "진행 중인 VM 처리가 완료된 후 다시 시도하세요.",
+  "message.autoscale.operation.stopping": "자동 확장은 중지되었습니다. 이미 시작한 VM 처리를 마무리하고 있습니다.",
+  "message.autoscale.operation.running": "VM 처리가 진행 중입니다. 중지하면 새 작업을 받지 않고 현재 VM 처리를 마무리합니다.",
+  "label.autoscale.operation.SCALEUP": "확장",
+  "label.autoscale.operation.SCALEDOWN": "축소",
+  "label.autoscale.operation.RECOVERY": "재시작 복구",
+  "label.autoscale.phase.ACCEPTED": "작업 수락",
+  "label.autoscale.phase.STARTING": "VM 시작",
+  "label.autoscale.phase.ASSIGNING": "LB 연결",
+  "label.autoscale.phase.DRAINING": "연결 해제 및 유예 대기",
+  "label.autoscale.phase.DESTROYING": "VM 삭제",
+  "label.autoscale.phase.RECOVERY": "기존 VM 확인 및 복구"
 }

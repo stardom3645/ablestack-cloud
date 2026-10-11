@@ -99,6 +99,37 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup, InternalIdentity, I
     @Column(name = "next_vm_seq")
     private long nextVmSeq = 1L;
 
+    @Column(name = "operation_uuid")
+    private String operationUuid;
+
+    @Column(name = "operation_action")
+    private String operationAction;
+
+    @Column(name = "operation_phase")
+    private String operationPhase;
+
+    @Column(name = "operation_vm_id")
+    private Long operationVmId;
+
+    @Column(name = "operation_deadline")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date operationDeadline;
+
+    public String getOperationUuid() { return operationUuid; }
+    public void setOperationUuid(String value) { operationUuid = value; }
+    @Override
+    public boolean isOperationInProgress() { return operationUuid != null || state == State.SCALING; }
+    @Override
+    public String getOperationAction() { return operationAction; }
+    public void setOperationAction(String value) { operationAction = value; }
+    @Override
+    public String getOperationPhase() { return operationPhase; }
+    public void setOperationPhase(String value) { operationPhase = value; }
+    public Long getOperationVmId() { return operationVmId; }
+    public void setOperationVmId(Long value) { operationVmId = value; }
+    public Date getOperationDeadline() { return operationDeadline; }
+    public void setOperationDeadline(Date value) { operationDeadline = value; }
+
     public AutoScaleVmGroupVO() {
     }
 

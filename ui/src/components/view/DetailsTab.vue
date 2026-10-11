@@ -16,9 +16,18 @@
 // under the License.
 
 <template>
+    <a-alert
+      v-if="resource.operationinprogress"
+      class="autoscale-operation-status"
+      :type="resource.state === 'DISABLED' ? 'warning' : 'info'"
+      show-icon
+      role="status"
+      :message="$t(resource.state === 'DISABLED' ? 'message.autoscale.operation.stopping' : 'message.autoscale.operation.running')"
+      :description="$t('label.autoscale.operation.' + (resource.scalingaction || 'RECOVERY')) + ' · ' + $t('label.autoscale.phase.' + (resource.scalingphase || 'RECOVERY'))" />
   <a-alert type="error" v-if="['vm', 'systemvm', 'router', 'ilbvm'].includes($route.meta.name) && 'hostcontrolstate' in resource && resource.hostcontrolstate !== 'Enabled'">
     <template #message>
       <div class="title">
+
         {{ $t('message.host.controlstate') }} {{ resource.hostcontrolstate }}. {{ $t('message.host.controlstate.retry') }}
       </div>
     </template>
