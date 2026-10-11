@@ -8587,5 +8587,9 @@
   "message.autoscale.profile.data.fixed": "데이터 디스크 크기는 사용자 지정 오퍼링에만 입력할 수 있습니다.",
   "message.autoscale.profile.template.ready": "선택한 존에서 준비된 템플릿을 지정하세요.",
   "message.autoscale.profile.offering.invalid": "활성 상태의 고정 사양 서비스 오퍼링을 지정하세요.",
-  "message.autoscale.edit.disabled.required": "연결된 모든 그룹이 비활성 상태여야 변경할 수 있습니다."
+  "message.autoscale.edit.disabled.required": "연결된 모든 그룹이 비활성 상태여야 변경할 수 있습니다.",
+  "schedule.create": "예약 생성",
+  "schedule.update": "예약 변경",
+  "schedule.delete": "예약 삭제",
+  "autoscalevmgroup.schedule.update": "오토스케일 VM 그룹 예약 적용"
 }

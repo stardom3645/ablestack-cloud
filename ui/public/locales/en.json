@@ -8622,5 +8622,9 @@
   "message.autoscale.profile.data.fixed": "Data disk size is supported only for custom offerings.",
   "message.autoscale.profile.template.ready": "Specify a template ready in the selected zone.",
   "message.autoscale.profile.offering.invalid": "Specify an active fixed service offering.",
-  "message.autoscale.edit.disabled.required": "All associated groups must be Disabled before changing this object."
+  "message.autoscale.edit.disabled.required": "All associated groups must be Disabled before changing this object.",
+  "schedule.create": "Schedule created",
+  "schedule.update": "Schedule updated",
+  "schedule.delete": "Schedule deleted",
+  "autoscalevmgroup.schedule.update": "AutoScale VM group scheduled update"
 }
