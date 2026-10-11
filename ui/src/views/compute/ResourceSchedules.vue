@@ -17,6 +17,7 @@
 
 <template>
   <div>
+    <a-alert v-if="resourceType === 'AutoScaleVmGroup'" type="info" show-icon :message="$t('message.autoscale.schedule.contract')" style="margin-bottom: 10px" />
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
     <a-button
       type="dashed"
@@ -88,6 +89,7 @@
     :maskClosable="false"
     :closable="true"
     @cancel="closeModal"
+    :confirmLoading="isSubmitted"
     @ok="submitForm"
   >
     <a-form
@@ -326,6 +328,7 @@ import cronstrue from 'cronstrue/i18n'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import { schedulePickerDate, autoScaleScheduleError } from '@/utils/autoScaleSchedule'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -386,6 +389,7 @@ export default {
       showModal: false,
       isSubmitted: false,
       isEdit: false,
+      originalSchedule: null,
       error: '',
       pattern: 'YYYY-MM-DD HH:mm:ss'
     }
@@ -483,11 +487,12 @@ export default {
     updateSchedule (schedule) {
       this.resetForm()
       this.isEdit = true
+      this.originalSchedule = { ...schedule }
       Object.assign(this.form, schedule)
       this.form.minMembers = schedule?.details?.minmembers ? Number(schedule.details.minmembers) : null
       this.form.maxMembers = schedule?.details?.maxmembers ? Number(schedule.details.maxmembers) : null
-      this.form.startDate = dayjs(schedule.startdate)
-      this.form.endDate = schedule.enddate ? dayjs(schedule.enddate) : null
+      this.form.startDate = schedulePickerDate(schedule.startdate, schedule.timezone)
+      this.form.endDate = schedulePickerDate(schedule.enddate, schedule.timezone)
       this.showAddModal()
     },
     showAddModal () {
@@ -499,6 +504,14 @@ export default {
       this.formRef.value.validate().then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
+        if (this.resourceType === 'AutoScaleVmGroup') {
+          const validationError = autoScaleScheduleError(values)
+          if (validationError) {
+            this.$message.error(this.$t(validationError))
+            this.isSubmitted = false
+            return
+          }
+        }
         const selectedAction = values.action || (this.actions.length === 1 ? this.actions[0].value : null)
         var params = {
           description: values.description,
@@ -521,6 +534,11 @@ export default {
         } else {
           params.id = this.form.id
           command = 'updateResourceSchedule'
+          if (values.timezone === this.originalSchedule.timezone) {
+            if (params.startdate === schedulePickerDate(this.originalSchedule.startdate, values.timezone)?.format(this.pattern)) delete params.startdate
+            if (params.enddate === schedulePickerDate(this.originalSchedule.enddate, values.timezone)?.format(this.pattern)) delete params.enddate
+          }
+          if (this.originalSchedule.enddate && !values.endDate) params.clearenddate = true
         }
 
         postAPI(command, params).then(response => {

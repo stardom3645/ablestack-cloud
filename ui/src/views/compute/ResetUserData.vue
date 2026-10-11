@@ -125,6 +125,7 @@
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { runAutoScaleMutation, autoScaleMutationDescription } from '@/utils/autoScaleEditing'
 import { genericCompare } from '@/utils/sort.js'
 import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 
@@ -338,7 +339,6 @@ export default {
       if (this.loadingData) return
       const values = toRaw(this.form)
       this.loadingData = true
-      console.log(values)
       const params = {
       }
       if (values.userdata && values.userdata.length > 0) {
@@ -364,7 +364,11 @@ export default {
 
       const resetUserDataApiName = this.resource.resetUserDataApiName ? this.resource.resetUserDataApiName : 'resetUserDataForVirtualMachine'
 
-      postAPI(resetUserDataApiName, params).then(json => {
+      if (resetUserDataApiName === 'updateAutoScaleVmProfile' && !params.userdataid && !params.userdata) params.userdata = ''
+      const update = resetUserDataApiName === 'updateAutoScaleVmProfile'
+        ? runAutoScaleMutation(postAPI, getAPI, resetUserDataApiName, params)
+        : postAPI(resetUserDataApiName, params)
+      update.then(json => {
         this.$message.success({
           content: `${this.$t('label.action.user.data.reset')} - ${this.$t('label.success')}`,
           duration: 2
@@ -372,7 +376,9 @@ export default {
         this.$emit('refresh-data')
         this.closeAction()
       }).catch(error => {
-        this.$notifyError(error)
+        if (resetUserDataApiName === 'updateAutoScaleVmProfile') {
+          this.$notification.error({ message: this.$t('label.error'), description: autoScaleMutationDescription(error, this.$t) })
+        } else this.$notifyError(error)
       }).finally(() => {
         this.loadingData = false
       })

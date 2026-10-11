@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -149,6 +150,7 @@ import com.cloud.network.router.VirtualRouterAutoScale.AutoScaleMetricsValue;
 import com.cloud.network.router.VirtualRouterAutoScale.AutoScaleValueType;
 import com.cloud.network.router.VirtualRouterAutoScale.VirtualRouterAutoScaleCounter;
 import com.cloud.offering.DiskOffering;
+import com.cloud.network.security.SecurityGroup;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.offerings.dao.NetworkOfferingDao;
@@ -516,16 +518,99 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
 
         List<Pair<String, String>> otherDeployParams = vmProfile.getOtherDeployParamsList();
         if (CollectionUtils.isNotEmpty(otherDeployParams)) {
+            Set<String> names = new HashSet<>();
             for (Pair<String, String> kvPair : otherDeployParams) {
+                if (!names.add(kvPair.first())) {
+                    throw new InvalidParameterValueException("Duplicate AutoScale deploy parameter: " + kvPair.first());
+                }
                 String key = kvPair.first();
                 if (!supportedDeployParams.contains(key)) {
                     throw new InvalidParameterValueException(String.format("Unsupported otherdeployparams key: %s. Supported values are %s", key, supportedDeployParams));
                 }
             }
         }
+        Account owner = accountMgr.getAccount(vmProfile.getAccountId());
+        DataCenter zone = entityMgr.findById(DataCenter.class, vmProfile.getZoneId());
+        ServiceOffering offering = entityMgr.findById(ServiceOffering.class, serviceOfferingId);
+        if (owner == null || zone == null || offering == null) {
+            throw new InvalidParameterValueException("AutoScale profile owner, zone and service offering must exist");
+        }
+        validateNewAutoScaleProfileSources(owner, zone, offering, template);
+        validateAutoScaleDeployParams(vmProfile, owner, zone, offering);
         vmProfile = autoScaleVmProfileDao.persist(vmProfile);
 
         return vmProfile;
+    }
+
+    protected void validateAutoScaleDeployParams(AutoScaleVmProfileVO profile, Account owner, DataCenter zone, ServiceOffering offering) {
+        Map<String, String> params = getDeployParams(profile.getOtherDeployParams());
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (StringUtils.isBlank(value) || value.contains("&") || value.contains("=")) {
+                throw new InvalidParameterValueException("Invalid AutoScale deploy parameter value for " + key);
+            }
+            if (PARAM_ROOT_DISK_SIZE.equals(key) || PARAM_DISK_SIZE.equals(key)) {
+                try {
+                    if (!value.matches("[0-9]+") || Long.parseLong(value) <= 0) {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    throw new InvalidParameterValueException(key + " must be a positive integer in GiB");
+                }
+            } else if (PARAM_DISK_OFFERING_ID.equals(key) || PARAM_OVERRIDE_DISK_OFFERING_ID.equals(key)) {
+                DiskOffering disk = diskOfferingDao.findByUuid(value);
+                if (disk == null || disk.getState() == DiskOffering.State.Inactive) {
+                    throw new InvalidParameterValueException("AutoScale deploy disk offering must exist and be active");
+                }
+                accountMgr.checkAccess(owner, disk, zone);
+                if (PARAM_OVERRIDE_DISK_OFFERING_ID.equals(key) && offering.getDiskOfferingStrictness()) {
+                    throw new InvalidParameterValueException("Cannot override the disk offering of a strict service offering");
+                }
+            } else {
+                Set<String> unique = new HashSet<>();
+                for (String item : value.split(",", -1)) {
+                    if (StringUtils.isBlank(item) || !item.equals(item.trim()) || !unique.add(item)) {
+                        throw new InvalidParameterValueException("AutoScale deploy parameter list must contain distinct non-empty values: " + key);
+                    }
+                    if (PARAM_NETWORK_IDS.equals(key)) {
+                        Network network = networkDao.findByUuid(item);
+                        if (network == null || network.getDataCenterId() != zone.getId()) {
+                            throw new InvalidParameterValueException("AutoScale deploy network must exist in the profile zone");
+                        }
+                        accountMgr.checkAccess(owner, AccessType.UseEntry, false, network);
+                    } else if (PARAM_SSH_KEYPAIRS.equals(key)) {
+                        if (sshKeyPairDao.findByName(owner.getAccountId(), owner.getDomainId(), item) == null) {
+                            throw new InvalidParameterValueException("AutoScale SSH keypair must belong to the profile owner");
+                        }
+                    } else if (PARAM_AFFINITY_GROUP_IDS.equals(key)) {
+                        AffinityGroupVO affinity = affinityGroupDao.findByUuid(item);
+                        if (affinity == null) {
+                            throw new InvalidParameterValueException("AutoScale affinity group must exist");
+                        }
+                        accountMgr.checkAccess(owner, AccessType.UseEntry, false, affinity);
+                    } else if (PARAM_SECURITY_GROUP_IDS.equals(key)) {
+                        SecurityGroup securityGroup = entityMgr.findByUuid(SecurityGroup.class, item);
+                        if (securityGroup == null) {
+                            throw new InvalidParameterValueException("AutoScale security group must exist");
+                        }
+                        accountMgr.checkAccess(owner, AccessType.UseEntry, false, securityGroup);
+                    }
+                }
+            }
+        }
+        if (params.containsKey(PARAM_DISK_SIZE) && !params.containsKey(PARAM_DISK_OFFERING_ID)) {
+            throw new InvalidParameterValueException("AutoScale disksize requires a data disk offering");
+        }
+        if (params.containsKey(PARAM_DISK_OFFERING_ID)) {
+            DiskOffering dataDisk = diskOfferingDao.findByUuid(params.get(PARAM_DISK_OFFERING_ID));
+            if (dataDisk.isCustomized() && !params.containsKey(PARAM_DISK_SIZE)) {
+                throw new InvalidParameterValueException("AutoScale custom data disk offering requires disksize");
+            }
+            if (!dataDisk.isCustomized() && params.containsKey(PARAM_DISK_SIZE)) {
+                throw new InvalidParameterValueException("AutoScale disksize is only supported for a custom data disk offering");
+            }
+        }
     }
 
     @Override
@@ -677,8 +762,8 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
 
         AutoScaleVmProfileVO vmProfile = getEntityInDatabase(CallContext.current().getCallingAccount(), "Auto Scale Vm Profile", profileId, autoScaleVmProfileDao);
 
-        boolean physicalParameterUpdate = (templateId != null || autoscaleUserId != null || counterParamList != null
-                || otherDeployParams != null || expungeVmGracePeriod != null || userdataUpdate);
+        boolean physicalParameterUpdate = (serviceOfferingId != null || templateId != null || autoscaleUserId != null || counterParamList != null
+                || otherDeployParams != null || cmd.isClearOtherDeployParams() || cmd.isClearCounterParams() || expungeVmGracePeriod != null || userdataUpdate);
 
         if (serviceOfferingId != null) {
             vmProfile.setServiceOfferingId(serviceOfferingId);
@@ -692,11 +777,18 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             vmProfile.setAutoscaleUserId(autoscaleUserId);
         }
 
-        if (otherDeployParams != null) {
+        if ((cmd.isClearOtherDeployParams() && MapUtils.isNotEmpty(otherDeployParams))
+                || (cmd.isClearCounterParams() && MapUtils.isNotEmpty(counterParamList))) {
+            throw new InvalidParameterValueException("Cannot clear and replace the same profile parameters in one request");
+        }
+        if (cmd.isClearOtherDeployParams()) {
+            vmProfile.setOtherDeployParams(null);
+        } else if (otherDeployParams != null) {
             vmProfile.setOtherDeployParamsForUpdate(otherDeployParams);
         }
-
-        if (counterParamList != null) {
+        if (cmd.isClearCounterParams()) {
+            vmProfile.setCounterParams(null);
+        } else if (counterParamList != null) {
             vmProfile.setCounterParamsForUpdate(counterParamList);
         }
 
@@ -713,6 +805,10 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
         }
 
         if (userdataUpdate) {
+            if (userData == null && userDataId == null) {
+                userDataId = vmProfile.getUserDataId();
+                userData = userDataId == null ? vmProfile.getUserData() : null;
+            }
             if (templateId == null) {
                 templateId = vmProfile.getTemplateId();
             }
@@ -1964,6 +2060,16 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             Long dataDiskSize = getVmDataDiskSize(deployParams);
             List<String> sshKeyPairs = getVmSshKeyPairs(deployParams, owner);
             List<Long> affinityGroupIdList = getVmAffinityGroupId(deployParams);
+            List<Long> securityGroupIds = new ArrayList<>();
+            if (deployParams.containsKey(PARAM_SECURITY_GROUP_IDS)) {
+                for (String uuid : deployParams.get(PARAM_SECURITY_GROUP_IDS).split(",")) {
+                    SecurityGroup securityGroup = entityMgr.findByUuid(SecurityGroup.class, uuid);
+                    if (securityGroup == null) {
+                        throw new InvalidParameterValueException("AutoScale security group no longer exists");
+                    }
+                    securityGroupIds.add(securityGroup.getId());
+                }
+            }
             updateVmDetails(deployParams, customParameters);
 
             Pair<String, String> vmHostAndDisplayName = getNextVmHostAndDisplayName(asGroup, template);
@@ -1973,23 +2079,26 @@ public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManage
             autoScaleVmGroupDao.updateNextVmSeq(asGroup.getId(), asGroup.getNextVmSeq());
 
             if (zone.getNetworkType() == NetworkType.Basic) {
-                vm = userVmService.createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, null, owner, vmHostName,
+                vm = userVmService.createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, securityGroupIds, owner, vmHostName,
                         vmDisplayName, diskOfferingId, dataDiskSize, null, null,
-                        hypervisorType, HTTPMethod.GET, userData, userDataId, userDataDetails, sshKeyPairs,
+                        hypervisorType, HTTPMethod.POST, userData, userDataId, userDataDetails, sshKeyPairs,
                         null, null, true, null, affinityGroupIdList, customParameters, null, null, null,
                         null, true, overrideDiskOfferingId, null, null, null);
             } else {
                 if (networkModel.checkSecurityGroupSupportForNetwork(owner, zone, networkIds,
                         Collections.emptyList())) {
-                    vm = userVmService.createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, networkIds, null,
+                    vm = userVmService.createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, networkIds, securityGroupIds,
                             owner, vmHostName, vmDisplayName, diskOfferingId, dataDiskSize, null, null,
-                            hypervisorType, HTTPMethod.GET, userData, userDataId, userDataDetails, sshKeyPairs,
+                            hypervisorType, HTTPMethod.POST, userData, userDataId, userDataDetails, sshKeyPairs,
                             null, null, true, null, affinityGroupIdList, customParameters, null, null, null,
                             null, true, overrideDiskOfferingId, null, null, null, null);
                 } else {
+                    if (!securityGroupIds.isEmpty()) {
+                        throw new InvalidParameterValueException("AutoScale security groups require a security-group-enabled network");
+                    }
                     vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, template, networkIds, owner, vmHostName, vmDisplayName,
                             diskOfferingId, dataDiskSize, null, null,
-                            hypervisorType, HTTPMethod.GET, userData, userDataId, userDataDetails, sshKeyPairs,
+                            hypervisorType, HTTPMethod.POST, userData, userDataId, userDataDetails, sshKeyPairs,
                             null, addrs, true, null, affinityGroupIdList, customParameters, null, null, null,
                             null, true, null, overrideDiskOfferingId, null, null, null);
                 }

@@ -457,6 +457,10 @@ public class AutoScaleManagerImplTest {
         when(templateMock.getState()).thenReturn(VirtualMachineTemplate.State.Active);
         when(autoScaleTemplateStoreDao.findByTemplateZoneReady(anyLong(), any())).thenReturn(Mockito.mock(TemplateDataStoreVO.class));
         when(asVmProfileMock.getZoneId()).thenReturn(zoneId);
+        when(asVmProfileMock.getAccountId()).thenReturn(accountId);
+        when(accountManager.getAccount(accountId)).thenReturn(account);
+        when(entityManager.findById(DataCenter.class, zoneId)).thenReturn(zoneMock);
+        when(entityManager.findById(ServiceOffering.class, serviceOfferingId)).thenReturn(serviceOfferingMock);
         when(templateMock.getGuestOSId()).thenReturn(100L);
         GuestOSVO guestOSMock = Mockito.mock(GuestOSVO.class);
         when(guestOSDao.findById(anyLong())).thenReturn(guestOSMock);
@@ -2800,6 +2804,77 @@ public class AutoScaleManagerImplTest {
         Mockito.verify(work, never()).unlock();
     }
 
+
+    @Test public void testOfferingOnlyUpdateRejectsEnabledAssociatedGroup() {
+        when(autoScaleVmProfileDao.findById(vmProfileId)).thenReturn(asVmProfileMock);
+        when(autoScaleVmGroupDao.listByAll(null, vmProfileId)).thenReturn(Collections.singletonList(asVmGroupMock));
+        when(autoScaleVmGroupDao.findById(vmGroupId)).thenReturn(asVmGroupMock);
+        when(asVmGroupMock.getId()).thenReturn(vmGroupId);
+        when(asVmGroupMock.getState()).thenReturn(AutoScaleVmGroup.State.ENABLED);
+        UpdateAutoScaleVmProfileCmd cmd = new UpdateAutoScaleVmProfileCmd();
+        ReflectionTestUtils.setField(cmd, "id", vmProfileId);
+        ReflectionTestUtils.setField(cmd, "serviceOfferingId", serviceOfferingId);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.updateAutoScaleVmProfile(cmd));
+        Mockito.verify(autoScaleVmProfileDao, never()).persist(any());
+    }
+
+    private UpdateAutoScaleVmProfileCmd editableProfileCmd() {
+        when(autoScaleVmProfileDao.findById(vmProfileId)).thenReturn(asVmProfileMock);
+        when(asVmProfileMock.getServiceOfferingId()).thenReturn(serviceOfferingId);
+        when(asVmProfileMock.getTemplateId()).thenReturn(templateId);
+        when(entityManager.findByIdIncludingRemoved(ServiceOffering.class, serviceOfferingId)).thenReturn(serviceOfferingMock);
+        when(entityManager.findById(VirtualMachineTemplate.class, templateId)).thenReturn(templateMock);
+        when(entityManager.findByIdIncludingRemoved(VirtualMachineTemplate.class, templateId)).thenReturn(templateMock);
+        when(autoScaleVmProfileDao.persist(any())).thenReturn(asVmProfileMock);
+        UpdateAutoScaleVmProfileCmd cmd = new UpdateAutoScaleVmProfileCmd();
+        ReflectionTestUtils.setField(cmd, "id", vmProfileId);
+        return cmd;
+    }
+
+    @Test public void testProfileExplicitClearAndOmittedUserDataRemainDistinct() {
+        UpdateAutoScaleVmProfileCmd cmd = editableProfileCmd();
+        ReflectionTestUtils.setField(cmd, "clearOtherDeployParams", true);
+        ReflectionTestUtils.setField(cmd, "clearCounterParams", true);
+        autoScaleManagerImplSpy.updateAutoScaleVmProfile(cmd);
+        Mockito.verify(asVmProfileMock).setOtherDeployParams(null);
+        Mockito.verify(asVmProfileMock).setCounterParams(null);
+        Mockito.verify(asVmProfileMock, never()).setUserData(any());
+        Mockito.verify(asVmProfileMock, never()).setUserDataId(any());
+    }
+
+    @Test public void testProfileUpdateRejectsUnreadyTemplate() {
+        UpdateAutoScaleVmProfileCmd cmd = editableProfileCmd();
+        when(autoScaleTemplateStoreDao.findByTemplateZoneReady(anyLong(), any())).thenReturn(null);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> autoScaleManagerImplSpy.updateAutoScaleVmProfile(cmd));
+        Mockito.verify(autoScaleVmProfileDao, never()).persist(any());
+    }
+
+    @Test public void testUserDataDetailsOnlyPreservesRegisteredUserDataId() {
+        UpdateAutoScaleVmProfileCmd cmd = editableProfileCmd();
+        when(asVmProfileMock.getUserDataId()).thenReturn(userDataId);
+        ReflectionTestUtils.setField(cmd, "userDataDetails", userDataDetails);
+        autoScaleManagerImplSpy.updateAutoScaleVmProfile(cmd);
+        Mockito.verify(userVmMgr).finalizeUserData(null, userDataId, templateMock);
+        Mockito.verify(asVmProfileMock).setUserDataId(userDataId);
+    }
+
+    @Test public void testProfileDeployParamsRejectInvalidSizesAndMissingOwnedKeys() {
+        AutoScaleVmProfileVO profile = Mockito.mock(AutoScaleVmProfileVO.class);
+        for (String params : Arrays.asList("rootdisksize=0", "rootdisksize=-1", "rootdisksize=1.5",
+                "rootdisksize=999999999999999999999", "disksize=10", "networkids=unknown", "keypairs=unknown",
+                "affinitygroupids=unknown", "diskofferingid=unknown", "networkids=unknown,")) {
+            when(profile.getOtherDeployParams()).thenReturn(params);
+            Assert.assertThrows(params, InvalidParameterValueException.class,
+                    () -> autoScaleManagerImplSpy.validateAutoScaleDeployParams(profile, account, zoneMock, serviceOfferingMock));
+        }
+    }
+
+    @Test public void testProfileDeployParamsAcceptPositiveRootSizeAndOwnedSshKey() {
+        AutoScaleVmProfileVO profile = Mockito.mock(AutoScaleVmProfileVO.class);
+        when(profile.getOtherDeployParams()).thenReturn("rootdisksize=120&keypairs=owned");
+        when(sshKeyPairDao.findByName(account.getAccountId(), account.getDomainId(), "owned")).thenReturn(Mockito.mock(SSHKeyPairVO.class));
+        autoScaleManagerImplSpy.validateAutoScaleDeployParams(profile, account, zoneMock, serviceOfferingMock);
+    }
 
     private AutoScaleVmGroupVO lifecycleGroup(String action, String phase, AutoScaleVmGroup.State state) {
         AutoScaleVmGroupVO group = new AutoScaleVmGroupVO(loadBalancerId, zoneId, 1, accountId, "lifecycle", 1, 3, 8080, 10, null, vmProfileId, state);

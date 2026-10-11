@@ -77,10 +77,14 @@ test.each([UpPolicy, DownPolicy])('condition editor accepts actual numeric zero'
     $refs: { newConditionCounterId: field(), newConditionRelationalOperator: field(), newConditionThreshold: field() },
     isNumber: component.methods.isNumber,
     addCondition: jest.fn().mockResolvedValue({ id: 'new' }),
-    updateAutoScalePolicy: jest.fn().mockResolvedValue(),
+    policy: { id: 'policy', conditions: [{ id: 'existing' }] },
+    saveEdit: action => action(),
+    mutate: jest.fn().mockResolvedValue({}),
+    deleteCondition: jest.fn(),
+    recordRetained: jest.fn(),
     $notification: { error: jest.fn() }
   }
   await component.methods.addConditionToPolicy.call(ctx)
   expect(ctx.addCondition).toHaveBeenCalledWith(expect.objectContaining({ threshold: 0 }))
-  expect(ctx.updateAutoScalePolicy).toHaveBeenCalledWith('new', null)
+  expect(ctx.mutate).toHaveBeenCalledWith('updateAutoScalePolicy', { id: 'policy', conditionids: 'existing,new' })
 })

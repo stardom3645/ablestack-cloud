@@ -17,6 +17,9 @@
 
 <template>
   <div>
+    <a-alert v-if="affectedGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedGroups.join(', ') })" />
+    <a-alert v-if="mutationError" type="error" show-icon :message="mutationError" />
+    <a-alert v-if="retainedResources" type="warning" show-icon :message="$t('message.autoscale.edit.retained', { ids: retainedResources })" />
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
     <div>
       <a-alert type="info" v-if="(resource.state !== 'DISABLED' || resource.operationinprogress)">
@@ -47,7 +50,7 @@
             {{ scalepolicy.name || scalepolicy.id }}
           </a-select-option>
         </a-select>
-        <a-button style="margin-left: 10px" ref="submit" type="primary" @click="addPolicyModalVisible = true" :disabled="!('createAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)">
+        <a-button style="margin-left: 10px" ref="submit" type="primary" @click="addPolicyModalVisible = true" :disabled="saving || !('createAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)">
           <template #icon><plus-outlined /></template>
           {{ $t('label.add.policy') }}
         </a-button>
@@ -57,7 +60,7 @@
           :okText="$t('label.yes')"
           :cancelText="$t('label.no')"
         >
-          <a-button style="margin-left: 10px" ref="submit" type="primary" :danger="true" :disabled="!('updateAutoScaleVmGroup' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)">
+          <a-button style="margin-left: 10px" ref="submit" type="primary" :danger="true" :disabled="saving || policies.length < 2 || !('updateAutoScaleVmGroup' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)">
             <template #icon><delete-outlined /></template>
             {{ $t('label.remove.policy') }}
           </a-button>
@@ -69,27 +72,27 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.name')" :tooltip="createAutoScalePolicyApiParams.name.description"/>
+            <tooltip-label :title="$t('label.name')" :tooltip="(createAutoScalePolicyApiParams.name || {}).description"/>
           </div>
           <a-input v-model:value="policy.name" :disabled="!this.isEditable"></a-input>
         </div>
         <div class="form__item">
           <div class="form__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.duration')" :tooltip="createAutoScalePolicyApiParams.duration.description"/>
+            <tooltip-label :title="$t('label.duration')" :tooltip="(createAutoScalePolicyApiParams.duration || {}).description"/>
           </div>
           <a-input v-model:value="policy.duration" type="number" :disabled="!this.isEditable"></a-input>
         </div>
         <div class="form__item">
           <div class="form__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.quiettime')" :tooltip="createAutoScalePolicyApiParams.quiettime.description"/>
+            <tooltip-label :title="$t('label.quiettime')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
           </div>
           <a-input v-model:value="policy.quiettime" type="number" :disabled="!this.isEditable"></a-input>
         </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.action') }}</div>
-          <a-button ref="submit" :disabled="!('updateAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="updateAutoScalePolicy(null, null)">
+          <a-button ref="submit" :disabled="saving || !('updateAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="updateAutoScalePolicy(null, null)">
             <template #icon><edit-outlined /></template>
             {{ isEditOrApply() }}
           </a-button>
@@ -100,7 +103,7 @@
     <a-divider/>
     <div class="title">
       <div class="form__label">
-        <tooltip-label :title="$t('label.conditions')" :tooltip="createAutoScalePolicyApiParams.conditionids.description"/>
+        <tooltip-label :title="$t('label.conditions')" :tooltip="(createAutoScalePolicyApiParams.conditionids || {}).description"/>
       </div>
     </div>
     <a-table
@@ -119,12 +122,12 @@
         <template v-if="column.key === 'actions'">
           <tooltip-button
             :tooltip="$t('label.edit')"
-            :disabled="!('updateCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
+            :disabled="saving || !('updateCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
             icon="edit-outlined"
             @onClick="() => openUpdateConditionModal(record)" />
           <tooltip-button
             :tooltip="$t('label.delete')"
-            :disabled="!('deleteCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
+            :disabled="saving || (policy.conditions || []).length < 2 || !('updateAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
             type="primary"
             :danger="true"
             icon="delete-outlined"
@@ -163,7 +166,7 @@
         <div class="form__item" ref="newConditionRelationalOperator">
           <div class="form__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.relationaloperator')" :tooltip="createConditionApiParams.relationaloperator.description"/>
+            <tooltip-label :title="$t('label.relationaloperator')" :tooltip="(createConditionApiParams.relationaloperator || {}).description"/>
           </div>
           <a-select
             v-model:value="newCondition.relationaloperator"
@@ -186,7 +189,7 @@
         </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.action') }}</div>
-          <a-button ref="submit" :disabled="!('createCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addConditionToPolicy">
+          <a-button ref="submit" :disabled="saving || !('createCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addConditionToPolicy">
             <template #icon><plus-outlined /></template>
             {{ $t('label.add.condition') }}
           </a-button>
@@ -202,6 +205,7 @@
       :closable="true"
       :footer="null"
       @cancel="updateConditionModalVisible = false">
+      <a-alert v-if="affectedConditionGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedConditionGroups.join(', ') })" />
       <span v-show="updateConditionModalLoading" class="modal-loading">
         <loading-outlined />
       </span>
@@ -214,7 +218,7 @@
         <div class="update-condition__item">
           <div class="update-condition__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.relationaloperator')" :tooltip="createConditionApiParams.relationaloperator.description"/>
+            <tooltip-label :title="$t('label.relationaloperator')" :tooltip="(createConditionApiParams.relationaloperator || {}).description"/>
           </div>
           <a-select
             v-model:value="updateConditionDetails.relationaloperator"
@@ -252,21 +256,21 @@
       <div class="update-condition">
         <div class="update-condition__item">
           <div class="update-condition__label">
-            <tooltip-label :title="$t('label.name')" :tooltip="createAutoScalePolicyApiParams.name.description"/>
+            <tooltip-label :title="$t('label.name')" :tooltip="(createAutoScalePolicyApiParams.name || {}).description"/>
           </div>
           <a-input v-model:value="newPolicy.name" v-focus="true"></a-input>
         </div>
         <div class="update-condition__item">
           <div class="update-condition__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.duration')" :tooltip="createAutoScalePolicyApiParams.duration.description"/>
+            <tooltip-label :title="$t('label.duration')" :tooltip="(createAutoScalePolicyApiParams.duration || {}).description"/>
           </div>
           <a-input v-model:value="newPolicy.duration" type="number"></a-input>
         </div>
         <div class="update-condition__item">
           <div class="update-condition__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.quiettime')" :tooltip="createAutoScalePolicyApiParams.quiettime.description"/>
+            <tooltip-label :title="$t('label.quiettime')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
           </div>
           <a-input v-model:value="newPolicy.quiettime" type="number"></a-input>
         </div>
@@ -295,7 +299,7 @@
         <div class="update-condition__item">
           <div class="update-condition__label">
             <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.relationaloperator')" :tooltip="createConditionApiParams.relationaloperator.description"/>
+            <tooltip-label :title="$t('label.relationaloperator')" :tooltip="(createConditionApiParams.relationaloperator || {}).description"/>
           </div>
           <a-select
             v-model:value="newPolicy.relationaloperator"
@@ -327,6 +331,8 @@
 <script>
 import { autoScaleOperators, validAutoScalePolicyTiming, autoScaleCounterLabel } from '@/utils/autoScalePolicyEvaluation'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
+import { autoScaleInteger } from '@/utils/autoscaleValidation'
+import { runAutoScaleMutation, autoScaleOwnerParams, autoScaleAffectedGroups, autoScaleMutationDescription, createAndAttachAutoScale } from '@/utils/autoScaleEditing'
 
 import { getAPI, postAPI } from '@/api'
 import Status from '@/components/widgets/Status'
@@ -352,6 +358,11 @@ export default {
       operators: autoScaleOperators,
       filterColumns: ['Actions'],
       loading: true,
+      saving: false,
+      affectedGroups: [],
+      affectedConditionGroups: [],
+      mutationError: '',
+      retainedResources: '',
       policies: [],
       isEditable: false,
       policy: {
@@ -405,12 +416,12 @@ export default {
   beforeCreate () {
     this.createConditionApi = this.$store.getters.apis.createCondition || {}
     this.createConditionApiParams = {}
-    this.createConditionApi.params.forEach(param => {
+    ;(this.createConditionApi.params || []).forEach(param => {
       this.createConditionApiParams[param.name] = param
     })
     this.createAutoScalePolicyApi = this.$store.getters.apis.createAutoScalePolicy || {}
     this.createAutoScalePolicyApiParams = {}
-    this.createAutoScalePolicyApi.params.forEach(param => {
+    ;(this.createAutoScalePolicyApi.params || []).forEach(param => {
       this.createAutoScalePolicyApiParams[param.name] = param
     })
   },
@@ -431,55 +442,41 @@ export default {
   inject: ['parentFetchData'],
   methods: {
     counterLabel (name) { return autoScaleCounterLabel(name, this.$t) },
-    fetchInitData () {
+    async fetchInitData () {
       this.loading = true
-      getAPI('listAutoScaleVmGroups', {
-        listAll: true,
-        id: this.resource.id
-      }).then(response => {
-        const lbruleid = response.listautoscalevmgroupsresponse?.autoscalevmgroup?.[0]?.lbruleid
-        this.policies = response.listautoscalevmgroupsresponse?.autoscalevmgroup?.[0]?.scaleuppolicies
-        if (this.selectedPolicyId) {
-          this.switchPolicy()
-        } else {
-          this.policy = this.policies?.[0]
-          this.selectedPolicyId = this.policy.id
+      try {
+        const response = await getAPI('listAutoScaleVmGroups', { ...autoScaleOwnerParams(this.resource), listall: true, id: this.resource.id })
+        const group = response.listautoscalevmgroupsresponse?.autoscalevmgroup?.[0]
+        this.policies = group?.scaleuppolicies || []
+        if (!this.policies.some(policy => policy.id === this.selectedPolicyId)) this.selectedPolicyId = this.policies[0]?.id
+        this.switchPolicy()
+        let provider = this.resource.lbprovider
+        if (!provider) {
+          const lb = await getAPI('listLoadBalancerRules', { ...autoScaleOwnerParams(this.resource), listall: true, id: group?.lbruleid })
+          const networkId = lb.listloadbalancerrulesresponse?.loadbalancerrule?.[0]?.networkid
+          const network = await getAPI('listNetworks', { ...autoScaleOwnerParams(this.resource), listall: true, id: networkId })
+          provider = network.listnetworksresponse?.network?.[0]?.service?.find(service => service.name === 'Lb')?.provider?.[0]?.name
         }
-        getAPI('listLoadBalancerRules', {
-          listAll: true,
-          id: lbruleid
-        }).then(response => {
-          const networkid = response.listloadbalancerrulesresponse?.loadbalancerrule?.[0]?.networkid
-          getAPI('listNetworks', {
-            listAll: true,
-            projectid: this.resource.projectid,
-            id: networkid
-          }).then(response => {
-            const services = response.listnetworksresponse?.network?.[0]?.service
-            const index = services.map(svc => { return svc.name }).indexOf('Lb')
-            const provider = services[index].provider[0].name
-            getAPI('listCounters', {
-              listAll: true,
-              provider: provider
-            }).then(response => {
-              this.countersList = response.counterresponse?.counter || []
-            })
-          })
-        })
-      }).finally(() => {
+        const counters = await getAPI('listCounters', { listall: true, provider })
+        this.countersList = counters.counterresponse?.counter || []
+      } catch (error) {
+        this.$notifyError(error)
+      } finally {
         this.loading = false
-      })
+      }
     },
     fetchData () {
       const listRequest = this.listRequestToken('fetchData')
       this.loading = !listRequest.loaded
+      if (!this.selectedPolicyId) return this.fetchInitData()
       return getAPI('listAutoScalePolicies', {
+        ...autoScaleOwnerParams(this.resource),
         listAll: true,
         id: this.selectedPolicyId
       }).then(response => {
         if (!this.isListRequestCurrent('fetchData', listRequest)) return
 
-        this.policy = response.listautoscalepoliciesresponse?.autoscalepolicy[0]
+        this.policy = response.listautoscalepoliciesresponse?.autoscalepolicy?.[0] || { conditions: [] }
       }).finally(() => {
         if (!this.isListRequestCurrent('fetchData', listRequest)) return
 
@@ -495,8 +492,12 @@ export default {
       })
     },
     switchPolicy () {
-      this.policy = this.policies.filter(policy => policy.id === this.selectedPolicyId)[0]
+      this.policy = this.policies.find(policy => policy.id === this.selectedPolicyId) || { conditions: [] }
       this.isEditable = false
+      if (this.selectedPolicyId) {
+        autoScaleAffectedGroups(getAPI, this.resource, { policyId: this.selectedPolicyId })
+          .then(groups => { this.affectedGroups = groups }).catch(error => this.$notifyError(error))
+      }
     },
     isEditOrApply () {
       if (this.isEditable) return this.$t('label.apply')
@@ -525,318 +526,119 @@ export default {
       if (val === 'EQ' || val === 'eq') return this.$t('label.operator.equal')
       return val
     },
-    async pollJob (jobId) {
-      return new Promise(resolve => {
-        const asyncJobInterval = setInterval(() => {
-          getAPI('queryAsyncJobResult', { jobId }).then(async json => {
-            const result = json.queryasyncjobresultresponse
-            if (result.jobstatus === 0) {
-              return
-            }
-
-            clearInterval(asyncJobInterval)
-            resolve(result)
-          })
-        }, 1000)
-      })
+    mutate (command, params) { return runAutoScaleMutation(postAPI, getAPI, command, params) },
+    recordRetained (resources) { this.retainedResources = Object.entries(resources).filter(([, id]) => id).map(([type, id]) => `${type}: ${id}`).join(', ') },
+    async saveEdit (action) {
+      if (this.saving) return
+      this.saving = true
+      this.mutationError = ''
+      try {
+        await action()
+        await this.fetchInitData()
+        this.closeModal()
+        this.$message.success(this.$t('message.autoscale.edit.saved'))
+      } catch (error) {
+        this.mutationError = autoScaleMutationDescription(error, this.$t)
+        this.$notification.error({ message: this.$t('label.error'), description: this.mutationError })
+      } finally {
+        this.saving = false
+        this.updateConditionModalLoading = false
+      }
     },
-    addCondition (params) {
-      this.loading = true
-      return new Promise((resolve, reject) => {
-        postAPI('createCondition', params).then(async json => {
-          this.$pollJob({
-            jobId: json.conditionresponse.jobid,
-            successMethod: (result) => {
-              resolve(result.jobresult.condition)
-            },
-            errorMethod: (result) => {
-              reject(result.jobresult.errortext)
-            },
-            catchMessage: this.$t('error.fetching.async.job.result')
-          })
-        }).catch(error => {
-          reject(error)
-        }).finally(
-          this.loading = false
-        )
-      })
-    },
-    deleteCondition (conditionId) {
-      this.loading = true
-      return new Promise((resolve, reject) => {
-        postAPI('deleteCondition', { id: conditionId }).then(response => {
-          const jobId = response.deleteconditionresponse.jobid
-          this.$pollJob({
-            title: this.$t('label.delete.condition'),
-            description: conditionId,
-            jobId: jobId,
-            successMethod: () => {
-              return resolve()
-            },
-            errorMessage: this.$t('message.delete.condition.failed'),
-            errorMethod: (result) => {
-              reject(result.jobresult.errortext)
-            },
-            loadingMessage: this.$t('message.delete.condition.processing'),
-            catchMessage: this.$t('error.fetching.async.job.result'),
-            catchMethod: () => this.fetchData()
-          })
-        }).catch(error => {
-          reject(error)
-        }).finally(() => {
-          this.fetchData()
-          this.loading = false
-        })
-      })
-    },
+    addCondition (params) { return this.mutate('createCondition', params).then(result => result.condition) },
+    deleteCondition (id) { return this.mutate('deleteCondition', { id }) },
     openUpdateConditionModal (condition) {
       this.selectedCondition = condition
       this.updateConditionModalVisible = true
-      this.updateConditionDetails.countername = this.selectedCondition.countername
-      this.updateConditionDetails.relationaloperator = this.selectedCondition.relationaloperator
-      this.updateConditionDetails.threshold = this.selectedCondition.threshold
+      this.updateConditionDetails = { countername: condition.countername, relationaloperator: condition.relationaloperator, threshold: condition.threshold }
+      this.affectedConditionGroups = []
+      autoScaleAffectedGroups(getAPI, this.resource, { conditionId: condition.id })
+        .then(groups => { this.affectedConditionGroups = groups }).catch(error => this.$notifyError(error))
     },
     handleSubmitUpdateConditionForm () {
-      if (this.updateConditionModalLoading) return
-
-      if (!this.isNumber(this.updateConditionDetails.threshold)) {
-        this.$notification.error({
-          message: this.$t('label.threshold'),
-          description: this.$t('message.validate.number')
-        })
+      const threshold = autoScaleInteger(this.updateConditionDetails.threshold, 0)
+      if (threshold === null) {
+        this.$message.error(this.$t('message.validate.number'))
         return
       }
-
-      this.updateConditionModalLoading = true
-      postAPI('updateCondition', {
+      return this.saveEdit(() => this.mutate('updateCondition', {
         id: this.selectedCondition.id,
         relationaloperator: this.updateConditionDetails.relationaloperator,
-        threshold: this.updateConditionDetails.threshold
-      }).then(response => {
-        this.$pollJob({
-          title: this.$t('label.update.condition'),
-          description: this.selectedCondition.id,
-          jobId: response.updateconditionresponse.jobid,
-          successMessage: this.$t('message.success.update.condition'),
-          successMethod: () => {
-            this.fetchData()
-            this.closeModal()
-          },
-          errorMessage: this.$t('message.update.condition.failed'),
-          errorMethod: () => {
-            this.fetchData()
-            this.closeModal()
-          },
-          loadingMessage: this.$t('message.update.condition.processing')
-        })
-      }).catch(error => {
-        this.$notifyError(error)
-        this.updateConditionModalLoading = false
-      })
+        threshold
+      }))
     },
-    async deleteConditionFromAutoScalePolicy (conditionId) {
-      await this.updateAutoScalePolicy(null, conditionId)
+    deleteConditionFromAutoScalePolicy (conditionId) {
+      if ((this.policy.conditions || []).length < 2) {
+        this.$message.error(this.$t('message.autoscale.policy.last.condition'))
+        return
+      }
+      return this.updateAutoScalePolicy(null, conditionId)
     },
-    async addConditionToPolicy () {
-      if (this.loading) return
-
-      if (!this.newCondition.counterid) {
-        this.$refs.newConditionCounterId.classList.add('error')
-      } else {
-        this.$refs.newConditionCounterId.classList.remove('error')
-      }
-
-      if (!this.newCondition.relationaloperator) {
-        this.$refs.newConditionRelationalOperator.classList.add('error')
-      } else {
-        this.$refs.newConditionRelationalOperator.classList.remove('error')
-      }
-
-      if (this.newCondition.threshold === null || this.newCondition.threshold === undefined || this.newCondition.threshold === '') {
-        this.$refs.newConditionThreshold.classList.add('error')
-      } else {
-        this.$refs.newConditionThreshold.classList.remove('error')
-      }
-
-      if (!this.newCondition.counterid || !this.newCondition.relationaloperator || this.newCondition.threshold === null || this.newCondition.threshold === undefined || this.newCondition.threshold === '') {
+    addConditionToPolicy () {
+      if (!this.newCondition.counterid || autoScaleInteger(this.newCondition.threshold, 0) === null) {
+        this.$message.error(this.$t('message.please.enter.valid.value'))
         return
       }
-
-      if (!this.isNumber(this.newCondition.threshold)) {
-        this.$notification.error({
-          message: this.$t('label.threshold'),
-          description: this.$t('message.validate.number')
-        })
-        return
-      }
-
-      const params = { ...this.newCondition }
-      params.domainid = this.resource.domainid
-      params.account = this.resource.account
-      const newCondition = await this.addCondition(params)
-
-      await this.updateAutoScalePolicy(newCondition.id, null)
+      return this.saveEdit(() => createAndAttachAutoScale({
+        createCondition: () => this.addCondition({ ...autoScaleOwnerParams(this.resource), ...this.newCondition }),
+        attach: condition => this.mutate('updateAutoScalePolicy', { id: this.policy.id, conditionids: [...this.policy.conditions.map(item => item.id), condition.id].join(',') }),
+        removeCondition: this.deleteCondition,
+        retained: this.recordRetained
+      }))
     },
-    async addNewScalePolicyToGroup () {
-      if (this.loading) return
-
-      if (!this.newPolicy.counterid || !this.newPolicy.relationaloperator || this.newPolicy.threshold === null || this.newPolicy.threshold === '') {
-        this.$notification.error({
-          message: this.$t('message.request.failed'),
-          description: this.$t('message.please.enter.valid.value')
-        })
+    addNewScalePolicyToGroup () {
+      if (!this.newPolicy.counterid || autoScaleInteger(this.newPolicy.threshold, 0) === null ||
+          !validAutoScalePolicyTiming(this.newPolicy, this.resource.interval)) {
+        this.$message.error(this.$t('message.autoscale.policy.time.invalid', { interval: this.resource.interval || 1 }))
         return
       }
-
-      if (!validAutoScalePolicyTiming(this.newPolicy, this.resource.interval)) {
-        this.$notification.error({
-          message: this.$t('label.duration'),
-          description: this.$t('message.autoscale.policy.time.invalid', { interval: this.resource.interval || 1 })
-        })
+      return this.saveEdit(() => createAndAttachAutoScale({
+        createCondition: () => this.addCondition({
+          ...autoScaleOwnerParams(this.resource),
+          counterid: this.newPolicy.counterid,
+          relationaloperator: this.newPolicy.relationaloperator,
+          threshold: this.newPolicy.threshold
+        }),
+        createPolicy: condition => this.mutate('createAutoScalePolicy', {
+          ...autoScaleOwnerParams(this.resource),
+          name: this.newPolicy.name,
+          conditionids: condition.id,
+          duration: this.newPolicy.duration,
+          quiettime: this.newPolicy.quiettime,
+          action: 'ScaleUp'
+        }).then(result => result.autoscalepolicy),
+        attach: policy => this.mutate('updateAutoScaleVmGroup', { id: this.resource.id, scaleuppolicyids: [...this.policies.map(item => item.id), policy.id].join(',') }),
+        removePolicy: id => this.mutate('deleteAutoScalePolicy', { id }),
+        removeCondition: this.deleteCondition,
+        retained: this.recordRetained
+      }))
+    },
+    removeScalePolicyFromGroup () {
+      if (this.policies.length < 2) {
+        this.$message.error(this.$t('message.autoscale.policy.last.policy'))
         return
       }
-
-      if (!this.isNumber(this.newPolicy.threshold)) {
-        this.$notification.error({
-          message: this.$t('label.threshold'),
-          description: this.$t('message.validate.number')
-        })
-        return
-      }
-
-      this.loading = true
-
-      const newCondition = await this.addCondition({
-        domainid: this.resource.domainid,
-        account: this.resource.account,
-        counterid: this.newPolicy.counterid,
-        relationaloperator: this.newPolicy.relationaloperator,
-        threshold: this.newPolicy.threshold
-      })
-
-      const newPolicy = await this.createAutoScalePolicy({
-        domainid: this.resource.domainid,
-        account: this.resource.account,
-        name: this.newPolicy.name,
-        conditionids: newCondition.id,
-        duration: this.newPolicy.duration,
-        quiettime: this.newPolicy.quiettime,
-        action: 'ScaleUp'
-      })
-
-      this.policies.push(newPolicy)
-      this.policy = newPolicy
-      this.selectedPolicyId = newPolicy.id
-
-      await this.updateAutoScaleVmGroup({
+      return this.saveEdit(() => this.mutate('updateAutoScaleVmGroup', {
         id: this.resource.id,
-        scaleuppolicyids: this.policies.map(policy => { return policy.id }).join(',')
-      })
-
-      this.addPolicyModalVisible = false
-    },
-    async removeScalePolicyFromGroup () {
-      this.policies = this.policies.filter(policy => policy.id !== this.selectedPolicyId)
-
-      await this.updateAutoScaleVmGroup({
-        id: this.resource.id,
-        scaleuppolicyids: this.policies.map(policy => { return policy.id }).join(',')
-      })
-
-      this.selectedPolicyId = this.policies[this.policies.length - 1].id
-      this.isEditable = false
-    },
-    createAutoScalePolicy (params) {
-      this.loading = true
-      return new Promise((resolve, reject) => {
-        postAPI('createAutoScalePolicy', params).then(async json => {
-          this.$pollJob({
-            jobId: json.autoscalepolicyresponse.jobid,
-            successMethod: (result) => {
-              resolve(result.jobresult.autoscalepolicy)
-            },
-            errorMethod: (result) => {
-              reject(result.jobresult.errortext)
-            },
-            catchMessage: this.$t('error.fetching.async.job.result')
-          })
-        }).catch(error => {
-          reject(error)
-        }).finally(
-          this.loading = false
-        )
-      })
+        scaleuppolicyids: this.policies.filter(policy => policy.id !== this.selectedPolicyId).map(policy => policy.id).join(',')
+      }))
     },
     updateAutoScalePolicy (conditionIdToAdd, conditionIdToRemove) {
-      if (conditionIdToAdd === null && conditionIdToRemove === null && !this.isEditable) {
-        this.isEditable = true
-        return
-      }
-      if (this.loading) return
+      if (!conditionIdToAdd && !conditionIdToRemove && !this.isEditable) { this.isEditable = true; return }
       if (!validAutoScalePolicyTiming(this.policy, this.resource.interval)) {
-        this.$notification.error({ message: this.$t('message.request.failed'), description: this.$t('message.autoscale.policy.time.invalid', { interval: this.resource.interval || 1 }) })
+        this.$message.error(this.$t('message.autoscale.policy.time.invalid', { interval: this.resource.interval || 1 }))
         return
       }
-      this.loading = true
-
-      let newConditionIds
-      if (conditionIdToAdd) {
-        newConditionIds = this.policy.conditions.map(condition => { return condition.id }).join(',') + ',' + conditionIdToAdd
-      } else if (conditionIdToRemove) {
-        newConditionIds = this.policy.conditions.filter(condition => condition.id !== conditionIdToRemove).map(condition => { return condition.id }).join(',')
-      }
-
-      return new Promise((resolve, reject) => {
-        postAPI('updateAutoScalePolicy', {
-          id: this.policy.id,
-          name: this.policy.name,
-          duration: this.policy.duration,
-          quiettime: this.policy.quiettime,
-          conditionids: newConditionIds
-        }).then(response => {
-          this.$pollJob({
-            jobId: response.updateautoscalepolicyresponse.jobid,
-            successMethod: (result) => {
-              this.policy = result.jobresult.autoscalepolicy
-              this.isEditable = false
-              resolve(this.policy)
-            },
-            errorMessage: this.$t('message.update.autoscale.policy.failed'),
-            errorMethod: (result) => {
-              reject(result.jobresult.errortext)
-            },
-            catchMessage: this.$t('error.fetching.async.job.result')
-          })
-        }).catch(error => {
-          reject(error)
-        }).finally(
-          this.loading = false
-        )
-      })
-    },
-    updateAutoScaleVmGroup (params) {
-      if (this.loading) return
-      this.loading = true
-
-      return new Promise((resolve, reject) => {
-        postAPI('updateAutoScaleVmGroup', params).then(response => {
-          this.$pollJob({
-            jobId: response.updateautoscalevmgroupresponse.jobid,
-            successMethod: (result) => {
-              resolve(result.jobresult.autoscalevmgroup)
-            },
-            errorMessage: this.$t('message.update.autoscale.vmgroup.failed'),
-            errorMethod: (result) => {
-              reject(result.jobresult.errortext)
-            },
-            catchMessage: this.$t('error.fetching.async.job.result')
-          })
-        }).catch(error => {
-          reject(error)
-        }).finally(
-          this.loading = false
-        )
-      })
+      const ids = this.policy.conditions.filter(condition => condition.id !== conditionIdToRemove).map(condition => condition.id)
+      if (conditionIdToAdd) ids.push(conditionIdToAdd)
+      if (!ids.length) { this.$message.error(this.$t('message.autoscale.policy.last.condition')); return }
+      return this.saveEdit(() => this.mutate('updateAutoScalePolicy', {
+        id: this.policy.id,
+        name: this.policy.name,
+        duration: this.policy.duration,
+        quiettime: this.policy.quiettime,
+        conditionids: ids.join(',')
+      }))
     },
     closeModal () {
       this.updateConditionModalVisible = false

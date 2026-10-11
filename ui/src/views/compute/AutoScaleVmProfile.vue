@@ -25,6 +25,9 @@
         </template>
       </a-alert>
 
+      <a-alert type="info" show-icon :message="$t('message.autoscale.profile.future')" />
+      <a-alert v-if="affectedGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedGroups.join(', ') })" />
+      <a-alert v-if="mutationError" type="error" show-icon :message="mutationError" />
       <a-divider/>
       <div class="form">
         <div class="form__item" v-if="resource.lbprovider === 'Netscaler'">
@@ -60,7 +63,7 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.templatename')" :tooltip="createAutoScaleVmProfileApiParams.templateid.description"/>
+            <tooltip-label :title="$t('label.templatename')" :tooltip="(createAutoScaleVmProfileApiParams.templateid || {}).description"/>
           </div>
           {{ getTemplateName(templateid) }}
         </div>
@@ -68,7 +71,7 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="createAutoScaleVmProfileApiParams.serviceofferingid.description"/>
+            <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="(createAutoScaleVmProfileApiParams.serviceofferingid || {}).description"/>
           </div>
           {{ getServiceOfferingName(serviceofferingid) }}
         </div>
@@ -108,7 +111,7 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.user.data')" :tooltip="createAutoScaleVmProfileApiParams.userdata.description"/>
+            <tooltip-label :title="$t('label.user.data')" :tooltip="(createAutoScaleVmProfileApiParams.userdata || {}).description"/>
           </div>
           <a-textarea v-model:value="userdata" rows="5" :disabled="true">
           </a-textarea>
@@ -116,13 +119,13 @@
       </div>
       <div class="form">
         <div class="form__item">
-          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="editProfileModalVisible = true">
+          <a-button ref="submit" :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="editProfileModalVisible = true">
             <template #icon><edit-outlined /></template>
             {{ $t('label.edit.autoscale.vmprofile') }}
           </a-button>
         </div>
         <div class="form__item">
-          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="showUpdateUserDataForm = true">
+          <a-button ref="submit" :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="showUpdateUserDataForm = true">
             <template #icon><solution-outlined /></template>
             {{ $t('label.reset.user.data.on.autoscale.vm.group') }}
           </a-button>
@@ -132,7 +135,7 @@
       <a-divider/>
       <div class="title">
         <div class="form__label">
-          <tooltip-label :title="$t('label.params')" :tooltip="createAutoScaleVmProfileApiParams.otherdeployparams.description"/>
+          <tooltip-label :title="$t('label.params')" :tooltip="(createAutoScaleVmProfileApiParams.otherdeployparams || {}).description"/>
         </div>
       </div>
       <div class="form" v-ctrl-enter="addParam">
@@ -158,9 +161,13 @@
           <a-input v-model:value="newParam.value"></a-input>
           <span class="error-text">{{ $t('label.required') }}</span>
         </div>
+        <div class="form__item" v-if="newParam.name === 'diskofferingid'">
+          <div class="form__label">{{ $t('label.disksize') }} (GiB)</div>
+          <a-input v-model:value="newParam.disksize" type="number" :placeholder="$t('message.autoscale.profile.data.size')" />
+        </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.action') }}</div>
-          <a-button ref="submit" :disabled="!('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addParam">
+          <a-button ref="submit" :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addParam">
             <template #icon><plus-outlined /></template>
             {{ $t('label.add.param') }}
           </a-button>
@@ -187,7 +194,7 @@
         >
           <tooltip-button
             :tooltip="$t('label.delete')"
-            :disabled="!('deleteCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
+            :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
             type="primary"
             :danger="true"
             icon="delete-outlined" />
@@ -238,7 +245,7 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.templatename')" :tooltip="createAutoScaleVmProfileApiParams.templateid.description"/>
+            <tooltip-label :title="$t('label.templatename')" :tooltip="(createAutoScaleVmProfileApiParams.templateid || {}).description"/>
           </div>
           <a-select
             style="width: 100%"
@@ -262,7 +269,7 @@
       <div class="form">
         <div class="form__item">
           <div class="form__label">
-            <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="createAutoScaleVmProfileApiParams.serviceofferingid.description"/>
+            <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="(createAutoScaleVmProfileApiParams.serviceofferingid || {}).description"/>
           </div>
           <a-select
             style="width: 100%"
@@ -284,8 +291,8 @@
         </div>
       </div>
       <div :span="24" class="action-button">
-        <a-button :loading="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
-        <a-button :loading="loading" ref="submit" type="primary" @click="updateAutoScaleVmProfile">{{ $t('label.ok') }}</a-button>
+        <a-button :disabled="saving" @click="closeModal">{{ $t('label.cancel') }}</a-button>
+        <a-button :loading="saving" ref="submit" type="primary" @click="updateAutoScaleVmProfile">{{ $t('label.ok') }}</a-button>
       </div>
     </a-modal>
 
@@ -300,7 +307,7 @@
       width="auto">
       <reset-user-data
         :resource="{ ...resource, ...{ resetUserDataApiName: 'updateAutoScaleVmProfile', resetUserDataResourceId: this.resource.vmprofileid, templateid: this.templateid}}"
-        @close-action="showUpdateUserDataForm = false"
+        @close-action="onUserDataClose"
       />
     </a-modal>
   </div>
@@ -308,7 +315,9 @@
 
 <script>
 import { getAPI, postAPI } from '@/api'
-import { isAdmin, isAdminOrDomainAdmin } from '@/role'
+import { isAdminOrDomainAdmin } from '@/role'
+import { autoScaleOfferingEligible, autoScaleInteger } from '@/utils/autoscaleValidation'
+import { runAutoScaleMutation, autoScaleOwnerParams, autoScaleAffectedGroups, autoScaleMutationDescription } from '@/utils/autoScaleEditing'
 import Status from '@/components/widgets/Status'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
@@ -332,6 +341,11 @@ export default {
     return {
       filterColumns: ['Actions'],
       loading: true,
+      saving: false,
+      profile: {},
+      affectedGroups: [],
+      mutationError: '',
+      zoneid: null,
       editProfileModalVisible: false,
       showUpdateUserDataForm: false,
       profileid: null,
@@ -350,7 +364,8 @@ export default {
       allParams: [],
       newParam: {
         name: null,
-        value: null
+        value: null,
+        disksize: null
       },
       counterParams: [],
       deployParams: [],
@@ -373,7 +388,7 @@ export default {
   beforeCreate () {
     this.createAutoScaleVmProfileApi = this.$store.getters.apis.createAutoScaleVmProfile || {}
     this.createAutoScaleVmProfileApiParams = {}
-    this.createAutoScaleVmProfileApi.params.forEach(param => {
+    ;(this.createAutoScaleVmProfileApi.params || []).forEach(param => {
       this.createAutoScaleVmProfileApiParams[param.name] = param
     })
   },
@@ -399,14 +414,15 @@ export default {
         'keypairs', 'affinitygroupids', 'networkids', 'securitygroupids']
       if (this.resource.lbprovider === 'Netscaler') {
         this.paramNameList = this.counterParams.concat(this.deployParams)
-      } else if (('VirtualRouter', 'VpcVirtualRouter').includes(this.resource.lbprovider)) {
+      } else {
         this.paramNameList = this.deployParams
       }
       this.paramNameList = this.paramNameList.sort()
-      this.fetchUserData()
-      this.fetchTemplateData()
+      if (this.resource.lbprovider === 'Netscaler') this.fetchUserData()
       this.fetchServiceOfferingData()
       this.fetchData()
+      autoScaleAffectedGroups(getAPI, this.resource, { profileId: this.resource.vmprofileid })
+        .then(groups => { this.affectedGroups = groups }).catch(error => this.$notifyError(error))
     },
     fetchUserData () {
       getAPI('listUsers', {
@@ -417,20 +433,16 @@ export default {
       })
     },
     fetchTemplateData () {
-      const params = {
-        listall: 'true',
-        domainid: this.resource.domainid,
-        account: this.resource.account
-      }
-      if (isAdmin()) {
-        params.templatefilter = 'all'
-        params.isready = true
-      } else {
-        params.templatefilter = 'executable'
-      }
-      getAPI('listTemplates', params).then(json => {
-        this.templatesList = json.listtemplatesresponse?.template || []
-      })
+      return getAPI('listTemplates', {
+        ...autoScaleOwnerParams(this.resource),
+        listall: true,
+        templatefilter: 'executable',
+        isready: true,
+        zoneid: this.zoneid
+      }).then(json => {
+        this.templatesList = (json.listtemplatesresponse?.template || []).filter(template =>
+          template.format !== 'ISO' && !['SYSTEM', 'ROUTING', 'DATADISK', 'ISODISK'].includes(template.templatetype))
+      }).catch(error => this.$notifyError(error))
     },
     fetchServiceOfferingData () {
       const params = {
@@ -442,15 +454,18 @@ export default {
       }
       getAPI('listServiceOfferings', params).then(json => {
         this.serviceOfferingsList = json.listserviceofferingsresponse?.serviceoffering || []
-        this.serviceOfferingsList = this.serviceOfferingsList.filter(offering => !offering.iscustomized)
+        this.serviceOfferingsList = this.serviceOfferingsList.filter(autoScaleOfferingEligible)
       })
     },
     fetchData () {
       this.loading = true
-      getAPI('listAutoScaleVmProfiles', {
+      return getAPI('listAutoScaleVmProfiles', {
+        ...autoScaleOwnerParams(this.resource),
         listAll: true,
         id: this.resource.vmprofileid
-      }).then(response => {
+      }).then(async response => {
+        this.profile = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0] || {}
+        this.zoneid = this.profile.zoneid || this.resource.zoneid
         this.profileid = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.id
         this.autoscaleuserid = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.autoscaleuserid
         this.expungevmgraceperiod = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.expungevmgraceperiod
@@ -465,7 +480,8 @@ export default {
         const counterparam = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.counterparam || {}
         const otherdeployparams = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.otherdeployparams || {}
         this.finalizeParams(counterparam, otherdeployparams)
-      }).finally(() => {
+        await this.fetchTemplateData()
+      }).catch(error => this.$notifyError(error)).finally(() => {
         this.loading = false
       })
     },
@@ -475,7 +491,7 @@ export default {
           return template.name
         }
       }
-      return ''
+      return this.profile.templatename || templateid || ''
     },
     getServiceOfferingName (serviceofferingid) {
       for (const serviceoffering of this.serviceOfferingsList) {
@@ -483,7 +499,7 @@ export default {
           return serviceoffering.name
         }
       }
-      return ''
+      return this.profile.serviceofferingname || serviceofferingid || ''
     },
     handleCancel () {
       this.parentFetchData()
@@ -525,7 +541,7 @@ export default {
       this.updateAutoScaleVmProfileWithParam(null, null, paramName)
     },
     addParam () {
-      if (this.loading) return
+      if (this.loading || this.saving) return
       if (!this.newParam.name) {
         this.$refs.newParamName.classList.add('error')
       } else {
@@ -542,7 +558,7 @@ export default {
       this.updateAutoScaleVmProfileWithParam(this.newParam.name, this.newParam.value, null)
     },
     updateAutoScaleVmProfileWithParam (paramNameToAdd, paramValueToAdd, paramNameToRemove) {
-      if (this.loading) return
+      if (this.loading || this.saving) return
       this.loading = true
 
       var params = {
@@ -552,6 +568,7 @@ export default {
       var j = 0
       for (var index = 0; index < this.allParams.length; index++) {
         var param = { ...this.allParams[index] }
+        if (param.name === 'disksize' && (paramNameToAdd === 'diskofferingid' || paramNameToRemove === 'diskofferingid')) continue
         if (this.counterParams.includes(param.name) && param.name !== paramNameToAdd && param.name !== paramNameToRemove) {
           params['counterparam[' + i + '].name'] = param.name
           params['counterparam[' + i + '].value'] = param.value
@@ -573,53 +590,63 @@ export default {
         params['otherdeployparams[' + j + '].value'] = paramValueToAdd
       }
 
-      postAPI('updateAutoScaleVmProfile', params).then(response => {
-        this.$pollJob({
-          jobId: response.updateautoscalevmprofileresponse.jobid,
-          successMethod: (result) => {
-          },
-          errorMessage: this.$t('message.update.autoscale.vm.profile.failed'),
-          errorMethod: () => {
-          }
-        })
-      }).finally(() => {
-        this.loading = false
+      if (paramNameToAdd === 'diskofferingid' && this.newParam.disksize !== null && this.newParam.disksize !== '') {
+        params['otherdeployparams[' + (j + 1) + '].name'] = 'disksize'
+        params['otherdeployparams[' + (j + 1) + '].value'] = this.newParam.disksize
+      }
+      if (paramNameToRemove && this.deployParams.includes(paramNameToRemove) && j === 0) params.clearotherdeployparams = true
+      if (paramNameToRemove && this.counterParams.includes(paramNameToRemove) && i === 0) params.clearcounterparams = true
+      this.loading = false
+      return this.saveProfile(params).then(saved => {
+        if (saved) this.newParam = { name: null, value: null, disksize: null }
       })
     },
+    async saveProfile (params) {
+      if (this.saving) return false
+      this.saving = true
+      this.mutationError = ''
+      try {
+        await runAutoScaleMutation(postAPI, getAPI, 'updateAutoScaleVmProfile', params)
+        await this.fetchData()
+        this.editProfileModalVisible = false
+        this.$message.success(this.$t('message.autoscale.edit.saved'))
+        return true
+      } catch (error) {
+        this.mutationError = autoScaleMutationDescription(error, this.$t)
+        this.$notification.error({ message: this.$t('label.error'), description: this.mutationError })
+        return false
+      } finally {
+        this.saving = false
+      }
+    },
     updateAutoScaleVmProfile () {
+      if (this.saving) return
+      const grace = autoScaleInteger(this.expungevmgraceperiod, 0, 2147483647)
+      if (grace === null) {
+        this.$message.error(this.$t('message.autoscale.profile.grace.invalid'))
+        return
+      }
       const params = {
         id: this.profileid,
-        expungevmgraceperiod: this.expungevmgraceperiod,
+        expungevmgraceperiod: grace,
         serviceofferingid: this.serviceofferingid,
         templateid: this.templateid
       }
-      if (this.autoscaleuserid) {
-        params.autoscaleuserid = this.autoscaleuserid
-      }
-
-      const httpMethod = 'GET'
-      const args = params
-      const data = {}
-
-      postAPI('updateAutoScaleVmProfile', args, httpMethod, data).then(response => {
-        this.$pollJob({
-          jobId: response.updateautoscalevmprofileresponse.jobid,
-          successMethod: (result) => {
-          },
-          errorMessage: this.$t('message.update.autoscale.vm.profile.failed'),
-          errorMethod: () => {
-          }
-        })
-      }).finally(() => {
-        this.loading = false
-      })
+      if (this.autoscaleuserid) params.autoscaleuserid = this.autoscaleuserid
+      return this.saveProfile(params)
+    },
+    onUserDataClose () {
+      this.showUpdateUserDataForm = false
+      this.fetchData()
     },
     decodeUserData (userdata) {
       const decodedData = Buffer.from(userdata, 'base64')
       return decodedData.toString('utf-8')
     },
     closeModal () {
+      if (this.saving) return
       this.editProfileModalVisible = false
+      this.fetchData()
     }
   }
 }
