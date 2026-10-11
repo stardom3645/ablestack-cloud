@@ -550,7 +550,7 @@
                         :filterOption="(input, option) => {
                           return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
                         }" >
-                        <a-select-option value="GT">{{ getOperator('GT') }}</a-select-option>
+                        <a-select-option v-for="operator in ['GT', 'GE', 'LT', 'LE', 'EQ']" :key="operator" :value="operator">{{ getOperator(operator) }}</a-select-option>
                       </a-select>
                       <span class="error-text">{{ $t('label.required') }}</span>
                     </div>
@@ -694,7 +694,7 @@
                         :filterOption="(input, option) => {
                           return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
                         }" >
-                        <a-select-option value="LT">{{ getOperator('LT') }}</a-select-option>
+                        <a-select-option v-for="operator in ['GT', 'GE', 'LT', 'LE', 'EQ']" :key="operator" :value="operator">{{ getOperator(operator) }}</a-select-option>
                       </a-select>
                       <span class="error-text">{{ $t('label.required') }}</span>
                     </div>
