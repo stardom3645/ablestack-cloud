@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div>
+  <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup' }">
     <a-affix
       :key="'affix-' + showSearchFilters"
       :offsetTop="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 103 : 78"

@@ -67,3 +67,16 @@
   }
   .ant-input::placeholder { color: var(--ui-text-muted); }
 }
+
+// Match the VM Mold dialog action palette, limited to this resource's screens.
+body .autoscale-screen, body .autoscale-create, body .autoscale-dialog {
+  .ant-btn-primary:not(:disabled) {
+    background-color: var(--ui-action-primary-bg) !important;
+    border-color: var(--ui-action-primary-bg) !important;
+    color: var(--ui-action-primary-text) !important;
+    &:hover, &:focus { background-color: var(--ui-action-primary-hover) !important; border-color: var(--ui-action-primary-hover) !important; }
+    &.ant-btn-dangerous { background-color: var(--ui-action-danger-bg) !important; border-color: var(--ui-action-danger-bg) !important; }
+  }
+  .ant-btn:disabled { background: var(--ui-bg-disabled) !important; color: var(--ui-text-secondary) !important; border-color: var(--ui-border-strong) !important; }
+  .ant-input:disabled, .ant-select-disabled .ant-select-selection-item { color: var(--ui-text-secondary) !important; -webkit-text-fill-color: var(--ui-text-secondary) !important; }
+}
