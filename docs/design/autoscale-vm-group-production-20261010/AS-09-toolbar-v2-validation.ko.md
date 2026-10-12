@@ -1,3 +1,5 @@
+> 최신 #1355 보완(행별 드롭다운·6개 칼럼·폼 잘림·갱신 유지)은 [2026-10-12 후속 검증](AS-09-row-actions-and-readability-validation.ko.md)을 기준으로 합니다. 아래는 이전 revision의 검증 기록입니다.
+
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
