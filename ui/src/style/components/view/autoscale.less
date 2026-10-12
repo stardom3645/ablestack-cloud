@@ -231,3 +231,13 @@ body .autoscale-dialog .ant-tabs-tab-active .ant-tabs-tab-btn {
 .autoscale-dialog .autoscale-stickiness-form .ant-select { width: 100%; }
 
 .autoscale-row-menu .ant-dropdown-menu-item-danger { color: var(--ui-error-text) !important; }
+
+// Sticky action cells must cover the horizontally scrolling columns beneath them.
+body .autoscale-screen .ant-table-cell-fix-right,
+body .autoscale-screen .ant-table-cell-fix-left {
+  background: var(--ui-bg-surface) !important;
+}
+body .autoscale-screen .ant-table-tbody > tr:hover > .ant-table-cell-fix-right,
+body .autoscale-screen .ant-table-tbody > tr:hover > .ant-table-cell-fix-left {
+  background: var(--ui-bg-hover) !important;
+}
