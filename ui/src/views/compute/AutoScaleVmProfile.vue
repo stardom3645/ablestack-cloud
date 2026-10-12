@@ -21,8 +21,6 @@
       <a-button type="primary" @click="editProfileModalVisible = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.profile.edit') }}</a-button>
       <a-button @click="showUpdateUserDataForm = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><solution-outlined /></template>{{ $t('label.autoscale.userdata.edit') }}</a-button>
       <a-button @click="openParamModal" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><plus-outlined /></template>{{ $t('label.add.param') }}</a-button>
-      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmParamRemoval" :ok-button-props="{ disabled: loading || saving }" @cancel="pendingParamRemoval = null" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button @click="prepareParamRemoval" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedParam"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.param.remove') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="saving" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <div>
@@ -144,7 +142,10 @@
       :dataSource="allParams"
       :pagination="false"
       :rowKey="record => record.name"
-      :row-selection="paramSelection">
+      :scroll="{ x: 640 }">
+      <template #bodyCell="{ column, record }"><template v-if="column.key === 'actions'"><div class="autoscale-row-actions">
+        <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmParamRemoval" @cancel="pendingParamRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('updateAutoScaleVmProfile' in $store.getters.apis)" @click="prepareParamRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.param.remove') }}</a-button></a-popconfirm>
+      </div></template></template>
     </a-table>
 
     <a-modal
@@ -354,7 +355,6 @@ export default {
       templatesList: [],
       serviceOfferingsList: [],
       allParams: [],
-      selectedParamKeys: [],
       pendingParamRemoval: null,
       addParamModalVisible: false,
       newParam: {
@@ -372,13 +372,10 @@ export default {
         {
           title: this.$t('label.param.value'),
           dataIndex: 'value'
-        }
+        },
+        { key: 'actions', title: this.$t('label.actions'), fixed: 'right', width: 180 }
       ]
     }
-  },
-  computed: {
-    selectedParam () { return this.allParams.find(item => item.name === this.selectedParamKeys[0]) },
-    paramSelection () { return { type: 'radio', selectedRowKeys: this.selectedParamKeys, onChange: keys => { this.selectedParamKeys = keys } } }
   },
   beforeCreate () {
     this.createAutoScaleVmProfileApi = this.$store.getters.apis.createAutoScaleVmProfile || {}
@@ -508,7 +505,6 @@ export default {
       this.parentFetchData()
     },
     finalizeParams (counterparam, otherdeployparams) {
-      this.selectedParamKeys = []
       this.allParams = []
       if (counterparam.snmpcommunity) {
         this.allParams.push({ name: 'snmpcommunity', value: counterparam.snmpcommunity })
@@ -541,8 +537,8 @@ export default {
         this.allParams.push({ name: 'networkids', value: otherdeployparams.networkids })
       }
     },
-    prepareParamRemoval () {
-      this.pendingParamRemoval = { resourceId: this.resource.id, profileId: this.profileid, name: this.selectedParam?.name }
+    prepareParamRemoval (record) {
+      this.pendingParamRemoval = { resourceId: this.resource.id, profileId: this.profileid, name: record?.name }
     },
     confirmParamRemoval () {
       const target = this.pendingParamRemoval

@@ -8693,5 +8693,13 @@
   "message.autoscale.userdata.variables": "사용자 데이터의 변수 값을 입력하십시오.",
   "label.autoscale.rule.pending": "적용 대기",
   "label.autoscale.rule.staged": "구성 대기",
-  "label.autoscale.rule.revoking": "해제 대기"
+  "label.autoscale.rule.revoking": "해제 대기",
+  "label.vmprofileid": "오토스케일 VM 프로필 ID",
+  "label.autoscale.policy.selected": "선택한 정책",
+  "label.autoscale.source.summary": "조회 정보",
+  "label.autoscale.source.column.source": "조회 대상",
+  "label.autoscale.source.column.status": "조회 상태",
+  "label.autoscale.source.column.time": "마지막 조회 시각",
+  "label.autoscale.source.current": "조회 완료",
+  "label.autoscale.metric.result": "평가 결과"
 }

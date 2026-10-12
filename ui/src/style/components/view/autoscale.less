@@ -215,3 +215,8 @@ body .autoscale-tab .ant-table-cell a, body .autoscale-dialog .ant-table-cell a 
 body .autoscale-dialog .ant-tabs-tab-active .ant-tabs-tab-btn {
   color: var(--ui-link) !important;
 }
+
+// Row actions stay with their resource, using the VM table's small-button layout.
+.autoscale-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.autoscale-userdata-form .ant-table table { table-layout: fixed; }
+.autoscale-userdata-form .ant-table-cell { overflow-wrap: anywhere; }

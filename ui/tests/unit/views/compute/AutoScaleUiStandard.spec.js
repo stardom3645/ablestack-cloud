@@ -51,8 +51,8 @@ test('future evaluation status is visible without exposing a missing translation
   expect(wrapper.text()).toContain('label.autoscale.evaluation.unknown (FUTURE)'); wrapper.unmount()
 })
 test('saved columns consolidate old port/range choices without duplicates or lost owner scope', () => {
-  expect(autoScaleVisibleColumns(['name', 'minmembers', 'maxmembers', 'publicip', 'publicport', 'privateport', 'account', 'project'])).toEqual(['name', 'availablevirtualmachinecount', 'associatednetworkname', 'account', 'project'])
-  expect(autoScaleVisibleColumns(['state', 'publicport'])).toEqual(['state', 'associatednetworkname'])
+  expect(autoScaleVisibleColumns(['name', 'minmembers', 'maxmembers', 'publicip', 'publicport', 'privateport', 'account', 'project'])).toEqual(['name', 'availablevirtualmachinecount', 'publicip', 'publicport', 'privateport', 'account', 'project'])
+  expect(autoScaleVisibleColumns(['state', 'publicport'])).toEqual(['state', 'publicport'])
 })
 const source = file => fs.readFileSync(path.resolve(__dirname, '../../../../src', file), 'utf8')
 test('common DetailsTab cannot show autoscale cards or operation alerts on any resource', () => {
@@ -152,4 +152,10 @@ test('AutoScale network initialization uses flat API parameters without altering
   NetworkSelection.created.call({ localizeAutoScaleSupport: false, vpcs: [] })
   await Promise.resolve()
   expect(getAPI.mock.calls[0][1]).toHaveProperty('params')
+})
+
+test('optional infrastructure visibility survives route reload without automatically selecting defaults', () => {
+  const selected = ['name', 'id', 'domain', 'associatednetworkid', 'lbruleid', 'lbprovider', 'publicipid', 'publicip', 'publicport', 'privateport', 'vmprofileid', 'interval', 'created']
+  expect(autoScaleVisibleColumns(selected)).toEqual(selected)
+  expect(autoScaleVisibleColumns(['name', 'id', 'id', 'unsupported'])).toEqual(['name', 'id'])
 })

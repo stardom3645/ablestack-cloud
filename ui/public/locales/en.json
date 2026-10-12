@@ -8728,5 +8728,13 @@
   "message.autoscale.userdata.variables": "Enter the UserData variable values.",
   "label.autoscale.rule.pending": "Pending application",
   "label.autoscale.rule.staged": "Staged",
-  "label.autoscale.rule.revoking": "Pending revocation"
+  "label.autoscale.rule.revoking": "Pending revocation",
+  "label.vmprofileid": "AutoScale VM profile ID",
+  "label.autoscale.policy.selected": "Selected policy",
+  "label.autoscale.source.summary": "Data sources",
+  "label.autoscale.source.column.source": "Source",
+  "label.autoscale.source.column.status": "Read status",
+  "label.autoscale.source.column.time": "Last read",
+  "label.autoscale.source.current": "Read complete",
+  "label.autoscale.metric.result": "Evaluation result"
 }

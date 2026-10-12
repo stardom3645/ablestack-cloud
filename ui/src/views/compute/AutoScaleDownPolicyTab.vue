@@ -19,13 +19,6 @@
   <div class="autoscale-tab">
     <a-space wrap class="autoscale-toolbar">
       <a-button type="primary" @click="addPolicyModalVisible = true" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('createAutoScalePolicy' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.add.policy') }}</a-button>
-      <a-button @click="openPolicyModal" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !policy.id || !('updateAutoScalePolicy' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.policy.edit') }}</a-button>
-      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.remove.policy') + '?'" @confirm="confirmPolicyRemoval" :ok-button-props="{ disabled: loading || saving }" @cancel="pendingPolicyRemoval = null" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button @click="preparePolicyRemoval" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || policies.length < 2 || !('updateAutoScaleVmGroup' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.policy.remove') }}</a-button></a-popconfirm>
-      <a-button @click="openAddConditionModal" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !policy.id || !('createCondition' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.autoscale.condition.add') }}</a-button>
-      <a-button @click="openUpdateConditionModal(selectedTableCondition)" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedTableCondition || !('updateCondition' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.condition.edit') }}</a-button>
-      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmConditionRemoval" :ok-button-props="{ disabled: loading || saving }" @cancel="pendingConditionRemoval = null" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button @click="prepareConditionRemoval" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedTableCondition || (policy.conditions || []).length < 2 || !('updateAutoScalePolicy' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.condition.remove') }}</a-button></a-popconfirm>
       <a-button @click="fetchInitData" :disabled="saving" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <a-alert v-if="affectedGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedGroups.join(', ') })" />
@@ -41,37 +34,16 @@
       </a-alert>
 
       <a-divider/>
-      <div class="form">
-        <strong>{{ $t('label.scaledown.policy') }} &nbsp;&nbsp;&nbsp;</strong>
-        <a-select
-          style="width: 320px"
-          v-model:value="selectedPolicyId"
-          @change="switchPolicy()"
-          :placeholder="$t('label.scaledown.policy')"
-          showSearch
-          optionFilterProp="label"
-          :filterOption="(input, option) => {
-                      return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                    }" >
-          <a-select-option
-            v-for="(scalepolicy, index) in this.policies"
-            :value="scalepolicy.id"
-            :key="index"
-            :label="scalepolicy.displaytext || scalepolicy.name" >
-            {{ scalepolicy.name || scalepolicy.id }}
-          </a-select-option>
-        </a-select>
-
-      </div>
-
-      <a-divider/>
-      <a-card size="small" :title="$t('label.autoscale.policy.settings')">
-        <a-descriptions size="small" :column="{ xs: 1, sm: 2 }">
-          <a-descriptions-item :label="$t('label.name')">{{ policy.name || policy.id || '—' }}</a-descriptions-item>
-          <a-descriptions-item :label="$t('label.duration')">{{ policy.duration ?? '—' }}</a-descriptions-item>
-          <a-descriptions-item :label="$t('label.autoscale.cooldown.seconds')">{{ policy.quiettime ?? '—' }}</a-descriptions-item>
-        </a-descriptions>
-      </a-card>
+      <a-table :columns="policyColumns" :data-source="policies" row-key="id" :pagination="false" :loading="loading" :scroll="{ x: 760 }" size="small">
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'name'"><a-button type="link" @click="selectPolicy(record)">{{ record.name || record.id }}</a-button><a-tag v-if="record.id === selectedPolicyId">{{ $t('label.autoscale.policy.selected') }}</a-tag></template>
+          <template v-else-if="column.key === 'actions'"><div class="autoscale-row-actions">
+            <a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('updateAutoScalePolicy' in $store.getters.apis)" @click="selectPolicy(record); openPolicyModal()"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.policy.edit') }}</a-button>
+            <a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('createCondition' in $store.getters.apis)" @click="selectPolicy(record); openAddConditionModal()"><template #icon><plus-outlined /></template>{{ $t('label.autoscale.condition.add') }}</a-button>
+            <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.remove.policy') + '?'" @confirm="confirmPolicyRemoval" @cancel="pendingPolicyRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || policies.length < 2 || !('updateAutoScaleVmGroup' in $store.getters.apis)" @click="selectPolicy(record); preparePolicyRemoval()"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.policy.remove') }}</a-button></a-popconfirm>
+          </div></template>
+        </template>
+      </a-table>
     </div>
 
     <a-divider/>
@@ -88,12 +60,16 @@
       :dataSource="policy.conditions"
       :pagination="false"
       :rowKey="record => record.id"
-      :row-selection="conditionSelection">
+      :scroll="{ x: 720 }">
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'countername'">{{ counterLabel(record.countername) }}</template>
         <template v-if="column.key === 'relationaloperator'">
           {{ getOperator(record.relationaloperator) }}
         </template>
+        <template v-if="column.key === 'actions'"><div class="autoscale-row-actions">
+          <a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('updateCondition' in $store.getters.apis)" @click="openUpdateConditionModal(record)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.condition.edit') }}</a-button>
+          <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmConditionRemoval" @cancel="pendingConditionRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || (policy.conditions || []).length < 2 || !('updateAutoScalePolicy' in $store.getters.apis)" @click="prepareConditionRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.condition.remove') }}</a-button></a-popconfirm>
+        </div></template>
 
       </template>
     </a-table>
@@ -376,7 +352,6 @@ export default {
       policyDraft: {},
       editPolicyModalVisible: false,
       addConditionModalVisible: false,
-      selectedConditionKeys: [],
       pendingPolicyRemoval: null,
       pendingConditionRemoval: null,
       policy: {
@@ -419,13 +394,20 @@ export default {
         {
           title: this.$t('label.threshold'),
           dataIndex: 'threshold'
-        }
+        },
+        { key: 'actions', title: this.$t('label.actions'), fixed: 'right', width: 180 }
       ]
     }
   },
   computed: {
-    selectedTableCondition () { return (this.policy.conditions || []).find(item => item.id === this.selectedConditionKeys[0]) },
-    conditionSelection () { return { type: 'radio', selectedRowKeys: this.selectedConditionKeys, onChange: keys => { this.selectedConditionKeys = keys } } }
+    policyColumns () {
+      return [
+        { key: 'name', title: this.$t('label.name') },
+        { key: 'duration', dataIndex: 'duration', title: this.$t('label.duration') },
+        { key: 'quiettime', dataIndex: 'quiettime', title: this.$t('label.autoscale.cooldown.seconds') },
+        { key: 'actions', title: this.$t('label.actions'), fixed: 'right', width: 200 }
+      ]
+    }
   },
   beforeCreate () {
     this.createConditionApi = this.$store.getters.apis.createCondition || {}
@@ -455,6 +437,7 @@ export default {
   },
   inject: ['parentFetchData'],
   methods: {
+    selectPolicy (record) { this.selectedPolicyId = record.id; this.switchPolicy() },
     openPolicyModal () {
       this.policyDraft = { name: this.policy.name, duration: this.policy.duration, quiettime: this.policy.quiettime }
       this.isEditable = true
@@ -517,7 +500,6 @@ export default {
       })
     },
     switchPolicy () {
-      this.selectedConditionKeys = []
       this.policy = this.policies.find(policy => policy.id === this.selectedPolicyId) || { conditions: [] }
       this.isEditable = false
       if (this.selectedPolicyId) {
@@ -605,8 +587,8 @@ export default {
       }
       return this.removeScalePolicyFromGroup()
     },
-    prepareConditionRemoval () {
-      this.pendingConditionRemoval = { resourceId: this.resource.id, policyId: this.policy.id, id: this.selectedTableCondition?.id }
+    prepareConditionRemoval (record) {
+      this.pendingConditionRemoval = { resourceId: this.resource.id, policyId: this.policy.id, id: record?.id }
     },
     confirmConditionRemoval () {
       const target = this.pendingConditionRemoval

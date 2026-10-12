@@ -23,6 +23,7 @@
             :rules="rules"
             layout="vertical"
             class="form"
+            :class="{ 'autoscale-userdata-form': isAutoScaleProfile }"
             v-ctrl-enter="handleSubmit"
             @finish="handleSubmit">
       <div v-if="template && template.userdataid">
@@ -422,5 +423,15 @@ export default {
   @media (min-width: 800px) {
     width: 45vw;
   }
+}
+.form.autoscale-userdata-form {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  :deep(.ant-steps-item-description), :deep(.ant-steps-item-content) { width: 100%; min-width: 0; max-width: 100%; }
+  :deep(.ant-card), :deep(.ant-card-body), :deep(.ant-table-wrapper) { min-width: 0; max-width: 100%; }
+  :deep(.ant-input-search) { width: min(320px, 100%) !important; }
+  :deep(.ant-table-cell) { overflow-wrap: anywhere; }
+  :deep(.ant-table) { table-layout: fixed; }
 }
 </style>

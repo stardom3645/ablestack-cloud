@@ -22,8 +22,6 @@
       <a-button @click="openTagsModal(currentRule.id)" :disabled="loading || !currentRule || !('updateLoadBalancerRule' in $store.getters.apis)"><template #icon><tag-outlined /></template>{{ $t('label.edit.tags') }}</a-button>
       <a-button @click="openStickinessModal(currentRule.id)" :disabled="loading || !currentRule || !('createLBStickinessPolicy' in $store.getters.apis)"><template #icon><link-outlined /></template>{{ $t('label.action.configure.stickiness') }}</a-button>
       <a-button disabled><template #icon><delete-outlined /></template>{{ $t('label.autoscale.rule.remove') }}</a-button>
-      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('message.autoscale.vm.detach.confirm')" @confirm="confirmInstanceRemoval" :ok-button-props="{ disabled: loading }" @cancel="pendingInstanceRemoval = null" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button @click="prepareInstanceRemoval" :disabled="loading || !selectedInstance || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="loading" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
@@ -42,11 +40,11 @@ size="small"
 :data-source="ruleInstances"
 :pagination="false"
 row-key="key"
-:row-selection="instanceSelection"
-:scroll="{ x: 480 }">
+:scroll="{ x: 640 }">
       <template #bodyCell="{ column, record }">
         <router-link v-if="column.key === 'name'" :to="'/vm/' + record.instance.loadbalancerruleinstance.id">{{ record.instance.loadbalancerruleinstance.displayname || record.instance.loadbalancerruleinstance.name }}</router-link>
         <status v-else-if="column.key === 'state'" :text="record.instance.loadbalancerruleinstance.state" :display-text="true" />
+        <template v-else-if="column.key === 'actions'"><div class="autoscale-row-actions"><a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('message.autoscale.vm.detach.confirm')" @confirm="confirmInstanceRemoval" @cancel="pendingInstanceRemoval = null" :ok-button-props="{ disabled: loading }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="loading || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress" @click="prepareInstanceRemoval(record)"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm></div></template>
       </template>
     </a-table>
     <a-modal
@@ -293,7 +291,6 @@ export default {
     return {
       loading: true,
       lbRules: [],
-      selectedInstanceKeys: [],
       pendingInstanceRemoval: null,
       tagsModalVisible: false,
       tagsModalLoading: false,
@@ -395,9 +392,7 @@ export default {
   computed: {
     currentRule () { return this.lbRules[0] },
     ruleInstances () { return (this.currentRule?.ruleInstances || []).flatMap(instance => (instance.lbvmipaddresses || []).map(ip => ({ key: instance.loadbalancerruleinstance.id + '/' + ip, ip, instance }))) },
-    selectedInstance () { return this.ruleInstances.find(item => item.key === this.selectedInstanceKeys[0]) },
-    instanceColumns () { return ['name', 'state', 'ip'].map(key => ({ key, dataIndex: key, title: this.$t(key === 'ip' ? 'label.ipaddress' : 'label.' + key) })) },
-    instanceSelection () { return { type: 'radio', selectedRowKeys: this.selectedInstanceKeys, onChange: keys => { this.selectedInstanceKeys = keys } } }
+    instanceColumns () { return ['name', 'state', 'ip', 'actions'].map(key => ({ key, dataIndex: key, title: this.$t(key === 'ip' ? 'label.ipaddress' : 'label.' + key), ...(key === 'actions' ? { fixed: 'right', width: 180 } : {}) })) }
   },
   created () {
     this.initForm()
@@ -425,7 +420,6 @@ export default {
       this.rules = reactive({})
     },
     fetchData () {
-      this.selectedInstanceKeys = []
       this.fetchListTiers()
       this.fetchLBRules()
     },
@@ -799,8 +793,8 @@ export default {
       this.stickinessPolicyMethod = e
       this.form.methodname = e
     },
-    prepareInstanceRemoval () {
-      this.pendingInstanceRemoval = { resourceId: this.resource.id, ruleId: this.currentRule?.id, key: this.selectedInstance?.key }
+    prepareInstanceRemoval (record) {
+      this.pendingInstanceRemoval = { resourceId: this.resource.id, ruleId: this.currentRule?.id, key: record?.key }
     },
     confirmInstanceRemoval () {
       const target = this.pendingInstanceRemoval

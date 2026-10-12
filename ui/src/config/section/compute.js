@@ -1158,6 +1158,7 @@ export default {
         }
         return fields
       },
+      optionalColumns: ['id', 'domain', 'associatednetworkid', 'lbruleid', 'lbprovider', 'publicipid', 'publicip', 'publicport', 'privateport', 'vmprofileid', 'interval', 'created'],
       details: ['name', 'id', 'account', 'domain', 'associatednetworkname', 'associatednetworkid', 'lbruleid', 'lbprovider', 'publicip', 'publicipid', 'publicport', 'privateport', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'interval', 'state', 'created'],
       related: [{
         name: 'vm',

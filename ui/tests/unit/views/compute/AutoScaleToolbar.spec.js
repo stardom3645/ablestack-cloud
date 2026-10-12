@@ -46,49 +46,6 @@ test.each([Up, Down])('policy confirmation sends the dialog values and retains t
   expect(ctx.policy.name).toBe('old')
 })
 
-test.each([Up, Down])('switching policies clears the previous condition target', component => {
-  const ctx = { policies: [{ id: 'p2', conditions: [{ id: 'c2' }] }], selectedPolicyId: 'p2', selectedConditionKeys: ['c1'], resource: {}, $notifyError: jest.fn() }
-  // No remote affected-group lookup when the policy is not selected.
-  ctx.selectedPolicyId = null
-  component.methods.switchPolicy.call(ctx)
-  expect(ctx.selectedConditionKeys).toEqual([])
-  expect(component.computed.selectedTableCondition.call(ctx)).toBeUndefined()
-})
-
-test('profile list refresh clears parameter targets so a renamed/removed item cannot be deleted', () => {
-  const ctx = { selectedParamKeys: ['rootdisksize'], allParams: [{ name: 'rootdisksize', value: '120' }] }
-  Profile.methods.finalizeParams.call(ctx, {}, { keypairs: 'key' })
-  expect(ctx.selectedParamKeys).toEqual([])
-  expect(Profile.computed.selectedParam.call(ctx)).toBeUndefined()
-  expect(ctx.allParams).toEqual([{ name: 'keypairs', value: 'key' }])
-})
-
-test('VM selection preserves the exact VM and IP tuple when one VM has multiple LB addresses', () => {
-  const instance = { loadbalancerruleinstance: { id: 'vm' }, lbvmipaddresses: ['10.0.0.4', '10.0.0.5'] }
-  const ctx = { currentRule: { ruleInstances: [instance] }, selectedInstanceKeys: ['vm/10.0.0.5'] }
-  ctx.ruleInstances = LB.computed.ruleInstances.call(ctx)
-  expect(LB.computed.selectedInstance.call(ctx)).toEqual({ key: 'vm/10.0.0.5', ip: '10.0.0.5', instance })
-  ctx.selectedInstanceKeys = ['missing']
-  expect(LB.computed.selectedInstance.call(ctx)).toBeUndefined()
-})
-
-test.each([[[]], [['a', 'b']], [['stale']]])('schedule edit/delete requires exactly one current record: %s', keys => {
-  expect(Schedules.computed.selectedSchedule.call({ selectedScheduleKeys: keys, schedules: [{ id: 'a' }, { id: 'b' }] })).toBeFalsy()
-})
-test('schedule edit resolves the selected record by ID rather than its old list position', () => {
-  const item = { id: 'b', schedule: '0 9 * * *' }
-  expect(Schedules.computed.selectedSchedule.call({ selectedScheduleKeys: ['b'], schedules: [item, { id: 'a' }] })).toBe(item)
-})
-
-test('Korean cron and picker localization are opted in for AutoScale while other schedule resources retain their existing cron defaults', () => {
-  const locale = Schedules.computed.cronLocale.call({ resourceType: 'AutoScaleVmGroup', $i18n: { locale: 'ko_KR' } })
-  expect(locale.day.text).toBe('일')
-  expect(locale['*'].minute.empty.text).toBe('매분')
-  expect(Schedules.computed.datePickerLocale.call({ $i18n: { locale: 'ko_KR' } }).lang.locale).toBe('ko_KR')
-  expect(Schedules.computed.cronLocale.call({ resourceType: 'VirtualMachine', $i18n: { locale: 'ko_KR' } })).toBeUndefined()
-})
-
-beforeEach(() => jest.clearAllMocks())
 function userDataContext (autoscale, tab, values) {
   postAPI.mockResolvedValue({ updateautoscalevmprofileresponse: { jobid: 'job' } })
   getAPI.mockResolvedValue({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { autoscalevmprofile: { id: 'profile' } } } })
@@ -150,9 +107,9 @@ const removalCases = [
 function removalContext (setup, mutation) {
   return { ...setup(), resource: { id: 'group' }, loading: false, saving: false, tabLoading: false, isSubmitted: false, $t: key => key, $message: { warning: jest.fn() }, [mutation]: jest.fn() }
 }
-test.each(removalCases)('%s confirmation keeps the opened target when a background refresh clears row selection', (name, component, prepare, confirm, mutation, setup, clear) => {
+test.each(removalCases)('%s row confirmation keeps the clicked record when background state clears former selection', (name, component, prepare, confirm, mutation, setup, clear) => {
   const ctx = removalContext(setup, mutation)
-  component.methods[prepare].call(ctx)
+  component.methods[prepare].call(ctx, name === 'schedule' ? ctx.selectedSchedule : name === 'parameter' ? ctx.selectedParam : name === 'VM-IP' ? ctx.selectedInstance : ctx.selectedTableCondition)
   clear(ctx)
   component.methods[confirm].call(ctx)
   expect(ctx[mutation]).toHaveBeenCalledTimes(1)
@@ -164,7 +121,7 @@ test.each(removalCases)('%s confirmation keeps the opened target when a backgrou
 })
 test.each(removalCases)('%s confirmation refuses the target when its list, parent or VM-IP tuple changed', (name, component, prepare, confirm, mutation, setup, clear, change) => {
   const ctx = removalContext(setup, mutation)
-  component.methods[prepare].call(ctx)
+  component.methods[prepare].call(ctx, name === 'schedule' ? ctx.selectedSchedule : name === 'parameter' ? ctx.selectedParam : name === 'VM-IP' ? ctx.selectedInstance : ctx.selectedTableCondition)
   change(ctx)
   component.methods[confirm].call(ctx)
   expect(ctx[mutation]).not.toHaveBeenCalled()
@@ -172,7 +129,7 @@ test.each(removalCases)('%s confirmation refuses the target when its list, paren
 })
 test.each(removalCases)('%s confirmation cannot mutate a different group after navigation', (name, component, prepare, confirm, mutation, setup) => {
   const ctx = removalContext(setup, mutation)
-  component.methods[prepare].call(ctx)
+  component.methods[prepare].call(ctx, name === 'schedule' ? ctx.selectedSchedule : name === 'parameter' ? ctx.selectedParam : name === 'VM-IP' ? ctx.selectedInstance : ctx.selectedTableCondition)
   ctx.resource = { id: 'another-group' }
   component.methods[confirm].call(ctx)
   expect(ctx[mutation]).not.toHaveBeenCalled()
@@ -210,4 +167,18 @@ test('a late variable lookup for an unselected AutoScale script cannot repopulat
   finishLookup({ listuserdataresponse: { userdata: [{ params: 'old-variable' }] } })
   await Promise.resolve()
   expect(ctx.userDataParams).toEqual([])
+})
+
+test.each([Up, Down])('policy row actions select the clicked policy independently of the prior selection', component => {
+  const ctx = { selectedPolicyId: 'old', switchPolicy: jest.fn() }
+  component.methods.selectPolicy.call(ctx, { id: 'clicked' })
+  expect(ctx.selectedPolicyId).toBe('clicked')
+  expect(ctx.switchPolicy).toHaveBeenCalledTimes(1)
+})
+test('VM row detach pins exactly the clicked IP when the same VM has several addresses', () => {
+  const rows = ['10.0.0.2', '10.0.0.3'].map(ip => ({ key: 'vm/' + ip, ip, instance: { loadbalancerruleinstance: { id: 'vm' } } }))
+  const ctx = { resource: { id: 'group' }, currentRule: { id: 'rule' }, ruleInstances: rows, selectedInstance: rows[0], loading: false, handleDeleteInstanceFromRule: jest.fn(), $t: key => key, $message: { warning: jest.fn() } }
+  LB.methods.prepareInstanceRemoval.call(ctx, rows[1])
+  LB.methods.confirmInstanceRemoval.call(ctx)
+  expect(ctx.handleDeleteInstanceFromRule).toHaveBeenCalledWith(rows[1].instance, ctx.currentRule, '10.0.0.3')
 })

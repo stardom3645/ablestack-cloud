@@ -28,23 +28,24 @@
         show-icon
         role="status"
         :message="statusLabel(evaluation.status)" />
-      <dl class="evaluation-times">
-        <div><dt>{{ $t('label.autoscale.evaluated.at') }}</dt><dd>{{ formatTime(evaluation.evaluatedat) }}</dd></div>
-        <div><dt>{{ $t('label.autoscale.collected.at') }}</dt><dd>{{ formatTime(evaluation.collectedat) }}</dd></div>
-        <div v-if="evaluation.status === 'COOLDOWN'"><dt>{{ $t('label.autoscale.cooldown.until') }}</dt><dd>{{ formatTime(evaluation.cooldownuntil) }}</dd></div>
-      </dl>
+      <a-descriptions class="evaluation-times" bordered size="small" :column="{ xs: 1, sm: 2 }">
+        <a-descriptions-item :label="$t('label.autoscale.evaluated.at')">{{ formatTime(evaluation.evaluatedat) }}</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.autoscale.collected.at')">{{ formatTime(evaluation.collectedat) }}</a-descriptions-item>
+        <a-descriptions-item v-if="evaluation.status === 'COOLDOWN'" :label="$t('label.autoscale.cooldown.until')">{{ formatTime(evaluation.cooldownuntil) }}</a-descriptions-item>
+      </a-descriptions>
       <div v-for="policy in evaluation.policies || []" :key="policy.id" class="evaluation-policy">
         <strong>{{ policyName(policy) }} · {{ statusLabel(policy.status) }}</strong>
         <p v-if="policy.reason">{{ $t('message.autoscale.evaluation.' + policy.reason) }}</p>
         <p>{{ $t('label.duration') }}: {{ policy.duration }}</p>
-        <ul>
-          <li v-for="(metric, index) in policy.conditions || []" :key="metric.id || index">
-            <strong>{{ counterLabel(metric.countername) }}</strong>
-            <div>{{ $t('label.autoscale.observed.value') }}: {{ formatValue(metric.value) }} {{ metric.unit === 'connections/VM' ? $t('label.autoscale.connections.per.vm') : metric.unit }} · {{ metric.operator }} {{ metric.threshold }}</div>
-            <div>{{ $t('label.autoscale.samples') }}: {{ metric.samples }} · {{ $t('label.autoscale.resources') }}: {{ metric.resources }} · {{ formatTime(metric.collectedat) }}</div>
-            <div>{{ metric.reason ? $t('message.autoscale.evaluation.' + metric.reason) : $t(metric.matched ? 'label.autoscale.evaluation.MATCHED' : 'label.autoscale.evaluation.NOT_MATCHED') }}</div>
-          </li>
-        </ul>
+        <a-table size="small" :columns="metricColumns" :data-source="policy.conditions || []" :row-key="(metric, index) => metric.id || index" :pagination="false" :scroll="{ x: 1000 }">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'counter'">{{ counterLabel(record.countername) }}</template>
+            <template v-else-if="column.key === 'value'">{{ formatValue(record.value) }} {{ record.unit === 'connections/VM' ? $t('label.autoscale.connections.per.vm') : record.unit }}</template>
+            <template v-else-if="column.key === 'threshold'">{{ record.operator }} {{ record.threshold }}</template>
+            <template v-else-if="column.key === 'collectedat'">{{ formatTime(record.collectedat) }}</template>
+            <template v-else-if="column.key === 'result'">{{ record.reason ? $t('message.autoscale.evaluation.' + record.reason) : $t(record.matched ? 'label.autoscale.evaluation.MATCHED' : 'label.autoscale.evaluation.NOT_MATCHED') }}</template>
+          </template>
+        </a-table>
       </div>
       <a-alert v-if="hasNetworkMetric" type="info" show-icon :message="$t('message.autoscale.evaluation.network.scope')" />
       <a-alert v-if="hasMemoryMetric" type="info" show-icon :message="$t('message.autoscale.evaluation.memory.requirements')" />
@@ -60,6 +61,10 @@ export default {
   name: 'AutoScaleEvaluation',
   props: { resource: { type: Object, required: true } },
   computed: {
+    metricColumns () {
+      const titles = { counter: 'label.counter', value: 'label.autoscale.observed.value', threshold: 'label.threshold', samples: 'label.autoscale.samples', resources: 'label.autoscale.resources', collectedat: 'label.autoscale.collected.at', result: 'label.autoscale.metric.result' }
+      return Object.entries(titles).map(([key, title]) => ({ key, dataIndex: key, title: this.$t(title) }))
+    },
     evaluation () { return this.resource.evaluation || null },
     changed () { return autoScaleEvaluationChanged(this.resource) },
     age () { const time = Number(this.evaluation?.evaluatedat); return Number.isFinite(time) && time > 0 ? Math.max(0, Math.floor((Date.now() - time) / 1000)) : null },
@@ -84,7 +89,7 @@ export default {
 .autoscale-evaluation {
   margin-bottom: 16px;
   overflow-wrap: anywhere;
-  .evaluation-times { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; }
+  .evaluation-times { margin: 12px 0; }
   dt { font-weight: 600; }
   dd { margin: 0; }
   .evaluation-policy { margin: 16px 0; }

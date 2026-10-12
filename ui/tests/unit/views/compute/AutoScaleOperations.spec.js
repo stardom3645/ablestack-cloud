@@ -142,3 +142,14 @@ test('flat event state and event type translations remain Korean', () => {
   expect(Operations.methods.eventState.call({ $t: translated }, 'Completed')).toBe('완료')
   expect(Operations.methods.eventLabel.call({ $t: translated }, { type: 'AUTOSCALEVMGROUP.UPDATE' })).toBe('그룹 변경')
 })
+
+test.each([
+  [{ denied: true, loaded: true, failed: true }, 'message.autoscale.source.denied'],
+  [{ loaded: true, failed: true }, 'message.autoscale.source.stale'],
+  [{ loaded: false, failed: true }, 'message.autoscale.source.failed'],
+  [{ loaded: true, loading: true }, 'message.autoscale.source.loading'],
+  [{ loaded: true }, 'label.autoscale.source.current'],
+  [{ loaded: false }, 'label.autoscale.not.recorded']
+])('the source table preserves read failure and permission semantics: %s', (part, expected) => {
+  expect(Operations.methods.sourceStatus.call({ $t: key => key }, part)).toBe(expected)
+})

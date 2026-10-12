@@ -1591,6 +1591,11 @@ export default {
           })
         }
 
+        // Optional AutoScale infrastructure fields use the existing VM column menu.
+        const defaultColumnKeys = [...this.columnKeys]
+        if (this.$route.name === 'autoscalevmgroup') {
+          this.columnKeys = [...this.columnKeys, ...asArray(this.$route.meta.optionalColumns)]
+        }
         // [CHANGE] 컬럼 루프 안전화
         for (const columnKey of asArray(this.columnKeys)) {
           let key = columnKey
@@ -1622,9 +1627,10 @@ export default {
             sorter: this.$route.name === 'vmsnapshot' ? ['displayname', 'state', 'type', 'current', 'created'].includes(key) : sorter,
             ...(this.$route.name === 'vmsnapshot' ? { sortOrder: (this.$route.query.sortkey || 'created') === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {})
           })
-          this.selectedColumns.push(key)
+          if (this.$route.name !== 'autoscalevmgroup' || defaultColumnKeys.some(column => (typeof column === 'object' ? column.field : column) === key)) this.selectedColumns.push(key)
         }
-        this.allColumns = this.columns
+        this.allColumns = [...this.columns]
+        if (this.$route.name === 'autoscalevmgroup') this.columns = this.allColumns.filter(column => this.selectedColumns.includes(column.dataIndex))
 
         if (!store.getters.metrics) {
           if (!this.$store.getters.customColumns[this.$store.getters.userInfo.id]) {
@@ -1648,6 +1654,8 @@ export default {
             this.updateSelectedColumns()
           }
         }
+
+        if (this.$route.name === 'autoscalevmgroup' && !this.columns.some(column => column.key === 'filtercolumn')) this.updateSelectedColumns()
 
         this.chosenColumns = this.columns.filter(column => {
           return ![this.$t('label.state'), this.$t('label.hostname'), this.$t('label.hostid'), this.$t('label.zonename'),

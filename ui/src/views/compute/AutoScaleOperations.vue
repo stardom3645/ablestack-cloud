@@ -19,12 +19,6 @@
   <section class="autoscale-operations">
     <a-space wrap class="autoscale-toolbar"><a-button @click="fetchData" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button></a-space>
     <p>{{ $t('message.autoscale.operational.source') }}</p>
-    <div v-for="(part, key) in parts" :key="key" class="source-status" role="status">
-      <strong>{{ $t('label.autoscale.source.' + key) }}</strong> · {{ time(part.time) }}
-      <span v-if="part.denied"> · {{ $t('message.autoscale.source.denied') }}</span>
-      <span v-else-if="part.failed"> · {{ $t(part.loaded ? 'message.autoscale.source.stale' : 'message.autoscale.source.failed') }}</span>
-      <span v-else-if="part.loading"> · {{ $t('message.autoscale.source.loading') }}</span>
-    </div>
     <auto-scale-operational-summary :resource="parts.group.rows" />
     <auto-scale-evaluation :resource="parts.group.rows" />
     <a-card size="small" :title="$t('label.autoscale.members')">
@@ -50,14 +44,24 @@ row-key="id"
     </a-card>
     <a-card size="small" :title="$t('label.autoscale.recent.events')">
       <p>{{ $t('message.autoscale.events.meaning') }}</p>
-      <p v-if="!parts.events.rows.length">{{ $t(parts.events.denied ? 'message.autoscale.source.denied' : parts.events.failed ? 'message.autoscale.source.failed' : parts.events.loaded ? 'message.autoscale.events.empty' : 'message.autoscale.source.loading') }}</p>
-      <ul class="recent-events"><li v-for="event in parts.events.rows" :key="event.id">
-        <strong>{{ time(event.created) }} · {{ $t('label.autoscale.event.level.' + (event.level || 'INFO')) }}</strong>
-        <p>{{ eventLabel(event) }} · <status :text="event.state" :display-text="true" :display-label="eventState(event.state)" /></p>
-        <router-link :to="'/event/' + event.id">{{ $t('label.autoscale.event.id') }}: {{ event.id }}</router-link>
-        <p v-if="event.parentid"><router-link :to="'/event/' + event.parentid">{{ $t('label.autoscale.event.parent') }}: {{ event.parentid }}</router-link></p>
-        <details><summary>{{ $t('label.autoscale.event.server.message') }}</summary>{{ event.description }}</details>
-      </li></ul>
+      <a-table size="small" row-key="id" :columns="eventColumns" :data-source="parts.events.rows" :pagination="false" :scroll="{ x: 800 }" :loading="parts.events.loading && !parts.events.loaded">
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'created'">{{ time(record.created) }}</template>
+          <template v-else-if="column.key === 'level'"><a-tag>{{ $t('label.autoscale.event.level.' + (record.level || 'INFO')) }}</a-tag></template>
+          <template v-else-if="column.key === 'event'"><router-link :to="'/event/' + record.id">{{ eventLabel(record) }}</router-link><div class="operations-note">{{ $t('label.autoscale.event.id') }}: {{ record.id }}</div><div v-if="record.parentid"><router-link :to="'/event/' + record.parentid">{{ $t('label.autoscale.event.parent') }}: {{ record.parentid }}</router-link></div><details><summary>{{ $t('label.autoscale.event.server.message') }}</summary>{{ record.description }}</details></template>
+          <template v-else-if="column.key === 'state'"><status :text="record.state" :display-text="true" :display-label="eventState(record.state)" /></template>
+        </template>
+        <template #emptyText>{{ $t(parts.events.denied ? 'message.autoscale.source.denied' : parts.events.failed ? 'message.autoscale.source.failed' : parts.events.loaded ? 'message.autoscale.events.empty' : 'message.autoscale.source.loading') }}</template>
+      </a-table>
+    </a-card>
+    <a-card size="small" :title="$t('label.autoscale.source.summary')">
+      <a-table size="small" row-key="key" :columns="sourceColumns" :data-source="sourceRows" :pagination="false" :scroll="{ x: 560 }">
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'source'">{{ $t('label.autoscale.source.' + record.key) }}</template>
+          <template v-else-if="column.key === 'time'">{{ time(record.time) }}</template>
+          <template v-else-if="column.key === 'status'"><span role="status">{{ sourceStatus(record) }}</span></template>
+        </template>
+      </a-table>
     </a-card>
   </section>
 </template>
@@ -75,6 +79,9 @@ export default {
   props: { resource: { type: Object, required: true } },
   data () { return { parts: { group: part(this.resource), members: part([]), lb: part([]), events: part([]) }, page: 1, pageSize: 10, total: 0, keyword: '', active: true } },
   computed: {
+    sourceRows () { return Object.entries(this.parts).map(([key, value]) => ({ key, ...value })) },
+    sourceColumns () { return ['source', 'status', 'time'].map(key => ({ key, title: this.$t('label.autoscale.source.column.' + key) })) },
+    eventColumns () { return ['created', 'level', 'event', 'state'].map(key => ({ key, title: this.$t('label.' + (key === 'event' ? 'event' : key)), width: { created: 170, level: 90, event: 380, state: 120 }[key] })) },
     loading () { return Object.values(this.parts).some(item => item.loading) },
     columns () { return ['name', 'state', 'lb'].map(key => ({ key, dataIndex: key, title: this.$t('label.autoscale.member.' + key) })) }
   },
@@ -95,6 +102,9 @@ export default {
   created () { this.fetchData() },
   beforeUnmount () { this.active = false; Object.values(this.parts).forEach(item => item.sequence++) },
   methods: {
+    sourceStatus (part) {
+      return this.$t(part.denied ? 'message.autoscale.source.denied' : part.failed ? (part.loaded ? 'message.autoscale.source.stale' : 'message.autoscale.source.failed') : part.loading ? 'message.autoscale.source.loading' : part.loaded ? 'label.autoscale.source.current' : 'label.autoscale.not.recorded')
+    },
     time (value) { return autoScaleTime(value, value => this.$toLocaleDate(value), key => this.$t(key)) },
     lbLabel (vm) {
       const state = autoScaleLbState(vm, this.parts.lb)
@@ -149,7 +159,7 @@ export default {
 .autoscale-operations { color: var(--ui-text-primary); overflow-wrap: anywhere;
   .operations-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
   .operations-toolbar p { margin: 0; flex: 1; min-width: 220px; }
-  .source-status { margin-bottom: 6px; }
+  .operations-note { color: var(--ui-text-secondary); margin-top: 4px; }
   .ant-card { margin: 16px 0; background: var(--ui-bg-surface); }
   .member-search { width: min(100%, 320px); margin: 12px 0; }
   a { color: var(--ui-text-primary); text-decoration: underline; text-underline-offset: 2px; }
