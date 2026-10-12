@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { mount } from '@vue/test-utils'
+import { mount, shallowMount } from '@vue/test-utils'
 import { h, reactive } from 'vue'
 import fs from 'fs'
 import path from 'path'
@@ -23,6 +23,7 @@ import LoadBalancing from '@/views/compute/AutoScaleLoadBalancing.vue'
 import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import NetworkSelection from '@/views/compute/wizard/NetworkSelection.vue'
 import Cell from '@/views/compute/AutoScaleListCell.vue'
+import ListView from '@/components/view/ListView'
 import ResourceView from '@/components/view/ResourceView.vue'
 import { autoScaleInfrastructureRows, autoScaleVisibleColumns, autoScaleTemplateById } from '@/utils/autoScaleUi'
 import { getAPI } from '@/api'
@@ -183,4 +184,21 @@ test('Zone enrichment failure/denial is explicit, preserves group rows and never
 test('an inaccessible network cannot contribute a name from another network response', async () => {
   const request = jest.fn().mockResolvedValue({ listnetworksresponse: { network: [{ id: 'other', zonename: 'private' }] } })
   expect((await autoScaleInfrastructureRows(request, [{ associatednetworkid: 'requested' }]))[0]).toMatchObject({ infrastructurestatus: 'UNAVAILABLE', zonename: undefined })
+})
+
+test.each(['autoscalevmgroup', 'vm'])('Zone is rendered exactly once in the shared list for %s', name => {
+  const record = { id: 'group', zoneid: 'zone', zonename: '한글 Zone' }
+  const wrapper = shallowMount(ListView, {
+    props: { columns: [{ key: 'zonename', dataIndex: 'zonename' }], items: [record] },
+    global: {
+      provide: { parentFetchData: jest.fn(), parentToggleLoading: jest.fn() },
+      mocks: { $route: { name, path: '/' + name, meta: {} }, $store: { getters: { apis: {}, userInfo: { roletype: 'Admin' } } }, $router: { resolve: () => ({ matched: [{ redirect: '/exception/404' }] }) }, $t: key => key },
+      stubs: {
+        AutoScaleListCell: false,
+        'a-table': { render () { return h('div', this.$slots.bodyCell({ column: { key: 'zonename' }, text: record.zonename, record })) } },
+        RouterLink: { props: ['to'], render () { return h('span', this.$slots.default()) } }
+      }
+    }
+  })
+  expect(wrapper.text()).toBe('한글 Zone'); wrapper.unmount()
 })

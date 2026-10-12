@@ -21,6 +21,8 @@ import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import LB from '@/views/compute/AutoScaleLoadBalancing.vue'
 import Schedules from '@/views/compute/ResourceSchedules.vue'
 import ResetUserData from '@/views/compute/ResetUserData.vue'
+import { autoScaleResourceScope } from '@/utils/autoScaleUi'
+import { nextTick } from 'vue'
 import { getAPI, postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: { apis: {}, userInfo: {}, project: null } }))
@@ -202,4 +204,70 @@ test.each([Up, Down])('an older policy row confirmation cannot remove a newly se
   component.methods.confirmPolicyRemoval.call(ctx, { id: 'first' })
   expect(ctx.removeScalePolicyFromGroup).not.toHaveBeenCalled()
   expect(ctx.$message.warning).toHaveBeenCalledWith('message.autoscale.selection.stale')
+})
+
+function deferred () { let resolveDeferred; let rejectDeferred; const promise = new Promise((resolve, reject) => { resolveDeferred = resolve; rejectDeferred = reject }); return { resolve: resolveDeferred, reject: rejectDeferred, promise } }
+function refreshContext (component) {
+  const resource = { id: 'group', vmprofileid: 'profile', lbruleid: 'rule', lbprovider: 'VirtualRouter' }
+  return { ...component.data.call({ $t: key => key, resource, fetchTimeZone: jest.fn() }), resource, $store: { getters: { userInfo: { id: 'owner' }, project: { id: 'project' } } }, $notifyError: jest.fn(), $t: key => key }
+}
+test('profile refresh retains existing values and rows without restarting table loading', async () => {
+  getAPI.mockReset(); const pending = deferred(); getAPI.mockReturnValue(pending.promise)
+  const ctx = refreshContext(Profile); ctx.profileReadScope = autoScaleResourceScope(ctx); ctx.profile = { id: 'profile' }; ctx.allParams = [{ name: 'rootdisksize', value: '100' }]
+  ctx.decodeUserData = value => value; ctx.finalizeParams = Profile.methods.finalizeParams.bind(ctx); ctx.fetchTemplateData = jest.fn().mockResolvedValue()
+  const update = Profile.methods.fetchData.call(ctx)
+  expect(ctx.loading).toBe(false); expect(ctx.profileRefreshing).toBe(true); expect(ctx.allParams).toHaveLength(1)
+  pending.resolve({ listautoscalevmprofilesresponse: { autoscalevmprofile: [{ id: 'profile', otherdeployparams: { rootdisksize: '100' } }] } }); await update
+  expect(ctx.profileRefreshing).toBe(false); expect(ctx.allParams).toEqual([{ name: 'rootdisksize', value: '100' }])
+})
+test('a late profile response from another project cannot overwrite its current scope', async () => {
+  getAPI.mockReset(); const pending = deferred(); getAPI.mockReturnValue(pending.promise)
+  const ctx = refreshContext(Profile); ctx.profileReadScope = autoScaleResourceScope(ctx); ctx.profile = { id: 'old' }; ctx.fetchTemplateData = jest.fn()
+  const update = Profile.methods.fetchData.call(ctx); ctx.$store.getters.project = { id: 'another-project' }
+  pending.resolve({ listautoscalevmprofilesresponse: { autoscalevmprofile: [{ id: 'foreign' }] } }); await update
+  expect(ctx.profile.id).toBe('old'); expect(ctx.fetchTemplateData).not.toHaveBeenCalled()
+})
+test.each([Up, Down])('policy refresh preserves the existing table until the group reply arrives', async component => {
+  getAPI.mockReset(); const pending = deferred(); getAPI.mockImplementation(api => api === 'listAutoScaleVmGroups' ? pending.promise : Promise.resolve({ counterresponse: { counter: [] } }))
+  const ctx = refreshContext(component); ctx.policiesReadScope = autoScaleResourceScope(ctx); ctx.policies = [{ id: 'policy', name: 'kept' }]; ctx.selectedPolicyId = 'policy'; ctx.switchPolicy = jest.fn()
+  const update = component.methods.fetchInitData.call(ctx)
+  expect(ctx.loading).toBe(false); expect(ctx.policies[0].name).toBe('kept')
+  const field = component === Up ? 'scaleuppolicies' : 'scaledownpolicies'
+  pending.resolve({ listautoscalevmgroupsresponse: { autoscalevmgroup: [{ [field]: [{ id: 'policy', name: 'new' }] }] } }); await update
+  expect(ctx.policies[0].name).toBe('new'); expect(ctx.policiesRefreshing).toBe(false)
+})
+test.each(['success', 'partial-failure', 'late-scope'])('LB refresh commits a complete snapshot and never clears existing VM rows: %s', async outcome => {
+  getAPI.mockReset(); const rules = deferred(); const instances = deferred()
+  getAPI.mockImplementation(api => api === 'listLoadBalancerRules' ? rules.promise : api === 'listLoadBalancerRuleInstances' ? instances.promise : Promise.resolve({ listlbstickinesspoliciesresponse: { stickinesspolicies: [] }, listautoscalevmgroupsresponse: { autoscalevmgroup: [] } }))
+  const ctx = refreshContext(LB); const token = {}; ctx.listRequestToken = () => token; ctx.isListRequestCurrent = () => true; ctx.lbReadScope = autoScaleResourceScope(ctx); ctx.lbRules = [{ id: 'rule', ruleInstances: [{ id: 'kept' }] }]; ctx.stickinessPolicies = []
+  const previous = ctx.lbRules; const update = LB.methods.fetchLBRules.call(ctx)
+  expect(ctx.loading).toBe(false); expect(ctx.lbRules).toBe(previous)
+  rules.resolve({ listloadbalancerrulesresponse: { loadbalancerrule: [{ id: 'rule', name: 'new' }], count: 1 } }); await Promise.resolve(); await Promise.resolve()
+  expect(ctx.lbRules).toBe(previous)
+  if (outcome === 'late-scope') ctx.resource = { ...ctx.resource, id: 'different-group' }
+  if (outcome === 'partial-failure') instances.reject(new Error('offline'))
+  else instances.resolve({ listloadbalancerruleinstancesresponse: { lbrulevmidip: [{ id: 'new' }] } })
+  await update
+  if (outcome === 'late-scope') expect(ctx.lbRules).toBe(previous)
+  else expect(ctx.lbRules[0].ruleInstances[0].id).toBe(outcome === 'partial-failure' ? 'kept' : 'new')
+  if (outcome === 'partial-failure') expect(ctx.listRefreshFailed).toBe(true)
+})
+test('AutoScale schedule refresh retains loaded rows even when the tab URL changed', async () => {
+  getAPI.mockReset(); const pending = deferred(); getAPI.mockReturnValue(pending.promise)
+  const ctx = refreshContext(Schedules); ctx.resourceType = 'AutoScaleVmGroup'; ctx.$refs = {}; ctx.scheduleReadScope = autoScaleResourceScope(ctx); ctx.schedules = [{ id: 'kept' }]; ctx.listRequestToken = () => ({ loaded: false }); ctx.isListRequestCurrent = () => true
+  const update = Schedules.methods.fetchSchedules.call(ctx)
+  expect(ctx.tabLoading).toBe(false); expect(ctx.schedules[0].id).toBe('kept')
+  pending.resolve({ listresourcescheduleresponse: { resourceschedule: [{ id: 'new' }], count: 1 } }); await update
+  expect(ctx.schedules[0].id).toBe('new'); expect(ctx.scheduleRefreshing).toBe(false)
+})
+test('a new stickiness dialog displays None instead of an empty method with cookie fields', () => {
+  const ctx = { $t: key => key, initForm: jest.fn(), form: {}, stickinessPolicies: [], selectedStickinessPolicy: { id: 'stale' } }
+  LB.methods.openStickinessModal.call(ctx, 'rule')
+  expect(ctx.form.methodname).toBe('none'); expect(ctx.stickinessPolicyMethod).toBe('none'); expect(ctx.selectedStickinessPolicy).toBeNull()
+})
+test('an existing SourceBased policy pre-fills its source settings', async () => {
+  const policy = { methodname: 'SourceBased', params: { tablesize: '10000', expire: '600' } }
+  const ctx = { $t: key => key, initForm: jest.fn(), form: {}, stickinessPolicies: [{ lbruleid: 'rule', stickinesspolicy: [policy] }] }
+  LB.methods.openStickinessModal.call(ctx, 'rule'); await nextTick()
+  expect(ctx.form.methodname).toBe('SourceBased'); expect(ctx.form.tablesize).toBe('10000'); expect(ctx.form.expire).toBe('600')
 })

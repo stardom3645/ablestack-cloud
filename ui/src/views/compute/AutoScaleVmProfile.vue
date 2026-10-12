@@ -21,7 +21,7 @@
       <a-button type="primary" @click="editProfileModalVisible = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.profile.edit') }}</a-button>
       <a-button @click="showUpdateUserDataForm = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><solution-outlined /></template>{{ $t('label.autoscale.userdata.edit') }}</a-button>
       <a-button @click="openParamModal" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><plus-outlined /></template>{{ $t('label.add.param') }}</a-button>
-      <a-button @click="fetchData" :disabled="saving" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+      <a-button @click="fetchData" :disabled="saving" :loading="loading || profileRefreshing"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <div>
       <a-alert type="info" v-if="(resource.state !== 'DISABLED' || resource.operationinprogress)">
@@ -309,6 +309,7 @@ centered
 
 <script>
 import '@/style/components/view/autoscale.less'
+import { autoScaleResourceScope } from '@/utils/autoScaleUi'
 import { getAPI, postAPI } from '@/api'
 import { isAdminOrDomainAdmin } from '@/role'
 import { autoScaleOfferingEligible, autoScaleInteger } from '@/utils/autoscaleValidation'
@@ -334,6 +335,9 @@ export default {
     return {
       filterColumns: ['Actions'],
       loading: true,
+      profileRefreshing: false,
+      profileReadScope: null,
+      profileReadRevision: 0,
       saving: false,
       profile: {},
       affectedGroups: [],
@@ -430,6 +434,7 @@ export default {
       })
     },
     fetchTemplateData () {
+      const scope = autoScaleResourceScope(this)
       const params = {
         ...autoScaleOwnerParams(this.resource),
         listall: true,
@@ -437,6 +442,7 @@ export default {
         zoneid: this.zoneid
       }
       return Promise.all(['executable', 'sharedexecutable'].map(templatefilter => getAPI('listTemplates', { ...params, templatefilter }))).then(responses => {
+        if (scope !== autoScaleResourceScope(this)) return
         const byId = new Map()
         responses.flatMap(json => json.listtemplatesresponse?.template || []).forEach(template => {
           if (template.format !== 'ISO' && !['SYSTEM', 'ROUTING', 'DATADISK', 'ISODISK'].includes(template.templatetype)) byId.set(template.id, template)
@@ -458,12 +464,22 @@ export default {
       })
     },
     fetchData () {
-      this.loading = true
+      const scope = autoScaleResourceScope(this)
+      const same = this.profileReadScope === scope
+      const revision = ++this.profileReadRevision
+      const current = () => revision === this.profileReadRevision && scope === autoScaleResourceScope(this)
+      if (!same) {
+        this.profile = {}; this.allParams = []; this.profileid = null
+        for (const key of ['autoscaleuserid', 'expungevmgraceperiod', 'serviceofferingid', 'templateid', 'userdata', 'userdataid', 'userdataname', 'userdatadetails', 'userdatapolicy']) this[key] = null
+      }
+      this.loading = !same
+      this.profileRefreshing = true
       return getAPI('listAutoScaleVmProfiles', {
         ...autoScaleOwnerParams(this.resource),
         listAll: true,
         id: this.resource.vmprofileid
       }).then(async response => {
+        if (!current()) return
         this.profile = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0] || {}
         this.zoneid = this.profile.zoneid || this.resource.zoneid
         this.profileid = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.id
@@ -480,9 +496,12 @@ export default {
         const counterparam = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.counterparam || {}
         const otherdeployparams = response.listautoscalevmprofilesresponse?.autoscalevmprofile?.[0]?.otherdeployparams || {}
         this.finalizeParams(counterparam, otherdeployparams)
+        this.profileReadScope = scope
         await this.fetchTemplateData()
-      }).catch(error => this.$notifyError(error)).finally(() => {
+      }).catch(error => { if (current()) this.$notifyError(error) }).finally(() => {
+        if (!current()) return
         this.loading = false
+        this.profileRefreshing = false
       })
     },
     getTemplateName (templateid) {

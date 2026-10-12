@@ -19,7 +19,7 @@
   <div :class="{ 'autoscale-tab': resourceType === 'AutoScaleVmGroup' }">
     <a-space v-if="resourceType === 'AutoScaleVmGroup'" wrap class="autoscale-toolbar">
       <a-button type="primary" @click="createSchedule" :disabled="isSubmitted || !('createResourceSchedule' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.schedule.add') }}</a-button>
-      <a-button @click="fetchData" :disabled="isSubmitted" :loading="tabLoading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+      <a-button @click="fetchData" :disabled="isSubmitted" :loading="tabLoading || scheduleRefreshing"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <a-alert v-if="resourceType === 'AutoScaleVmGroup'" type="info" show-icon :message="$t('message.autoscale.schedule.contract')" style="margin-bottom: 10px" />
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
@@ -45,8 +45,10 @@
     >
       <template #scheduleActions="{ record }">
         <div v-if="resourceType === 'AutoScaleVmGroup'" class="autoscale-row-actions">
-          <a-button size="small" :disabled="tabLoading || isSubmitted || !('updateResourceSchedule' in $store.getters.apis)" @click="updateSchedule(record)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.schedule.edit') }}</a-button>
-          <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmScheduleRemoval(record)" @cancel="pendingScheduleRemoval = null" :ok-button-props="{ disabled: tabLoading || isSubmitted }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="tabLoading || isSubmitted || !('deleteResourceSchedule' in $store.getters.apis)" @click="prepareScheduleRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.schedule.remove') }}</a-button></a-popconfirm>
+          <a-dropdown :trigger="['click']" placement="bottomRight" overlay-class-name="autoscale-row-menu"><a-button size="small" :aria-label="$t('label.actions')"><template #icon><down-outlined /></template></a-button><template #overlay><a-menu>
+            <a-menu-item key="edit" :disabled="tabLoading || isSubmitted || !('updateResourceSchedule' in $store.getters.apis)" @click="updateSchedule(record)">{{ $t('label.autoscale.schedule.edit') }}</a-menu-item>
+            <a-menu-item key="delete" danger :disabled="tabLoading || isSubmitted || !('deleteResourceSchedule' in $store.getters.apis)" @click="prepareScheduleRemoval(record)">{{ $t('label.autoscale.schedule.remove') }}</a-menu-item>
+          </a-menu></template></a-dropdown>
         </div>
         <template v-else>
         <tooltip-button
@@ -95,6 +97,20 @@
   </div>
 
   <a-modal
+v-if="resourceType === 'AutoScaleVmGroup'"
+class="mold-dialog autoscale-dialog"
+centered
+:width="520"
+:visible="!!pendingScheduleRemoval"
+:title="$t('label.autoscale.schedule.remove')"
+:ok-text="$t('label.delete')"
+      :ok-button-props="{ danger: true, disabled: tabLoading || isSubmitted }"
+      @ok="confirmScheduleRemoval({ id: pendingScheduleRemoval?.id })"
+      @cancel="pendingScheduleRemoval = null">
+    <a-descriptions bordered :column="1" size="small"><a-descriptions-item :label="$t('label.description')">{{ pendingScheduleRemoval?.name }}</a-descriptions-item><a-descriptions-item :label="$t('label.id')">{{ pendingScheduleRemoval?.id }}</a-descriptions-item></a-descriptions>
+  </a-modal>
+
+  <a-modal
     :class="resourceType === 'AutoScaleVmGroup' ? 'mold-dialog autoscale-dialog' : undefined"
     :centered="resourceType === 'AutoScaleVmGroup'"
     :width="resourceType === 'AutoScaleVmGroup' ? 760 : 520"
@@ -102,9 +118,11 @@
     :title="$t('label.schedule')"
     :maskClosable="false"
     :closable="true"
-    @cancel="closeModal"
+
+      @cancel="closeModal"
     :confirmLoading="isSubmitted"
-    @ok="submitForm"
+
+      @ok="submitForm"
   >
     <a-form
       layout="vertical"
@@ -332,6 +350,7 @@
 
 <script>
 import '@/style/components/view/autoscale.less'
+import { autoScaleResourceScope } from '@/utils/autoScaleUi'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { reactive, ref, toRaw, h } from 'vue'
@@ -382,6 +401,8 @@ export default {
     this.fetchTimeZone = debounce(this.fetchTimeZone, 800)
     return {
       tabLoading: false,
+      scheduleRefreshing: false,
+      scheduleReadScope: null,
       columnKeys: ['action', 'enabled', 'description', 'schedule', 'timezone', 'startdate', 'enddate', 'created', 'scheduleActions'],
       selectedColumnKeys: [],
       columns: [],
@@ -507,7 +528,7 @@ export default {
       this.showAddModal()
     },
     prepareScheduleRemoval (record) {
-      this.pendingScheduleRemoval = { resourceId: this.resource.id, id: record?.id }
+      this.pendingScheduleRemoval = { resourceId: this.resource.id, id: record?.id, name: record?.description }
     },
     confirmScheduleRemoval (record) {
       const target = this.pendingScheduleRemoval
@@ -648,6 +669,9 @@ export default {
     },
     fetchSchedules () {
       const listRequest = this.listRequestToken('fetchSchedules')
+      const scope = autoScaleResourceScope(this)
+      const same = this.scheduleReadScope === scope
+      if (this.resourceType === 'AutoScaleVmGroup') { this.scheduleRefreshing = true; if (!same) this.schedules = [] }
 
       if (!this.resource.id) {
         return
@@ -659,13 +683,13 @@ export default {
         resourcetype: this.resourceType,
         listall: true
       }
-      this.tabLoading = !listRequest.loaded
+      this.tabLoading = this.resourceType === 'AutoScaleVmGroup' ? !same : !listRequest.loaded
       return getAPI('listResourceSchedule', params).then(json => {
         if (!this.isListRequestCurrent('fetchSchedules', listRequest)) return
         if (this.resourceType === 'AutoScaleVmGroup' && this.$refs.listview) this.$refs.listview.setSelection([])
-        this.schedules = []
         this.totalCount = json?.listresourcescheduleresponse?.count || 0
         const rawSchedules = json?.listresourcescheduleresponse?.resourceschedule || []
+        if (this.resourceType === 'AutoScaleVmGroup') this.scheduleReadScope = scope
         this.schedules = rawSchedules.map(s => ({
           ...s,
           minmembers: s.details?.minmembers,
@@ -683,9 +707,11 @@ export default {
         if (!this.isListRequestCurrent('fetchSchedules', listRequest)) return
 
         this.tabLoading = false
+        this.scheduleRefreshing = false
       }).finally(() => {
         if (!this.isListRequestCurrent('fetchSchedules', listRequest)) return
         this.tabLoading = false
+        this.scheduleRefreshing = false
       })
     },
     changePage (page, pageSize) {
@@ -723,7 +749,7 @@ export default {
           column.key = 'autoscaleScheduleState'
           column.customRender = ({ record }) => h(Status, { text: record.enabled ? 'Enabled' : 'Disabled', displayText: true, displayLabel: this.$t(record.enabled ? 'state.enabled' : 'state.disabled') })
         }
-        if (this.resourceType === 'AutoScaleVmGroup' && columnKey === 'scheduleActions') Object.assign(column, { fixed: 'right', width: 180 })
+        if (this.resourceType === 'AutoScaleVmGroup' && columnKey === 'scheduleActions') Object.assign(column, { fixed: 'right', width: 90 })
         this.columns.push(column)
       }
       if (this.columns.length > 0) {

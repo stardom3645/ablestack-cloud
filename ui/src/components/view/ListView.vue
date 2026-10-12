@@ -808,7 +808,7 @@
         >{{ text || record.zoneid }}</router-link>
         <span v-else>{{ text }}</span>
       </template>
-      <template v-if="column.key === 'zonename'">
+      <template v-if="column.key === 'zonename' && $route.name !== 'autoscalevmgroup'">
         <router-link
           v-if="$router.resolve('/zone/' + record.zoneid).matched[0].redirect !== '/exception/404'"
           :to="{ path: '/zone/' + record.zoneid }"

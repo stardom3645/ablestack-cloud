@@ -22,7 +22,7 @@
       <a-button @click="openTagsModal(currentRule.id)" :disabled="loading || !currentRule || !('updateLoadBalancerRule' in $store.getters.apis)"><template #icon><tag-outlined /></template>{{ $t('label.edit.tags') }}</a-button>
       <a-button @click="openStickinessModal(currentRule.id)" :disabled="loading || !currentRule || !('createLBStickinessPolicy' in $store.getters.apis)"><template #icon><link-outlined /></template>{{ $t('label.action.configure.stickiness') }}</a-button>
       <a-button disabled><template #icon><delete-outlined /></template>{{ $t('label.autoscale.rule.remove') }}</a-button>
-      <a-button @click="fetchData" :disabled="loading" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+      <a-button @click="fetchData" :disabled="loading" :loading="loading || lbRefreshing"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
     <a-alert v-if="resource.state !== 'DISABLED' || resource.operationinprogress" type="info" show-icon :message="$t(resource.operationinprogress ? 'message.autoscale.operation.wait' : 'message.autoscale.loadbalancer.update')" />
@@ -122,7 +122,8 @@ centered
         :rules="rules"
         @finish="handleSubmitStickinessForm"
         v-ctrl-enter="handleSubmitStickinessForm"
-        class="custom-ant-form"
+        layout="vertical"
+        class="autoscale-stickiness-form"
        >
         <a-form-item name="methodname" ref="methodname" :label="$t('label.stickiness.method')">
           <a-select
@@ -164,14 +165,14 @@ centered
             'AppCookie'">
           <a-input v-model:value="form.mode" />
         </a-form-item>
-        <a-form-item name="nocache" ref="nocache" :label="$t('label.sticky.nocache')" v-show="stickinessPolicyMethod === 'LbCookie'">
-          <a-checkbox v-model:checked="form.nocache"></a-checkbox>
+        <a-form-item name="nocache" ref="nocache" v-show="stickinessPolicyMethod === 'LbCookie'">
+          <a-checkbox v-model:checked="form.nocache">{{ $t('label.sticky.nocache') }}</a-checkbox>
         </a-form-item>
-        <a-form-item name="indirect" ref="indirect" :label="$t('label.sticky.indirect')" v-show="stickinessPolicyMethod === 'LbCookie'">
-          <a-checkbox v-model:checked="form.indirect"></a-checkbox>
+        <a-form-item name="indirect" ref="indirect" v-show="stickinessPolicyMethod === 'LbCookie'">
+          <a-checkbox v-model:checked="form.indirect">{{ $t('label.sticky.indirect') }}</a-checkbox>
         </a-form-item>
-        <a-form-item name="postonly" ref="postonly" :label="$t('label.sticky.postonly')" v-show="stickinessPolicyMethod === 'LbCookie'">
-          <a-checkbox v-model:checked="form.postonly"></a-checkbox>
+        <a-form-item name="postonly" ref="postonly" v-show="stickinessPolicyMethod === 'LbCookie'">
+          <a-checkbox v-model:checked="form.postonly">{{ $t('label.sticky.postonly') }}</a-checkbox>
         </a-form-item>
         <a-form-item name="domain" ref="domain" :label="$t('label.domain')" v-show="stickinessPolicyMethod === 'LbCookie'">
           <a-input v-model:value="form.domain" />
@@ -182,11 +183,11 @@ centered
         <a-form-item name="holdtime" ref="holdtime" :label="$t('label.sticky.holdtime')" v-show="stickinessPolicyMethod === 'AppCookie'">
           <a-input v-model:value="form.holdtime" type="number" />
         </a-form-item>
-        <a-form-item name="requestLearn" ref="requestLearn" :label="$t('label.sticky.request-learn')" v-show="stickinessPolicyMethod === 'AppCookie'">
-          <a-checkbox v-model:checked="form.requestLearn"></a-checkbox>
+        <a-form-item name="requestLearn" ref="requestLearn" v-show="stickinessPolicyMethod === 'AppCookie'">
+          <a-checkbox v-model:checked="form.requestLearn">{{ $t('label.sticky.request-learn') }}</a-checkbox>
         </a-form-item>
-        <a-form-item name="prefix" ref="prefix" :label="$t('label.sticky.prefix')" v-show="stickinessPolicyMethod === 'AppCookie'">
-          <a-checkbox v-model:checked="form.prefix"></a-checkbox>
+        <a-form-item name="prefix" ref="prefix" v-show="stickinessPolicyMethod === 'AppCookie'">
+          <a-checkbox v-model:checked="form.prefix">{{ $t('label.sticky.prefix') }}</a-checkbox>
         </a-form-item>
         <a-form-item name="tablesize" ref="tablesize" :label="$t('label.sticky.tablesize')" v-show="stickinessPolicyMethod === 'SourceBased'">
           <a-input v-model:value="form.tablesize" />
@@ -267,6 +268,8 @@ centered
 
 <script>
 import '@/style/components/view/autoscale.less'
+import { autoScaleResourceScope } from '@/utils/autoScaleUi'
+import { autoScaleOwnerParams } from '@/utils/autoScaleEditing'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { ref, reactive, toRaw, nextTick } from 'vue'
@@ -290,6 +293,8 @@ export default {
   data () {
     return {
       loading: true,
+      lbRefreshing: false,
+      lbReadScope: null,
       lbRules: [],
       pendingInstanceRemoval: null,
       tagsModalVisible: false,
@@ -438,87 +443,53 @@ export default {
         this.$notifyError(error)
       }).finally(() => { this.tiers.loading = false })
     },
-    fetchLBRules () {
+    async fetchLBRules () {
       const listRequest = this.listRequestToken('fetchLBRules')
-      this.loading = !listRequest.loaded
-
-      return getAPI('listLoadBalancerRules', {
-        listAll: true,
-        id: this.resource.lbruleid,
-        page: this.page,
-        pageSize: this.pageSize
-      }).then(response => {
-        if (!this.isListRequestCurrent('fetchLBRules', listRequest)) return
-        this.lbRules = []
-        this.stickinessPolicies = []
-        this.lbRules = response.listloadbalancerrulesresponse.loadbalancerrule || []
-        this.totalCount = response.listloadbalancerrulesresponse.count || 0
-      }).then(() => {
-        if (this.lbRules.length > 0) {
-          setTimeout(() => {
-            this.fetchLBRuleInstances()
-          }, 100)
-          this.fetchLBStickinessPolicies()
-          this.fetchAutoScaleVMgroups()
-          return
-        }
-        this.loading = false
-      }).catch(error => {
-        if (!this.isListRequestCurrent('fetchLBRules', listRequest)) return
-        listRequest.failed = true
-        this.listRefreshFailed = true
-        if (listRequest.loaded) return
-
-        this.$notifyError(error)
-        this.loading = false
-      }).finally(() => {
-        if (!this.isListRequestCurrent('fetchLBRules', listRequest)) return
-        this.loading = false
-      })
-    },
-    fetchLBRuleInstances () {
-      for (const rule of this.lbRules) {
-        this.loading = true
-        getAPI('listLoadBalancerRuleInstances', {
-          listAll: true,
-          lbvmips: true,
-          id: rule.id
-        }).then(response => {
-          rule.ruleInstances = response.listloadbalancerruleinstancesresponse.lbrulevmidip
-        }).catch(error => {
-          this.$notifyError(error)
-        }).finally(() => {
-          this.loading = false
-        })
+      const scope = autoScaleResourceScope(this)
+      const same = this.lbReadScope === scope
+      const current = () => this.isListRequestCurrent('fetchLBRules', listRequest) && scope === autoScaleResourceScope(this)
+      if (!same) { this.lbRules = []; this.stickinessPolicies = [] }
+      this.loading = !same
+      this.lbRefreshing = true
+      try {
+        const response = await getAPI('listLoadBalancerRules', { ...autoScaleOwnerParams(this.resource), listall: true, id: this.resource.lbruleid, page: this.page, pagesize: this.pageSize })
+        if (!current()) return
+        const previous = new Map(this.lbRules.map(rule => [rule.id, rule]))
+        const policies = this.stickinessPolicies
+        let partialFailure = false
+        const results = await Promise.all((response.listloadbalancerrulesresponse?.loadbalancerrule || []).map(async rule => {
+          const params = { ...autoScaleOwnerParams(this.resource), listall: true }
+          const reads = await Promise.allSettled([
+            getAPI('listLoadBalancerRuleInstances', { ...params, lbvmips: true, id: rule.id }),
+            getAPI('listLBStickinessPolicies', { ...params, lbruleid: rule.id }),
+            getAPI('listAutoScaleVmGroups', { ...params, lbruleid: rule.id })
+          ])
+          partialFailure ||= reads.some(read => read.status === 'rejected')
+          const old = previous.get(rule.id) || {}
+          return {
+            rule: {
+              ...old,
+              ...rule,
+              ruleInstances: reads[0].status === 'fulfilled' ? reads[0].value.listloadbalancerruleinstancesresponse?.lbrulevmidip || [] : old.ruleInstances || [],
+              autoscalevmgroup: reads[2].status === 'fulfilled' ? reads[2].value.listautoscalevmgroupsresponse?.autoscalevmgroup?.[0] : old.autoscalevmgroup
+            },
+            policies: reads[1].status === 'fulfilled' ? reads[1].value.listlbstickinesspoliciesresponse?.stickinesspolicies || [] : policies.filter(policy => policy.lbruleid === rule.id)
+          }
+        }))
+        if (!current()) return
+        this.lbRules = results.map(result => result.rule)
+        this.stickinessPolicies = results.flatMap(result => result.policies)
+        this.totalCount = response.listloadbalancerrulesresponse?.count || 0
+        this.lbReadScope = scope
+        listRequest.failed = partialFailure
+        this.listRefreshFailed = partialFailure
+      } catch (error) {
+        if (!current()) return
+        listRequest.failed = true; this.listRefreshFailed = true
+        if (!same) this.$notifyError(error)
+      } finally {
+        if (current()) { this.loading = false; this.lbRefreshing = false }
       }
-    },
-    fetchLBStickinessPolicies () {
-      this.loading = true
-      this.lbRules.forEach(rule => {
-        getAPI('listLBStickinessPolicies', {
-          listAll: true,
-          lbruleid: rule.id
-        }).then(response => {
-          this.stickinessPolicies.push(...response.listlbstickinesspoliciesresponse.stickinesspolicies)
-        }).catch(error => {
-          this.$notifyError(error)
-        }).finally(() => {
-          this.loading = false
-        })
-      })
-    },
-    fetchAutoScaleVMgroups () {
-      this.loading = true
-      this.lbRules.forEach(rule => {
-        getAPI('listAutoScaleVmGroups', {
-          listAll: true,
-          lbruleid: rule.id
-        }).then(response => {
-          rule.autoscalevmgroup = response.listautoscalevmgroupsresponse?.autoscalevmgroup?.[0]
-        }).finally(() => {
-          this.loading = false
-        })
-      })
     },
     returnAlgorithmName (name) {
       switch (name) {
@@ -587,19 +558,19 @@ export default {
             jobId: response.createtagsresponse.jobid,
             successMessage: this.$t('message.success.add.tag'),
             successMethod: () => {
-              this.parentToggleLoading()
+              this.parentFetchData()
               this.openTagsModal(this.selectedRule)
             },
             errorMessage: this.$t('message.add.tag.failed'),
             errorMethod: () => {
-              this.parentToggleLoading()
+              this.parentFetchData()
               this.closeModal()
             },
             loadingMessage: this.$t('message.add.tag.processing'),
             catchMessage: this.$t('error.fetching.async.job.result'),
             catchMethod: () => {
               this.parentFetchData()
-              this.parentToggleLoading()
+              this.parentFetchData()
               this.closeModal()
             }
           })
@@ -624,19 +595,19 @@ export default {
           jobId: response.deletetagsresponse.jobid,
           successMessage: this.$t('message.success.delete.tag'),
           successMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.openTagsModal(this.selectedRule)
           },
           errorMessage: this.$t('message.delete.tag.failed'),
           errorMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.closeModal()
           },
           loadingMessage: this.$t('message.delete.tag.processing'),
           catchMessage: this.$t('error.fetching.async.job.result'),
           catchMethod: () => {
             this.parentFetchData()
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.closeModal()
           }
         })
@@ -651,6 +622,9 @@ export default {
       }
       this.stickinessModalVisible = true
       this.selectedRule = id
+      this.selectedStickinessPolicy = null
+      this.stickinessPolicyMethod = 'none'
+      this.form.methodname = 'none'
       const match = this.stickinessPolicies.find(policy => policy.lbruleid === id)
 
       if (match && match.stickinesspolicy.length > 0) {
@@ -664,6 +638,8 @@ export default {
           this.form.domain = this.selectedStickinessPolicy.params.domain
           this.form.length = this.selectedStickinessPolicy.params.length
           this.form.holdtime = this.selectedStickinessPolicy.params.holdtime
+          this.form.tablesize = this.selectedStickinessPolicy.params.tablesize
+          this.form.expire = this.selectedStickinessPolicy.params.expire
           this.form.nocache = !!this.selectedStickinessPolicy.params.nocache
           this.form.indirect = !!this.selectedStickinessPolicy.params.indirect
           this.form.postonly = !!this.selectedStickinessPolicy.params.postonly
@@ -683,13 +659,13 @@ export default {
           jobId: response.createLBStickinessPolicy.jobid,
           successMessage: this.$t('message.success.config.sticky.policy'),
           successMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           },
           errorMessage: this.$t('message.config.sticky.policy.failed'),
           errorMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           },
@@ -697,7 +673,7 @@ export default {
           catchMessage: this.$t('error.fetching.async.job.result'),
           catchMethod: () => {
             this.parentFetchData()
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           }
@@ -715,13 +691,13 @@ export default {
           jobId: response.deleteLBstickinessrruleresponse.jobid,
           successMessage: this.$t('message.success.remove.sticky.policy'),
           successMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           },
           errorMessage: this.$t('message.remove.sticky.policy.failed'),
           errorMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           },
@@ -729,7 +705,7 @@ export default {
           catchMessage: this.$t('error.fetching.async.job.result'),
           catchMethod: () => {
             this.parentFetchData()
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           }
@@ -857,13 +833,13 @@ export default {
           jobId: response.updateloadbalancerruleresponse.jobid,
           successMessage: this.$t('message.success.edit.rule'),
           successMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           },
           errorMessage: this.$t('message.edit.rule.failed'),
           errorMethod: () => {
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           },
@@ -871,7 +847,7 @@ export default {
           catchMessage: this.$t('error.fetching.async.job.result'),
           catchMethod: () => {
             this.parentFetchData()
-            this.parentToggleLoading()
+            this.parentFetchData()
             this.fetchData()
             this.closeModal()
           }

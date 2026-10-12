@@ -551,7 +551,7 @@
   "label.auto.assign.diskoffering.disk.size": "디스크 크기와 일치하는 오퍼링 자동 할당",
   "label.auto.assign.random.ip": "임의의 IP 주소를 자동으로 할당",
   "label.autoscale.vm.groups": "오토스케일 VM 그룹",
-  "label.autoscale.vm.profile": "오토스케일 VM 프로필",
+  "label.autoscale.vm.profile": "VM 프로필",
   "label.autoscalingenabled": "오토스케일링",
   "label.availability": "가용성",
   "label.available": "사용 가능",

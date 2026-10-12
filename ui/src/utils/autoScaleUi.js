@@ -63,3 +63,9 @@ export async function autoScaleInfrastructureRows (request, rows, allowed = true
     return { ...row, zonename: result.network?.zonename, zoneid: result.network?.zoneid, infrastructurestatus: result.failed ? 'FAILED' : result.network ? 'CURRENT' : 'UNAVAILABLE' }
   }))
 }
+
+// Resource/security identity is stable across tab switches and status timestamps.
+export function autoScaleResourceScope (vm) {
+  const getters = vm.$store?.getters || {}
+  return JSON.stringify([vm.resource?.id, vm.resource?.vmprofileid, vm.resource?.lbruleid, getters.userInfo?.id, getters.userInfo?.roleid, getters.userInfo?.roletype, getters.project?.id])
+}

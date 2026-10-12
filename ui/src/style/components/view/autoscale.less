@@ -220,3 +220,14 @@ body .autoscale-dialog .ant-tabs-tab-active .ant-tabs-tab-btn {
 .autoscale-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .autoscale-userdata-form .ant-table table { table-layout: fixed; }
 .autoscale-userdata-form .ant-table-cell { overflow-wrap: anywhere; }
+
+// Use the same portal dropdown palette as the VM row action menus.
+.autoscale-row-menu .ant-dropdown-menu { background: var(--ui-bg-surface); color: var(--ui-text-primary); border: 1px solid var(--ui-border-strong); }
+.autoscale-row-menu .ant-dropdown-menu-item { color: var(--ui-text-primary); }
+.autoscale-row-menu .ant-dropdown-menu-item-disabled { color: var(--ui-text-secondary) !important; }
+.autoscale-row-menu .ant-dropdown-menu-item-active { background: var(--ui-bg-elevated); }
+.autoscale-dialog .autoscale-stickiness-form { width: 100%; }
+.autoscale-dialog .autoscale-stickiness-form .ant-form-item { margin-bottom: 16px; }
+.autoscale-dialog .autoscale-stickiness-form .ant-select { width: 100%; }
+
+.autoscale-row-menu .ant-dropdown-menu-item-danger { color: var(--ui-error-text) !important; }
