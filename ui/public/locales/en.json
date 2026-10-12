@@ -8724,5 +8724,8 @@
   "label.autoscale.userdata.registered": "Registered UserData",
   "label.autoscale.userdata.manual": "Manual UserData",
   "message.autoscale.userdata.template": "Template {template} is linked to UserData {userdata} with policy {policy}.",
-  "message.autoscale.userdata.variables": "Enter the UserData variable values."
+  "message.autoscale.userdata.variables": "Enter the UserData variable values.",
+  "label.autoscale.rule.pending": "Pending application",
+  "label.autoscale.rule.staged": "Staged",
+  "label.autoscale.rule.revoking": "Pending revocation"
 }

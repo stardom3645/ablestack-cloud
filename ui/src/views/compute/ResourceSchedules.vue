@@ -333,7 +333,7 @@
 import '@/style/components/view/autoscale.less'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
-import { reactive, ref, toRaw } from 'vue'
+import { reactive, ref, toRaw, h } from 'vue'
 import koKR from 'ant-design-vue/es/date-picker/locale/ko_KR'
 import enUS from 'ant-design-vue/es/date-picker/locale/en_US'
 import 'dayjs/locale/ko'
@@ -599,7 +599,7 @@ export default {
           this.isSubmitted = false
         })
       }).catch(error => {
-        this.$notifyError(error)
+        if (this.resourceType !== 'AutoScaleVmGroup' || !error.errorFields) this.$notifyError(error)
         if (error.errorFields !== undefined) {
           this.formRef.value.scrollToField(error.errorFields[0].name)
         }
@@ -697,11 +697,16 @@ export default {
       }
       for (var columnKey of this.columnKeys) {
         if (!this.selectedColumnKeys.includes(columnKey)) continue
-        this.columns.push({
+        const column = {
           key: columnKey,
           title: columnTitleMap[columnKey] || this.$t('label.' + String(columnKey).toLowerCase()),
           dataIndex: columnKey
-        })
+        }
+        if (this.resourceType === 'AutoScaleVmGroup' && columnKey === 'enabled') {
+          column.key = 'autoscaleScheduleState'
+          column.customRender = ({ record }) => h(Status, { text: record.enabled ? 'Enabled' : 'Disabled', displayText: true, displayLabel: this.$t(record.enabled ? 'state.enabled' : 'state.disabled') })
+        }
+        this.columns.push(column)
       }
       if (this.columns.length > 0) {
         this.columns[this.columns.length - 1].customFilterDropdown = true

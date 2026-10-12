@@ -125,3 +125,15 @@ test('AutoScale dialog template metadata uses allowed project lists and never re
   expect(getAPI).toHaveBeenCalledWith('listTemplates', expect.objectContaining({ projectid: 'project', isready: true, templatefilter: 'executable' }))
   expect(ctx.updateTemplateLinkedUserData).not.toHaveBeenCalled()
 })
+
+test.each(['AutoScaleVmGroup', 'VirtualMachine'])('schedule state rendering is localized only for the AutoScale resource: %s', resourceType => {
+  const ctx = { resourceType, columnKeys: ['enabled'], selectedColumnKeys: ['enabled'], $t: key => key }
+  Schedules.methods.updateColumns.call(ctx)
+  if (resourceType === 'AutoScaleVmGroup') {
+    expect(ctx.columns[0].customRender({ record: { enabled: false } }).props.displayLabel).toBe('state.disabled')
+    expect(ctx.columns[0].customRender({ record: { enabled: true } }).props.displayLabel).toBe('state.enabled')
+  } else {
+    expect(ctx.columns[0].key).toBe('enabled')
+    expect(ctx.columns[0].customRender).toBeUndefined()
+  }
+})

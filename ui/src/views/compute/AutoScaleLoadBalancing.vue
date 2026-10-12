@@ -30,7 +30,7 @@
     <a-alert v-if="resource.state !== 'DISABLED' || resource.operationinprogress" type="info" show-icon :message="$t(resource.operationinprogress ? 'message.autoscale.operation.wait' : 'message.autoscale.loadbalancer.update')" />
     <a-card size="small" v-if="currentRule">
       <a-descriptions size="small" :column="{ xs: 1, sm: 2 }">
-        <a-descriptions-item v-for="key in ['name', 'publicport', 'privateport', 'algorithm', 'protocol', 'state']" :key="key" :label="$t('label.' + key)">{{ key === 'algorithm' ? returnAlgorithmName(currentRule[key]) : key === 'protocol' ? getCapitalise(currentRule[key] || 'tcp') : currentRule[key] }}</a-descriptions-item>
+        <a-descriptions-item v-for="key in ['name', 'publicport', 'privateport', 'algorithm', 'protocol', 'state']" :key="key" :label="$t('label.' + key)"><status v-if="key === 'state'" :text="currentRule.state" :display-text="true" :display-label="ruleStateLabel(currentRule.state)" /><template v-else>{{ key === 'algorithm' ? returnAlgorithmName(currentRule[key]) : key === 'protocol' ? getCapitalise(currentRule[key] || 'tcp') : currentRule[key] }}</template></a-descriptions-item>
         <a-descriptions-item :label="$t('label.action.configure.stickiness')">{{ returnStickinessLabel(currentRule.id) }}</a-descriptions-item>
       </a-descriptions>
     </a-card>
@@ -414,6 +414,10 @@ export default {
     }
   },
   methods: {
+    ruleStateLabel (state) {
+      const labels = { Active: 'state.ok', Add: 'label.autoscale.rule.pending', Staged: 'label.autoscale.rule.staged', Revoke: 'label.autoscale.rule.revoking' }
+      return labels[state] ? this.$t(labels[state]) : state || this.$t('label.autoscale.not.recorded')
+    },
     initForm () {
       this.formRef = ref()
       this.form = reactive({})

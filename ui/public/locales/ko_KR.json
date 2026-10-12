@@ -8689,5 +8689,8 @@
   "label.autoscale.userdata.registered": "저장된 사용자 데이터",
   "label.autoscale.userdata.manual": "사용자 데이터 직접 입력",
   "message.autoscale.userdata.template": "템플릿 {template}은 사용자 데이터 {userdata}와 연결되어 있으며 적용 정책은 {policy}입니다.",
-  "message.autoscale.userdata.variables": "사용자 데이터의 변수 값을 입력하십시오."
+  "message.autoscale.userdata.variables": "사용자 데이터의 변수 값을 입력하십시오.",
+  "label.autoscale.rule.pending": "적용 대기",
+  "label.autoscale.rule.staged": "구성 대기",
+  "label.autoscale.rule.revoking": "해제 대기"
 }
