@@ -182,3 +182,14 @@ test('VM row detach pins exactly the clicked IP when the same VM has several add
   LB.methods.confirmInstanceRemoval.call(ctx)
   expect(ctx.handleDeleteInstanceFromRule).toHaveBeenCalledWith(rows[1].instance, ctx.currentRule, '10.0.0.3')
 })
+
+test.each(removalCases.filter(([name]) => !name.startsWith('policy')))('%s confirmation from an older row cannot execute a newly opened target', (name, component, prepare, confirm, mutation, setup) => {
+  const ctx = removalContext(setup, mutation)
+  const first = name === 'schedule' ? ctx.selectedSchedule : name === 'parameter' ? ctx.selectedParam : name === 'VM-IP' ? ctx.selectedInstance : ctx.selectedTableCondition
+  component.methods[prepare].call(ctx, first)
+  const second = { ...first, id: 'another', name: 'another', key: 'another' }
+  component.methods[prepare].call(ctx, second)
+  component.methods[confirm].call(ctx, first)
+  expect(ctx[mutation]).not.toHaveBeenCalled()
+  expect(ctx.$message.warning).toHaveBeenCalledWith('message.autoscale.selection.stale')
+})

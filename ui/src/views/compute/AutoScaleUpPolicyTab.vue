@@ -68,7 +68,7 @@
         </template>
         <template v-if="column.key === 'actions'"><div class="autoscale-row-actions">
           <a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('updateCondition' in $store.getters.apis)" @click="openUpdateConditionModal(record)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.condition.edit') }}</a-button>
-          <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmConditionRemoval" @cancel="pendingConditionRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || (policy.conditions || []).length < 2 || !('updateAutoScalePolicy' in $store.getters.apis)" @click="prepareConditionRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.condition.remove') }}</a-button></a-popconfirm>
+          <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmConditionRemoval(record)" @cancel="pendingConditionRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || (policy.conditions || []).length < 2 || !('updateAutoScalePolicy' in $store.getters.apis)" @click="prepareConditionRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.condition.remove') }}</a-button></a-popconfirm>
         </div></template>
 
       </template>
@@ -590,9 +590,13 @@ export default {
     prepareConditionRemoval (record) {
       this.pendingConditionRemoval = { resourceId: this.resource.id, policyId: this.policy.id, id: record?.id }
     },
-    confirmConditionRemoval () {
+    confirmConditionRemoval (record) {
       const target = this.pendingConditionRemoval
       this.pendingConditionRemoval = null
+      if (record && record.id !== target?.id) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
       if (this.loading || this.saving || target?.resourceId !== this.resource.id || target?.policyId !== this.policy.id || !(this.policy.conditions || []).some(item => item.id === target?.id)) {
         this.$message.warning(this.$t('message.autoscale.selection.stale'))
         return

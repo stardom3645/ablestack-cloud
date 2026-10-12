@@ -44,7 +44,7 @@ row-key="key"
       <template #bodyCell="{ column, record }">
         <router-link v-if="column.key === 'name'" :to="'/vm/' + record.instance.loadbalancerruleinstance.id">{{ record.instance.loadbalancerruleinstance.displayname || record.instance.loadbalancerruleinstance.name }}</router-link>
         <status v-else-if="column.key === 'state'" :text="record.instance.loadbalancerruleinstance.state" :display-text="true" />
-        <template v-else-if="column.key === 'actions'"><div class="autoscale-row-actions"><a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('message.autoscale.vm.detach.confirm')" @confirm="confirmInstanceRemoval" @cancel="pendingInstanceRemoval = null" :ok-button-props="{ disabled: loading }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="loading || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress" @click="prepareInstanceRemoval(record)"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm></div></template>
+        <template v-else-if="column.key === 'actions'"><div class="autoscale-row-actions"><a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('message.autoscale.vm.detach.confirm')" @confirm="confirmInstanceRemoval(record)" @cancel="pendingInstanceRemoval = null" :ok-button-props="{ disabled: loading }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="loading || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress" @click="prepareInstanceRemoval(record)"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm></div></template>
       </template>
     </a-table>
     <a-modal
@@ -796,9 +796,13 @@ export default {
     prepareInstanceRemoval (record) {
       this.pendingInstanceRemoval = { resourceId: this.resource.id, ruleId: this.currentRule?.id, key: record?.key }
     },
-    confirmInstanceRemoval () {
+    confirmInstanceRemoval (record) {
       const target = this.pendingInstanceRemoval
       this.pendingInstanceRemoval = null
+      if (record && record.key !== target?.key) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
       const selected = this.ruleInstances.find(item => item.key === target?.key)
       if (this.loading || target?.resourceId !== this.resource.id || target?.ruleId !== this.currentRule?.id || !selected) {
         this.$message.warning(this.$t('message.autoscale.selection.stale'))

@@ -46,7 +46,7 @@
       <template #scheduleActions="{ record }">
         <div v-if="resourceType === 'AutoScaleVmGroup'" class="autoscale-row-actions">
           <a-button size="small" :disabled="tabLoading || isSubmitted || !('updateResourceSchedule' in $store.getters.apis)" @click="updateSchedule(record)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.schedule.edit') }}</a-button>
-          <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmScheduleRemoval" @cancel="pendingScheduleRemoval = null" :ok-button-props="{ disabled: tabLoading || isSubmitted }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="tabLoading || isSubmitted || !('deleteResourceSchedule' in $store.getters.apis)" @click="prepareScheduleRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.schedule.remove') }}</a-button></a-popconfirm>
+          <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmScheduleRemoval(record)" @cancel="pendingScheduleRemoval = null" :ok-button-props="{ disabled: tabLoading || isSubmitted }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="tabLoading || isSubmitted || !('deleteResourceSchedule' in $store.getters.apis)" @click="prepareScheduleRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.schedule.remove') }}</a-button></a-popconfirm>
         </div>
         <template v-else>
         <tooltip-button
@@ -509,9 +509,13 @@ export default {
     prepareScheduleRemoval (record) {
       this.pendingScheduleRemoval = { resourceId: this.resource.id, id: record?.id }
     },
-    confirmScheduleRemoval () {
+    confirmScheduleRemoval (record) {
       const target = this.pendingScheduleRemoval
       this.pendingScheduleRemoval = null
+      if (record && record.id !== target?.id) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
       const schedule = this.schedules.find(item => item.id === target?.id)
       if (this.tabLoading || this.isSubmitted || target?.resourceId !== this.resource.id || !schedule) {
         this.$message.warning(this.$t('message.autoscale.selection.stale'))

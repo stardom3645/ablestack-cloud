@@ -144,7 +144,7 @@
       :rowKey="record => record.name"
       :scroll="{ x: 640 }">
       <template #bodyCell="{ column, record }"><template v-if="column.key === 'actions'"><div class="autoscale-row-actions">
-        <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmParamRemoval" @cancel="pendingParamRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('updateAutoScaleVmProfile' in $store.getters.apis)" @click="prepareParamRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.param.remove') }}</a-button></a-popconfirm>
+        <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmParamRemoval(record)" @cancel="pendingParamRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('updateAutoScaleVmProfile' in $store.getters.apis)" @click="prepareParamRemoval(record)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.param.remove') }}</a-button></a-popconfirm>
       </div></template></template>
     </a-table>
 
@@ -540,9 +540,13 @@ export default {
     prepareParamRemoval (record) {
       this.pendingParamRemoval = { resourceId: this.resource.id, profileId: this.profileid, name: record?.name }
     },
-    confirmParamRemoval () {
+    confirmParamRemoval (record) {
       const target = this.pendingParamRemoval
       this.pendingParamRemoval = null
+      if (record && record.name !== target?.name) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
       if (this.loading || this.saving || target?.resourceId !== this.resource.id || target?.profileId !== this.profileid || !this.allParams.some(item => item.name === target?.name)) {
         this.$message.warning(this.$t('message.autoscale.selection.stale'))
         return
