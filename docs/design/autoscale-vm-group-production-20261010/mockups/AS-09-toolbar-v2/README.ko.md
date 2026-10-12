@@ -37,65 +37,65 @@ NODE_OPTIONS=--openssl-legacy-provider node node_modules/@vue/cli-service/bin/vu
 
 라이트
 
-![운영 상태 라이트](images/operations-light.png)
+![운영 상태 라이트](images/operations-light.jpg)
 
 다크
 
-![운영 상태 다크](images/operations-dark.png)
+![운영 상태 다크](images/operations-dark.jpg)
 
 ### VM 프로필
 
 라이트
 
-![VM 프로필 라이트](images/profile-light.png)
+![VM 프로필 라이트](images/profile-light.jpg)
 
 다크
 
-![VM 프로필 다크](images/profile-dark.png)
+![VM 프로필 다크](images/profile-dark.jpg)
 
 ### 부하 분산 규칙
 
 라이트
 
-![부하 분산 규칙 라이트](images/lb-light.png)
+![부하 분산 규칙 라이트](images/lb-light.jpg)
 
 다크
 
-![부하 분산 규칙 다크](images/lb-dark.png)
+![부하 분산 규칙 다크](images/lb-dark.jpg)
 
 ### 스케일업 정책
 
 라이트
 
-![스케일업 정책 라이트](images/up-light.png)
+![스케일업 정책 라이트](images/up-light.jpg)
 
 다크
 
-![스케일업 정책 다크](images/up-dark.png)
+![스케일업 정책 다크](images/up-dark.jpg)
 
 ### 스케일다운 정책
 
 라이트
 
-![스케일다운 정책 라이트](images/down-light.png)
+![스케일다운 정책 라이트](images/down-light.jpg)
 
 다크
 
-![스케일다운 정책 다크](images/down-dark.png)
+![스케일다운 정책 다크](images/down-dark.jpg)
 
 ### 스케줄
 
 라이트
 
-![스케줄 라이트](images/schedules-light.png)
+![스케줄 라이트](images/schedules-light.jpg)
 
 다크
 
-![스케줄 다크](images/schedules-dark.png)
+![스케줄 다크](images/schedules-dark.jpg)
 
 ## 조건 선택 후 기존 편집·삭제 활성화 예시
 
-![선택한 조건을 대상으로 상단 편집·삭제 활성화](images/up-selected-dark.png)
+![선택한 조건을 대상으로 상단 편집·삭제 활성화](images/up-selected-dark.jpg)
 
 mockup-audit.json은12개 화면의 버튼 순서/아이콘/primary/간격·표본 대비, responsive-audit.json은1024/390px 줄바꿈·문서 폭, scope-audit.json은 제외 탭의 새 툴바0개를 기록한다. versions.json은 실제 런타임 라이브러리 버전이다. 이미지의 예시 정책/조건/시각은 실제 클러스터 설정값을 의미하지 않는다.
 
