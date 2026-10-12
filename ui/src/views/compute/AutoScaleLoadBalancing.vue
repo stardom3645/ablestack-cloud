@@ -22,8 +22,8 @@
       <a-button @click="openTagsModal(currentRule.id)" :disabled="loading || !currentRule || !('updateLoadBalancerRule' in $store.getters.apis)"><template #icon><tag-outlined /></template>{{ $t('label.edit.tags') }}</a-button>
       <a-button @click="openStickinessModal(currentRule.id)" :disabled="loading || !currentRule || !('createLBStickinessPolicy' in $store.getters.apis)"><template #icon><link-outlined /></template>{{ $t('label.action.configure.stickiness') }}</a-button>
       <a-button disabled><template #icon><delete-outlined /></template>{{ $t('label.autoscale.rule.remove') }}</a-button>
-      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('message.autoscale.vm.detach.confirm')" @confirm="handleDeleteInstanceFromRule(selectedInstance.instance, currentRule, selectedInstance.ip)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button :disabled="loading || !selectedInstance || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm>
+      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('message.autoscale.vm.detach.confirm')" @confirm="confirmInstanceRemoval" :ok-button-props="{ disabled: loading }" @cancel="pendingInstanceRemoval = null" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button @click="prepareInstanceRemoval" :disabled="loading || !selectedInstance || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="loading" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
@@ -294,6 +294,7 @@ export default {
       loading: true,
       lbRules: [],
       selectedInstanceKeys: [],
+      pendingInstanceRemoval: null,
       tagsModalVisible: false,
       tagsModalLoading: false,
       tags: [],
@@ -797,6 +798,19 @@ export default {
       if (this.formRef.value) this.formRef.value.resetFields()
       this.stickinessPolicyMethod = e
       this.form.methodname = e
+    },
+    prepareInstanceRemoval () {
+      this.pendingInstanceRemoval = { resourceId: this.resource.id, ruleId: this.currentRule?.id, key: this.selectedInstance?.key }
+    },
+    confirmInstanceRemoval () {
+      const target = this.pendingInstanceRemoval
+      this.pendingInstanceRemoval = null
+      const selected = this.ruleInstances.find(item => item.key === target?.key)
+      if (this.loading || target?.resourceId !== this.resource.id || target?.ruleId !== this.currentRule?.id || !selected) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
+      return this.handleDeleteInstanceFromRule(selected.instance, this.currentRule, selected.ip)
     },
     handleDeleteInstanceFromRule (instance, rule, ip) {
       this.loading = true

@@ -21,8 +21,8 @@
       <a-button type="primary" @click="editProfileModalVisible = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.profile.edit') }}</a-button>
       <a-button @click="showUpdateUserDataForm = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><solution-outlined /></template>{{ $t('label.autoscale.userdata.edit') }}</a-button>
       <a-button @click="openParamModal" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><plus-outlined /></template>{{ $t('label.add.param') }}</a-button>
-      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="deleteParam(selectedParam.name)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedParam"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.param.remove') }}</a-button></a-popconfirm>
+      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmParamRemoval" :ok-button-props="{ disabled: loading || saving }" @cancel="pendingParamRemoval = null" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button @click="prepareParamRemoval" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedParam"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.param.remove') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="saving" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <div>
@@ -355,6 +355,7 @@ export default {
       serviceOfferingsList: [],
       allParams: [],
       selectedParamKeys: [],
+      pendingParamRemoval: null,
       addParamModalVisible: false,
       newParam: {
         name: null,
@@ -539,6 +540,18 @@ export default {
       if (otherdeployparams.networkids) {
         this.allParams.push({ name: 'networkids', value: otherdeployparams.networkids })
       }
+    },
+    prepareParamRemoval () {
+      this.pendingParamRemoval = { resourceId: this.resource.id, profileId: this.profileid, name: this.selectedParam?.name }
+    },
+    confirmParamRemoval () {
+      const target = this.pendingParamRemoval
+      this.pendingParamRemoval = null
+      if (this.loading || this.saving || target?.resourceId !== this.resource.id || target?.profileId !== this.profileid || !this.allParams.some(item => item.name === target?.name)) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
+      return this.deleteParam(target.name)
     },
     deleteParam (paramName) {
       this.updateAutoScaleVmProfileWithParam(null, null, paramName)

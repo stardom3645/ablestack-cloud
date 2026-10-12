@@ -8685,6 +8685,7 @@
   "label.autoscale.schedule.remove": "스케줄 삭제",
   "message.autoscale.lb.delete.bound": "오토스케일 그룹에 연결된 부하 분산 규칙은 삭제할 수 없습니다.",
   "label.autoscale.vm.detach": "VM 연결 해제",
+  "message.autoscale.selection.stale": "선택한 항목이 변경되었거나 조회 중입니다. 최신 목록에서 다시 선택해 주세요.",
   "message.autoscale.vm.detach.confirm": "선택한 VM을 부하 분산 규칙과 오토스케일 그룹에서 분리합니다. VM과 볼륨은 삭제하지 않습니다. 그룹을 다시 활성화하면 최소 멤버 수에 따라 새 VM이 생성될 수 있습니다. 계속하시겠습니까?",
   "label.autoscale.userdata.registered": "저장된 사용자 데이터",
   "label.autoscale.userdata.manual": "사용자 데이터 직접 입력",

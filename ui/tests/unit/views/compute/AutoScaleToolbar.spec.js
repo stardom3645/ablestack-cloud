@@ -137,3 +137,43 @@ test.each(['AutoScaleVmGroup', 'VirtualMachine'])('schedule state rendering is l
     expect(ctx.columns[0].customRender).toBeUndefined()
   }
 })
+
+const removalCases = [
+  ['schedule', Schedules, 'prepareScheduleRemoval', 'confirmScheduleRemoval', 'removeSchedule', () => ({ selectedSchedule: { id: 'schedule' }, schedules: [{ id: 'schedule', description: 'current' }] }), ctx => { ctx.selectedSchedule = null }, ctx => { ctx.schedules = [] }],
+  ['parameter', Profile, 'prepareParamRemoval', 'confirmParamRemoval', 'deleteParam', () => ({ profileid: 'profile', selectedParam: { name: 'rootdisksize' }, allParams: [{ name: 'rootdisksize', value: '100' }] }), ctx => { ctx.selectedParam = undefined }, ctx => { ctx.profileid = 'different' }],
+  ...[Up, Down].flatMap((component, index) => [
+    ['condition-' + index, component, 'prepareConditionRemoval', 'confirmConditionRemoval', 'deleteConditionFromAutoScalePolicy', () => ({ policy: { id: 'policy', conditions: [{ id: 'condition' }] }, selectedTableCondition: { id: 'condition' } }), ctx => { ctx.selectedTableCondition = undefined }, ctx => { ctx.policy = { id: 'different', conditions: [{ id: 'condition' }] } }],
+    ['policy-' + index, component, 'preparePolicyRemoval', 'confirmPolicyRemoval', 'removeScalePolicyFromGroup', () => ({ policy: { id: 'policy' }, policies: [{ id: 'policy' }, { id: 'other' }] }), () => {}, ctx => { ctx.policy = { id: 'other' } }]
+  ]),
+  ['VM-IP', LB, 'prepareInstanceRemoval', 'confirmInstanceRemoval', 'handleDeleteInstanceFromRule', () => ({ currentRule: { id: 'rule' }, selectedInstance: { key: 'vm/10.0.0.2' }, ruleInstances: [{ key: 'vm/10.0.0.2', ip: '10.0.0.2', instance: { loadbalancerruleinstance: { id: 'vm' } } }] }), ctx => { ctx.selectedInstance = undefined }, ctx => { ctx.ruleInstances = [{ key: 'vm/10.0.0.3', ip: '10.0.0.3' }] }]
+]
+function removalContext (setup, mutation) {
+  return { ...setup(), resource: { id: 'group' }, loading: false, saving: false, tabLoading: false, isSubmitted: false, $t: key => key, $message: { warning: jest.fn() }, [mutation]: jest.fn() }
+}
+test.each(removalCases)('%s confirmation keeps the opened target when a background refresh clears row selection', (name, component, prepare, confirm, mutation, setup, clear) => {
+  const ctx = removalContext(setup, mutation)
+  component.methods[prepare].call(ctx)
+  clear(ctx)
+  component.methods[confirm].call(ctx)
+  expect(ctx[mutation]).toHaveBeenCalledTimes(1)
+  expect(ctx.$message.warning).not.toHaveBeenCalled()
+  if (name === 'schedule') expect(ctx[mutation]).toHaveBeenCalledWith(ctx.schedules[0])
+  if (name === 'parameter') expect(ctx[mutation]).toHaveBeenCalledWith('rootdisksize')
+  if (name.startsWith('condition')) expect(ctx[mutation]).toHaveBeenCalledWith('condition')
+  if (name === 'VM-IP') expect(ctx[mutation]).toHaveBeenCalledWith(ctx.ruleInstances[0].instance, ctx.currentRule, '10.0.0.2')
+})
+test.each(removalCases)('%s confirmation refuses the target when its list, parent or VM-IP tuple changed', (name, component, prepare, confirm, mutation, setup, clear, change) => {
+  const ctx = removalContext(setup, mutation)
+  component.methods[prepare].call(ctx)
+  change(ctx)
+  component.methods[confirm].call(ctx)
+  expect(ctx[mutation]).not.toHaveBeenCalled()
+  expect(ctx.$message.warning).toHaveBeenCalledWith('message.autoscale.selection.stale')
+})
+test.each(removalCases)('%s confirmation cannot mutate a different group after navigation', (name, component, prepare, confirm, mutation, setup) => {
+  const ctx = removalContext(setup, mutation)
+  component.methods[prepare].call(ctx)
+  ctx.resource = { id: 'another-group' }
+  component.methods[confirm].call(ctx)
+  expect(ctx[mutation]).not.toHaveBeenCalled()
+})

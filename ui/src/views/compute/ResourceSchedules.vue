@@ -20,8 +20,8 @@
     <a-space v-if="resourceType === 'AutoScaleVmGroup'" wrap class="autoscale-toolbar">
       <a-button type="primary" @click="createSchedule" :disabled="isSubmitted || !('createResourceSchedule' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.schedule.add') }}</a-button>
       <a-button @click="updateSchedule(selectedSchedule)" :disabled="isSubmitted || !selectedSchedule || !('updateResourceSchedule' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.schedule.edit') }}</a-button>
-      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="removeSchedule(selectedSchedule)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button :disabled="isSubmitted || !selectedSchedule || !('deleteResourceSchedule' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.schedule.remove') }}</a-button></a-popconfirm>
+      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="confirmScheduleRemoval" :ok-button-props="{ disabled: tabLoading || isSubmitted }" @cancel="pendingScheduleRemoval = null" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button @click="prepareScheduleRemoval" :disabled="isSubmitted || !selectedSchedule || !('deleteResourceSchedule' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.schedule.remove') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="isSubmitted" :loading="tabLoading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <a-alert v-if="resourceType === 'AutoScaleVmGroup'" type="info" show-icon :message="$t('message.autoscale.schedule.contract')" style="margin-bottom: 10px" />
@@ -386,6 +386,7 @@ export default {
       columns: [],
       schedules: [],
       selectedScheduleKeys: [],
+      pendingScheduleRemoval: null,
       timeZoneMap: [],
       resourceActionsMap: {
         VirtualMachine: [
@@ -506,8 +507,21 @@ export default {
       this.resetForm()
       this.showAddModal()
     },
+    prepareScheduleRemoval () {
+      this.pendingScheduleRemoval = { resourceId: this.resource.id, id: this.selectedSchedule?.id }
+    },
+    confirmScheduleRemoval () {
+      const target = this.pendingScheduleRemoval
+      this.pendingScheduleRemoval = null
+      const schedule = this.schedules.find(item => item.id === target?.id)
+      if (this.tabLoading || this.isSubmitted || target?.resourceId !== this.resource.id || !schedule) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
+      return this.removeSchedule(schedule)
+    },
     removeSchedule (schedule) {
-      postAPI('deleteResourceSchedule', {
+      return postAPI('deleteResourceSchedule', {
         id: schedule.id,
         resourceid: this.resource.id,
         resourcetype: this.resourceType
