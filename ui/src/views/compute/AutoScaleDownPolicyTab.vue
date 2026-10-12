@@ -17,6 +17,17 @@
 
 <template>
   <div class="autoscale-tab">
+    <a-space wrap class="autoscale-toolbar">
+      <a-button type="primary" @click="addPolicyModalVisible = true" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('createAutoScalePolicy' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.add.policy') }}</a-button>
+      <a-button @click="openPolicyModal" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !policy.id || !('updateAutoScalePolicy' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.policy.edit') }}</a-button>
+      <a-popconfirm :title="$t('label.remove.policy') + '?'" @confirm="removeScalePolicyFromGroup" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || policies.length < 2 || !('updateAutoScaleVmGroup' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.policy.remove') }}</a-button></a-popconfirm>
+      <a-button @click="openAddConditionModal" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !policy.id || !('createCondition' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.autoscale.condition.add') }}</a-button>
+      <a-button @click="openUpdateConditionModal(selectedTableCondition)" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedTableCondition || !('updateCondition' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.condition.edit') }}</a-button>
+      <a-popconfirm :title="$t('label.delete') + '?'" @confirm="deleteConditionFromAutoScalePolicy(selectedTableCondition.id)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedTableCondition || (policy.conditions || []).length < 2 || !('updateAutoScalePolicy' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.condition.remove') }}</a-button></a-popconfirm>
+      <a-button @click="fetchInitData" :disabled="saving" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+    </a-space>
     <a-alert v-if="affectedGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedGroups.join(', ') })" />
     <a-alert v-if="mutationError" type="error" show-icon :message="mutationError" />
     <a-alert v-if="retainedResources" type="warning" show-icon :message="$t('message.autoscale.edit.retained', { ids: retainedResources })" />
@@ -50,54 +61,17 @@
             {{ scalepolicy.name || scalepolicy.id }}
           </a-select-option>
         </a-select>
-        <a-button style="margin-left: 10px" ref="submit" type="primary" @click="addPolicyModalVisible = true" :disabled="saving || !('createAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)">
-          <template #icon><plus-outlined /></template>
-          {{ $t('label.add.policy') }}
-        </a-button>
-        <a-popconfirm
-          :title="$t('label.remove.policy') + '?'"
-          @confirm="removeScalePolicyFromGroup"
-          :okText="$t('label.yes')"
-          :cancelText="$t('label.no')"
-        >
-          <a-button style="margin-left: 10px" ref="submit" type="primary" :danger="true" :disabled="saving || policies.length < 2 || !('updateAutoScaleVmGroup' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)">
-            <template #icon><delete-outlined /></template>
-            {{ $t('label.remove.policy') }}
-          </a-button>
-        </a-popconfirm>
 
       </div>
 
       <a-divider/>
-      <div class="form">
-        <div class="form__item">
-          <div class="form__label">
-            <tooltip-label :title="$t('label.name')" :tooltip="(createAutoScalePolicyApiParams.name || {}).description"/>
-          </div>
-          <a-input v-model:value="policy.name" :disabled="!this.isEditable"></a-input>
-        </div>
-        <div class="form__item">
-          <div class="form__label">
-            <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.duration')" :tooltip="(createAutoScalePolicyApiParams.duration || {}).description"/>
-          </div>
-          <a-input v-model:value="policy.duration" type="number" :disabled="!this.isEditable"></a-input>
-        </div>
-        <div class="form__item">
-          <div class="form__label">
-            <span class="form__required">*</span>
-            <tooltip-label :title="$t('label.autoscale.cooldown.seconds')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
-          </div>
-          <a-input v-model:value="policy.quiettime" type="number" :disabled="!this.isEditable"></a-input>
-        </div>
-        <div class="form__item">
-          <div class="form__label">{{ $t('label.action') }}</div>
-          <a-button ref="submit" :disabled="saving || !('updateAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="updateAutoScalePolicy(null, null)">
-            <template #icon><edit-outlined /></template>
-            {{ isEditOrApply() }}
-          </a-button>
-        </div>
-      </div>
+      <a-card size="small" :title="$t('label.autoscale.policy.settings')">
+        <a-descriptions size="small" :column="{ xs: 1, sm: 2 }">
+          <a-descriptions-item :label="$t('label.name')">{{ policy.name || policy.id || '—' }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.duration')">{{ policy.duration ?? '—' }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.autoscale.cooldown.seconds')">{{ policy.quiettime ?? '—' }}</a-descriptions-item>
+        </a-descriptions>
+      </a-card>
     </div>
 
     <a-divider/>
@@ -113,31 +87,28 @@
       :columns="columns"
       :dataSource="policy.conditions"
       :pagination="false"
-      :rowKey="record => record.id">
+      :rowKey="record => record.id"
+      :row-selection="conditionSelection">
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'countername'">{{ counterLabel(record.countername) }}</template>
         <template v-if="column.key === 'relationaloperator'">
           {{ getOperator(record.relationaloperator) }}
         </template>
-        <template v-if="column.key === 'actions'">
-          <tooltip-button
-            :tooltip="$t('label.edit')"
-            :disabled="saving || !('updateCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
-            icon="edit-outlined"
-            @onClick="() => openUpdateConditionModal(record)" />
-          <tooltip-button
-            :tooltip="$t('label.delete')"
-            :disabled="saving || (policy.conditions || []).length < 2 || !('updateAutoScalePolicy' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
-            type="primary"
-            :danger="true"
-            icon="delete-outlined"
-            @onClick="deleteConditionFromAutoScalePolicy(record.id)" />
-        </template>
+
       </template>
     </a-table>
 
-    <div>
-      <a-divider/>
+<a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
+:title="$t('label.autoscale.condition.add')"
+:visible="addConditionModalVisible"
+:mask-closable="false"
+:closable="!saving"
+:destroy-on-close="true"
+@cancel="!saving && closeModal()">
+      <a-alert v-if="mutationError" type="error" show-icon :message="mutationError" />
       <div class="form" v-ctrl-enter="addConditionToPolicy">
         <div class="form__item" ref="newConditionCounterId">
           <div class="form__label">
@@ -187,16 +158,44 @@
           <a-input v-model:value="newCondition.threshold" type="number"></a-input>
           <span class="error-text">{{ $t('label.required') }}</span>
         </div>
+      </div>
+      <template #footer><div class="action-button"><a-button :disabled="saving" @click="!saving && closeModal()">{{ $t('label.cancel') }}</a-button><a-button type="primary" :loading="saving" @click="addConditionToPolicy">{{ $t('label.ok') }}</a-button></div></template>
+    </a-modal>
+    <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
+:title="$t('label.autoscale.policy.edit')"
+:visible="editPolicyModalVisible"
+:mask-closable="false"
+:closable="!saving"
+:destroy-on-close="true"
+@cancel="!saving && closeModal()">
+      <a-alert v-if="mutationError" type="error" show-icon :message="mutationError" />
+            <div class="form">
         <div class="form__item">
-          <div class="form__label">{{ $t('label.action') }}</div>
-          <a-button ref="submit" :disabled="saving || !('createCondition' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addConditionToPolicy">
-            <template #icon><plus-outlined /></template>
-            {{ $t('label.autoscale.condition.add') }}
-          </a-button>
+          <div class="form__label">
+            <tooltip-label :title="$t('label.name')" :tooltip="(createAutoScalePolicyApiParams.name || {}).description"/>
+          </div>
+          <a-input v-model:value="policyDraft.name" :disabled="saving"></a-input>
+        </div>
+        <div class="form__item">
+          <div class="form__label">
+            <span class="form__required">*</span>
+            <tooltip-label :title="$t('label.duration')" :tooltip="(createAutoScalePolicyApiParams.duration || {}).description"/>
+          </div>
+          <a-input v-model:value="policyDraft.duration" type="number" :disabled="saving"></a-input>
+        </div>
+        <div class="form__item">
+          <div class="form__label">
+            <span class="form__required">*</span>
+            <tooltip-label :title="$t('label.autoscale.cooldown.seconds')" :tooltip="(createAutoScalePolicyApiParams.quiettime || {}).description"/>
+          </div>
+          <a-input v-model:value="policyDraft.quiettime" type="number" :disabled="saving"></a-input>
         </div>
       </div>
-    </div>
-
+      <template #footer><div class="action-button"><a-button :disabled="saving" @click="!saving && closeModal()">{{ $t('label.cancel') }}</a-button><a-button type="primary" :loading="saving" @click="updateAutoScalePolicy(null, null)">{{ $t('label.ok') }}</a-button></div></template>
+    </a-modal>
     <a-modal
 class="mold-dialog autoscale-dialog"
 centered
@@ -206,7 +205,7 @@ centered
       :afterClose="closeModal"
       :maskClosable="false"
       :closable="true"
-      @cancel="updateConditionModalVisible = false">
+      @cancel="!saving && closeModal()">
       <a-alert v-if="affectedConditionGroups.length > 1" type="warning" show-icon :message="$t('message.autoscale.edit.shared', { groups: affectedConditionGroups.join(', ') })" />
       <span v-show="updateConditionModalLoading" class="modal-loading">
         <loading-outlined />
@@ -243,8 +242,8 @@ centered
       </div>
       <template #footer>
         <div :span="24" class="action-button">
-          <a-button @click="() => updateConditionModalVisible = false">{{ $t('label.cancel') }}</a-button>
-          <a-button type="primary" @click="handleSubmitUpdateConditionForm">{{ $t('label.ok') }}</a-button>
+          <a-button @click="!saving && closeModal()">{{ $t('label.cancel') }}</a-button>
+          <a-button type="primary" :loading="saving" @click="handleSubmitUpdateConditionForm">{{ $t('label.ok') }}</a-button>
         </div>
       </template>
     </a-modal>
@@ -258,7 +257,7 @@ centered
       :afterClose="closeModal"
       :maskClosable="false"
       :closable="true"
-      @cancel="addPolicyModalVisible = false">
+      @cancel="!saving && closeModal()">
 
       <div class="update-condition">
         <div class="update-condition__item">
@@ -329,8 +328,8 @@ centered
 
       <template #footer>
         <div :span="24" class="action-button">
-        <a-button :loading="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
-        <a-button :loading="loading" ref="submit" type="primary" @click="addNewScalePolicyToGroup">{{ $t('label.ok') }}</a-button>
+        <a-button :disabled="saving" @click="!saving && closeModal()">{{ $t('label.cancel') }}</a-button>
+        <a-button :loading="saving" ref="submit" type="primary" @click="addNewScalePolicyToGroup">{{ $t('label.ok') }}</a-button>
       </div>
       </template>
     </a-modal>
@@ -347,7 +346,6 @@ import { runAutoScaleMutation, autoScaleOwnerParams, autoScaleAffectedGroups, au
 
 import { getAPI, postAPI } from '@/api'
 import Status from '@/components/widgets/Status'
-import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 
 export default {
@@ -355,7 +353,6 @@ export default {
   name: 'conditionsTab',
   components: {
     Status,
-    TooltipButton,
     TooltipLabel
   },
   props: {
@@ -376,6 +373,10 @@ export default {
       retainedResources: '',
       policies: [],
       isEditable: false,
+      policyDraft: {},
+      editPolicyModalVisible: false,
+      addConditionModalVisible: false,
+      selectedConditionKeys: [],
       policy: {
         duration: null,
         quiettime: null,
@@ -416,13 +417,13 @@ export default {
         {
           title: this.$t('label.threshold'),
           dataIndex: 'threshold'
-        },
-        {
-          title: this.$t('label.actions'),
-          key: 'actions'
         }
       ]
     }
+  },
+  computed: {
+    selectedTableCondition () { return (this.policy.conditions || []).find(item => item.id === this.selectedConditionKeys[0]) },
+    conditionSelection () { return { type: 'radio', selectedRowKeys: this.selectedConditionKeys, onChange: keys => { this.selectedConditionKeys = keys } } }
   },
   beforeCreate () {
     this.createConditionApi = this.$store.getters.apis.createCondition || {}
@@ -452,6 +453,17 @@ export default {
   },
   inject: ['parentFetchData'],
   methods: {
+    openPolicyModal () {
+      this.policyDraft = { name: this.policy.name, duration: this.policy.duration, quiettime: this.policy.quiettime }
+      this.isEditable = true
+      this.editPolicyModalVisible = true
+      this.mutationError = ''
+    },
+    openAddConditionModal () {
+      this.newCondition = { counterid: null, relationaloperator: 'LT', threshold: null }
+      this.addConditionModalVisible = true
+      this.mutationError = ''
+    },
     counterLabel (name) { return autoScaleCounterLabel(name, this.$t) },
     async fetchInitData () {
       this.loading = true
@@ -503,6 +515,7 @@ export default {
       })
     },
     switchPolicy () {
+      this.selectedConditionKeys = []
       this.policy = this.policies.find(policy => policy.id === this.selectedPolicyId) || { conditions: [] }
       this.isEditable = false
       if (this.selectedPolicyId) {
@@ -635,8 +648,9 @@ export default {
       }))
     },
     updateAutoScalePolicy (conditionIdToAdd, conditionIdToRemove) {
-      if (!conditionIdToAdd && !conditionIdToRemove && !this.isEditable) { this.isEditable = true; return }
-      if (!validAutoScalePolicyTiming(this.policy, this.resource.interval)) {
+      if (!conditionIdToAdd && !conditionIdToRemove && !this.isEditable) { this.openPolicyModal(); return }
+      const settings = this.editPolicyModalVisible ? this.policyDraft : this.policy
+      if (!validAutoScalePolicyTiming(settings, this.resource.interval)) {
         this.$message.error(this.$t('message.autoscale.policy.time.invalid', { interval: this.resource.interval || 1 }))
         return
       }
@@ -645,13 +659,15 @@ export default {
       if (!ids.length) { this.$message.error(this.$t('message.autoscale.policy.last.condition')); return }
       return this.saveEdit(() => this.mutate('updateAutoScalePolicy', {
         id: this.policy.id,
-        name: this.policy.name,
-        duration: this.policy.duration,
-        quiettime: this.policy.quiettime,
+        name: settings.name,
+        duration: settings.duration,
+        quiettime: settings.quiettime,
         conditionids: ids.join(',')
       }))
     },
     closeModal () {
+      this.addConditionModalVisible = false
+      this.editPolicyModalVisible = false
       this.updateConditionModalVisible = false
       this.updateConditionModalLoading = false
       this.addPolicyModalVisible = false

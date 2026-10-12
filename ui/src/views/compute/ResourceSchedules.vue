@@ -16,10 +16,18 @@
 // under the License.
 
 <template>
-  <div>
+  <div :class="{ 'autoscale-tab': resourceType === 'AutoScaleVmGroup' }">
+    <a-space v-if="resourceType === 'AutoScaleVmGroup'" wrap class="autoscale-toolbar">
+      <a-button type="primary" @click="createSchedule" :disabled="isSubmitted || !('createResourceSchedule' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.schedule.add') }}</a-button>
+      <a-button @click="updateSchedule(selectedSchedule)" :disabled="isSubmitted || !selectedSchedule || !('updateResourceSchedule' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.schedule.edit') }}</a-button>
+      <a-popconfirm :title="$t('label.delete') + '?'" @confirm="removeSchedule(selectedSchedule)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button :disabled="isSubmitted || !selectedSchedule || !('deleteResourceSchedule' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.schedule.remove') }}</a-button></a-popconfirm>
+      <a-button @click="fetchData" :disabled="isSubmitted" :loading="tabLoading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+    </a-space>
     <a-alert v-if="resourceType === 'AutoScaleVmGroup'" type="info" show-icon :message="$t('message.autoscale.schedule.contract')" style="margin-bottom: 10px" />
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
     <a-button
+      v-if="resourceType !== 'AutoScaleVmGroup'"
       type="dashed"
       style="width: 100%; margin-bottom: 10px"
       @click="showAddModal"
@@ -35,6 +43,8 @@
       :columnKeys="columnKeys"
       :selectedColumns="selectedColumnKeys"
       ref="listview"
+      :explicitlyAllowRowSelection="resourceType === 'AutoScaleVmGroup'"
+      @selection-change="keys => { selectedScheduleKeys = keys }"
       @update-selected-columns="updateSelectedColumns"
       @refresh="this.fetchData"
     >
@@ -84,6 +94,9 @@
   </div>
 
   <a-modal
+    :class="resourceType === 'AutoScaleVmGroup' ? 'mold-dialog autoscale-dialog' : undefined"
+    :centered="resourceType === 'AutoScaleVmGroup'"
+    :width="resourceType === 'AutoScaleVmGroup' ? 760 : 520"
     :visible="showModal"
     :title="$t('label.schedule')"
     :maskClosable="false"
@@ -313,6 +326,7 @@
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { reactive, ref, toRaw } from 'vue'
@@ -364,6 +378,7 @@ export default {
       selectedColumnKeys: [],
       columns: [],
       schedules: [],
+      selectedScheduleKeys: [],
       timeZoneMap: [],
       resourceActionsMap: {
         VirtualMachine: [
@@ -407,6 +422,7 @@ export default {
         return a - b
       }).map(String)
     },
+    selectedSchedule () { return this.selectedScheduleKeys.length === 1 ? this.schedules.find(item => item.id === this.selectedScheduleKeys[0]) : null },
     actions () {
       return this.resourceActionsMap[this.resourceType] || []
     }
@@ -415,8 +431,7 @@ export default {
     this.selectedColumnKeys = this.columnKeys
     if (this.resourceType === 'AutoScaleVmGroup') {
       this.columnKeys = ['enabled', 'description', 'schedule', 'minmembers',
-        'maxmembers', 'timezone', 'startdate', 'enddate', 'created',
-        'scheduleActions']
+        'maxmembers', 'timezone', 'startdate', 'enddate', 'created']
       this.selectedColumnKeys = [...this.columnKeys]
     }
     this.updateColumns()
@@ -601,6 +616,8 @@ export default {
       this.tabLoading = !listRequest.loaded
       return getAPI('listResourceSchedule', params).then(json => {
         if (!this.isListRequestCurrent('fetchSchedules', listRequest)) return
+        this.selectedScheduleKeys = []
+        if (this.resourceType === 'AutoScaleVmGroup' && this.$refs.listview) this.$refs.listview.setSelection([])
         this.schedules = []
         this.totalCount = json?.listresourcescheduleresponse?.count || 0
         const rawSchedules = json?.listresourcescheduleresponse?.resourceschedule || []

@@ -17,78 +17,36 @@
 
 <template>
   <div class="autoscale-tab">
+    <a-space wrap class="autoscale-toolbar">
+      <a-button type="primary" @click="openEditRuleModal(currentRule)" :disabled="loading || !currentRule || !('updateLoadBalancerRule' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.edit.rule') }}</a-button>
+      <a-button @click="openTagsModal(currentRule.id)" :disabled="loading || !currentRule || !('createTags' in $store.getters.apis)"><template #icon><tag-outlined /></template>{{ $t('label.edit.tags') }}</a-button>
+      <a-button @click="openStickinessModal(currentRule.id)" :disabled="loading || !currentRule || !('createLBStickinessPolicy' in $store.getters.apis)"><template #icon><link-outlined /></template>{{ $t('label.action.configure.stickiness') }}</a-button>
+      <a-button disabled><template #icon><delete-outlined /></template>{{ $t('label.autoscale.rule.remove') }}</a-button>
+      <a-popconfirm :title="$t('label.remove.vm.from.lb') + '?'" @confirm="handleDeleteInstanceFromRule(selectedInstance.instance, currentRule, selectedInstance.ip)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button :disabled="loading || !selectedInstance || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><disconnect-outlined /></template>{{ $t('label.remove.vm.from.lb') }}</a-button></a-popconfirm>
+      <a-button @click="fetchData" :disabled="loading" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+    </a-space>
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
-    <div>
-      <a-alert type="info" v-if="resource.state !== 'DISABLED'">
-        <template #message>
-        <div
-          v-html="$t('message.autoscale.loadbalancer.update')" />
-        </template>
-      </a-alert>
-    </div>
+    <a-alert v-if="resource.state !== 'DISABLED' || resource.operationinprogress" type="info" show-icon :message="$t(resource.operationinprogress ? 'message.autoscale.operation.wait' : 'message.autoscale.loadbalancer.update')" />
+    <a-card size="small" v-if="currentRule">
+      <a-descriptions size="small" :column="{ xs: 1, sm: 2 }">
+        <a-descriptions-item v-for="key in ['name', 'publicport', 'privateport', 'algorithm', 'protocol', 'state']" :key="key" :label="$t('label.' + key)">{{ key === 'algorithm' ? returnAlgorithmName(currentRule[key]) : key === 'protocol' ? getCapitalise(currentRule[key] || 'tcp') : currentRule[key] }}</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.action.configure.stickiness')">{{ returnStickinessLabel(currentRule.id) }}</a-descriptions-item>
+      </a-descriptions>
+    </a-card>
+    <a-alert type="info" show-icon :message="$t('message.autoscale.lb.delete.bound')" />
     <a-table
-      size="small"
-      class="list-view"
-      :loading="loading"
-      :columns="columns"
-      :dataSource="lbRules"
-      :pagination="false"
-      :rowKey="record => record.id"
-      :expandRowByClick="true">
+size="small"
+:loading="loading"
+:columns="instanceColumns"
+:data-source="ruleInstances"
+:pagination="false"
+row-key="key"
+:row-selection="instanceSelection"
+:scroll="{ x: 480 }">
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'algorithm'">
-        {{ returnAlgorithmName(record.algorithm) }}
-        </template>
-        <template v-if="column.key === 'protocol'">
-          {{ getCapitalise(record.protocol) }}
-        </template>
-        <template v-if="column.key === 'stickiness'">
-          <a-button @click="() => openStickinessModal(record.id)">
-            {{ returnStickinessLabel(record.id) }}
-          </a-button>
-        </template>
-        <template v-if="column.key === 'actions'">
-          <div class="actions">
-            <tooltip-button :tooltip="$t('label.edit')" icon="edit-outlined" @onClick="() => openEditRuleModal(record)" />
-            <tooltip-button :tooltip="$t('label.edit.tags')" :disabled="!('updateLoadBalancerRule' in $store.getters.apis)" icon="tag-outlined" @onClick="() => openTagsModal(record.id)" />
-            <a-popconfirm
-              :title="$t('label.delete') + '?'"
-              @confirm="handleDeleteRule(record)"
-              :okText="$t('label.yes')"
-              :cancelText="$t('label.no')"
-            >
-              <tooltip-button
-                :tooltip="$t('label.delete')"
-                :disabled="!('deleteLoadBalancerRule' in $store.getters.apis) || record.autoscalevmgroup"
-                type="primary"
-                :danger="true"
-                icon="delete-outlined" />
-            </a-popconfirm>
-          </div>
-        </template>
-      </template>
-      <template #expandedRowRender="{ record }">
-        <div class="rule-instance-list">
-          <div v-for="instance in record.ruleInstances" :key="instance.loadbalancerruleinstance.id">
-            <div v-for="ip in instance.lbvmipaddresses" :key="ip" class="rule-instance-list__item">
-              <div>
-                <status :text="instance.loadbalancerruleinstance.state" />
-                <desktop-outlined />
-                <router-link :to="{ path: '/vm/' + instance.loadbalancerruleinstance.id }">
-                  {{ instance.loadbalancerruleinstance.displayname }}
-                </router-link>
-              </div>
-              <div>{{ ip }}</div>
-              <tooltip-button
-                :disabled='record.autoscalevmgroup && (record.autoscalevmgroup.state !== "DISABLED" || record.autoscalevmgroup.operationinprogress)'
-                :tooltip="$t('label.remove.vm.from.lb')"
-                type="primary"
-                :danger="true"
-                icon="delete-outlined"
-                @onClick="() => handleDeleteInstanceFromRule(instance, record, ip)" />
-            </div>
-          </div>
-        </div>
+        <router-link v-if="column.key === 'name'" :to="'/vm/' + record.instance.loadbalancerruleinstance.id">{{ record.instance.loadbalancerruleinstance.displayname || record.instance.loadbalancerruleinstance.name }}</router-link>
+        <status v-else-if="column.key === 'state'" :text="record.instance.loadbalancerruleinstance.state" />
       </template>
     </a-table>
     <a-modal
@@ -98,7 +56,6 @@ centered
       v-if="tagsModalVisible"
       :title="$t('label.edit.tags')"
       :visible="tagsModalVisible"
-      :footer="null"
       :closable="true"
       :afterClose="closeModal"
       :maskClosable="false"
@@ -142,7 +99,7 @@ centered
         </div>
       </div>
 
-      <a-button class="add-tags-done" @click="tagsModalVisible = false" type="primary">{{ $t('label.done') }}</a-button>
+      <template #footer><a-button @click="tagsModalVisible = false">{{ $t('label.done') }}</a-button></template>
     </a-modal>
 
     <a-modal
@@ -318,14 +275,12 @@ import { ref, reactive, toRaw, nextTick } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import { mixinForm } from '@/utils/mixin'
 import Status from '@/components/widgets/Status'
-import TooltipButton from '@/components/widgets/TooltipButton'
 
 export default {
   name: 'LoadBalancing',
   mixins: [listRefreshMixin(['fetchLBRules']), mixinForm],
   components: {
-    Status,
-    TooltipButton
+    Status
   },
   props: {
     resource: {
@@ -338,6 +293,7 @@ export default {
     return {
       loading: true,
       lbRules: [],
+      selectedInstanceKeys: [],
       tagsModalVisible: false,
       tagsModalLoading: false,
       tags: [],
@@ -435,6 +391,13 @@ export default {
       searchQuery: null
     }
   },
+  computed: {
+    currentRule () { return this.lbRules[0] },
+    ruleInstances () { return (this.currentRule?.ruleInstances || []).flatMap(instance => (instance.lbvmipaddresses || []).map(ip => ({ key: instance.loadbalancerruleinstance.id + '/' + ip, ip, instance }))) },
+    selectedInstance () { return this.ruleInstances.find(item => item.key === this.selectedInstanceKeys[0]) },
+    instanceColumns () { return ['name', 'state', 'ip'].map(key => ({ key, dataIndex: key, title: this.$t(key === 'ip' ? 'label.ipaddress' : 'label.' + key) })) },
+    instanceSelection () { return { type: 'radio', selectedRowKeys: this.selectedInstanceKeys, onChange: keys => { this.selectedInstanceKeys = keys } } }
+  },
   created () {
     this.initForm()
     this.fetchData()
@@ -457,6 +420,7 @@ export default {
       this.rules = reactive({})
     },
     fetchData () {
+      this.selectedInstanceKeys = []
       this.fetchListTiers()
       this.fetchLBRules()
     },
@@ -560,11 +524,11 @@ export default {
     returnAlgorithmName (name) {
       switch (name) {
         case 'leastconn':
-          return 'Least connections'
+          return this.$t('label.lb.algorithm.leastconn')
         case 'roundrobin' :
-          return 'Round-robin'
+          return this.$t('label.lb.algorithm.roundrobin')
         case 'source':
-          return 'Source'
+          return this.$t('label.lb.algorithm.source')
         default :
           return ''
       }
@@ -574,7 +538,7 @@ export default {
       if (match.length > 0 && match[0].stickinesspolicy.length > 0) {
         return match[0].stickinesspolicy[0].methodname
       }
-      return 'Configure'
+      return this.$t('label.none')
     },
     getCapitalise (val) {
       if (!val) {
@@ -609,7 +573,7 @@ export default {
       if (this.tagsModalLoading) return
       this.tagsModalLoading = true
 
-      e.preventDefault()
+      if (e) e.preventDefault()
       this.formRef.value.validate().then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
@@ -778,11 +742,12 @@ export default {
     handleSubmitStickinessForm (e) {
       if (this.stickinessModalLoading) return
       this.stickinessModalLoading = true
-      e.preventDefault()
+      if (e) e.preventDefault()
       this.formRef.value.validate().then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
         if (values.methodname === 'none') {
+          if (!this.selectedStickinessPolicy) { this.closeModal(); return }
           this.handleDeleteStickinessPolicy()
           return
         }
@@ -898,6 +863,7 @@ export default {
       }).catch(error => {
         this.$notifyError(error)
         this.loading = false
+        this.editRuleModalLoading = false
       })
     },
     closeModal () {

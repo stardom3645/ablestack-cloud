@@ -8671,5 +8671,17 @@
   "label.autoscale.condition.add": "조건 추가",
   "label.autoscale.creation.summary": "생성 전 그룹 설정 확인",
   "message.autoscale.name.ascii": "그룹 이름은 게스트 호스트 이름에 사용되므로 영문·숫자·하이픈으로 입력하세요. 정책 이름과 설명은 한글을 사용할 수 있습니다.",
-  "label.autoscale.owner": "소유자"
+  "label.autoscale.owner": "소유자",
+  "label.autoscale.policy.edit": "정책 편집",
+  "label.autoscale.policy.remove": "정책 삭제",
+  "label.autoscale.policy.settings": "정책 설정",
+  "label.autoscale.condition.edit": "조건 편집",
+  "label.autoscale.condition.remove": "조건 삭제",
+  "label.autoscale.profile.edit": "프로필 편집",
+  "label.autoscale.userdata.edit": "사용자 데이터 변경",
+  "label.autoscale.param.remove": "매개변수 삭제",
+  "label.autoscale.rule.remove": "규칙 삭제",
+  "label.autoscale.schedule.edit": "스케줄 편집",
+  "label.autoscale.schedule.remove": "스케줄 삭제",
+  "message.autoscale.lb.delete.bound": "오토스케일 그룹에 연결된 부하 분산 규칙은 삭제할 수 없습니다."
 }

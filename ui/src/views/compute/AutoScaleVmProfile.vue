@@ -17,6 +17,14 @@
 
 <template>
   <div class="autoscale-tab">
+    <a-space wrap class="autoscale-toolbar">
+      <a-button type="primary" @click="editProfileModalVisible = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.profile.edit') }}</a-button>
+      <a-button @click="showUpdateUserDataForm = true" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><solution-outlined /></template>{{ $t('label.autoscale.userdata.edit') }}</a-button>
+      <a-button @click="openParamModal" :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><plus-outlined /></template>{{ $t('label.add.param') }}</a-button>
+      <a-popconfirm :title="$t('label.delete') + '?'" @confirm="deleteParam(selectedParam.name)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button :disabled="saving || loading || !('updateAutoScaleVmProfile' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress || !selectedParam"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.param.remove') }}</a-button></a-popconfirm>
+      <a-button @click="fetchData" :disabled="saving" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+    </a-space>
     <div>
       <a-alert type="info" v-if="(resource.state !== 'DISABLED' || resource.operationinprogress)">
         <template #message>
@@ -117,20 +125,6 @@
           </a-textarea>
         </div>
       </div>
-      <div class="form">
-        <div class="form__item">
-          <a-button ref="submit" :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="editProfileModalVisible = true">
-            <template #icon><edit-outlined /></template>
-            {{ $t('label.edit.autoscale.vmprofile') }}
-          </a-button>
-        </div>
-        <div class="form__item">
-          <a-button ref="submit" :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="showUpdateUserDataForm = true">
-            <template #icon><solution-outlined /></template>
-            {{ $t('label.reset.user.data.on.autoscale.vm.group') }}
-          </a-button>
-        </div>
-      </div>
 
       <a-divider/>
       <div class="title">
@@ -138,7 +132,33 @@
           <tooltip-label :title="$t('label.params')" :tooltip="(createAutoScaleVmProfileApiParams.otherdeployparams || {}).description"/>
         </div>
       </div>
-      <div class="form" v-ctrl-enter="addParam">
+
+    </div>
+
+    <a-divider/>
+    <a-table
+      size="small"
+      style="overflow-y: auto"
+      :loading="loading"
+      :columns="columns"
+      :dataSource="allParams"
+      :pagination="false"
+      :rowKey="record => record.name"
+      :row-selection="paramSelection">
+    </a-table>
+
+    <a-modal
+class="mold-dialog autoscale-dialog"
+centered
+:width="760"
+:title="$t('label.add.param')"
+:visible="addParamModalVisible"
+:mask-closable="false"
+:closable="!saving"
+:destroy-on-close="true"
+@cancel="closeModal">
+      <a-alert v-if="mutationError" type="error" show-icon :message="mutationError" />
+            <div class="form" v-ctrl-enter="addParam">
         <div class="form__item" ref="newParamName">
           <div class="form__label"><span class="form__required">*</span>{{ $t('label.param.name') }}</div>
           <a-select
@@ -165,43 +185,9 @@
           <div class="form__label">{{ $t('label.disksize') }} (GiB)</div>
           <a-input v-model:value="newParam.disksize" type="number" :placeholder="$t('message.autoscale.profile.data.size')" />
         </div>
-        <div class="form__item">
-          <div class="form__label">{{ $t('label.action') }}</div>
-          <a-button ref="submit" :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)" type="primary" @click="addParam">
-            <template #icon><plus-outlined /></template>
-            {{ $t('label.add.param') }}
-          </a-button>
-        </div>
       </div>
-    </div>
-
-    <a-divider/>
-    <a-table
-      size="small"
-      style="overflow-y: auto"
-      :loading="loading"
-      :columns="columns"
-      :dataSource="allParams"
-      :pagination="false"
-      :rowKey="record => record.name">
-      <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'actions'">
-        <a-popconfirm
-          :title="$t('label.delete') + '?'"
-          @confirm="deleteParam(record.name)"
-          :okText="$t('label.yes')"
-          :cancelText="$t('label.no')"
-        >
-          <tooltip-button
-            :tooltip="$t('label.delete')"
-            :disabled="saving || !('updateAutoScaleVmProfile' in $store.getters.apis) || (resource.state !== 'DISABLED' || resource.operationinprogress)"
-            type="primary"
-            :danger="true"
-            icon="delete-outlined" />
-        </a-popconfirm>
-        </template>
-      </template>
-    </a-table>
+      <template #footer><div class="action-button"><a-button :disabled="saving" @click="closeModal">{{ $t('label.cancel') }}</a-button><a-button type="primary" :loading="saving" @click="addParam">{{ $t('label.ok') }}</a-button></div></template>
+    </a-modal>
 
     <a-modal
 class="mold-dialog autoscale-dialog"
@@ -327,7 +313,6 @@ import { isAdminOrDomainAdmin } from '@/role'
 import { autoScaleOfferingEligible, autoScaleInteger } from '@/utils/autoscaleValidation'
 import { runAutoScaleMutation, autoScaleOwnerParams, autoScaleAffectedGroups, autoScaleMutationDescription } from '@/utils/autoScaleEditing'
 import Status from '@/components/widgets/Status'
-import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import ResetUserData from '@views/compute/ResetUserData'
 
@@ -336,7 +321,6 @@ export default {
   components: {
     ResetUserData,
     Status,
-    TooltipButton,
     TooltipLabel
   },
   props: {
@@ -370,6 +354,8 @@ export default {
       templatesList: [],
       serviceOfferingsList: [],
       allParams: [],
+      selectedParamKeys: [],
+      addParamModalVisible: false,
       newParam: {
         name: null,
         value: null,
@@ -385,13 +371,13 @@ export default {
         {
           title: this.$t('label.param.value'),
           dataIndex: 'value'
-        },
-        {
-          title: this.$t('label.actions'),
-          key: 'actions'
         }
       ]
     }
+  },
+  computed: {
+    selectedParam () { return this.allParams.find(item => item.name === this.selectedParamKeys[0]) },
+    paramSelection () { return { type: 'radio', selectedRowKeys: this.selectedParamKeys, onChange: keys => { this.selectedParamKeys = keys } } }
   },
   beforeCreate () {
     this.createAutoScaleVmProfileApi = this.$store.getters.apis.createAutoScaleVmProfile || {}
@@ -416,6 +402,11 @@ export default {
   },
   inject: ['parentFetchData'],
   methods: {
+    openParamModal () {
+      this.newParam = { name: null, value: null, disksize: null }
+      this.mutationError = ''
+      this.addParamModalVisible = true
+    },
     fetchInitData () {
       this.counterParams = ['snmpcommunity', 'snmpport']
       this.deployParams = ['overridediskofferingid', 'rootdisksize', 'diskofferingid', 'disksize',
@@ -516,6 +507,7 @@ export default {
       this.parentFetchData()
     },
     finalizeParams (counterparam, otherdeployparams) {
+      this.selectedParamKeys = []
       this.allParams = []
       if (counterparam.snmpcommunity) {
         this.allParams.push({ name: 'snmpcommunity', value: counterparam.snmpcommunity })
@@ -620,6 +612,7 @@ export default {
         await runAutoScaleMutation(postAPI, getAPI, 'updateAutoScaleVmProfile', params)
         await this.fetchData()
         this.editProfileModalVisible = false
+        this.addParamModalVisible = false
         this.$message.success(this.$t('message.autoscale.edit.saved'))
         return true
       } catch (error) {
@@ -657,6 +650,7 @@ export default {
     closeModal () {
       if (this.saving) return
       this.editProfileModalVisible = false
+      this.addParamModalVisible = false
       this.fetchData()
     }
   }

@@ -17,7 +17,8 @@
 
 <template>
   <section class="autoscale-operations">
-    <div class="operations-toolbar"><p>{{ $t('message.autoscale.operational.source') }}</p><a-button @click="fetchData" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.autoscale.operational.refresh') }}</a-button></div>
+    <a-space wrap class="autoscale-toolbar"><a-button @click="fetchData" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button></a-space>
+    <p>{{ $t('message.autoscale.operational.source') }}</p>
     <div v-for="(part, key) in parts" :key="key" class="source-status" role="status">
       <strong>{{ $t('label.autoscale.source.' + key) }}</strong> · {{ time(part.time) }}
       <span v-if="part.denied"> · {{ $t('message.autoscale.source.denied') }}</span>

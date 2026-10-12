@@ -8706,5 +8706,17 @@
   "label.autoscale.condition.add": "Add condition",
   "label.autoscale.creation.summary": "Review group settings",
   "message.autoscale.name.ascii": "The group name is used in guest hostnames. Use ASCII letters, digits and hyphens; policy names and descriptions may use Unicode.",
-  "label.autoscale.owner": "Owner"
+  "label.autoscale.owner": "Owner",
+  "label.autoscale.policy.edit": "Edit policy",
+  "label.autoscale.policy.remove": "Remove policy",
+  "label.autoscale.policy.settings": "Policy settings",
+  "label.autoscale.condition.edit": "Edit condition",
+  "label.autoscale.condition.remove": "Remove condition",
+  "label.autoscale.profile.edit": "Edit profile",
+  "label.autoscale.userdata.edit": "Change UserData",
+  "label.autoscale.param.remove": "Remove parameter",
+  "label.autoscale.rule.remove": "Delete rule",
+  "label.autoscale.schedule.edit": "Edit schedule",
+  "label.autoscale.schedule.remove": "Delete schedule",
+  "message.autoscale.lb.delete.bound": "A load balancer rule attached to an AutoScale group cannot be deleted."
 }
