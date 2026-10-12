@@ -203,3 +203,10 @@ body .autoscale-schedule-picker, body .autoscale-confirm {
   .ant-popover-message-title { color: var(--ui-text-primary); white-space: normal; overflow-wrap: anywhere; }
 }
 .autoscale-dialog .ant-table-wrapper { max-width: 100%; overflow-x: auto; }
+
+// Keep existing links in AutoScale tables readable, including library selections.
+body .autoscale-tab .ant-table-cell a, body .autoscale-dialog .ant-table-cell a {
+  color: var(--ui-link) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
