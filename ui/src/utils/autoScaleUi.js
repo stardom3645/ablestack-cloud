@@ -15,13 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { autoScaleOwnerParams } from '@/utils/autoScaleEditing'
+
 // Preserve a user's saved visibility choices when former single-value columns
 // are consolidated. A selection consisting only of removed columns stays useful.
 export function autoScaleVisibleColumns (columns) {
   const oldDefault = ['name', 'state', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'publicip', 'publicport', 'privateport', 'associatednetworkname', 'account'].every(key => columns.includes(key))
   if (oldDefault && columns.every(key => ['name', 'state', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'publicip', 'publicport', 'privateport', 'associatednetworkname', 'account', 'project'].includes(key))) return ['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', ...(columns.includes('project') ? ['project'] : [])]
-  const available = ['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'project', 'id', 'domain', 'associatednetworkid', 'lbruleid', 'lbprovider', 'publicipid', 'publicip', 'publicport', 'privateport', 'vmprofileid', 'interval', 'created']
-  return [...new Set(columns.map(key => ['minmembers', 'maxmembers'].includes(key) ? 'availablevirtualmachinecount' : key).filter(key => available.includes(key)))]
+  const available = ['name', 'state', 'availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'project', 'domain', 'infrastructurenetworkname', 'lbprovider', 'interval', 'created', 'zonename']
+  return [...new Set(columns.map(key => ['minmembers', 'maxmembers'].includes(key) ? 'availablevirtualmachinecount' : ['publicip', 'publicport', 'privateport'].includes(key) ? 'associatednetworkname' : key).filter(key => available.includes(key)))]
 }
 
 // Exact-ID template listing evaluates the caller's personal account, even for
@@ -45,4 +47,19 @@ export async function autoScaleTemplateById (request, params) {
   const response = await request('listTemplates', { ...params, templatefilter: 'executable' })
   if (response.listtemplatesresponse?.template?.some(item => item.id === params.id)) return response
   return request('listTemplates', { ...params, templatefilter: 'sharedexecutable' })
+}
+
+// Read Zone names from the group's authorized network only when the optional
+// column is visible. Deduplicate each network/owner query within a page refresh.
+export async function autoScaleInfrastructureRows (request, rows, allowed = true) {
+  const lookups = new Map()
+  return Promise.all(rows.map(async row => {
+    if (!allowed) return { ...row, infrastructurestatus: 'DENIED' }
+    if (!row.associatednetworkid) return { ...row }
+    const params = { ...autoScaleOwnerParams(row), listall: true, id: row.associatednetworkid }
+    const key = JSON.stringify(params)
+    if (!lookups.has(key)) lookups.set(key, request('listNetworks', params).then(json => ({ network: json.listnetworksresponse?.network?.find(network => network.id === row.associatednetworkid) })).catch(() => ({ failed: true })))
+    const result = await lookups.get(key)
+    return { ...row, zonename: result.network?.zonename, zoneid: result.network?.zoneid, infrastructurestatus: result.failed ? 'FAILED' : result.network ? 'CURRENT' : 'UNAVAILABLE' }
+  }))
 }

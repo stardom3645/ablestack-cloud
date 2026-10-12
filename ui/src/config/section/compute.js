@@ -1158,7 +1158,7 @@ export default {
         }
         return fields
       },
-      optionalColumns: ['id', 'domain', 'associatednetworkid', 'lbruleid', 'lbprovider', 'publicipid', 'publicip', 'publicport', 'privateport', 'vmprofileid', 'interval', 'created'],
+      optionalColumns: ['domain', { field: 'infrastructurenetworkname', customTitle: 'networkname', infrastructurenetworkname: record => record.associatednetworkname || '—' }, 'lbprovider', 'interval', 'created', 'zonename'],
       details: ['name', 'id', 'account', 'domain', 'associatednetworkname', 'associatednetworkid', 'lbruleid', 'lbprovider', 'publicip', 'publicipid', 'publicport', 'privateport', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'interval', 'state', 'created'],
       related: [{
         name: 'vm',

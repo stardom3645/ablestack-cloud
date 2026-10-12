@@ -26,6 +26,11 @@
       <span v-else>{{ resource.associatednetworkname || '—' }}</span>
       <div>{{ resource.publicip || '—' }}:{{ resource.publicport ?? '—' }} → {{ resource.privateport ?? '—' }}</div>
     </template>
+    <template v-else-if="column === 'zonename'">
+      <span v-if="resource.infrastructurestatus === 'DENIED'">{{ $t('message.autoscale.source.denied') }}</span>
+      <span v-else-if="resource.infrastructurestatus === 'FAILED'">{{ $t('message.autoscale.source.failed') }}</span>
+      <span v-else>{{ resource.zonename || '—' }}</span>
+    </template>
     <template v-else-if="column === 'account'">
       <span>{{ resource.account || resource.project || '—' }}</span>
     </template>

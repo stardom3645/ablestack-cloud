@@ -24,7 +24,7 @@ import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import NetworkSelection from '@/views/compute/wizard/NetworkSelection.vue'
 import Cell from '@/views/compute/AutoScaleListCell.vue'
 import ResourceView from '@/components/view/ResourceView.vue'
-import { autoScaleVisibleColumns, autoScaleTemplateById } from '@/utils/autoScaleUi'
+import { autoScaleInfrastructureRows, autoScaleVisibleColumns, autoScaleTemplateById } from '@/utils/autoScaleUi'
 import { getAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn() }))
 const translate = (key, params) => params ? `${key}:${params.min}/${params.max}` : key
@@ -51,8 +51,8 @@ test('future evaluation status is visible without exposing a missing translation
   expect(wrapper.text()).toContain('label.autoscale.evaluation.unknown (FUTURE)'); wrapper.unmount()
 })
 test('saved columns consolidate old port/range choices without duplicates or lost owner scope', () => {
-  expect(autoScaleVisibleColumns(['name', 'minmembers', 'maxmembers', 'publicip', 'publicport', 'privateport', 'account', 'project'])).toEqual(['name', 'availablevirtualmachinecount', 'publicip', 'publicport', 'privateport', 'account', 'project'])
-  expect(autoScaleVisibleColumns(['state', 'publicport'])).toEqual(['state', 'publicport'])
+  expect(autoScaleVisibleColumns(['name', 'minmembers', 'maxmembers', 'publicip', 'publicport', 'privateport', 'account', 'project'])).toEqual(['name', 'availablevirtualmachinecount', 'associatednetworkname', 'account', 'project'])
+  expect(autoScaleVisibleColumns(['state', 'publicport'])).toEqual(['state', 'associatednetworkname'])
 })
 const source = file => fs.readFileSync(path.resolve(__dirname, '../../../../src', file), 'utf8')
 test('common DetailsTab cannot show autoscale cards or operation alerts on any resource', () => {
@@ -155,7 +155,32 @@ test('AutoScale network initialization uses flat API parameters without altering
 })
 
 test('optional infrastructure visibility survives route reload without automatically selecting defaults', () => {
-  const selected = ['name', 'id', 'domain', 'associatednetworkid', 'lbruleid', 'lbprovider', 'publicipid', 'publicip', 'publicport', 'privateport', 'vmprofileid', 'interval', 'created']
+  const selected = ['name', 'domain', 'infrastructurenetworkname', 'lbprovider', 'interval', 'created', 'zonename']
   expect(autoScaleVisibleColumns(selected)).toEqual(selected)
-  expect(autoScaleVisibleColumns(['name', 'id', 'id', 'unsupported'])).toEqual(['name', 'id'])
+  expect(autoScaleVisibleColumns(['name', 'zonename', 'zonename', 'unsupported'])).toEqual(['name', 'zonename'])
+})
+
+test('Zone enrichment queries each authorized project network once per page and keeps rows and counts', async () => {
+  const request = jest.fn().mockResolvedValue({ listnetworksresponse: { network: [{ id: 'network', zoneid: 'zone', zonename: '한글 Zone' }] } })
+  const rows = [{ id: 'one', associatednetworkid: 'network', projectid: 'project', availablevirtualmachinecount: 0 }, { id: 'two', associatednetworkid: 'network', projectid: 'project' }]
+  const result = await autoScaleInfrastructureRows(request, rows)
+  expect(request).toHaveBeenCalledTimes(1)
+  expect(request).toHaveBeenCalledWith('listNetworks', { projectid: 'project', listall: true, id: 'network' })
+  expect(result.map(row => row.zonename)).toEqual(['한글 Zone', '한글 Zone'])
+  expect(result[0].availablevirtualmachinecount).toBe(0)
+  expect(rows[0].zonename).toBeUndefined()
+})
+test('Zone enrichment failure/denial is explicit, preserves group rows and never guesses a Zone', async () => {
+  const request = jest.fn().mockRejectedValue(new Error('offline'))
+  const rows = [{ id: 'group', associatednetworkid: 'network', account: 'owner', domainid: 'domain' }]
+  const failed = await autoScaleInfrastructureRows(request, rows)
+  expect(request).toHaveBeenCalledWith('listNetworks', { account: 'owner', domainid: 'domain', listall: true, id: 'network' })
+  expect(failed[0].infrastructurestatus).toBe('FAILED'); expect(failed[0].zonename).toBeUndefined()
+  request.mockClear()
+  expect((await autoScaleInfrastructureRows(request, rows, false))[0].infrastructurestatus).toBe('DENIED')
+  expect(request).not.toHaveBeenCalled()
+})
+test('an inaccessible network cannot contribute a name from another network response', async () => {
+  const request = jest.fn().mockResolvedValue({ listnetworksresponse: { network: [{ id: 'other', zonename: 'private' }] } })
+  expect((await autoScaleInfrastructureRows(request, [{ associatednetworkid: 'requested' }]))[0]).toMatchObject({ infrastructurestatus: 'UNAVAILABLE', zonename: undefined })
 })

@@ -54,7 +54,7 @@
       </div>
     </template>
     <template #bodyCell="{ column, text, record }">
-      <template v-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account'].includes(column.key)">
+      <template v-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'zonename'].includes(column.key)">
         <auto-scale-list-cell :resource="record" :column="column.key" />
       </template>
       <template v-else-if="['name', 'provider'].includes(column.key)">

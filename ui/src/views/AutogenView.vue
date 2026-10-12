@@ -878,7 +878,7 @@
 
 <script>
 import '@/style/components/view/autoscale.less'
-import { autoScaleVisibleColumns } from '@/utils/autoScaleUi'
+import { autoScaleInfrastructureRows, autoScaleVisibleColumns } from '@/utils/autoScaleUi'
 import { createListRefresh, listRowKey, canRefreshList } from '@/utils/listRefresh'
 import { ref, reactive, toRaw, h } from 'vue'
 import { Button } from 'ant-design-vue'
@@ -1629,7 +1629,7 @@ export default {
           })
           if (this.$route.name !== 'autoscalevmgroup' || defaultColumnKeys.some(column => (typeof column === 'object' ? column.field : column) === key)) this.selectedColumns.push(key)
         }
-        this.allColumns = [...this.columns]
+        this.allColumns = this.$route.name === 'autoscalevmgroup' ? [...this.columns] : this.columns
         if (this.$route.name === 'autoscalevmgroup') this.columns = this.allColumns.filter(column => this.selectedColumns.includes(column.dataIndex))
 
         if (!store.getters.metrics) {
@@ -1767,7 +1767,7 @@ export default {
       this.listRequestPending = true
       this.listRequestScope = scope
       const requestApi = this.apiName
-      const request = callAPI(requestApi, params).then(json => {
+      const request = callAPI(requestApi, params).then(async json => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         this.listLastUpdated = Date.now()
         this.listLoadedScope = scope
@@ -1806,7 +1806,12 @@ export default {
             return
           }
         }
-        this.items = json[responseName][objectName]
+        let responseItems = json[responseName][objectName]
+        if (this.$route.name === 'autoscalevmgroup' && !this.dataView && this.selectedColumns.includes('zonename')) {
+          responseItems = await autoScaleInfrastructureRows(getAPI, responseItems || [], 'listNetworks' in this.$store.getters.apis)
+          if (version !== this.listRequestVersion || scope !== this.listScope()) return
+        }
+        this.items = responseItems
         if (!this.items || this.items.length === 0) {
           this.items = []
         }
@@ -2657,6 +2662,8 @@ export default {
           this.selectedColumns.push(name)
         }
       }
+
+      if (this.$route.name === 'autoscalevmgroup' && name === 'zonename' && this.selectedColumns.includes('zonename')) this.fetchData()
 
       this.columns = this.allColumns.filter(x => this.selectedColumns.includes(x.dataIndex))
       const filterColumn = {
