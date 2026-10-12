@@ -27,11 +27,13 @@
             @finish="handleSubmit">
       <div v-if="template && template.userdataid">
         <a-typography-text>
-            The template "{{ $t(this.template.name) }}" is linked to Userdata "{{ $t(this.template.userdataname) }}" with override policy "{{ $t(this.template.userdatapolicy) }}"
+            <template v-if="isAutoScaleProfile">{{ $t('message.autoscale.userdata.template', { template: template.name, userdata: template.userdataname, policy: template.userdatapolicy }) }}</template>
+            <template v-else>The template "{{ $t(this.template.name) }}" is linked to Userdata "{{ $t(this.template.userdataname) }}" with override policy "{{ $t(this.template.userdatapolicy) }}"</template>
         </a-typography-text><br/><br/>
         <div v-if="templateUserDataParams.length > 0 && !doUserdataOverride">
           <a-typography-text v-if="this.template && this.template.userdataid && templateUserDataParams.length > 0">
-              Enter the values for the variables in userdata
+              <template v-if="isAutoScaleProfile">{{ $t('message.autoscale.userdata.variables') }}</template>
+              <template v-else>Enter the values for the variables in userdata</template>
           </a-typography-text>
           <a-input-group>
             <a-table
@@ -104,7 +106,7 @@
                 <div v-else>
                   <a-form-item name="userdata" ref="userdata" >
                     <a-textarea
-                      placeholder="Userdata"
+                      :placeholder="isAutoScaleProfile ? $t('label.user.data') : 'Userdata'"
                       v-model:value="form.userdata">
                     </a-textarea>
                   </a-form-item>
@@ -125,7 +127,8 @@
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
-import { runAutoScaleMutation, autoScaleMutationDescription } from '@/utils/autoScaleEditing'
+import { runAutoScaleMutation, autoScaleMutationDescription, autoScaleOwnerParams } from '@/utils/autoScaleEditing'
+import { autoScaleTemplateById } from '@/utils/autoScaleUi'
 import { genericCompare } from '@/utils/sort.js'
 import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 
@@ -215,6 +218,9 @@ export default {
       userdata: {}
     }
   },
+  computed: {
+    isAutoScaleProfile () { return this.resource.resetUserDataApiName === 'updateAutoScaleVmProfile' }
+  },
   created () {
     this.initForm()
     this.fetchData()
@@ -242,6 +248,13 @@ export default {
       })
     },
     fetchTemplateData () {
+      if (this.isAutoScaleProfile) {
+        return autoScaleTemplateById(getAPI, { ...autoScaleOwnerParams(this.resource), id: this.resource.templateid, isready: true, zoneid: this.resource.zoneid }).then(json => {
+          this.template = json.listtemplatesresponse?.template?.[0] || {}
+          this.userdataDefaultOverridePolicy = this.template.userdatapolicy
+          if (this.template.userdataid && this.template.userdataid !== '0') this.updateTemplateLinkedUserData(this.template.userdataid)
+        }).catch(error => this.$notifyError(error))
+      }
       const params = {}
       params.id = this.resource.templateid
       params.isrecursive = true
@@ -271,7 +284,7 @@ export default {
           var that = this
           that.templateUserDataParams = []
           if (dataParams) {
-            dataParams.forEach(function (val, index) {
+            ;(dataParams || []).forEach(function (val, index) {
               that.templateUserDataParams.push({
                 id: index,
                 key: val
@@ -284,11 +297,11 @@ export default {
     loadUserdataTabList () {
       this.userdataTabList = [{
         key: 'userdataregistered',
-        tab: this.$t('label.user.data.registered')
+        tab: this.$t(this.isAutoScaleProfile ? 'label.autoscale.userdata.registered' : 'label.user.data.registered')
       },
       {
         key: 'userdatatext',
-        tab: this.$t('label.user.data.text')
+        tab: this.$t(this.isAutoScaleProfile ? 'label.autoscale.userdata.manual' : 'label.user.data.text')
       }]
     },
     onUserdataTabChange (key, type) {
@@ -313,7 +326,7 @@ export default {
             var dataParams = params.split(',')
           }
           var that = this
-          dataParams.forEach(function (val, index) {
+          ;(dataParams || []).forEach(function (val, index) {
             that.userDataParams.push({
               id: index,
               key: val
@@ -341,10 +354,10 @@ export default {
       this.loadingData = true
       const params = {
       }
-      if (values.userdata && values.userdata.length > 0) {
+      if ((!this.isAutoScaleProfile || this.userdataTabKey === 'userdatatext') && values.userdata && values.userdata.length > 0) {
         params.userdata = this.$toBase64AndURIEncoded(values.userdata)
       }
-      if (values.userdataid) {
+      if ((!this.isAutoScaleProfile || this.userdataTabKey === 'userdataregistered') && values.userdataid) {
         params.userdataid = values.userdataid
       }
       var idx = 0
@@ -354,7 +367,7 @@ export default {
           idx++
         }
       }
-      if (this.userDataValues) {
+      if ((!this.isAutoScaleProfile || params.userdataid) && this.userDataValues) {
         for (const [key, value] of Object.entries(this.userDataValues)) {
           params['userdatadetails[' + idx + '].' + `${key}`] = value
           idx++
@@ -368,7 +381,7 @@ export default {
       const update = resetUserDataApiName === 'updateAutoScaleVmProfile'
         ? runAutoScaleMutation(postAPI, getAPI, resetUserDataApiName, params)
         : postAPI(resetUserDataApiName, params)
-      update.then(json => {
+      return update.then(json => {
         this.$message.success({
           content: `${this.$t('label.action.user.data.reset')} - ${this.$t('label.success')}`,
           duration: 2

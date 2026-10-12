@@ -8685,5 +8685,9 @@
   "label.autoscale.schedule.remove": "스케줄 삭제",
   "message.autoscale.lb.delete.bound": "오토스케일 그룹에 연결된 부하 분산 규칙은 삭제할 수 없습니다.",
   "label.autoscale.vm.detach": "VM 연결 해제",
-  "message.autoscale.vm.detach.confirm": "선택한 VM을 부하 분산 규칙과 오토스케일 그룹에서 분리합니다. VM과 볼륨은 삭제하지 않습니다. 그룹을 다시 활성화하면 최소 멤버 수에 따라 새 VM이 생성될 수 있습니다. 계속하시겠습니까?"
+  "message.autoscale.vm.detach.confirm": "선택한 VM을 부하 분산 규칙과 오토스케일 그룹에서 분리합니다. VM과 볼륨은 삭제하지 않습니다. 그룹을 다시 활성화하면 최소 멤버 수에 따라 새 VM이 생성될 수 있습니다. 계속하시겠습니까?",
+  "label.autoscale.userdata.registered": "저장된 사용자 데이터",
+  "label.autoscale.userdata.manual": "사용자 데이터 직접 입력",
+  "message.autoscale.userdata.template": "템플릿 {template}은 사용자 데이터 {userdata}와 연결되어 있으며 적용 정책은 {policy}입니다.",
+  "message.autoscale.userdata.variables": "사용자 데이터의 변수 값을 입력하십시오."
 }

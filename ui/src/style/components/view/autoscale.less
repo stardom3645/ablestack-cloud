@@ -187,3 +187,19 @@ body .autoscale-dialog {
 body .autoscale-schedule-picker .ant-btn:disabled {
   background: var(--ui-bg-disabled) !important; color: var(--ui-text-secondary) !important; border-color: var(--ui-border-strong) !important;
 }
+
+// The picker and confirmations are teleported outside the dialog resource root.
+body .autoscale-schedule-picker, body .autoscale-confirm {
+  .ant-btn-primary:not(:disabled) {
+    background: var(--ui-action-primary-bg) !important; border-color: var(--ui-action-primary-bg) !important; color: var(--ui-action-primary-text) !important;
+    > span, .anticon { color: inherit !important; }
+    &:hover, &:focus { background: var(--ui-action-primary-hover) !important; border-color: var(--ui-action-primary-hover) !important; }
+  }
+  .ant-btn:not(.ant-btn-primary) { color: var(--ui-text-secondary); }
+}
+.autoscale-confirm {
+  max-width: min(420px, calc(100vw - 32px));
+  .ant-popover-inner { background: var(--ui-bg-elevated); color: var(--ui-text-primary); }
+  .ant-popover-message-title { color: var(--ui-text-primary); white-space: normal; overflow-wrap: anywhere; }
+}
+.autoscale-dialog .ant-table-wrapper { max-width: 100%; overflow-x: auto; }

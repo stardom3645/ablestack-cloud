@@ -22,7 +22,7 @@
       <a-button @click="openTagsModal(currentRule.id)" :disabled="loading || !currentRule || !('updateLoadBalancerRule' in $store.getters.apis)"><template #icon><tag-outlined /></template>{{ $t('label.edit.tags') }}</a-button>
       <a-button @click="openStickinessModal(currentRule.id)" :disabled="loading || !currentRule || !('createLBStickinessPolicy' in $store.getters.apis)"><template #icon><link-outlined /></template>{{ $t('label.action.configure.stickiness') }}</a-button>
       <a-button disabled><template #icon><delete-outlined /></template>{{ $t('label.autoscale.rule.remove') }}</a-button>
-      <a-popconfirm :title="$t('message.autoscale.vm.detach.confirm')" @confirm="handleDeleteInstanceFromRule(selectedInstance.instance, currentRule, selectedInstance.ip)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('message.autoscale.vm.detach.confirm')" @confirm="handleDeleteInstanceFromRule(selectedInstance.instance, currentRule, selectedInstance.ip)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
       <a-button :disabled="loading || !selectedInstance || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="loading" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>

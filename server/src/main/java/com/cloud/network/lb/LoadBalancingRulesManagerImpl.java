@@ -345,7 +345,7 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
         return null;
     }
 
-    protected LbAutoScaleVmGroup getLbAutoScaleVmGroup(AutoScaleVmGroupVO vmGroup, AutoScaleVmGroup.State currentState, LoadBalancerVO lb) {
+    private LbAutoScaleVmGroup getLbAutoScaleVmGroup(AutoScaleVmGroupVO vmGroup, AutoScaleVmGroup.State currentState, LoadBalancerVO lb) {
         long lbNetworkId = lb.getNetworkId();
         String lbName = lb.getName();
         List<AutoScaleVmGroupPolicyMapVO> vmGroupPolicyMapList = _autoScaleVmGroupPolicyMapDao.listByVmGroupId(vmGroup.getId());
@@ -467,23 +467,15 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
         return providers.get(0);
     }
 
-    protected List<LbDestination> getAutoScaleDestinations(LoadBalancerVO lb) {
-        Network.Provider provider = getLoadBalancerServiceProvider(lb);
-        if (Network.Provider.VirtualRouter.equals(provider) || Network.Provider.VPCVirtualRouter.equals(provider)) {
-            return getExistingDestinations(lb.getId());
-        }
-        return null;
-    }
-
     private boolean applyAutoScaleConfig(LoadBalancerVO lb, AutoScaleVmGroupVO vmGroup, AutoScaleVmGroup.State currentState) throws ResourceUnavailableException {
         LbAutoScaleVmGroup lbAutoScaleVmGroup = getLbAutoScaleVmGroup(vmGroup, currentState, lb);
         /*
-         * External appliances manage their own AutoScale destinations. Native
-         * VirtualRouter rules must include the current member destinations.
+         * Regular config like destinations need not be packed for applying
+         * autoscale config as of today.
          */
         List<LbStickinessPolicy> policyList = getStickinessPolicies(lb.getId());
         Ip sourceIp = getSourceIp(lb);
-        LoadBalancingRule rule = new LoadBalancingRule(lb, getAutoScaleDestinations(lb), policyList, null, sourceIp, null, lb.getLbProtocol(), isBackendSslEnabled(lb.getId()));
+        LoadBalancingRule rule = new LoadBalancingRule(lb, null, policyList, null, sourceIp, null, lb.getLbProtocol(), isBackendSslEnabled(lb.getId()));
         rule.setAutoScaleVmGroup(lbAutoScaleVmGroup);
 
         if (!isRollBackAllowedForProvider(lb)) {
@@ -2169,7 +2161,6 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
             AutoScaleVmGroupVO vmGroup = _autoScaleVmGroupDao.listByAll(lb.getId(), null).get(0);
             LbAutoScaleVmGroup lbAutoScaleVmGroup = getLbAutoScaleVmGroup(vmGroup, vmGroup.getState(), lb);
             loadBalancing.setAutoScaleVmGroup(lbAutoScaleVmGroup);
-            loadBalancing.setDestinations(getAutoScaleDestinations(lb));
         } else {
             List<LbDestination> dstList = getExistingDestinations(lb.getId());
             loadBalancing.setDestinations(dstList);

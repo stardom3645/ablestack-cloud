@@ -20,7 +20,8 @@ import Down from '@/views/compute/AutoScaleDownPolicyTab.vue'
 import Profile from '@/views/compute/AutoScaleVmProfile.vue'
 import LB from '@/views/compute/AutoScaleLoadBalancing.vue'
 import Schedules from '@/views/compute/ResourceSchedules.vue'
-import { postAPI } from '@/api'
+import ResetUserData from '@/views/compute/ResetUserData.vue'
+import { getAPI, postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: { apis: {}, userInfo: {}, project: null } }))
 
@@ -85,4 +86,42 @@ test('Korean cron and picker localization are opted in for AutoScale while other
   expect(locale['*'].minute.empty.text).toBe('매분')
   expect(Schedules.computed.datePickerLocale.call({ $i18n: { locale: 'ko_KR' } }).lang.locale).toBe('ko_KR')
   expect(Schedules.computed.cronLocale.call({ resourceType: 'VirtualMachine', $i18n: { locale: 'ko_KR' } })).toBeUndefined()
+})
+
+beforeEach(() => jest.clearAllMocks())
+function userDataContext (autoscale, tab, values) {
+  postAPI.mockResolvedValue({ updateautoscalevmprofileresponse: { jobid: 'job' } })
+  getAPI.mockResolvedValue({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { autoscalevmprofile: { id: 'profile' } } } })
+  return { isAutoScaleProfile: autoscale, userdataTabKey: tab, form: values, resource: autoscale ? { resetUserDataApiName: 'updateAutoScaleVmProfile', resetUserDataResourceId: 'profile' } : { id: 'vm' }, loadingData: false, templateUserDataValues: {}, userDataValues: {}, $toBase64AndURIEncoded: value => 'encoded:' + value, $t: key => key, $message: { success: jest.fn() }, $emit: jest.fn(), closeAction: jest.fn() }
+}
+test('registered AutoScale UserData selection ignores a retained manual draft', async () => {
+  await ResetUserData.methods.handleSubmit.call(userDataContext(true, 'userdataregistered', { userdata: 'stale', userdataid: 'registered' }))
+  expect(postAPI).toHaveBeenCalledWith('updateAutoScaleVmProfile', { id: 'profile', userdataid: 'registered' })
+})
+test('manual AutoScale UserData ignores a retained registered selection', async () => {
+  await ResetUserData.methods.handleSubmit.call(userDataContext(true, 'userdatatext', { userdata: 'manual', userdataid: 'registered' }))
+  expect(postAPI).toHaveBeenCalledWith('updateAutoScaleVmProfile', { id: 'profile', userdata: 'encoded:manual' })
+})
+test('registered None clears AutoScale custom data even when the manual draft is retained', async () => {
+  await ResetUserData.methods.handleSubmit.call(userDataContext(true, 'userdataregistered', { userdata: 'stale' }))
+  expect(postAPI).toHaveBeenCalledWith('updateAutoScaleVmProfile', { id: 'profile', userdata: '' })
+})
+test('the default VM reset request keeps its existing parameters', async () => {
+  await ResetUserData.methods.handleSubmit.call(userDataContext(false, 'userdataregistered', { userdata: 'manual', userdataid: 'registered' }))
+  expect(postAPI).toHaveBeenCalledWith('resetUserDataForVirtualMachine', { id: 'vm', userdata: 'encoded:manual', userdataid: 'registered' })
+})
+test('a registered script with no variables leaves an empty variable list without failing', async () => {
+  getAPI.mockResolvedValue({ listuserdataresponse: { userdata: [{ id: 'registered' }] } })
+  const ctx = { form: {}, userDataParams: [{ key: 'stale' }] }
+  ResetUserData.methods.updateUserData.call(ctx, 'registered')
+  await Promise.resolve()
+  expect(ctx.userDataParams).toEqual([])
+  expect(ctx.form.userdataid).toBe('registered')
+})
+test('AutoScale dialog template metadata uses allowed project lists and never reads an unrelated script when the template has no UserData', async () => {
+  getAPI.mockResolvedValue({ listtemplatesresponse: { template: [{ id: 'template' }] } })
+  const ctx = { isAutoScaleProfile: true, resource: { templateid: 'template', projectid: 'project', zoneid: 'zone' }, updateTemplateLinkedUserData: jest.fn(), $notifyError: jest.fn() }
+  await ResetUserData.methods.fetchTemplateData.call(ctx)
+  expect(getAPI).toHaveBeenCalledWith('listTemplates', expect.objectContaining({ projectid: 'project', isready: true, templatefilter: 'executable' }))
+  expect(ctx.updateTemplateLinkedUserData).not.toHaveBeenCalled()
 })

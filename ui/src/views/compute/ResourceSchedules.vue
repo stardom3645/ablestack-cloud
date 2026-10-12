@@ -20,7 +20,7 @@
     <a-space v-if="resourceType === 'AutoScaleVmGroup'" wrap class="autoscale-toolbar">
       <a-button type="primary" @click="createSchedule" :disabled="isSubmitted || !('createResourceSchedule' in $store.getters.apis)"><template #icon><plus-outlined /></template>{{ $t('label.schedule.add') }}</a-button>
       <a-button @click="updateSchedule(selectedSchedule)" :disabled="isSubmitted || !selectedSchedule || !('updateResourceSchedule' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.schedule.edit') }}</a-button>
-      <a-popconfirm :title="$t('label.delete') + '?'" @confirm="removeSchedule(selectedSchedule)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.delete') + '?'" @confirm="removeSchedule(selectedSchedule)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
       <a-button :disabled="isSubmitted || !selectedSchedule || !('deleteResourceSchedule' in $store.getters.apis)"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.schedule.remove') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="isSubmitted" :loading="tabLoading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
