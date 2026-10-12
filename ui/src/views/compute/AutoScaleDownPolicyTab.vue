@@ -40,7 +40,7 @@
           <template v-else-if="column.key === 'actions'"><div class="autoscale-row-actions">
             <a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('updateAutoScalePolicy' in $store.getters.apis)" @click="selectPolicy(record); openPolicyModal()"><template #icon><edit-outlined /></template>{{ $t('label.autoscale.policy.edit') }}</a-button>
             <a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || !('createCondition' in $store.getters.apis)" @click="selectPolicy(record); openAddConditionModal()"><template #icon><plus-outlined /></template>{{ $t('label.autoscale.condition.add') }}</a-button>
-            <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.remove.policy') + '?'" @confirm="confirmPolicyRemoval" @cancel="pendingPolicyRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || policies.length < 2 || !('updateAutoScaleVmGroup' in $store.getters.apis)" @click="selectPolicy(record); preparePolicyRemoval()"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.policy.remove') }}</a-button></a-popconfirm>
+            <a-popconfirm overlay-class-name="autoscale-confirm" :title="$t('label.remove.policy') + '?'" @confirm="confirmPolicyRemoval(record)" @cancel="pendingPolicyRemoval = null" :ok-button-props="{ disabled: loading || saving }" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')"><a-button size="small" :disabled="saving || loading || resource.state !== 'DISABLED' || resource.operationinprogress || policies.length < 2 || !('updateAutoScaleVmGroup' in $store.getters.apis)" @click="selectPolicy(record); preparePolicyRemoval()"><template #icon><delete-outlined /></template>{{ $t('label.autoscale.policy.remove') }}</a-button></a-popconfirm>
           </div></template>
         </template>
       </a-table>
@@ -578,9 +578,13 @@ export default {
     preparePolicyRemoval () {
       this.pendingPolicyRemoval = { resourceId: this.resource.id, policyId: this.policy.id }
     },
-    confirmPolicyRemoval () {
+    confirmPolicyRemoval (record) {
       const target = this.pendingPolicyRemoval
       this.pendingPolicyRemoval = null
+      if (record && record.id !== target?.policyId) {
+        this.$message.warning(this.$t('message.autoscale.selection.stale'))
+        return
+      }
       if (this.loading || this.saving || target?.resourceId !== this.resource.id || target?.policyId !== this.policy.id || !this.policies.some(item => item.id === target?.policyId)) {
         this.$message.warning(this.$t('message.autoscale.selection.stale'))
         return

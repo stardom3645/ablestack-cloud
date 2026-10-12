@@ -193,3 +193,13 @@ test.each(removalCases.filter(([name]) => !name.startsWith('policy')))('%s confi
   expect(ctx[mutation]).not.toHaveBeenCalled()
   expect(ctx.$message.warning).toHaveBeenCalledWith('message.autoscale.selection.stale')
 })
+
+test.each([Up, Down])('an older policy row confirmation cannot remove a newly selected policy', component => {
+  const ctx = { resource: { id: 'group' }, policy: { id: 'first' }, policies: [{ id: 'first' }, { id: 'second' }], loading: false, saving: false, removeScalePolicyFromGroup: jest.fn(), $t: key => key, $message: { warning: jest.fn() } }
+  component.methods.preparePolicyRemoval.call(ctx)
+  ctx.policy = { id: 'second' }
+  component.methods.preparePolicyRemoval.call(ctx)
+  component.methods.confirmPolicyRemoval.call(ctx, { id: 'first' })
+  expect(ctx.removeScalePolicyFromGroup).not.toHaveBeenCalled()
+  expect(ctx.$message.warning).toHaveBeenCalledWith('message.autoscale.selection.stale')
+})
