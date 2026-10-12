@@ -307,11 +307,23 @@ export default {
     onUserdataTabChange (key, type) {
       this[type] = key
       this.userDataParams = []
+      if (this.isAutoScaleProfile && type === 'userdataTabKey' && key === 'userdataregistered') {
+        this.form.userdataid = undefined
+        this.userDataValues = {}
+      }
     },
     isUserAllowedToListUserDatas () {
       return Boolean('listUserData' in this.$store.getters.apis)
     },
     updateUserData (id) {
+      if (this.isAutoScaleProfile) {
+        this.userDataParams = []
+        this.userDataValues = {}
+        if (id === '0' || id === this.$t('label.noselect')) {
+          this.form.userdataid = undefined
+          return
+        }
+      }
       if (id === '0') {
         this.form.userdataid = undefined
         return
@@ -319,6 +331,7 @@ export default {
       this.form.userdataid = id
       this.userDataParams = []
       getAPI('listUserData', { id: id }).then(json => {
+        if (this.isAutoScaleProfile && this.form.userdataid !== id) return
         const resp = json?.listuserdataresponse?.userdata || []
         if (resp.length > 0) {
           var params = resp[0].params

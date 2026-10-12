@@ -177,3 +177,37 @@ test.each(removalCases)('%s confirmation cannot mutate a different group after n
   component.methods[confirm].call(ctx)
   expect(ctx[mutation]).not.toHaveBeenCalled()
 })
+
+test.each(['설정 안함', 'None'])('the actual localized library None row %s clears the previous AutoScale selection and variable values', async label => {
+  const ctx = userDataContext(true, 'userdataregistered', { userdataid: 'old', userdata: 'retained' })
+  ctx.$t = key => key === 'label.noselect' ? label : key
+  ctx.userDataValues = { old: 'secret' }
+  ResetUserData.methods.updateUserData.call(ctx, label)
+  await ResetUserData.methods.handleSubmit.call(ctx)
+  expect(postAPI).toHaveBeenCalledWith('updateAutoScaleVmProfile', { id: 'profile', userdata: '' })
+  expect(getAPI).not.toHaveBeenCalledWith('listUserData', { id: label })
+})
+test('returning from manual entry to the AutoScale library submits None as displayed by the remounted selection widget', async () => {
+  const ctx = userDataContext(true, 'userdataregistered', { userdataid: 'old-library', userdata: 'manual' })
+  ResetUserData.methods.onUserdataTabChange.call(ctx, 'userdatatext', 'userdataTabKey')
+  ResetUserData.methods.onUserdataTabChange.call(ctx, 'userdataregistered', 'userdataTabKey')
+  await ResetUserData.methods.handleSubmit.call(ctx)
+  expect(postAPI).toHaveBeenCalledWith('updateAutoScaleVmProfile', { id: 'profile', userdata: '' })
+})
+test('the same library tab navigation keeps the existing VM request contract', async () => {
+  const ctx = userDataContext(false, 'userdataregistered', { userdataid: 'old-library', userdata: 'manual' })
+  ResetUserData.methods.onUserdataTabChange.call(ctx, 'userdatatext', 'userdataTabKey')
+  ResetUserData.methods.onUserdataTabChange.call(ctx, 'userdataregistered', 'userdataTabKey')
+  await ResetUserData.methods.handleSubmit.call(ctx)
+  expect(postAPI).toHaveBeenCalledWith('resetUserDataForVirtualMachine', { id: 'vm', userdataid: 'old-library', userdata: 'encoded:manual' })
+})
+test('a late variable lookup for an unselected AutoScale script cannot repopulate the None form', async () => {
+  let finishLookup
+  getAPI.mockImplementation(() => new Promise(resolve => { finishLookup = resolve }))
+  const ctx = { isAutoScaleProfile: true, form: {}, userDataParams: [], userDataValues: {}, $t: () => '설정 안함' }
+  ResetUserData.methods.updateUserData.call(ctx, 'script')
+  ResetUserData.methods.updateUserData.call(ctx, '설정 안함')
+  finishLookup({ listuserdataresponse: { userdata: [{ params: 'old-variable' }] } })
+  await Promise.resolve()
+  expect(ctx.userDataParams).toEqual([])
+})
