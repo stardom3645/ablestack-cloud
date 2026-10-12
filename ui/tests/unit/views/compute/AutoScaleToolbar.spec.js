@@ -78,3 +78,11 @@ test('schedule edit resolves the selected record by ID rather than its old list 
   const item = { id: 'b', schedule: '0 9 * * *' }
   expect(Schedules.computed.selectedSchedule.call({ selectedScheduleKeys: ['b'], schedules: [item, { id: 'a' }] })).toBe(item)
 })
+
+test('Korean cron and picker localization are opted in for AutoScale while other schedule resources retain their existing cron defaults', () => {
+  const locale = Schedules.computed.cronLocale.call({ resourceType: 'AutoScaleVmGroup', $i18n: { locale: 'ko_KR' } })
+  expect(locale.day.text).toBe('일')
+  expect(locale['*'].minute.empty.text).toBe('매분')
+  expect(Schedules.computed.datePickerLocale.call({ $i18n: { locale: 'ko_KR' } }).lang.locale).toBe('ko_KR')
+  expect(Schedules.computed.cronLocale.call({ resourceType: 'VirtualMachine', $i18n: { locale: 'ko_KR' } })).toBeUndefined()
+})

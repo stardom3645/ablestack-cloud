@@ -8718,5 +8718,7 @@
   "label.autoscale.rule.remove": "Delete rule",
   "label.autoscale.schedule.edit": "Edit schedule",
   "label.autoscale.schedule.remove": "Delete schedule",
-  "message.autoscale.lb.delete.bound": "A load balancer rule attached to an AutoScale group cannot be deleted."
+  "message.autoscale.lb.delete.bound": "A load balancer rule attached to an AutoScale group cannot be deleted.",
+  "label.autoscale.vm.detach": "Detach VM",
+  "message.autoscale.vm.detach.confirm": "Detach the selected VM from both the load balancer rule and the AutoScale group. The VM and its volumes are retained. Enabling the group later may create a new VM to meet the minimum size. Continue?"
 }

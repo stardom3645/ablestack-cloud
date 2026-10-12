@@ -458,4 +458,57 @@ public class LoadBalancingRulesManagerImplTest{
             Mockito.verify(lbr).applyLoadBalancerConfig(lbRuleId);
         }
     }
+
+    private void assertNativeAutoScaleDestinations(Network.Provider provider) throws Exception {
+        com.cloud.network.as.dao.AutoScaleVmGroupDao groups = Mockito.mock(com.cloud.network.as.dao.AutoScaleVmGroupDao.class);
+        com.cloud.network.as.AutoScaleVmGroupVO group = Mockito.mock(com.cloud.network.as.AutoScaleVmGroupVO.class);
+        LoadBalancingRule.LbAutoScaleVmGroup payload = Mockito.mock(LoadBalancingRule.LbAutoScaleVmGroup.class);
+        com.cloud.network.PublicIpAddress publicIp = Mockito.mock(com.cloud.network.PublicIpAddress.class);
+        List<LoadBalancingRule.LbDestination> destinations = Collections.singletonList(new LoadBalancingRule.LbDestination(8080, 8080, "10.0.0.4", false));
+        ReflectionTestUtils.setField(lbr, "_autoScaleVmGroupDao", groups);
+        when(loadBalancerMock.getId()).thenReturn(lbRuleId);
+        when(loadBalancerMock.getSourceIpAddressId()).thenReturn(9L);
+        when(loadBalancerMock.getState()).thenReturn(com.cloud.network.rules.FirewallRule.State.Active);
+        when(_networkModel.getPublicIpAddress(9L)).thenReturn(publicIp);
+        when(publicIp.getAddress()).thenReturn(new com.cloud.utils.net.Ip("10.0.0.1"));
+        when(groups.isAutoScaleLoadBalancer(lbRuleId)).thenReturn(true);
+        when(groups.listByAll(lbRuleId, null)).thenReturn(Collections.singletonList(group));
+        when(groups.findById(5L)).thenReturn(group);
+        when(loadBalancerMock.getNetworkId()).thenReturn(networkId);
+        when(_networkDao.findById(networkId)).thenReturn(networkMock);
+        when(_networkMgr.getProvidersForServiceInNetwork(networkMock, Network.Service.Lb)).thenReturn(Collections.singletonList(provider));
+        when(group.getLoadBalancerId()).thenReturn(lbRuleId);
+        when(group.getState()).thenReturn(com.cloud.network.as.AutoScaleVmGroup.State.DISABLED);
+        when(_lbDao.findById(lbRuleId)).thenReturn(loadBalancerMock);
+        Mockito.doReturn(provider).when(lbr).getLoadBalancerServiceProvider(loadBalancerMock);
+        Mockito.doReturn(payload).when(lbr).getLbAutoScaleVmGroup(Mockito.eq(group), Mockito.any(), Mockito.eq(loadBalancerMock));
+        Mockito.doReturn(Collections.emptyList()).when(lbr).getStickinessPolicies(lbRuleId);
+        Mockito.doReturn(null).when(lbr).getLbSslCert(lbRuleId);
+        Mockito.doReturn(destinations).when(lbr).getExistingDestinations(lbRuleId);
+        LoadBalancingRule edited = lbr.getLoadBalancerRuleToApply(loadBalancerMock);
+        Assert.assertSame(destinations, edited.getDestinations());
+        Assert.assertSame(payload, edited.getAutoScaleVmGroup());
+        Mockito.doAnswer(invocation -> {
+            List<LoadBalancingRule> rules = invocation.getArgument(0);
+            Assert.assertSame(destinations, rules.get(0).getDestinations());
+            Assert.assertSame(payload, rules.get(0).getAutoScaleVmGroup());
+            return true;
+        }).when(lbr).applyLbRules(Mockito.anyList(), Mockito.eq(false));
+        Assert.assertTrue(lbr.configureLbAutoScaleVmGroup(5L, com.cloud.network.as.AutoScaleVmGroup.State.ENABLED));
+        Mockito.verify(lbr).applyLbRules(Mockito.anyList(), Mockito.eq(false));
+    }
+
+    @Test public void nativeVirtualRouterRetainsMembersWhenRuleOrGroupIsReconfigured() throws Exception {
+        assertNativeAutoScaleDestinations(Network.Provider.VirtualRouter);
+    }
+
+    @Test public void nativeVpcVirtualRouterRetainsMembersWhenRuleOrGroupIsReconfigured() throws Exception {
+        assertNativeAutoScaleDestinations(Network.Provider.VPCVirtualRouter);
+    }
+
+    @Test public void externalAutoScaleStillDelegatesDestinationsToTheAppliance() {
+        Mockito.doReturn(Network.Provider.Netscaler).when(lbr).getLoadBalancerServiceProvider(loadBalancerMock);
+        Assert.assertNull(lbr.getAutoScaleDestinations(loadBalancerMock));
+        Mockito.verify(lbr, never()).getExistingDestinations(Mockito.anyLong());
+    }
 }

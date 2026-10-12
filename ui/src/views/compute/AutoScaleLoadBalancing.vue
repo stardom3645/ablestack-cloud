@@ -19,11 +19,11 @@
   <div class="autoscale-tab">
     <a-space wrap class="autoscale-toolbar">
       <a-button type="primary" @click="openEditRuleModal(currentRule)" :disabled="loading || !currentRule || !('updateLoadBalancerRule' in $store.getters.apis)"><template #icon><edit-outlined /></template>{{ $t('label.edit.rule') }}</a-button>
-      <a-button @click="openTagsModal(currentRule.id)" :disabled="loading || !currentRule || !('createTags' in $store.getters.apis)"><template #icon><tag-outlined /></template>{{ $t('label.edit.tags') }}</a-button>
+      <a-button @click="openTagsModal(currentRule.id)" :disabled="loading || !currentRule || !('updateLoadBalancerRule' in $store.getters.apis)"><template #icon><tag-outlined /></template>{{ $t('label.edit.tags') }}</a-button>
       <a-button @click="openStickinessModal(currentRule.id)" :disabled="loading || !currentRule || !('createLBStickinessPolicy' in $store.getters.apis)"><template #icon><link-outlined /></template>{{ $t('label.action.configure.stickiness') }}</a-button>
       <a-button disabled><template #icon><delete-outlined /></template>{{ $t('label.autoscale.rule.remove') }}</a-button>
-      <a-popconfirm :title="$t('label.remove.vm.from.lb') + '?'" @confirm="handleDeleteInstanceFromRule(selectedInstance.instance, currentRule, selectedInstance.ip)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
-      <a-button :disabled="loading || !selectedInstance || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><disconnect-outlined /></template>{{ $t('label.remove.vm.from.lb') }}</a-button></a-popconfirm>
+      <a-popconfirm :title="$t('message.autoscale.vm.detach.confirm')" @confirm="handleDeleteInstanceFromRule(selectedInstance.instance, currentRule, selectedInstance.ip)" :ok-text="$t('label.yes')" :cancel-text="$t('label.no')">
+      <a-button :disabled="loading || !selectedInstance || !('removeFromLoadBalancerRule' in $store.getters.apis) || resource.state !== 'DISABLED' || resource.operationinprogress"><template #icon><disconnect-outlined /></template>{{ $t('label.autoscale.vm.detach') }}</a-button></a-popconfirm>
       <a-button @click="fetchData" :disabled="loading" :loading="loading"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </a-space>
     <p v-if="listRefreshFailed" role="status">{{ $t('message.list.refresh.stale') }}</p>
@@ -46,7 +46,7 @@ row-key="key"
 :scroll="{ x: 480 }">
       <template #bodyCell="{ column, record }">
         <router-link v-if="column.key === 'name'" :to="'/vm/' + record.instance.loadbalancerruleinstance.id">{{ record.instance.loadbalancerruleinstance.displayname || record.instance.loadbalancerruleinstance.name }}</router-link>
-        <status v-else-if="column.key === 'state'" :text="record.instance.loadbalancerruleinstance.state" />
+        <status v-else-if="column.key === 'state'" :text="record.instance.loadbalancerruleinstance.state" :display-text="true" />
       </template>
     </a-table>
     <a-modal
@@ -137,9 +137,9 @@ centered
               return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }" >
             <a-select-option value="LbCookie" :label="$t('label.lb.cookie')">{{ $t('label.lb.cookie') }}</a-select-option>
-            <a-select-option value="AppCookie" :label="$t('label.lb.cookie')">{{ $t('label.app.cookie') }}</a-select-option>
-            <a-select-option value="SourceBased" :label="$t('label.lb.cookie')">{{ $t('label.source.based') }}</a-select-option>
-            <a-select-option value="none" :label="$t('label.lb.cookie')">{{ $t('label.none') }}</a-select-option>
+            <a-select-option value="AppCookie" :label="$t('label.app.cookie')">{{ $t('label.app.cookie') }}</a-select-option>
+            <a-select-option value="SourceBased" :label="$t('label.source.based')">{{ $t('label.source.based') }}</a-select-option>
+            <a-select-option value="none" :label="$t('label.none')">{{ $t('label.none') }}</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item

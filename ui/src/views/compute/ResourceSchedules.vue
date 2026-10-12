@@ -234,7 +234,8 @@
             <a-date-picker
               v-model:value="form.startDate"
               show-time
-              :locale="this.$i18n.locale"
+              :locale="resourceType === 'AutoScaleVmGroup' ? datePickerLocale : this.$i18n.locale"
+              :dropdown-class-name="resourceType === 'AutoScaleVmGroup' ? 'autoscale-schedule-picker' : undefined"
               :placeholder="$t('message.select.start.date.and.time')"
             />
           </a-form-item>
@@ -253,7 +254,8 @@
             <a-date-picker
               v-model:value="form.endDate"
               show-time
-              :locale="this.$i18n.locale"
+              :locale="resourceType === 'AutoScaleVmGroup' ? datePickerLocale : this.$i18n.locale"
+              :dropdown-class-name="resourceType === 'AutoScaleVmGroup' ? 'autoscale-schedule-picker' : undefined"
               :placeholder="$t('message.select.end.date.and.time')"
             />
           </a-form-item>
@@ -279,7 +281,9 @@
             v-if="!form.useCronFormat"
             v-model="form.schedule"
             :periods="periods"
-            :button-props="{ type: 'primary', size: 'small', disabled: form.useCronFormat }"
+            :locale="resourceType === 'AutoScaleVmGroup' ? $i18n.locale.replace('_', '-') : undefined"
+            :custom-locale="cronLocale"
+            :button-props="{ type: resourceType === 'AutoScaleVmGroup' ? 'default' : 'primary', size: 'small', disabled: form.useCronFormat }"
             @error="error = $event"
           />
           <label
@@ -330,6 +334,9 @@ import '@/style/components/view/autoscale.less'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { reactive, ref, toRaw } from 'vue'
+import koKR from 'ant-design-vue/es/date-picker/locale/ko_KR'
+import enUS from 'ant-design-vue/es/date-picker/locale/en_US'
+import 'dayjs/locale/ko'
 import { getAPI, postAPI } from '@/api'
 import ListView from '@/components/view/ListView'
 import Status from '@/components/widgets/Status'
@@ -413,6 +420,28 @@ export default {
     this.apiParams = this.$getApiParams('createResourceSchedule')
   },
   computed: {
+    datePickerLocale () { return this.$i18n.locale === 'ko_KR' ? koKR : enUS },
+    cronLocale () {
+      if (this.resourceType !== 'AutoScaleVmGroup' || this.$i18n.locale !== 'ko_KR') return undefined
+      return {
+        '*': {
+          prefix: '매',
+          suffix: '',
+          text: '',
+          '*': { empty: { text: '매번' }, value: { text: '{{val.text}}' }, range: { text: '{{start.text}}–{{end.text}}' }, everyX: { text: '{{every.value}}마다' } },
+          month: { '*': { prefix: '' }, empty: { text: '매월' }, value: { text: '{{val.alt}}' }, range: { text: '{{start.alt}}–{{end.alt}}' } },
+          day: { '*': { prefix: '' }, empty: { text: '매일' }, value: { text: '{{val.text}}일' } },
+          dayOfWeek: { '*': { prefix: '' }, empty: { text: '모든 요일' }, value: { text: '{{val.alt}}' }, range: { text: '{{start.alt}}–{{end.alt}}' } },
+          hour: { '*': { prefix: '' }, empty: { text: '매시' }, value: { text: '{{val.text}}시' } },
+          minute: { '*': { prefix: '' }, empty: { text: '매분' }, value: { text: '{{val.text}}분' } }
+        },
+        year: { text: '년', dayOfWeek: { '*': { prefix: '' } } },
+        month: { text: '월', dayOfWeek: { '*': { prefix: '' } } },
+        week: { text: '주' },
+        day: { text: '일' }
+      }
+    },
+
     pageSizeOptions () {
       var sizes = [20, 50, 100, 200, this.$store.getters.defaultListViewPageSize]
       if (this.device !== 'desktop') {

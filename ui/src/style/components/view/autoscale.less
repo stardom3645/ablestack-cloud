@@ -159,3 +159,31 @@ body .autoscale-screen, body .autoscale-dialog {
   .ant-radio-checked .ant-radio-inner::after { background-color: var(--ui-link); }
 }
 @media (max-width: 768px) { .autoscale-toolbar.ant-space { margin-bottom: 16px !important; } }
+
+body .autoscale-dialog {
+  .ant-input-group-addon, .ant-input-group-addon-disabled {
+    background: var(--ui-bg-elevated) !important; color: var(--ui-text-primary) !important; border-color: var(--ui-border-strong) !important;
+  }
+}
+.autoscale-schedule-picker {
+  .ant-picker-panel-container, .ant-picker-panel { background: var(--ui-bg-elevated); color: var(--ui-text-primary); }
+  .ant-picker-header, .ant-picker-footer, .ant-picker-content, .ant-picker-time-panel, .ant-picker-time-panel-column { border-color: var(--ui-border); }
+  .ant-picker-header button, .ant-picker-content th, .ant-picker-cell-in-view, .ant-picker-time-panel-cell-inner { color: var(--ui-text-primary) !important; }
+  .ant-picker-cell { color: var(--ui-text-muted); }
+  .ant-picker-cell:hover .ant-picker-cell-inner, .ant-picker-time-panel-cell:hover .ant-picker-time-panel-cell-inner { background: var(--ui-bg-hover); }
+  .ant-picker-cell-selected .ant-picker-cell-inner, .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner { color: var(--ui-text-primary); background: var(--ui-bg-selected); }
+  .ant-picker-header button:hover { color: var(--ui-link) !important; }
+  @media (max-width: 600px) {
+    .ant-picker-panel-container { max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; }
+    .ant-picker-panel, .ant-picker-datetime-panel { width: 280px; max-width: calc(100vw - 32px); }
+    .ant-picker-datetime-panel { flex-direction: column; }
+    .ant-picker-time-panel { width: 100%; border-left: 0; border-top: 1px solid var(--ui-border); }
+    .ant-picker-time-panel .ant-picker-content { height: 112px; }
+    .ant-picker-time-panel-column { flex: 1; }
+  }
+}
+
+
+body .autoscale-schedule-picker .ant-btn:disabled {
+  background: var(--ui-bg-disabled) !important; color: var(--ui-text-secondary) !important; border-color: var(--ui-border-strong) !important;
+}
