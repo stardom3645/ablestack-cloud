@@ -17,12 +17,11 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 241,
       "top": 189,
       "width": 448.203125
     },
-    "minimum": 5.19,
+    "minimum": 5.3,
     "low": []
   },
   {
@@ -79,7 +78,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 281,
       "top": 189,
       "width": 448.203125
@@ -150,7 +148,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 281,
       "top": 189,
       "width": 448.203125
@@ -230,7 +227,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 321,
       "top": 189,
       "width": 448.203125
@@ -310,7 +306,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 303,
       "top": 171,
       "width": 448.203125
@@ -363,7 +358,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 281,
       "top": 189,
       "width": 448.203125
@@ -389,7 +383,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 241,
       "top": 189,
       "width": 448.203125
@@ -402,61 +395,24 @@
     "tab": "profile",
     "label": "오토스케일 VM 프로필",
     "toolbar": {
-      "bottom": 261,
+      "bottom": 221,
       "buttons": [
         {
           "disabled": false,
           "iconCount": 1,
           "left": 779.78125,
-          "primary": true,
-          "right": 902.03125,
-          "text": "프로필 편집",
-          "top": 189
-        },
-        {
-          "disabled": false,
-          "iconCount": 1,
-          "left": 910.03125,
           "primary": false,
-          "right": 1074.75,
-          "text": "사용자 데이터 변경",
-          "top": 189
-        },
-        {
-          "disabled": false,
-          "iconCount": 1,
-          "left": 1082.75,
-          "primary": false,
-          "right": 1217.875,
-          "text": "매개변수 추가",
-          "top": 189
-        },
-        {
-          "disabled": true,
-          "iconCount": 1,
-          "left": 779.78125,
-          "primary": false,
-          "right": 914.90625,
-          "text": "매개변수 삭제",
-          "top": 229
-        },
-        {
-          "disabled": false,
-          "iconCount": 1,
-          "left": 922.90625,
-          "primary": false,
-          "right": 1028.4375,
+          "right": 885.3125,
           "text": "업데이트",
-          "top": 229
+          "top": 189
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
-      "nextTop": 281,
+      "nextTop": 241,
       "top": 189,
       "width": 448.203125
     },
-    "minimum": 5.19,
+    "minimum": 5.28,
     "low": []
   },
   {
@@ -522,7 +478,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 281,
       "top": 189,
       "width": 448.203125
@@ -602,7 +557,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 321,
       "top": 189,
       "width": 448.203125
@@ -682,7 +636,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 303,
       "top": 171,
       "width": 448.203125
@@ -735,7 +688,6 @@
         }
       ],
       "left": 779.78125,
-      "margin": "20px",
       "nextTop": 225,
       "top": 133,
       "width": 448.203125

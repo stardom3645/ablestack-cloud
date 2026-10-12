@@ -98,3 +98,5 @@ NODE_OPTIONS=--openssl-legacy-provider node node_modules/@vue/cli-service/bin/vu
 ![선택한 조건을 대상으로 상단 편집·삭제 활성화](images/up-selected-dark.png)
 
 mockup-audit.json은12개 화면의 버튼 순서/아이콘/primary/간격·표본 대비, responsive-audit.json은1024/390px 줄바꿈·문서 폭, scope-audit.json은 제외 탭의 새 툴바0개를 기록한다. versions.json은 실제 런타임 라이브러리 버전이다. 이미지의 예시 정책/조건/시각은 실제 클러스터 설정값을 의미하지 않는다.
+
+shell-audit.json은 최종 라이트/다크 헤더 사용자명·아바타·선택 메뉴의 실제 색상/대비를 별도 기록한다. 기본 검정색 상속을 보정한 최종13장으로 교체했다.
