@@ -45,3 +45,5 @@ AutogenView/공통 ListView·ResourceView를 재사용하고 그룹 경로의 �
 새 집중 검사는 URL/서버 필터 계약, 초기/갱신/정상 0/실패/권한/불완전 응답, 확인 시각과 작업 차단, 실제 AutogenView 요청 메서드의 페이지·소유·세션·대상 경쟁, 검색/정렬/탭 유지와 다른 자원 회귀를 포함한다. 기존 VG-01~03 UI 집중 검사도 수행한다.
 
 31 대표 환경 배포·검증 후 32로 확대한다. 기존 배포/백업 데이터는 식별·정리하고 최신 롤백 백업을 확보한다. 활성 webapp의 WEB-INF/config/META-INF와 management JAR/PID를 보존해 정적 UI만 갱신한다. 산출물 해시·service active·HTTP 200·실제 API/브라우저를 확인한다. 전용 계정/프로젝트/빈 그룹만 사용하고 기존 VM·볼륨을 조작하지 않는다.
+
+상세 자식 경로는 route.name이 없으므로 그룹 분기는 목록·상세 공통의 route.meta.name으로 판단한다. 상세 코멘트 탭의 UI query는 API에서 제외하며 누락/403/실패도 그룹 전용 상태로 처리한다. 실제 unnamed 상세 경로를 집중 테스트한다.

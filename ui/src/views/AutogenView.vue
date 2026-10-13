@@ -30,7 +30,7 @@
             <breadcrumb :resource="resource">
               <template #end>
                 <a-button
-                  :loading="loading || ($route.name === 'vmgroup' && listRequestPending)"
+                  :loading="loading || ($route.meta?.name === 'vmgroup' && listRequestPending)"
                   style="margin-bottom: 5px"
                   shape="round"
                   size="small"
@@ -804,7 +804,7 @@
       :style="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 'margin-top: 24px; margin-bottom: 12px' : null"
     >
       <InstanceGroupQueryStatus
-        v-if="$route.name === 'vmgroup'"
+        v-if="$route.meta?.name === 'vmgroup'"
         :status="vmGroupQueryStatus"
         :updated="listLastUpdated"
         :retained="!!listLoadedScope"
@@ -815,12 +815,12 @@
           v-if="$route.path.startsWith('/publicip')"
         ></slot>
         <resource-view
-          v-else-if="$route.name !== 'vmgroup' || resource.id || loading"
+          v-else-if="$route.meta?.name !== 'vmgroup' || resource.id || loading"
           :key="$route.path"
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
-          :actions="$route.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
+          :actions="$route.meta?.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
           @exec-action="handleDataViewAction"
           @change-resource="resource = $event" />
       </div>
@@ -834,13 +834,13 @@
         <a-alert v-if="listRefreshError && $route.name === 'vmsnapshot'" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
           <template #action><a-button size="small" @click="fetchData">{{ $t('label.refresh') }}</a-button></template>
         </a-alert>
-        <p v-else-if="listRefreshError && $route.name !== 'vmgroup'" role="status">{{ $t('message.list.refresh.stale') }}</p>
+        <p v-else-if="listRefreshError && $route.meta?.name !== 'vmgroup'" role="status">{{ $t('message.list.refresh.stale') }}</p>
         <list-view
           :loading="loading"
-          :emptyText="$route.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
+          :emptyText="$route.meta?.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
           :columns="columns"
           :items="items"
-          :actions="$route.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
+          :actions="$route.meta?.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
           :currentPage="page"
           :pageSize="pageSize"
           :columnKeys="columnKeys"
@@ -852,7 +852,7 @@
           @table-change="handleTableChange"
         />
         <a-pagination
-          v-if="$route.name !== 'vmgroup' || listLoadedScope"
+          v-if="$route.meta?.name !== 'vmgroup' || listLoadedScope"
           class="row-element"
           style="margin-top: 10px"
           size="small"
@@ -1151,12 +1151,12 @@ export default {
   },
   watch: {
     snapshotSecurityScope () {
-      if (this.$route.name === 'vmgroup') this.fetchData()
+      if (this.$route.meta?.name === 'vmgroup') this.fetchData()
       if (['createVMSnapshot', 'revertToVMSnapshot', 'deleteVMSnapshot', 'createSnapshotFromVMSnapshot'].includes(this.currentAction.api)) this.closeAction()
     },
     '$route' (to, from) {
       if (to.fullPath !== from.fullPath && !to.path.startsWith('/action/') && to?.query?.tab !== 'browser') {
-        if (to.name === 'vmgroup' && from.name === 'vmgroup' &&
+        if (to.meta?.name === 'vmgroup' && from.meta?.name === 'vmgroup' &&
           vmGroupQueryScope(to, this.$store.getters, this.$store.state?.user?.token) === vmGroupQueryScope(from, this.$store.getters, this.$store.state?.user?.token)) {
           this.fetchData({ irefresh: true })
           return
@@ -1287,7 +1287,7 @@ export default {
       return 'self'
     },
     visibleDataViewActions () {
-      if (this.$route.name === 'vmgroup' && !this.vmGroupQueryReady) return []
+      if (this.$route.meta?.name === 'vmgroup' && !this.vmGroupQueryReady) return []
       if (!this.actions || !this.dataView) {
         return []
       }
@@ -1386,7 +1386,7 @@ export default {
       }
     },
     listScope () {
-      if (this.$route.name === 'vmgroup') return vmGroupQueryScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
+      if (this.$route.meta?.name === 'vmgroup') return vmGroupQueryScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
       return JSON.stringify([this.$route.fullPath, this.$store.getters.project?.id,
         this.$store.getters.userInfo?.id, this.$store.getters.metrics, this.$store.getters.listAllProjects])
     },
@@ -1467,7 +1467,7 @@ export default {
       })
     },
     fetchData (params = {}) {
-      if (this.$route.name === 'vmgroup') {
+      if (this.$route.meta?.name === 'vmgroup') {
         const clean = vmGroupQuery(this.$route.query)
         if (vmGroupQueryChanged(this.$route.query, clean)) {
           if (Object.keys(this.$route.query).some(key => !(key in clean))) this.$message.info(this.$t('message.vm.group.query.removed'))
@@ -1531,7 +1531,7 @@ export default {
 
       params.listall = true
 
-      this.dataView = !!(this.$route?.params?.id || (this.$route.name === 'vmgroup' ? this.$route.query.dataView === 'true' : !!this.$route?.query?.dataView))
+      this.dataView = !!(this.$route?.params?.id || (this.$route.meta?.name === 'vmgroup' ? this.$route.query.dataView === 'true' : !!this.$route?.query?.dataView))
 
       if (this.$route.meta.params) {
         const metaParams = this.$route.meta.params
@@ -1563,7 +1563,7 @@ export default {
         }
         Object.assign(params, this.$route.query)
       }
-      if (['vmsnapshot', 'vmgroup'].includes(this.$route.name) && !rebuildSchema) {
+      if ((this.$route.name === 'vmsnapshot' || this.$route.meta?.name === 'vmgroup') && !rebuildSchema) {
         this.columns.forEach(column => { column.sortOrder = (params.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === column.key ? (params.sortorder === 'asc' ? 'ascend' : 'descend') : null })
       }
       delete params.q
@@ -1675,7 +1675,7 @@ export default {
             title: this.$t('label.' + String(title).toLowerCase()),
             dataIndex: key,
             sorter: this.$route.name === 'vmsnapshot' ? ['displayname', 'state', 'type', 'current', 'created'].includes(key) : sorter,
-            ...(['vmsnapshot', 'vmgroup'].includes(this.$route.name) ? { sortOrder: (this.$route.query.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {})
+            ...((this.$route.name === 'vmsnapshot' || this.$route.meta?.name === 'vmgroup') ? { sortOrder: (this.$route.query.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {})
           })
           if (this.$route.name !== 'autoscalevmgroup' || defaultColumnKeys.some(column => (typeof column === 'object' ? column.field : column) === key)) this.selectedColumns.push(key)
         }
@@ -1817,7 +1817,7 @@ export default {
       this.listRequestPending = true
       this.listRequestScope = scope
       const requestApi = this.apiName
-      const vmGroups = this.$route.name === 'vmgroup'
+      const vmGroups = this.$route.meta?.name === 'vmgroup'
       if (vmGroups) {
         params = vmGroupQueryParams(params)
         this.vmGroupQueryStatus = sameList ? 'refreshing' : 'loading'
@@ -2955,7 +2955,7 @@ export default {
       this.$router.push({ query })
     },
     handleTableChange (pagination, filters, sorter) {
-      if (this.$route.name === 'vmgroup') {
+      if (this.$route.meta?.name === 'vmgroup') {
         const query = { ...this.$route.query }
         if (sorter?.order) { query.sortkey = sorter.field; query.sortorder = sorter.order === 'ascend' ? 'asc' : 'desc' } else { delete query.sortkey; delete query.sortorder }
         this.$router.push({ query: vmGroupQuery(query) })

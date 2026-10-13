@@ -108,8 +108,11 @@ test('late error does not replace success in a different context', async () => {
   const old = ctx.fetchData(); route({ account: 'other', domainid: id }); await ctx.fetchData(); fail(new Error('old failure')); await old
   expect(ctx.vmGroupQueryStatus).toBe('ready'); expect(ctx.listRefreshError).toBe(false)
 })
-test('refresh keeps the detail tab and a missing target has its own state', async () => {
-  route({ tab: 'comments' }, '/vmgroup/' + id); await ctx.fetchData()
+test('unnamed detail refresh uses the group contract and preserves its tab/missing state', async () => {
+  route({ tab: 'comments' }, '/vmgroup/' + id)
+  delete ctx.$route.name
+  await ctx.fetchData()
+  expect(getAPI).toHaveBeenCalledWith('listInstanceGroups', { id, listall: true, page: 1, pagesize: 20 }, { preserveOnFailure: true, timeout: 20000 })
   getAPI.mockResolvedValue(reply([])); await ctx.fetchData({ irefresh: true })
   expect(ctx.vmGroupQueryStatus).toBe('missing'); expect(ctx.resource).toEqual({}); expect(ctx.$route.query.tab).toBe('comments'); expect(ctx.$router.push).not.toHaveBeenCalled()
 })
@@ -132,4 +135,12 @@ test('a disposed view never applies its delayed group response', async () => {
   let complete; getAPI.mockImplementation(() => new Promise(resolve => { complete = resolve }))
   const request = ctx.fetchData(); Autogen.beforeUnmount.call(ctx)
   complete(reply()); await request; expect(ctx.items).toEqual([]); expect(ctx.listLastUpdated).toBeNull()
+})
+
+test('unnamed group detail refuses forbidden/stale actions through group status', async () => {
+  route({ tab: 'comments' }, '/vmgroup/' + id); delete ctx.$route.name
+  await ctx.fetchData()
+  getAPI.mockRejectedValue({ response: { status: 403 } }); await ctx.fetchData()
+  expect(ctx.vmGroupQueryStatus).toBe('forbidden'); expect(ctx.resource).toEqual({}); expect(ctx.items).toEqual([])
+  expect(Autogen.computed.visibleDataViewActions.call(ctx)).toEqual([])
 })
