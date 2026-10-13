@@ -2951,8 +2951,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
             backupManager.checkAndRemoveBackupOfferingBeforeExpunge(vm);
 
-            autoScaleManager.removeVmFromVmGroup(vm.getId());
-
+            // Keep autoscale membership until expunge and resource cleanup succeed.
             // VM expunge 시 할당된 모든 디바이스 자동 해제
             try {
                 _managementServer.deallocateAllDevicesOnVmDestroy(vm.getId());
@@ -2991,6 +2990,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 vmGuestNetworkStateDao.removeByVmId(vm.getId());
             }
 
+            autoScaleManager.removeVmFromVmGroup(vm.getId());
             return true;
 
         } catch (ResourceUnavailableException e) {
@@ -3992,6 +3992,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
 
         _accountMgr.checkAccess(caller, null, true, vmInstance);
+
+        autoScaleManager.checkIfVmActionAllowed(vmId);
 
         checkIfHostOfVMIsInPrepareForMaintenanceState(vmInstance, "Reboot");
 

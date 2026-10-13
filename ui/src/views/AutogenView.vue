@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div>
+  <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup' }">
     <a-affix
       :key="'affix-' + showSearchFilters"
       :offsetTop="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 103 : 78"
@@ -177,6 +177,7 @@
       <keep-alive v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
         <a-modal
           class="mold-dialog"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           centered
           :visible="showAction"
           :closable="true"
@@ -218,6 +219,7 @@
       </keep-alive>
       <a-modal
           class="mold-dialog"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           v-else-if="currentAction.label === 'label.download.events'"
         :visible="showAction"
         :closable="true"
@@ -449,6 +451,7 @@
       </a-modal>
       <a-modal
           class="mold-dialog"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           v-else
         :visible="showAction"
         :closable="true"
@@ -874,6 +877,8 @@
 </template>
 
 <script>
+import '@/style/components/view/autoscale.less'
+import { autoScaleInfrastructureRows, autoScaleVisibleColumns } from '@/utils/autoScaleUi'
 import { createListRefresh, listRowKey, canRefreshList } from '@/utils/listRefresh'
 import { ref, reactive, toRaw, h } from 'vue'
 import { Button } from 'ant-design-vue'
@@ -1586,6 +1591,11 @@ export default {
           })
         }
 
+        // Optional AutoScale infrastructure fields use the existing VM column menu.
+        const defaultColumnKeys = [...this.columnKeys]
+        if (this.$route.name === 'autoscalevmgroup') {
+          this.columnKeys = [...this.columnKeys, ...asArray(this.$route.meta.optionalColumns)]
+        }
         // [CHANGE] 컬럼 루프 안전화
         for (const columnKey of asArray(this.columnKeys)) {
           let key = columnKey
@@ -1617,9 +1627,10 @@ export default {
             sorter: this.$route.name === 'vmsnapshot' ? ['displayname', 'state', 'type', 'current', 'created'].includes(key) : sorter,
             ...(this.$route.name === 'vmsnapshot' ? { sortOrder: (this.$route.query.sortkey || 'created') === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {})
           })
-          this.selectedColumns.push(key)
+          if (this.$route.name !== 'autoscalevmgroup' || defaultColumnKeys.some(column => (typeof column === 'object' ? column.field : column) === key)) this.selectedColumns.push(key)
         }
-        this.allColumns = this.columns
+        this.allColumns = this.$route.name === 'autoscalevmgroup' ? [...this.columns] : this.columns
+        if (this.$route.name === 'autoscalevmgroup') this.columns = this.allColumns.filter(column => this.selectedColumns.includes(column.dataIndex))
 
         if (!store.getters.metrics) {
           if (!this.$store.getters.customColumns[this.$store.getters.userInfo.id]) {
@@ -1627,6 +1638,9 @@ export default {
             this.$store.getters.customColumns[this.$store.getters.userInfo.id][this.$route.path] = this.selectedColumns
           } else {
             this.selectedColumns = this.$store.getters.customColumns[this.$store.getters.userInfo.id][this.$route.path] || this.selectedColumns
+            if (this.$route.name === 'autoscalevmgroup') {
+              this.selectedColumns = autoScaleVisibleColumns(this.selectedColumns)
+            }
             if (this.$route.name === 'kubernetes') {
               this.selectedColumns = [...new Set(this.selectedColumns.map(key => ['cpunumber', 'memory'].includes(key) ? 'resources' : key))]
             }
@@ -1640,6 +1654,8 @@ export default {
             this.updateSelectedColumns()
           }
         }
+
+        if (this.$route.name === 'autoscalevmgroup' && !this.columns.some(column => column.key === 'filtercolumn')) this.updateSelectedColumns()
 
         this.chosenColumns = this.columns.filter(column => {
           return ![this.$t('label.state'), this.$t('label.hostname'), this.$t('label.hostid'), this.$t('label.zonename'),
@@ -1751,7 +1767,7 @@ export default {
       this.listRequestPending = true
       this.listRequestScope = scope
       const requestApi = this.apiName
-      const request = callAPI(requestApi, params).then(json => {
+      const request = callAPI(requestApi, params).then(async json => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         this.listLastUpdated = Date.now()
         this.listLoadedScope = scope
@@ -1790,7 +1806,12 @@ export default {
             return
           }
         }
-        this.items = json[responseName][objectName]
+        let responseItems = json[responseName][objectName]
+        if (this.$route.name === 'autoscalevmgroup' && !this.dataView && this.selectedColumns.includes('zonename')) {
+          responseItems = await autoScaleInfrastructureRows(getAPI, responseItems || [], 'listNetworks' in this.$store.getters.apis)
+          if (version !== this.listRequestVersion || scope !== this.listScope()) return
+        }
+        this.items = responseItems
         if (!this.items || this.items.length === 0) {
           this.items = []
         }
@@ -2641,6 +2662,8 @@ export default {
           this.selectedColumns.push(name)
         }
       }
+
+      if (this.$route.name === 'autoscalevmgroup' && name === 'zonename' && this.selectedColumns.includes('zonename')) this.fetchData()
 
       this.columns = this.allColumns.filter(x => this.selectedColumns.includes(x.dataIndex))
       const filterColumn = {

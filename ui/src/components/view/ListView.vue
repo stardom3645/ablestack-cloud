@@ -16,13 +16,14 @@
 // under the License.
 
 <template>
-  <div class="list-view-table-wrapper" @contextmenu="handleGlobalContextMenu">
+  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup' }" @contextmenu="handleGlobalContextMenu">
     <a-table
       size="middle"
       :loading="loading"
       :locale="emptyText ? { emptyText } : undefined"
       :columns="isOrderUpdatable() ? columns : columns.filter(x => x.dataIndex !== 'order')"
       :dataSource="items"
+      :scroll="$route.name === 'autoscalevmgroup' ? { x: 980 } : undefined"
       :rowKey="listRowKey"
       :pagination="false"
       :rowSelection="explicitlyAllowRowSelection || enableGroupAction() || $route.name === 'event' ? {selectedRowKeys: selectedRowKeys, onChange: onSelectChange, columnWidth: 30} : null"
@@ -53,7 +54,10 @@
       </div>
     </template>
     <template #bodyCell="{ column, text, record }">
-      <template v-if="['name', 'provider'].includes(column.key)">
+      <template v-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'zonename'].includes(column.key)">
+        <auto-scale-list-cell :resource="record" :column="column.key" />
+      </template>
+      <template v-else-if="['name', 'provider'].includes(column.key)">
         <span
           v-if="['vm', 'vnfapp'].includes($route.path.split('/')[1])"
           style="margin-right: 5px"
@@ -649,7 +653,7 @@
           <span v-if="idx < (record.network.length - 1)">, </span>
         </template>
       </template>
-      <template v-if="column.key === 'associatednetworkname'">
+      <template v-if="column.key === 'associatednetworkname' && $route.name !== 'autoscalevmgroup'">
         <router-link :to="{ path: '/guestnetwork/' + record.associatednetworkid }">{{ text }}</router-link>
       </template>
       <template v-if="column.key === 'vpcname'">
@@ -730,7 +734,7 @@
       <template v-if="column.key === 'podname'">
         <router-link :to="{ path: '/pod/' + record.podid }">{{ text }}</router-link>
       </template>
-      <template v-if="column.key === 'account'">
+      <template v-if="column.key === 'account' && $route.name !== 'autoscalevmgroup'">
         <template v-if="record.owner">
           <template
             v-for="(item, idx) in record.owner"
@@ -804,7 +808,7 @@
         >{{ text || record.zoneid }}</router-link>
         <span v-else>{{ text }}</span>
       </template>
-      <template v-if="column.key === 'zonename'">
+      <template v-if="column.key === 'zonename' && $route.name !== 'autoscalevmgroup'">
         <router-link
           v-if="$router.resolve('/zone/' + record.zoneid).matched[0].redirect !== '/exception/404'"
           :to="{ path: '/zone/' + record.zoneid }"
@@ -878,7 +882,7 @@
         {{ record.enabled ? 'Enabled' : 'Disabled' }}
       </template>
       <template
-        v-if="['created', 'sent', 'removed', 'effectiveDate', 'endDate', 'allocated', 'startdate', 'enddate'].includes(column.key) || (['startdate'].includes(column.key) && ['webhook'].includes($route.path.split('/')[1])) || (column.key === 'allocated' && ['asnumbers', 'publicip', 'ipv4subnets'].includes($route.meta.name) && text)"
+        v-if="['created', 'sent', 'removed', 'effectiveDate', 'endDate', 'allocated', 'startdate', 'enddate'].includes(column.key) && !(['startdate', 'enddate'].includes(column.key) && ['vm', 'vnfapp', 'autoscalevmgroup'].includes($route.path.split('/')[1])) || (['startdate'].includes(column.key) && ['webhook'].includes($route.path.split('/')[1])) || (column.key === 'allocated' && ['asnumbers', 'publicip', 'ipv4subnets'].includes($route.meta.name) && text)"
       >
         {{ text && $toLocaleDate(text) }}
       </template>
@@ -1178,6 +1182,7 @@
 </template>
 
 <script>
+import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import { listRowKey } from '@/utils/listRefresh'
 import { getAPI, postAPI } from '@/api'
 import OsLogo from '@/components/widgets/OsLogo'
@@ -1200,6 +1205,7 @@ import { FileTextOutlined } from '@ant-design/icons-vue'
 export default {
   name: 'ListView',
   components: {
+    AutoScaleListCell,
     OsLogo,
     Status,
     CloneFlattenControl,
@@ -1737,7 +1743,7 @@ export default {
       }
     },
     generateHumanReadableSchedule (schedule) {
-      return cronstrue.toString(schedule, { locale: this.$i18n.locale })
+      return cronstrue.toString(schedule, { locale: this.$i18n.locale === 'ko_KR' ? 'ko' : this.$i18n.locale })
     },
     entityTypeToPath (entitytype) {
       switch (entitytype) {
