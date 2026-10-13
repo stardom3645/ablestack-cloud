@@ -24,7 +24,7 @@
       <a-input-search v-model:value="draftKeyword" :placeholder="$t('label.search')" allow-clear @search="searchMembers" />
     </div>
     <p v-if="actionReason && actionReason !== 'message.vm.group.members.refresh' && !['error', 'forbidden'].includes(status)" role="status">{{ $t(actionReason) }}</p>
-    <p v-if="['error', 'forbidden'].includes(status)" role="status">{{ $t('message.vm.group.members.' + status) }} <a-button type="link" @click="fetchData">{{ $t('label.vm.group.query.retry') }}</a-button></p>
+    <p v-if="['error', 'forbidden'].includes(status)" role="status">{{ $t('message.vm.group.members.' + status) }} <a-button type="link" @click="fetchData">{{ $t('label.retry') }}</a-button></p>
     <ListView
 ref="membersTable"
 resource-path="/vm"
@@ -58,7 +58,7 @@ show-size-changer
         <template v-if="stage === 'choose' && mode === 'link'">
           <p>{{ $t('message.vm.group.members.link') }}</p>
           <a-input-search ref="candidateSearch" v-model:value="candidateKeyword" :placeholder="$t('label.search')" allow-clear @search="searchCandidates" />
-          <p v-if="['error', 'forbidden'].includes(candidateStatus)" role="status">{{ $t('message.vm.group.members.' + candidateStatus) }} <a-button type="link" @click="fetchCandidates">{{ $t('label.vm.group.query.retry') }}</a-button></p>
+          <p v-if="['error', 'forbidden'].includes(candidateStatus)" role="status">{{ $t('message.vm.group.members.' + candidateStatus) }} <a-button type="link" @click="fetchCandidates">{{ $t('label.retry') }}</a-button></p>
           <ListView
 ref="candidateTable"
 resource-path="/vm"
@@ -77,7 +77,7 @@ resource-path="/vm"
           <a-form-item :label="$t('label.vm.group.members.target')" required>
             <a-select v-model:value="targetId" :loading="groups.loading" :disabled="!groupsReady" :options="groupOptions" :placeholder="$t('label.vm.group.members.target')" />
           </a-form-item>
-          <p v-if="!groupsReady || !groupOptions.length" role="status">{{ $t('message.vm.group.members.groups.' + (groups.status === 'ready' && !groupOptions.length ? 'empty' : groups.status)) }} <a-button v-if="['error', 'forbidden'].includes(groups.status)" type="link" @click="loadGroups">{{ $t('label.vm.group.query.retry') }}</a-button></p>
+          <p v-if="!groupsReady || !groupOptions.length" role="status">{{ $t('message.vm.group.members.groups.' + (groups.status === 'ready' && !groupOptions.length ? 'empty' : groups.status)) }} <a-button v-if="['error', 'forbidden'].includes(groups.status)" type="link" @click="loadGroups">{{ $t('label.retry') }}</a-button></p>
         </template>
         <template v-if="stage === 'confirm' || stage === 'result'">
           <p>{{ $t('message.vm.group.members.' + (mode === 'clear' ? 'confirm.clear' : 'confirm.move')) }}</p>
@@ -90,7 +90,7 @@ resource-path="/vm"
         <a-button :disabled="busy" @click="closeModal">{{ $t(stage === 'result' ? 'label.close' : 'label.cancel') }}</a-button>
         <a-button v-if="stage === 'choose'" type="primary" :disabled="mode === 'link' ? candidateStatus !== 'ready' || candidatePending || !candidateSelection.length : !groupsReady || !targetId" @click="confirmSelection">{{ $t('label.next') }}</a-button>
         <a-button v-if="stage === 'confirm'" type="primary" :loading="busy" :disabled="!!actionReason" @click="execute">{{ $t('label.ok') }}</a-button>
-        <a-button v-if="stage === 'result' && results.some(row => row.status === 'failed')" type="primary" :loading="busy" :disabled="!!actionReason" @click="execute">{{ $t('label.vm.group.query.retry') }}</a-button>
+        <a-button v-if="stage === 'result' && results.some(row => row.status === 'failed')" type="primary" :loading="busy" :disabled="!!actionReason" @click="execute">{{ $t('label.retry') }}</a-button>
         <a-button v-if="stage === 'result' && results.some(row => row.status === 'unknown')" @click="fetchData(); parentFetchData()">{{ $t('label.refresh') }}</a-button>
       </template>
     </a-modal>
