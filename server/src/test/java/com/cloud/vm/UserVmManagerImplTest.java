@@ -259,9 +259,6 @@ public class UserVmManagerImplTest {
     private UserVmDao userVmDao;
 
     @Mock
-    private VmCreationSourceService creationSourceService;
-
-    @Mock
     private VmInstanceGroupAssignment vmInstanceGroupAssignment;
 
     @Mock
@@ -627,6 +624,7 @@ public class UserVmManagerImplTest {
 
     @Test
     public void groupOnlyUpdateChecksAccessAndBypassesVmSettings() throws ResourceUnavailableException, InsufficientCapacityException {
+        Mockito.when(updateVmCommand.getOsTypeId()).thenReturn(null);
         Mockito.when(updateVmCommand.hasGroupUpdate()).thenReturn(true);
         Mockito.when(updateVmCommand.isGroupOnlyUpdate()).thenReturn(true);
         Mockito.when(updateVmCommand.getGroupId()).thenReturn(20L);
@@ -643,6 +641,7 @@ public class UserVmManagerImplTest {
 
     @Test
     public void unavailableVmCannotChangeGroup() {
+        Mockito.when(updateVmCommand.getOsTypeId()).thenReturn(null);
         Mockito.when(updateVmCommand.hasGroupUpdate()).thenReturn(true);
         Mockito.when(updateVmCommand.isGroupOnlyUpdate()).thenReturn(true);
         Mockito.when(userVmVoMock.getState()).thenReturn(VirtualMachine.State.Expunging);
