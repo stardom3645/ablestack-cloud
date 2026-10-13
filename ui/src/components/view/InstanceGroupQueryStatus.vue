@@ -17,14 +17,11 @@ specific language governing permissions and limitations
 under the License.
 -->
 <template>
-  <a-alert class="vm-group-query-status" :type="['error', 'forbidden'].includes(status) ? 'error' : 'info'" show-icon>
-    <template #message><span role="status" aria-live="polite">{{ $t(messageKey) }}</span></template>
-    <template #description>
-      <span v-if="updated">{{ $t('message.vm.group.query.updated', { time: new Date(updated).toLocaleString($i18n.locale?.replace('_', '-')) }) }}</span>
-      <span v-if="sorted"> {{ $t('message.vm.group.query.page.sort') }}</span>
-    </template>
-    <template #action><a-button v-if="['error', 'forbidden', 'missing'].includes(status)" size="small" @click="$emit('retry')">{{ $t('label.retry') }}</a-button></template>
-  </a-alert>
+  <p v-if="['error', 'forbidden', 'missing'].includes(status)" class="vm-group-query-status" role="status" aria-live="polite">
+    {{ $t(messageKey) }}
+    <span v-if="updated && retained">{{ $t('message.vm.group.query.updated', { time: new Date(updated).toLocaleString($i18n.locale?.replace('_', '-')) }) }}</span>
+    <a-button type="link" size="small" @click="$emit('retry')">{{ $t('label.retry') }}</a-button>
+  </p>
 </template>
 <script>
 import { vmGroupQueryMessage } from '@/utils/vmGroupQuery'
@@ -32,8 +29,7 @@ export default {
   props: {
     status: { type: String, default: 'loading' },
     updated: { type: Number, default: null },
-    retained: { type: Boolean, default: false },
-    sorted: { type: Boolean, default: false }
+    retained: { type: Boolean, default: false }
   },
   emits: ['retry'],
   computed: { messageKey () { return vmGroupQueryMessage(this.status, this.retained) } }
@@ -41,4 +37,5 @@ export default {
 </script>
 <style scoped>
 .vm-group-query-status { margin-bottom: 12px; }
+.vm-group-query-status span { margin-left: 8px; }
 </style>

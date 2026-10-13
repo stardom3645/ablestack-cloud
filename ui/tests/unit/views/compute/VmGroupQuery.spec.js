@@ -14,7 +14,8 @@
 // KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { shallowMount } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
+import { Button } from 'ant-design-vue'
 import compute from '@/config/section/compute'
 import Status from '@/components/view/InstanceGroupQueryStatus'
 import { vmGroupQuery, vmGroupQueryParams, vmGroupQueryScope, vmGroupQueryRows, vmGroupQueryMessage } from '@/utils/vmGroupQuery'
@@ -65,8 +66,16 @@ test('retained failure has a different status from empty/permission', () => {
   expect(vmGroupQueryMessage('forbidden', true)).toBe('message.vm.group.query.forbidden')
 })
 test('status renders a Korean-locale success time and explicit retry without raw errors', () => {
-  const wrapper = shallowMount(Status, { props: { status: 'error', retained: true, updated: 1700000000000, sorted: true }, global: { mocks: { $t: (key, args) => args?.time ? key + args.time : key, $i18n: { locale: 'ko_KR' } }, stubs: { 'a-alert': { template: '<div><slot name="message"/><slot name="description"/><slot name="action"/></div>' }, 'a-button': { emits: ['click'], template: `<button @click="$emit('click')"><slot/></button>` } } } })
+  const wrapper = mount(Status, { props: { status: 'error', retained: true, updated: 1700000000000 }, global: { components: { 'a-button': Button }, mocks: { $t: (key, args) => args?.time ? key + args.time : key, $i18n: { locale: 'ko_KR' } } } })
   expect(wrapper.text()).toContain('message.vm.group.query.stale')
   expect(wrapper.text()).toContain('message.vm.group.query.updated')
   return wrapper.find('button').trigger('click').then(() => expect(wrapper.emitted('retry')).toHaveLength(1))
+})
+
+test.each(['loading', 'refreshing', 'ready', 'empty'])('normal %s uses the existing Mold list without any status ribbon', status => {
+  const wrapper = mount(Status, { props: { status, updated: 1700000000000 }, global: { components: { 'a-button': Button }, mocks: { $t: key => key, $i18n: { locale: 'ko_KR' } } } })
+  expect(wrapper.find('p').exists()).toBe(false)
+  expect(wrapper.find('button').exists()).toBe(false)
+  expect(wrapper.text()).toBe('')
+  wrapper.unmount()
 })

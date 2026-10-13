@@ -28,11 +28,11 @@ listInstanceGroups의 실제 ListVMGroupsCmd 및 QueryManagerImpl을 대조했�
 
 그룹 경로의 URL만 정리한다. API 필드 name/keyword/account/domainid/projectid/id/isrecursive/listall/page/pagesize와 UI 상태 q/tab/action/dataView/sortkey/sortorder를 구분한다. 미지원/배열/잘못된 UUID·페이지·불리언은 제거하고 제거 알림을 표시한다. q와 keyword를 일치시켜 URL 재진입의 검색 입력을 복원한다. 기존 이름의 공백을 검색 단계에서 자동 정규화하지 않는다.
 
-정렬은 현재 페이지에 적용하며 그 범위를 표시한다. 정렬 필드/방향을 URL과 AntD column sortOrder에 유지하고 서버에 미지원 sortkey/sortorder를 보내지 않는다. 검색·페이지·탭·소유 범위의 지원된 상태는 갱신으로 소실되지 않는다.
+정렬은 기존 Mold 목록과 같이 현재 페이지에 적용한다. 정렬 필드/방향을 URL과 AntD column sortOrder에 유지하고 서버에 미지원 sortkey/sortorder를 보내지 않는다. 검색·페이지·탭·소유 범위의 지원된 상태는 갱신으로 소실되지 않는다.
 
 ## 조회 상태와 문맥
 
-그룹 경로에서 getAPI preserveOnFailure 및 20초 timeout을 사용한다. 일반 네트워크/서버 실패와 권한 거부는 화면이 처리하며 현재 세션 401의 기존 인증 처리만 유지한다. loading/refreshing/ready/empty/error/forbidden/missing과 마지막 성공 확인 시각을 명시한다. 같은 문맥의 실패는 이전 성공 데이터·시각을 유지하지만 작업·선택을 막는다. 권한 거부에서는 데이터와 선택을 제거한다. 최초 실패와 정상 0건을 같은 빈 목록으로 안내하지 않는다.
+그룹 경로에서 getAPI preserveOnFailure 및 20초 timeout을 사용한다. 일반 네트워크/서버 실패와 권한 거부는 화면이 처리하며 현재 세션 401의 기존 인증 처리만 유지한다. 내부 조회 상태는 loading/refreshing/ready/empty/error/forbidden/missing으로 구분한다. 사용자 지시에 따라 정상 조회·갱신·0건에는 상단 리본이나 성공 확인 시각을 표시하지 않는다. 기존 목록과 갱신 버튼의 로딩 표시를 사용하고, 실패·권한 거부·없어진 대상에만 기존 공통 목록과 같은 문장형 안내·재시도를 표시한다. 이전 결과를 유지한 실패에서만 마지막 성공 확인 시각을 함께 표시한다. 같은 문맥의 실패는 이전 성공 데이터·시각을 유지하지만 작업·선택을 막는다. 권한 거부에서는 데이터와 선택을 제거한다. 최초 실패와 정상 0건을 같은 빈 목록으로 안내하지 않는다.
 
 페이지의 필수 응답 구조·UUID/이름·중복 ID·총 개수를 확인한 뒤 성공 시각을 갱신한다. 불완전한 응답은 오류이며 이전 결과를 성공/0건으로 바꾸지 않는다. 상세 대상이 사라진 경우 자체 missing 상태로 표시하고 오래된 상세 작업을 차단한다.
 

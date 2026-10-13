@@ -8758,8 +8758,6 @@
   "label.autoscale.source.current": "Read complete",
   "label.autoscale.metric.result": "Evaluation result",
   "message.vm.group.query.loading": "Loading groups.",
-  "message.vm.group.query.refreshing": "Refreshing groups; the previous results remain visible.",
-  "message.vm.group.query.ready": "Group query completed.",
   "message.vm.group.query.empty": "No groups in this scope.",
   "message.vm.group.query.no.results": "No groups match the search.",
   "message.vm.group.query.error": "Unable to query groups. Retry to obtain results.",
@@ -8767,6 +8765,5 @@
   "message.vm.group.query.forbidden": "You do not have permission to query these groups. Previous data and selections have been cleared.",
   "message.vm.group.query.missing": "This group is no longer available. Refresh the list to confirm.",
   "message.vm.group.query.updated": "Last successful check: {time}",
-  "message.vm.group.query.page.sort": "Sorting applies to the current page.",
   "message.vm.group.query.removed": "Unsupported or invalid group search conditions were removed from the URL."
 }

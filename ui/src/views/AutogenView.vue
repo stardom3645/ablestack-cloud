@@ -30,7 +30,7 @@
             <breadcrumb :resource="resource">
               <template #end>
                 <a-button
-                  :loading="loading"
+                  :loading="loading || ($route.name === 'vmgroup' && listRequestPending)"
                   style="margin-bottom: 5px"
                   shape="round"
                   size="small"
@@ -808,7 +808,6 @@
         :status="vmGroupQueryStatus"
         :updated="listLastUpdated"
         :retained="!!listLoadedScope"
-        :sorted="!!$route.query.sortkey"
         @retry="fetchData({ irefresh: true })" />
       <div v-if="dataView">
         <slot

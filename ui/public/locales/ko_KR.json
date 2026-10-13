@@ -8723,8 +8723,6 @@
   "label.autoscale.source.current": "조회 완료",
   "label.autoscale.metric.result": "평가 결과",
   "message.vm.group.query.loading": "그룹을 조회하고 있습니다.",
-  "message.vm.group.query.refreshing": "그룹을 갱신하고 있습니다. 이전 결과를 유지합니다.",
-  "message.vm.group.query.ready": "그룹 조회가 완료되었습니다.",
   "message.vm.group.query.empty": "현재 소유 범위에 그룹이 없습니다.",
   "message.vm.group.query.no.results": "검색 조건에 맞는 그룹이 없습니다.",
   "message.vm.group.query.error": "그룹을 조회하지 못했습니다. 다시 시도해 결과를 확인해 주세요.",
@@ -8732,6 +8730,5 @@
   "message.vm.group.query.forbidden": "그룹 조회 권한이 없습니다. 이전 데이터와 선택을 제거했습니다.",
   "message.vm.group.query.missing": "그룹을 더 이상 조회할 수 없습니다. 목록을 갱신해 확인해 주세요.",
   "message.vm.group.query.updated": "마지막 성공 확인: {time}",
-  "message.vm.group.query.page.sort": "정렬은 현재 페이지에 적용됩니다.",
   "message.vm.group.query.removed": "지원되지 않거나 잘못된 그룹 검색 조건을 URL에서 제거했습니다."
 }
