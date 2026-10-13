@@ -15,18 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { normalizeVmGroupName } from '@/utils/vmGroupNames'
+
 export function buildVmGroupUpdate (resource, value, groups = [], supported = { groupId: true, clearGroup: true }) {
   const name = value == null ? '' : String(value)
   const previous = resource.group == null ? '' : String(resource.group)
   if (name === previous) return {}
-  if (name !== '' && name.trim() === '') throw new Error('message.vm.group.blank.name')
   if (name === '') {
     if (!previous && !resource.groupid) return {}
     if (!supported.clearGroup) throw new Error('message.vm.group.clear.unsupported')
     return { cleargroup: true }
   }
   const existing = groups.find(group => group.value === name && group.groupId)
-  return existing && supported.groupId ? { groupid: existing.groupId } : { group: name }
+  if (existing && supported.groupId) return { groupid: existing.groupId }
+  const normalized = normalizeVmGroupName(name, existing?.value)
+  const canonical = groups.find(group => group.value === normalized && group.groupId)
+  return canonical && supported.groupId ? { groupid: canonical.groupId } : { group: normalized }
 }
 
 export function isGroupOnlyEdit (values, initialValues) {

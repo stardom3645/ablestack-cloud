@@ -171,4 +171,27 @@ public class VmInstanceGroupAssignmentTest {
         when(mapDao.persist(any())).thenReturn(null);
         assertThrows(CloudRuntimeException.class, () -> service.apply(10L, 20L, null, false));
     }
+    @Test public void normalizedNameReusesExistingCanonicalGroup() {
+        AccountVO owner = mock(AccountVO.class);
+        when(accountDao.acquireInLockTable(7L)).thenReturn(owner);
+        when(accountDao.lockRow(7L, true)).thenReturn(owner);
+        when(groupDao.findByAccountAndName(7L, "한글")).thenReturn(group);
+        service.apply(10L, null, " 한글 ", false);
+        verify(groupDao, never()).persist(any());
+        verify(mapDao).persist(any());
+    }
+    @Test public void overlongNamePreservesMembership() {
+        assertThrows(InvalidParameterValueException.class, () -> service.apply(10L, null, "가".repeat(256), false));
+        verifyNoInteractions(mapDao, accountDao);
+    }
+    @Test public void exactPaddedLegacyNameIsNotRewritten() {
+        AccountVO owner = mock(AccountVO.class);
+        when(accountDao.acquireInLockTable(7L)).thenReturn(owner);
+        when(accountDao.lockRow(7L, true)).thenReturn(owner);
+        when(group.getName()).thenReturn(" 기존 ");
+        when(groupDao.findByAccountAndName(7L, " 기존 ")).thenReturn(group);
+        service.apply(10L, null, " 기존 ", false);
+        verify(groupDao, never()).persist(any());
+        verify(mapDao).persist(any());
+    }
 }

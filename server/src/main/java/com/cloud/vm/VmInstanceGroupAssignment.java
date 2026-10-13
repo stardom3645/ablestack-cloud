@@ -18,7 +18,6 @@ package com.cloud.vm;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import com.cloud.exception.InvalidParameterValueException;
@@ -51,10 +50,13 @@ public class VmInstanceGroupAssignment {
 
     public void validate(long vmId, Long groupId, String name, boolean clear) {
         int selectors = (groupId != null ? 1 : 0) + (name != null ? 1 : 0) + (clear ? 1 : 0);
-        if (selectors > 1 || name != null && StringUtils.isBlank(name)) {
+        if (selectors > 1) {
             throw new InvalidParameterValueException("Specify one non-blank group name, groupid or cleargroup=true.");
         }
         UserVmVO vm = requireVm(vmDao.findById(vmId));
+        if (name != null) {
+            VmInstanceGroupNames.forExisting(name, groupDao.findByAccountAndName(vm.getAccountId(), name));
+        }
         if (groupId != null) {
             requireGroup(groupDao.findById(groupId), vm.getAccountId());
         }
@@ -84,9 +86,11 @@ public class VmInstanceGroupAssignment {
                     if (groupId != null) {
                         target = requireGroup(groupDao.lockRow(groupId, true), owner);
                     } else {
-                        target = groupDao.findByAccountAndName(owner, name);
+                        InstanceGroupVO existing = groupDao.findByAccountAndName(owner, name);
+                        String normalized = VmInstanceGroupNames.forExisting(name, existing);
+                        target = existing != null && name.equals(existing.getName()) ? existing : groupDao.findByAccountAndName(owner, normalized);
                         if (target == null) {
-                            target = groupDao.persist(new InstanceGroupVO(name, owner));
+                            target = groupDao.persist(new InstanceGroupVO(normalized, owner));
                             if (target == null) {
                                 throw new CloudRuntimeException("Unable to create the instance group.");
                             }

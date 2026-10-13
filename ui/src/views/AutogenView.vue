@@ -480,6 +480,7 @@
           v-ctrl-enter="handleSubmit"
         >
           <VmSnapshotSummary v-if="currentAction.api === 'createVMSnapshot'" vm-only :snapshot="{ virtualmachineid: currentAction.resource.id, virtualmachinename: currentAction.resource.displayname || currentAction.resource.name, virtualmachineinstancename: currentAction.resource.instancename, virtualmachinestate: currentAction.resource.state }" />
+          <InstanceGroupDeleteSummary v-if="currentAction.api === 'deleteInstanceGroup'" :groups="currentAction.vmGroupTargets || []" />
           <span v-if="currentAction.message">
             <div v-if="selectedRowKeys.length > 0 && currentAction.invokedAsGroupAction">
               <a-alert
@@ -512,7 +513,7 @@
             <div v-if="selectedRowKeys.length > 0 && currentAction.invokedAsGroupAction">
               <a-divider />
               <a-table
-                v-if="selectedRowKeys.length > 0"
+                v-if="selectedRowKeys.length > 0 && currentAction.api !== 'deleteInstanceGroup'"
                 size="middle"
                 :columns="chosenColumns"
                 :dataSource="selectedItems"
@@ -905,6 +906,8 @@ import { bulkColumns, updateBulkItem } from '@/utils/bulkAction'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import DetailsInput from '@/components/widgets/DetailsInput'
 import AdvisoriesView from '@/components/view/AdvisoriesView'
+import InstanceGroupDeleteSummary from '@/components/view/InstanceGroupDeleteSummary'
+import { normalizeVmGroupName, isVmGroupNameAction, isVmGroupAction, vmGroupErrorKey, vmGroupDeleteTargets } from '@/utils/vmGroupNames'
 
 export default {
   name: 'Resource',
@@ -914,6 +917,7 @@ export default {
     ListView,
     ActionButton,
     VmSnapshotSummary,
+    InstanceGroupDeleteSummary,
     SearchView,
     SearchFilter,
     BulkActionProgress,
@@ -2023,6 +2027,9 @@ export default {
         ...action,
         invokedAsGroupAction: !!isGroupAction
       }
+      if (action.api === 'deleteInstanceGroup') {
+        this.currentAction.vmGroupTargets = vmGroupDeleteTargets(this.currentAction, this.selectedItems)
+      }
       const apiParams = store.getters.apis[this.currentAction.api]?.params
       if (!Array.isArray(apiParams)) {
         this.rejectActionSchema(action.api, ['*'])
@@ -2349,10 +2356,12 @@ export default {
     handleSubmit (e) {
       if (this.actionLoading || this.isSubmitDisabled) return
       this.promises = []
-      if (!this.dataView && this.currentAction.invokedAsGroupAction && this.selectedRowKeys.length > 0) {
-        if (this.selectedRowKeys.length > 0) {
+      const groupDeletion = this.currentAction.api === 'deleteInstanceGroup' && this.currentAction.invokedAsGroupAction
+      const selectedKeys = groupDeletion ? (this.currentAction.vmGroupTargets || []).map(group => group.id) : this.selectedRowKeys
+      if (!this.dataView && this.currentAction.invokedAsGroupAction && selectedKeys.length > 0) {
+        if (selectedKeys.length > 0) {
           this.bulkColumns = bulkColumns(this.chosenColumns)
-          this.selectedItems = this.selectedItems.map(v => ({ ...v, status: 'InProgress' }))
+          this.selectedItems = (groupDeletion ? this.currentAction.vmGroupTargets : this.selectedItems).map(v => ({ ...v, status: 'InProgress' }))
           this.bulkColumns.splice(0, 0, {
             key: 'status',
             dataIndex: 'status',
@@ -2371,10 +2380,11 @@ export default {
           const values = toRaw(this.form)
           this.actionLoading = true
           const itemsNameMap = {}
-          this.items.map(x => {
+          const namedItems = groupDeletion ? this.currentAction.vmGroupTargets : this.items
+          namedItems.map(x => {
             itemsNameMap[x.id] = x.name || x.displaytext || x.id
           })
-          const paramsList = this.currentAction.groupMap(this.selectedRowKeys, values, this.items)
+          const paramsList = this.currentAction.groupMap(groupDeletion ? selectedKeys : this.selectedRowKeys, values, this.items)
           for (const params of paramsList) {
             var resourceName = itemsNameMap[params.id]
             // Using a method for this since it's an async call and don't want wrong prarms to be passed
@@ -2409,7 +2419,8 @@ export default {
             return
           }
           if (selectedItems === this.selectedItems && selectedItems.length !== 0) {
-            this.$notifyError(error)
+            if (isVmGroupAction(action.api)) this.notifyVmGroupError(error)
+            else this.$notifyError(error)
             eventBus.emit('update-resource-state', { selectedItems, resource: this.getDataIdentifier(params), state: error.trackingStatus === 'unknown' ? 'unknown' : 'failed' })
           }
           resolve(false)
@@ -2499,11 +2510,23 @@ export default {
     execSubmit (e) {
       e.preventDefault()
       this.formRef.value.validate().then(() => {
-        const values = toRaw(this.form)
+        let values = toRaw(this.form)
         const params = {}
         const action = this.currentAction
+        if (isVmGroupNameAction(action.api)) {
+          values = { ...values, name: normalizeVmGroupName(values.name, action.api === 'updateInstanceGroup' ? this.resource.name : undefined) }
+          if (action.api === 'updateInstanceGroup' && values.name === this.resource.name) {
+            this.$message.info(this.$t('message.vm.group.name.unchanged'))
+            this.closeAction()
+            return
+          }
+        }
         if ('id' in this.resource && action.params.map(i => { return i.name }).includes('id')) {
           params.id = this.resource.id
+        }
+        if (action.api === 'deleteInstanceGroup') {
+          if (!action.vmGroupTargets?.length) throw new Error('message.vm.group.operation.missing')
+          params.id = action.vmGroupTargets[0].id
         }
 
         if (['updateDiskOffering'].includes(action.api) && values.tags === this.resource.tags) {
@@ -2604,7 +2627,7 @@ export default {
           }
         }
 
-        const resourceName = params.displayname || params.displaytext || params.name || params.hostname || params.username ||
+        const resourceName = (action.api === 'deleteInstanceGroup' ? action.vmGroupTargets[0]?.name : null) || params.displayname || params.displaytext || params.name || params.hostname || params.username ||
           params.ipaddress || params.virtualmachinename || this.resource.name || this.resource.ipaddress || this.resource.id
 
         var hasJobId = false
@@ -2634,15 +2657,20 @@ export default {
             return
           }
 
-          console.log(error)
+          if (!isVmGroupAction(action.api)) console.log(error)
           eventBus.emit('update-resource-state', { selectedItems: this.selectedItems, resource: this.getDataIdentifier(params), state: 'failed' })
-          this.$notifyError(error)
+          if (isVmGroupAction(action.api)) this.notifyVmGroupError(error)
+          else this.$notifyError(error)
         }).finally(f => {
           this.actionLoading = false
         })
       }).catch(error => {
-        this.formRef.value.scrollToField(error.errorFields[0].name)
+        if (error.errorFields?.length) this.formRef.value.scrollToField(error.errorFields[0].name)
+        else if (isVmGroupAction(this.currentAction.api)) this.notifyVmGroupError(error)
       })
+    },
+    notifyVmGroupError (error) {
+      this.$notification.error({ message: this.$t('message.request.failed'), description: this.$t(vmGroupErrorKey(error)) })
     },
     shouldNavigateBack (action) {
       return ((['delete-outlined', 'DeleteOutlined'].includes(action.icon) || ['archiveEvents', 'archiveAlerts', 'unmanageVirtualMachine'].includes(action.api)) && this.dataView)
@@ -2933,6 +2961,15 @@ export default {
       }
 
       switch (true) {
+        case (field.name === 'name' && isVmGroupNameAction(this.currentAction.api)):
+          rule.validator = (_, value) => {
+            try {
+              normalizeVmGroupName(value, this.currentAction.api === 'updateInstanceGroup' ? this.resource?.name : undefined)
+              return Promise.resolve()
+            } catch (error) { return Promise.reject(this.$t(error.message)) }
+          }
+          this.rules[field.name].push(rule)
+          break
         case (field.type === 'boolean'):
           rule.required = field.required
           rule.message = this.$t('message.error.required.input')

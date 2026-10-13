@@ -30,9 +30,10 @@ it('sends explicit removal for cleared input and existing IDs for moves', () => 
   expect(buildVmGroupUpdate(resource, '', groups)).toEqual({ cleargroup: true })
   expect(buildVmGroupUpdate(resource, 'B', groups)).toEqual({ groupid: 'b' })
 })
-it('retains exact legacy names when creating a group or using an older server', () => {
-  expect(buildVmGroupUpdate(resource, ' 새 그룹 ', groups)).toEqual({ group: ' 새 그룹 ' })
+it('trims new names and preserves names selected from existing candidates', () => {
+  expect(buildVmGroupUpdate(resource, ' 새 그룹 ', groups)).toEqual({ group: '새 그룹' })
   expect(buildVmGroupUpdate(resource, 'B', groups, { groupId: false })).toEqual({ group: 'B' })
+  expect(buildVmGroupUpdate(resource, ' 기존 ', [{ value: ' 기존 ', groupId: 'old' }], { groupId: false })).toEqual({ group: ' 기존 ' })
 })
 it('rejects spaces and refuses to silently ignore clear on an older server', () => {
   expect(() => buildVmGroupUpdate(resource, '   ', groups)).toThrow('message.vm.group.blank.name')

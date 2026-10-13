@@ -4243,42 +4243,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Account owner = _accountMgr.finalizeOwner(caller, accountName, domainId, projectId);
         long accountId = owner.getId();
 
-        // Check if name is already in use by this account
-        boolean isNameInUse = _vmGroupDao.isNameInUse(accountId, groupName);
-
-        if (isNameInUse) {
-            throw new InvalidParameterValueException(String.format("Unable to create Instance group, a group with name %s already exists for Account %s", groupName, owner));
-        }
-
-        return createVmGroup(groupName, accountId);
-    }
-
-    @DB
-    private InstanceGroupVO createVmGroup(String groupName, long accountId) {
-        Account account = null;
-        try {
-            account = _accountDao.acquireInLockTable(accountId); // to ensure
-            // duplicate
-            // vm group
-            // names are
-            // not
-            // created.
-            if (account == null) {
-                logger.warn("Failed to acquire lock on Account");
-                return null;
-            }
-            return Transaction.execute((TransactionCallback<InstanceGroupVO>) status -> {
-                if (_accountDao.lockRow(accountId, true) == null) {
-                    throw new CloudRuntimeException("Unable to lock the instance group owner.");
-                }
-                InstanceGroupVO group = _vmGroupDao.findByAccountAndName(accountId, groupName);
-                return group == null ? _vmGroupDao.persist(new InstanceGroupVO(groupName, accountId)) : group;
-            });
-        } finally {
-            if (account != null) {
-                _accountDao.releaseFromLockTable(accountId);
-            }
-        }
+        return VmInstanceGroupNames.create(_vmGroupDao, _accountDao, accountId, groupName);
     }
 
     @Override
@@ -4947,6 +4912,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Long rootDiskOfferingId, Long rootDiskKmsKeyId, long volumesSize, long additionalDiskSize, Volume volume, Snapshot snapshot) throws ResourceAllocationException {
 
         List<Reserver> checkedReservations = new ArrayList<>();
+
+        if (group != null) {
+            VmInstanceGroupNames.forExisting(group, _vmGroupDao.findByAccountAndName(owner.getId(), group));
+        }
 
 
         try {

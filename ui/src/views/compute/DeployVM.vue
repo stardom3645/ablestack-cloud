@@ -1244,6 +1244,7 @@ import IsoAdditionalDataDisks from '@views/compute/wizard/IsoAdditionalDataDisks
 import DiskQuantitySelection from './wizard/DiskQuantitySelection'
 import { deploymentStorageQuery, dataDiskRequest, dataDiskDeviceIds, completeIsoDiskDeployment, additionalIsoConfigDriveConflict } from '@/utils/vmDiskDeployment'
 import { createVmGroupLookup, vmGroupOwner, vmGroupOwnerKey, vmGroupLookupReady } from '@/utils/vmGroupLookup'
+import { normalizeVmGroupName } from '@/utils/vmGroupNames'
 import DiskSizeSelection from '@views/compute/wizard/DiskSizeSelection'
 import MultiDiskSelection from '@views/compute/wizard/MultiDiskSelection'
 import TemplateIsoSelection from '@views/compute/wizard/TemplateIsoSelection'
@@ -3089,6 +3090,13 @@ export default {
           this.$message.error(this.$t('message.vm.group.lookup.blocked'))
           return
         }
+        let groupName
+        if (values.group) {
+          try {
+            const existing = this.groups.opts.find(group => group.value === values.group)
+            groupName = normalizeVmGroupName(values.group, existing?.value)
+          } catch (error) { this.$message.error(this.$t(error.message)); return }
+        }
         if (this.additionalIsoConfigDriveConflict) {
           this.$notification.error({ message: this.$t('message.request.failed'), description: this.$t('message.additional.iso.configdrive.conflict') })
           return
@@ -3364,7 +3372,7 @@ export default {
           deployVmData.displayname = values.name
         }
         if (values.group) {
-          deployVmData.group = values.group
+          deployVmData.group = groupName
         }
         if (values.leaseduration) {
           deployVmData.leaseduration = values.leaseduration

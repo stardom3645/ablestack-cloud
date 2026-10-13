@@ -82,6 +82,7 @@ it('rechecks ownership after an asynchronous capability check before creating th
     loading: { deploy: false },
     owner: { account: 'before', domainid: 'domain' },
     form: { group: 'selected', templateid: 'template', computeofferingid: 'offering' },
+    groups: { opts: [{ value: 'selected', groupId: 'selected-id' }] },
     groupLookupReady: true,
     formRef: { value: { validate: () => Promise.resolve() } },
     selectedDataDiskOffering: { id: 'disk' },
