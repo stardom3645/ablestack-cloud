@@ -55,6 +55,7 @@ it.each([['', { cleargroup: true }], ['B', { groupid: 'b' }], ['New', { group: '
       initialForm: initial,
       resource,
       groups: { opts: groups },
+      groupLookupReady: true,
       apiParams: { groupid: {}, cleargroup: {} },
       $toBase64AndURIEncoded: jest.fn(),
       $t: text => text,
@@ -73,6 +74,8 @@ it('retains form values and submits nothing for a rejected whitespace name', asy
   const ctx = {
     formRef: { value: { validate: () => Promise.resolve() } },
     form: { group: '   ' },
+    initialForm: {},
+    groupLookupReady: true,
     resource,
     groups: { opts: groups },
     apiParams: { groupid: {}, cleargroup: {} },
