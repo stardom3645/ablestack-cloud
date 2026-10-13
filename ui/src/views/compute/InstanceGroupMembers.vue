@@ -73,7 +73,7 @@ resource-path="/vm"
 @selection-change="candidateSelection = $event" />
           </div>
           <p>{{ $t('message.vm.group.members.already') }}</p>
-          <a-pagination :current="candidatePage" :pageSize="20" :total="candidateCount" @change="candidatePage = $event; fetchCandidates()" />
+          <a-pagination :current="candidatePage" :pageSize="20" :showSizeChanger="false" :total="candidateCount" @change="candidatePage = $event; fetchCandidates()" />
         </template>
         <template v-if="stage === 'choose' && mode === 'move'">
           <a-form-item :label="$t('label.vm.group.members.target')" required>
