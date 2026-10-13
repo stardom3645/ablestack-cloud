@@ -86,9 +86,9 @@ public class VmInstanceGroupNamesTest {
     @Test public void rejects256Characters() {
         assertThrows(InvalidParameterValueException.class, () -> VmInstanceGroupNames.normalize("가".repeat(256)));
     }
-    @Test public void countsSupplementaryCharactersAsOneCharacter() {
-        assertEquals(510, VmInstanceGroupNames.normalize("\ud83d\ude00".repeat(255)).length());
-        assertThrows(InvalidParameterValueException.class, () -> VmInstanceGroupNames.normalize("\ud83d\ude00".repeat(256)));
+    @Test public void supplementaryCharactersRespectTheOrmUtf16Boundary() {
+        assertEquals(255, VmInstanceGroupNames.normalize("\ud83d\ude00".repeat(127) + "A").length());
+        assertThrows(InvalidParameterValueException.class, () -> VmInstanceGroupNames.normalize("\ud83d\ude00".repeat(128)));
     }
     @Test public void exactLegacySelectionIsPreserved() {
         when(group.getName()).thenReturn(" 기존 ");

@@ -29,7 +29,7 @@ export function normalizeVmGroupName (value, previous) {
   if (!name) throw new Error('message.vm.group.blank.name')
   // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u001f\u007f]/.test(name)) throw new Error('message.vm.group.name.characters')
-  if (Array.from(name).length > VM_GROUP_NAME_MAX) throw new Error('message.vm.group.name.length')
+  if (name.length > VM_GROUP_NAME_MAX) throw new Error('message.vm.group.name.length')
   return name
 }
 

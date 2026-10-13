@@ -33,7 +33,7 @@ import com.cloud.vm.dao.InstanceGroupDao;
 public final class VmInstanceGroupNames {
     public static final int MAX_LENGTH = 255;
     private static final Pattern ASCII_CONTROLS = Pattern.compile("[\\u0000-\\u001f\\u007f]");
-    // The same boundary whitespace set is used by the UI; length is Unicode code points.
+    // The UI and ORM both count UTF-16 units; reject before GenericDaoBase can truncate.
     private static final Pattern BOUNDARY_WHITESPACE = Pattern.compile(
             "^[\\u0009-\\u000d\\u0020\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+"
             + "|[\\u0009-\\u000d\\u0020\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$");
@@ -51,8 +51,8 @@ public final class VmInstanceGroupNames {
         if (ASCII_CONTROLS.matcher(name).find()) {
             throw new InvalidParameterValueException("[VM_GROUP_NAME_INVALID_CHARACTERS] Instance group name must not contain ASCII control characters.");
         }
-        if (name.codePointCount(0, name.length()) > MAX_LENGTH) {
-            throw new InvalidParameterValueException("[VM_GROUP_NAME_TOO_LONG] Instance group name must be at most 255 characters.");
+        if (name.length() > MAX_LENGTH) {
+            throw new InvalidParameterValueException("[VM_GROUP_NAME_TOO_LONG] Instance group name must be at most 255 UTF-16 units.");
         }
         return name;
     }

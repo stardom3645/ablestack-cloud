@@ -53,10 +53,11 @@ public class VmInstanceGroupInputContractTest {
         dispatch(command, CreateVMGroupCmd.class, "groupName", " " + "가".repeat(255) + " ");
         assertEquals("가".repeat(255), VmInstanceGroupNames.normalize(command.getGroupName()));
     }
-    @Test public void renameAllows255SupplementaryCharacters() throws Exception {
+    @Test public void renamePreservesSupplementaryNameAtTheStorageBoundary() throws Exception {
         UpdateVMGroupCmd command = new UpdateVMGroupCmd();
-        dispatch(command, UpdateVMGroupCmd.class, "groupName", " " + "\ud83d\ude00".repeat(255) + " ");
-        assertEquals(255, VmInstanceGroupNames.normalize(command.getGroupName()).codePointCount(0, 510));
+        String name = "\ud83d\ude00".repeat(127) + "A";
+        dispatch(command, UpdateVMGroupCmd.class, "groupName", " " + name + " ");
+        assertEquals(name, VmInstanceGroupNames.normalize(command.getGroupName()));
     }
     @Test public void vmUpdateUsesTheSameInputBoundary() throws Exception {
         UpdateVMCmd command = new UpdateVMCmd();

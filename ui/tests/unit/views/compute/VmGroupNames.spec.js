@@ -25,9 +25,14 @@ import { buildVmGroupUpdate } from '@/utils/vmGroupAssignment'
 test.each([null, undefined, '', '   ', '\t\r\n', '\u00a0\u3000\ufeff', '\u2000\u202f\u205f'])('rejects blank name %j', value => {
   expect(() => normalizeVmGroupName(value)).toThrow('message.vm.group.blank.name')
 })
-test.each(['가', 'a', '😀'])('accepts 255 and rejects 256 %s characters', character => {
+test.each(['가', 'a'])('accepts 255 and rejects 256 %s characters', character => {
   expect(normalizeVmGroupName(' ' + character.repeat(255) + ' ')).toBe(character.repeat(255))
   expect(() => normalizeVmGroupName(character.repeat(256))).toThrow('message.vm.group.name.length')
+})
+test('supplementary characters fit the ORM boundary without truncation', () => {
+  const name = '😀'.repeat(127) + 'A'
+  expect(normalizeVmGroupName(' ' + name + ' ')).toBe(name)
+  expect(() => normalizeVmGroupName('😀'.repeat(128))).toThrow('message.vm.group.name.length')
 })
 test('trims surrounding Unicode whitespace while preserving internal whitespace', () => {
   expect(normalizeVmGroupName('\u00a0 한글  그룹 \u3000')).toBe('한글  그룹')
