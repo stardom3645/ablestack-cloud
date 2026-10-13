@@ -39,6 +39,7 @@ import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.user.UserCmd;
 import org.apache.cloudstack.api.response.GuestOSResponse;
+import org.apache.cloudstack.api.response.InstanceGroupResponse;
 import org.apache.cloudstack.api.response.SecurityGroupResponse;
 import org.apache.cloudstack.api.response.UserDataResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
@@ -51,6 +52,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
+import java.util.Set;
 
 @APICommand(name = "updateVirtualMachine", description = "Updates properties of an Instance. The Instance has to be stopped and restarted for the " +
         "new properties to take effect. UpdateVirtualMachine does not first check whether the Instance is stopped. " +
@@ -68,6 +71,15 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
 
     @Parameter(name = ApiConstants.GROUP, type = CommandType.STRING, description = "Group of the Instance")
     private String group;
+
+    @ACL(accessType = AccessType.OperateEntry)
+    @Parameter(name = ApiConstants.GROUP_ID, type = CommandType.UUID, entityType = InstanceGroupResponse.class,
+            description = "Existing instance group belonging to the VM owner. Mutually exclusive with group and cleargroup=true.")
+    private Long groupId;
+
+    @Parameter(name = ApiConstants.CLEAR_GROUP, type = CommandType.BOOLEAN,
+            description = "Remove the VM from its instance group without changing the VM or deleting the group. Mutually exclusive with group and groupid.")
+    private Boolean clearGroup;
 
     @Parameter(name = ApiConstants.HA_ENABLE, type = CommandType.BOOLEAN, description = "True if high-availability is enabled for the Instance, false otherwise")
     private Boolean haEnable;
@@ -184,6 +196,37 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
 
     public String getGroup() {
         return group;
+    }
+
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public boolean isClearGroup() {
+        return Boolean.TRUE.equals(clearGroup);
+    }
+
+    public boolean hasGroupUpdate() {
+        return group != null || groupId != null || isClearGroup();
+    }
+
+    public void validateGroupUpdateParameters() {
+        int selectors = (group != null ? 1 : 0) + (groupId != null ? 1 : 0) + (isClearGroup() ? 1 : 0);
+        if (selectors > 1) {
+            throw new InvalidParameterValueException("Specify only one of group, groupid or cleargroup=true.");
+        }
+        if (group != null && StringUtils.isBlank(group)) {
+            throw new InvalidParameterValueException("The instance group name cannot be blank. Use cleargroup=true to remove the group.");
+        }
+    }
+
+    public boolean isGroupOnlyUpdate() {
+        if (!hasGroupUpdate() || getFullUrlParams() == null) {
+            return false;
+        }
+        Set<String> allowed = Set.of("id", "group", "groupid", "cleargroup", "command", "response", "sessionkey",
+                "apikey", "signature", "signatureversion", "expires", "projectid", "_");
+        return getFullUrlParams().keySet().stream().allMatch(key -> allowed.contains(key.toLowerCase(Locale.ROOT)));
     }
 
     public Boolean getHaEnable() {

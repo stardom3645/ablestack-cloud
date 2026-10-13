@@ -67,12 +67,13 @@
         </template>
         <a-switch v-model:checked="form.haenable" />
       </a-form-item>
-      <a-form-item name="group" ref="group">
+      <a-form-item name="group" ref="group" :extra="$t('message.vm.group.no.restart')">
         <template #label>
           <tooltip-label :title="$t('label.group')" :tooltip="apiParams.group.description"/>
         </template>
         <a-auto-complete
           v-model:value="form.group"
+          allowClear
           :filterOption="(input, option) => {
             return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
           }"
@@ -156,6 +157,7 @@
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { buildVmGroupUpdate, isGroupOnlyEdit } from '@/utils/vmGroupAssignment'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import { getFastClonePhase } from '@/utils/fastClone'
 
@@ -181,6 +183,7 @@ export default {
       userDataEnabled: false,
       securityGroupsEnabled: false,
       loading: false,
+      initialForm: {},
       securitygroups: {
         loading: false,
         opts: []
@@ -249,6 +252,7 @@ export default {
       this.rules = reactive({
         leaseduration: [this.naturalNumberRule]
       })
+      this.initialForm = JSON.parse(JSON.stringify(toRaw(this.form)))
       this.showLeaseOptions = this.isLeaseEditable
     },
     fetchData () {
@@ -350,7 +354,7 @@ export default {
       getAPI('listInstanceGroups', params).then(json => {
         const groups = json.listinstancegroupsresponse.instancegroup || []
         groups.forEach(x => {
-          this.groups.opts.push({ id: x.name, value: x.name })
+          this.groups.opts.push({ id: x.name, value: x.name, groupId: x.id })
         })
       }).catch(error => {
         this.$notifyError(error)
@@ -394,6 +398,7 @@ export default {
             }
             getAPI('listVirtualMachines', listVmParams).then(json => {
               this.form.userdata = atob(json.listvirtualmachinesresponse.virtualmachine[0].userdata || '')
+              this.initialForm.userdata = this.form.userdata
             })
           }
         })
@@ -402,7 +407,7 @@ export default {
     handleSubmit () {
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
-        const params = {}
+        let params = {}
         params.id = this.resource.id
         params.displayname = values.displayname
         params.ostypeid = values.ostypeid
@@ -420,9 +425,17 @@ export default {
         if (values.haenable !== undefined) {
           params.haenable = values.haenable
         }
-        if (values.group && values.group.length > 0) {
-          params.group = values.group
+        let groupUpdate
+        try {
+          groupUpdate = buildVmGroupUpdate(this.resource, values.group, this.groups.opts, {
+            groupId: 'groupid' in this.apiParams,
+            clearGroup: 'cleargroup' in this.apiParams
+          })
+        } catch (error) {
+          this.$message.error(this.$t(error.message))
+          return
         }
+        Object.assign(params, groupUpdate)
         if (values.userdata && values.userdata.length > 0) {
           params.userdata = this.$toBase64AndURIEncoded(values.userdata)
         }
@@ -439,8 +452,11 @@ export default {
         }
         // Do not submit unchanged hardware or lifecycle settings during a clone operation.
         if (this.cloneEditRestricted) {
-          const allowed = ['id', 'displayname', 'group', 'deleteprotection']
+          const allowed = ['id', 'displayname', 'group', 'groupid', 'cleargroup', 'deleteprotection']
           Object.keys(params).filter(key => !allowed.includes(key)).forEach(key => delete params[key])
+        }
+        if (Object.keys(groupUpdate).length > 0 && isGroupOnlyEdit(values, this.initialForm)) {
+          params = { id: this.resource.id, ...groupUpdate }
         }
         this.loading = true
 
