@@ -59,6 +59,7 @@ show-size-changer
           <p>{{ $t('message.vm.group.members.link') }}</p>
           <a-input-search ref="candidateSearch" v-model:value="candidateKeyword" :placeholder="$t('label.search')" allow-clear @search="searchCandidates" />
           <p v-if="['error', 'forbidden'].includes(candidateStatus)" role="status">{{ $t('message.vm.group.members.' + candidateStatus) }} <a-button type="link" @click="fetchCandidates">{{ $t('label.retry') }}</a-button></p>
+          <div class="vm-group-member-candidates">
           <ListView
 ref="candidateTable"
 resource-path="/vm"
@@ -70,6 +71,7 @@ resource-path="/vm"
 :selectionDisabled="vm => candidateStatus !== 'ready' || candidatePending || vm.groupid === modalSource.id"
 :emptyText="$t('message.vm.group.members.' + (candidateStatus === 'ready' ? 'candidates.empty' : candidateStatus))"
 @selection-change="candidateSelection = $event" />
+          </div>
           <p>{{ $t('message.vm.group.members.already') }}</p>
           <a-pagination :current="candidatePage" :pageSize="20" :total="candidateCount" @change="candidatePage = $event; fetchCandidates()" />
         </template>
@@ -286,6 +288,10 @@ export default {
 .member-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .member-toolbar .ant-input-search { flex: 1; min-width: 150px; }
 .vm-group-members { min-width: 0; }
+.vm-group-member-candidates { overflow-x: auto; }
 .vm-group-members :deep(.ant-pagination) { margin-top: 16px; }
 .vm-group-members :deep(.list-view-table-wrapper) { overflow-x: auto; }
+@media (max-width: 767px) {
+  .vm-group-members :deep(.ant-table), .vm-group-member-candidates :deep(.ant-table) { min-width: 760px; }
+}
 </style>
