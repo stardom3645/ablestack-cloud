@@ -1362,6 +1362,8 @@
   "message.vm.edit.metadata.unavailable": "Template or compute offering details are unavailable, so dynamic scaling cannot be changed. Group changes remain available.",
   "message.vm.group.blank.name": "Enter a group name. A name containing only whitespace is not allowed.",
   "message.vm.group.name.length": "The group name must contain at most 255 characters after trimming surrounding whitespace.",
+  "message.vm.group.name.input.length": "The group name input is too long. Reduce surrounding whitespace and enter a name of at most 255 characters.",
+  "message.vm.group.name.characters": "The group name must not contain control characters such as embedded tabs or line breaks.",
   "message.vm.group.name.duplicate": "A group with this name already exists for the selected account or project. Enter another name.",
   "message.vm.group.name.unchanged": "The group name is unchanged.",
   "message.vm.group.operation.missing": "The group no longer exists. Refresh the list and select the target again.",

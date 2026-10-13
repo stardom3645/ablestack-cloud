@@ -19,6 +19,8 @@ package com.cloud.vm;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+import org.apache.cloudstack.api.ApiConstants;
+
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.user.AccountVO;
 import com.cloud.user.dao.AccountDao;
@@ -30,6 +32,7 @@ import com.cloud.vm.dao.InstanceGroupDao;
 /** Name policy shared by explicit creation, rename and name-based VM assignment. */
 public final class VmInstanceGroupNames {
     public static final int MAX_LENGTH = 255;
+    private static final Pattern ASCII_CONTROLS = Pattern.compile("[\\u0000-\\u001f\\u007f]");
     // The same boundary whitespace set is used by the UI; length is Unicode code points.
     private static final Pattern BOUNDARY_WHITESPACE = Pattern.compile(
             "^[\\u0009-\\u000d\\u0020\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+"
@@ -38,9 +41,15 @@ public final class VmInstanceGroupNames {
     private VmInstanceGroupNames() { }
 
     public static String normalize(String value) {
+        if (value != null && value.length() > ApiConstants.INSTANCE_GROUP_NAME_INPUT_MAX_LENGTH) {
+            throw new InvalidParameterValueException("[VM_GROUP_NAME_INPUT_TOO_LONG] Instance group name input must be at most 1024 UTF-16 units.");
+        }
         String name = value == null ? "" : BOUNDARY_WHITESPACE.matcher(value).replaceAll("");
         if (name.isEmpty()) {
             throw new InvalidParameterValueException("[VM_GROUP_NAME_REQUIRED] Instance group name is required.");
+        }
+        if (ASCII_CONTROLS.matcher(name).find()) {
+            throw new InvalidParameterValueException("[VM_GROUP_NAME_INVALID_CHARACTERS] Instance group name must not contain ASCII control characters.");
         }
         if (name.codePointCount(0, name.length()) > MAX_LENGTH) {
             throw new InvalidParameterValueException("[VM_GROUP_NAME_TOO_LONG] Instance group name must be at most 255 characters.");

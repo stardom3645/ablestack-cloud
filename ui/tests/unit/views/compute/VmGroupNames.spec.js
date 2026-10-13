@@ -32,6 +32,15 @@ test.each(['가', 'a', '😀'])('accepts 255 and rejects 256 %s characters', cha
 test('trims surrounding Unicode whitespace while preserving internal whitespace', () => {
   expect(normalizeVmGroupName('\u00a0 한글  그룹 \u3000')).toBe('한글  그룹')
 })
+test('accepts the bounded raw input after trimming', () => {
+  expect(normalizeVmGroupName(' '.repeat(1023) + 'A')).toBe('A')
+})
+test('rejects oversized raw input before normalization', () => {
+  expect(() => normalizeVmGroupName(' '.repeat(1024) + 'A')).toThrow('message.vm.group.name.input.length')
+})
+test('rejects internal ASCII controls before transmission', () => {
+  expect(() => normalizeVmGroupName('한\t글')).toThrow('message.vm.group.name.characters')
+})
 test('preserves exact legacy no-op without rewriting it', () => {
   expect(normalizeVmGroupName(' 기존 ', ' 기존 ')).toBe(' 기존 ')
   expect(normalizeVmGroupName(' 새 이름 ', ' 기존 ')).toBe('새 이름')
@@ -49,6 +58,8 @@ test.each([
   ['Unable to create Instance group, a group with name A already exists for Account AccountVO:private', 431, 'message.vm.group.name.duplicate'],
   ['[VM_GROUP_NAME_REQUIRED]', 431, 'message.vm.group.blank.name'],
   ['[VM_GROUP_NAME_TOO_LONG]', 431, 'message.vm.group.name.length'],
+  ['Value greater than max allowed length 1024 for param: groupName', 431, 'message.vm.group.name.input.length'],
+  ['Received value containing illegal ASCII non-printable characters for parameter name', 431, 'message.vm.group.name.characters'],
   ['[VM_GROUP_NOT_FOUND]', 431, 'message.vm.group.operation.missing'],
   ['unable to find an instance group with specified groupId', 431, 'message.vm.group.operation.missing'],
   ['denied', 531, 'message.vm.group.operation.forbidden'],

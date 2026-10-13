@@ -16,14 +16,19 @@
 // under the License.
 
 export const VM_GROUP_NAME_MAX = 255
+export const VM_GROUP_NAME_INPUT_MAX = 1024
 // Boundary tabs and line breaks are intentionally included, matching the server policy.
 // eslint-disable-next-line no-control-regex
 const boundaryWhitespace = /^[\u0009-\u000d\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+|[\u0009-\u000d\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+$/g
 
 export function normalizeVmGroupName (value, previous) {
   if (previous !== undefined && value === previous) return value
-  const name = value == null ? '' : String(value).replace(boundaryWhitespace, '')
+  const raw = value == null ? '' : String(value)
+  if (raw.length > VM_GROUP_NAME_INPUT_MAX) throw new Error('message.vm.group.name.input.length')
+  const name = raw.replace(boundaryWhitespace, '')
   if (!name) throw new Error('message.vm.group.blank.name')
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(name)) throw new Error('message.vm.group.name.characters')
   if (Array.from(name).length > VM_GROUP_NAME_MAX) throw new Error('message.vm.group.name.length')
   return name
 }
@@ -43,6 +48,8 @@ export function vmGroupErrorKey (error) {
   const code = Number(response.errorcode)
   if (text.includes('VM_GROUP_NAME_DUPLICATE') || (code === 431 && /group.*already exists/i.test(text))) return 'message.vm.group.name.duplicate'
   if (text.includes('VM_GROUP_NAME_REQUIRED') || text === 'message.vm.group.blank.name') return 'message.vm.group.blank.name'
+  if (text.includes('VM_GROUP_NAME_INVALID_CHARACTERS') || /illegal ASCII non-printable/i.test(text)) return 'message.vm.group.name.characters'
+  if (text.includes('VM_GROUP_NAME_INPUT_TOO_LONG') || text === 'message.vm.group.name.input.length' || /max allowed length 1024/i.test(text)) return 'message.vm.group.name.input.length'
   if (text.includes('VM_GROUP_NAME_TOO_LONG') || text === 'message.vm.group.name.length') return 'message.vm.group.name.length'
   if ([401, 403, 432, 531].includes(code) || [401, 403].includes(error?.response?.status)) return 'message.vm.group.operation.forbidden'
   if (text.includes('VM_GROUP_NOT_FOUND') || text === 'message.vm.group.operation.missing' || /unable to (find|locate).*instance group|unable to find.*vm group/i.test(text)) return 'message.vm.group.operation.missing'

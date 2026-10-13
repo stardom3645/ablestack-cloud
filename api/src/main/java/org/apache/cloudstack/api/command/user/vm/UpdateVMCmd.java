@@ -70,7 +70,8 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
     @Parameter(name = ApiConstants.DISPLAY_NAME, type = CommandType.STRING, description = "User generated name")
     private String displayName;
 
-    @Parameter(name = ApiConstants.GROUP, type = CommandType.STRING, description = "Group of the Instance")
+    @Parameter(name = ApiConstants.GROUP, type = CommandType.STRING, length = ApiConstants.INSTANCE_GROUP_NAME_INPUT_MAX_LENGTH,
+            description = "Group of the Instance. New names are trimmed and must contain 1 to 255 characters.")
     private String group;
 
     @ACL(accessType = AccessType.OperateEntry)
@@ -217,7 +218,7 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
             throw new InvalidParameterValueException("Specify only one of group, groupid or cleargroup=true.");
         }
         if (group != null && StringUtils.isBlank(group)) {
-            throw new InvalidParameterValueException("The instance group name cannot be blank. Use cleargroup=true to remove the group.");
+            throw new InvalidParameterValueException("[VM_GROUP_NAME_REQUIRED] The instance group name cannot be blank. Use cleargroup=true to remove the group.");
         }
     }
 

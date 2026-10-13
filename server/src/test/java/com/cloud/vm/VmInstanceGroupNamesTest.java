@@ -174,4 +174,13 @@ public class VmInstanceGroupNamesTest {
         assertThrows(CloudRuntimeException.class, () -> VmInstanceGroupNames.create(groups, accounts, 7L, "valid"));
         verify(accounts).releaseFromLockTable(7L);
     }
+    @Test public void acceptsTheRawBoundaryAfterTrimming() {
+        assertEquals("A", VmInstanceGroupNames.normalize(" ".repeat(1023) + "A"));
+    }
+    @Test public void rejectsOversizedRawInputEvenWhenTrimmedNameWouldFit() {
+        assertThrows(InvalidParameterValueException.class, () -> VmInstanceGroupNames.normalize(" ".repeat(1024) + "A"));
+    }
+    @Test public void rejectsInternalAsciiControls() {
+        assertThrows(InvalidParameterValueException.class, () -> VmInstanceGroupNames.normalize("한\t글"));
+    }
 }
