@@ -18,8 +18,8 @@
 // listInstanceGroups uses exact name and keyword(name/UUID) search, owner ACL,
 // and id-ordered pagination. Sorting is deliberately limited to the visible page.
 const apiKeys = ['id', 'name', 'keyword', 'account', 'domainid', 'projectid', 'isrecursive', 'listall', 'page', 'pagesize']
-const uiKeys = ['q', 'tab', 'action', 'dataView', 'sortkey', 'sortorder']
-const sortKeys = ['name', 'account', 'domain', 'project']
+const uiKeys = ['q', 'tab', 'action', 'dataView', 'sortkey', 'sortorder', 'memberkeyword', 'memberpage', 'memberpagesize', 'membersort', 'memberorder']
+const sortKeys = ['name', 'account', 'domain', 'project', 'virtualmachinecount']
 const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
 
 export function vmGroupQuery (query = {}) {
@@ -33,7 +33,7 @@ export function vmGroupQuery (query = {}) {
   for (const key of ['id', 'domainid', 'projectid']) {
     if (clean[key] && !uuid.test(clean[key]) && !(key === 'projectid' && clean[key] === '-1')) delete clean[key]
   }
-  for (const key of ['page', 'pagesize']) {
+  for (const key of ['page', 'pagesize', 'memberpage', 'memberpagesize']) {
     if (clean[key] && (!/^\d+$/.test(clean[key]) || !Number.isSafeInteger(Number(clean[key])) || Number(clean[key]) < 1)) delete clean[key]
   }
   for (const key of ['isrecursive', 'listall', 'dataView']) {
@@ -43,6 +43,10 @@ export function vmGroupQuery (query = {}) {
   if (!sortKeys.includes(clean.sortkey) || !['asc', 'desc'].includes(clean.sortorder)) {
     delete clean.sortkey
     delete clean.sortorder
+  }
+  if (!['name', 'state', 'account', 'domain', 'project', 'group'].includes(clean.membersort) || !['asc', 'desc'].includes(clean.memberorder)) {
+    delete clean.membersort
+    delete clean.memberorder
   }
   return clean
 }

@@ -26,7 +26,7 @@
       :scroll="$route.name === 'autoscalevmgroup' ? { x: 980 } : undefined"
       :rowKey="listRowKey"
       :pagination="false"
-      :rowSelection="explicitlyAllowRowSelection || enableGroupAction() || $route.name === 'event' ? {selectedRowKeys: selectedRowKeys, onChange: onSelectChange, columnWidth: 30} : null"
+      :rowSelection="explicitlyAllowRowSelection || enableGroupAction() || $route.name === 'event' ? {selectedRowKeys: selectedRowKeys, onChange: onSelectChange, getCheckboxProps: record => ({ disabled: selectionDisabled(record) }), columnWidth: 30} : null"
       :rowClassName="getRowClassName"
       :customRow="snapshotRowEvents"
       @change="handleTableChange"
@@ -57,9 +57,12 @@
       <template v-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'zonename'].includes(column.key)">
         <auto-scale-list-cell :resource="record" :column="column.key" />
       </template>
+      <template v-else-if="$route.meta?.name === 'vmgroup' && ['virtualmachinecount', 'virtualmachinestates'].includes(column.key)">
+        <InstanceGroupSummary :resource="record" :field="column.key" />
+      </template>
       <template v-else-if="['name', 'provider'].includes(column.key)">
         <span
-          v-if="['vm', 'vnfapp'].includes($route.path.split('/')[1])"
+          v-if="(resourcePath === '/vm' || ['vm', 'vnfapp'].includes($route.path.split('/')[1]))"
           style="margin-right: 5px"
         >
           <span v-if="record.icon && record.icon.base64image">
@@ -108,7 +111,8 @@
               size="xl"
             />
           </span>
-          <span v-if="record.hasannotations">
+          <span v-if="resourcePath && record.id" class="embedded-resource-name"><router-link :to="{ path: resourcePath === '/vm' ? createPathBasedOnVmType(record.vmtype, record.id) : resourcePath + '/' + record.id }">{{ text }}</router-link></span>
+          <span v-else-if="record.hasannotations">
             <span v-if="record.id">
               <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
               <router-link :to="{ path: $route.path + '/' + record.id, query: { tab: 'comments' } }"><message-filled
@@ -1183,6 +1187,7 @@
 
 <script>
 import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
+import InstanceGroupSummary from '@/views/compute/InstanceGroupSummary'
 import { listRowKey } from '@/utils/listRefresh'
 import { getAPI, postAPI } from '@/api'
 import OsLogo from '@/components/widgets/OsLogo'
@@ -1206,6 +1211,7 @@ export default {
   name: 'ListView',
   components: {
     AutoScaleListCell,
+    InstanceGroupSummary,
     OsLogo,
     Status,
     CloneFlattenControl,
@@ -1218,6 +1224,9 @@ export default {
     FileTextOutlined
   },
   props: {
+    resourcePath: { type: String, default: '' },
+    selectionDisabled: { type: Function, default: () => false },
+    keyboardContextMenu: { type: Boolean, default: false },
     columns: {
       type: Array,
       required: true
@@ -1406,7 +1415,7 @@ export default {
   methods: {
     handleTableChange (pagination, filters, sorter) { this.$emit('table-change', pagination, filters, sorter) },
     snapshotRowEvents (record) {
-      if (!['vmsnapshot', 'kubernetes', 'kubernetesiso'].includes(this.$route.name)) return {}
+      if (!this.keyboardContextMenu && !['vmsnapshot', 'kubernetes', 'kubernetesiso'].includes(this.$route.name)) return {}
       return {
         tabindex: 0,
         onKeydown: event => {
@@ -1517,6 +1526,7 @@ export default {
           .test(this.$route.path)
     },
     enableGroupAction () {
+      if (this.resourcePath) return this.explicitlyAllowRowSelection
       return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
         'vmsnapshot', 'backup', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway', 'vnfapp',
         'project', 'account', 'systemvm', 'router', 'computeoffering', 'systemoffering',

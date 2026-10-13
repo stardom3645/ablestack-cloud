@@ -1281,29 +1281,23 @@ export default {
       permission: ['listInstanceGroups'],
       searchFilters: ['name', 'domainid', 'account'],
       columns: (store) => {
-        var fields = ['name', 'account']
+        var fields = ['name', 'virtualmachinecount', 'virtualmachinestates', 'account']
         if (store.listAllProjects) {
           fields.push('project')
         }
         fields.push('domain')
         return fields
       },
-      details: ['name', 'id', 'account', 'domain', 'created'],
+      details: ['name', 'id', 'virtualmachinecount', 'virtualmachinestates', 'account', 'domain', 'project', 'created'],
       related: [{
         name: 'vm',
         title: 'label.instances',
         param: 'groupid'
       }],
-      tabs: [
-        {
-          name: 'details',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
-        },
-        {
-          name: 'comments',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
-        }
-      ],
+      tabs: [{
+        name: 'instancegroup',
+        component: shallowRef(defineAsyncComponent(() => import('@/views/compute/InstanceGroupTab.vue')))
+      }],
       actions: [
         {
           api: 'createInstanceGroup',

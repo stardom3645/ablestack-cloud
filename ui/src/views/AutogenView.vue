@@ -817,6 +817,7 @@
         <resource-view
           v-else-if="$route.meta?.name !== 'vmgroup' || resource.id || loading"
           :key="$route.path"
+          :readyForActions="$route.meta?.name !== 'vmgroup' || vmGroupQueryReady"
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
@@ -1492,8 +1493,9 @@ export default {
       if (['deployVirtualMachine', 'usage'].includes(this.$route.name)) {
         return
       }
-      if (this.routeName !== this.$route.name) {
-        this.routeName = this.$route.name
+      const currentRouteName = this.$route.meta?.name === 'vmgroup' ? 'vmgroup' : this.$route.name
+      if (this.routeName !== currentRouteName) {
+        this.routeName = currentRouteName
         this.items = []
       }
       if (!this.routeName) {
@@ -1819,7 +1821,9 @@ export default {
       const requestApi = this.apiName
       const vmGroups = this.$route.meta?.name === 'vmgroup'
       if (vmGroups) {
+        this.columns.forEach(column => { if (column.key === 'virtualmachinestates') column.sorter = false })
         params = vmGroupQueryParams(params)
+        if (this.dataView) { params.page = 1; params.pagesize = 20 }
         this.vmGroupQueryStatus = sameList ? 'refreshing' : 'loading'
       }
       const response = vmGroups ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)

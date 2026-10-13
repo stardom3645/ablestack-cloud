@@ -42,6 +42,7 @@ import com.cloud.network.dao.PublicIpQuarantineDao;
 import com.cloud.network.vo.PublicIpQuarantineVO;
 import com.cloud.user.UserVO;
 import org.apache.cloudstack.acl.RoleService;
+import org.apache.cloudstack.acl.APIAclChecker;
 import org.apache.cloudstack.acl.RoleVO;
 import org.apache.cloudstack.acl.dao.RoleDao;
 import com.cloud.dc.DataCenterVO;
@@ -418,6 +419,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
     @Inject
     InstanceGroupJoinDao _vmGroupJoinDao;
+
+    @Inject
+    protected List<APIAclChecker> vmGroupMemberApiAclCheckers;
 
     @Inject
     UserVmJoinDao _userVmJoinDao;
@@ -1220,8 +1224,35 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Pair<List<InstanceGroupJoinVO>, Integer> groups = searchForVmGroupsInternal(cmd);
         ListResponse<InstanceGroupResponse> response = new ListResponse<>();
         List<InstanceGroupResponse> grpResponses = ViewResponseHelper.createInstanceGroupResponse(groups.first().toArray(new InstanceGroupJoinVO[0]));
+        attachVmGroupMemberCounts(groups.first(), grpResponses);
         response.setResponses(grpResponses, groups.second());
         return response;
+    }
+
+    void attachVmGroupMemberCounts(List<InstanceGroupJoinVO> groups, List<InstanceGroupResponse> responses) {
+        if (groups.isEmpty()) {
+            return;
+        }
+        Account caller = CallContext.current().getCallingAccount();
+        try {
+            if (vmGroupMemberApiAclCheckers == null || vmGroupMemberApiAclCheckers.isEmpty()) {
+                return;
+            }
+            for (APIAclChecker checker : vmGroupMemberApiAclCheckers) {
+                checker.checkAccess(CallContext.current().getCallingUser(), "listVirtualMachines", null);
+            }
+        } catch (PermissionDeniedException e) {
+            return;
+        }
+        Map<Long, Map<String, Long>> counts = _vmGroupJoinDao.listMemberStateCounts(
+                groups.stream().map(InstanceGroupJoinVO::getId).collect(Collectors.toList()), accountMgr.isRootAdmin(caller.getId()));
+        Map<String, Long> ids = groups.stream().collect(Collectors.toMap(InstanceGroupJoinVO::getUuid, InstanceGroupJoinVO::getId));
+        responses.forEach(response -> {
+            Long id = ids.get(response.getId());
+            if (id != null && counts.containsKey(id)) {
+                response.setVirtualMachineStates(counts.get(id));
+            }
+        });
     }
 
     private Pair<List<InstanceGroupJoinVO>, Integer> searchForVmGroupsInternal(ListVMGroupsCmd cmd) {
