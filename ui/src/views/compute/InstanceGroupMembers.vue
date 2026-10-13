@@ -222,7 +222,7 @@ export default {
     execAction (action, bulk) { this.openAction(action.memberMode, bulk ? this.selectedRows : [action.resource]) },
     openAction (mode, rows) {
       if (this.actionReason || !['link', 'move', 'clear'].includes(mode) || rows.some(row => !row)) return
-      const rowElement = rows[0]?.id && this.$refs.membersTable?.$el?.querySelector('tr[data-row-key="' + rows[0].id + '"]')
+      const rowElement = rows[0]?.id && this.$el?.querySelector?.('tr[data-row-key="' + rows[0].id + '"]')
       this.actionTrigger = rowElement || document.activeElement
       this.modalScope = this.scope; this.modalSource = Object.freeze({ ...this.resource }); this.targets = vmGroupMemberSnapshot(rows)
       this.mode = mode; this.stage = mode === 'clear' ? 'confirm' : 'choose'; this.modalVisible = true; this.targetId = undefined; this.operationTarget = mode === 'link' ? this.modalSource : null; this.results = []
