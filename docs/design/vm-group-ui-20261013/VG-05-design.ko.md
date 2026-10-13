@@ -8,7 +8,7 @@
 
 ## 조회 계약
 
-listInstanceGroups의 ACL을 통과해 실제 반환되는 그룹 ID만 대상으로 멤버 수/상태를 배치 집계한다. virtualmachinecount와 virtualmachinestates를 추가한다. 동일 소유 user VM만 포함하고 removed·Destroyed·Expunging을 제외한다. root admin 외 숨김 VM은 제외한다. 멤버 탭도 listVirtualMachines state=present 및 대상 account/domain/project·groupid를 사용해 같은 범위와 대조한다. VM 조회 API 권한이 없으면 집계 필드를 제공하지 않으며 UI는 0으로 꾸미지 않고 권한 제한을 안내한다. 그룹당 VM API/SQL 조회를 추가하지 않는다. DB 스키마 변경은 없다.
+listInstanceGroups의 ACL을 통과해 실제 반환되는 그룹 ID만 대상으로 멤버 수/상태를 배치 집계한다. virtualmachinecount와 virtualmachinestates를 추가한다. 동일 소유 user VM만 포함하고 removed·Destroyed·Expunging을 제외한다. root admin 외 숨김 VM은 제외한다. 멤버 탭도 listVirtualMachines state=present 및 대상 account/domain/project·groupid를 사용해 같은 범위와 대조한다. VM 조회 API 권한이 없으면 집계 필드를 제공하지 않으며 UI는 0으로 꾸미지 않고 권한 제한을 안내한다. 기존 AccountManager.checkApiAccessForUser를 사용해 사용자/프로젝트 역할과 호출 API 키 제한을 검사하며 별도 권한 검사기 Bean을 주입하지 않는다. 그룹당 VM API/SQL 조회를 추가하지 않는다. DB 스키마 변경은 없다.
 
 ## 멤버 관리
 

@@ -25,7 +25,6 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.User;
 import com.google.gson.Gson;
-import org.apache.cloudstack.acl.APIAclChecker;
 import org.apache.cloudstack.api.response.InstanceGroupResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.junit.After;
@@ -45,19 +44,17 @@ public class QueryManagerVmGroupMemberTest {
     private QueryManagerImpl manager;
     private InstanceGroupJoinDao dao;
     private AccountManager accountManager;
-    private APIAclChecker checker;
     private User user;
     private Account account;
 
     @Before
     public void setup() {
         manager = new QueryManagerImpl(); dao = mock(InstanceGroupJoinDao.class);
-        accountManager = mock(AccountManager.class); checker = mock(APIAclChecker.class);
+        accountManager = mock(AccountManager.class);
         account = mock(Account.class); user = mock(User.class); when(account.getId()).thenReturn(2L);
         CallContext.register(user, account);
         ReflectionTestUtils.setField(manager, "accountMgr", accountManager);
         ReflectionTestUtils.setField(manager, "_vmGroupJoinDao", dao);
-        manager.vmGroupMemberApiAclCheckers = List.of(checker);
     }
 
     @After
@@ -76,39 +73,40 @@ public class QueryManagerVmGroupMemberTest {
     public void visiblePageIsAggregatedOnceAndAssociatedByUuid() {
         InstanceGroupResponse first = response("first"), second = response("second");
         when(dao.listMemberStateCounts(List.of(41L, 42L), false)).thenReturn(Map.of(41L, Map.of("Running", 2L), 42L, Map.of()));
-        manager.attachVmGroupMemberCounts(List.of(row(41L, "first"), row(42L, "second")), List.of(second, first));
+        manager.attachVmGroupMemberCounts(List.of(row(41L, "first"), row(42L, "second")), List.of(second, first), "fixture-key");
         verify(dao, times(1)).listMemberStateCounts(List.of(41L, 42L), false);
-        verify(checker).checkAccess(user, "listVirtualMachines", null);
+        verify(accountManager).checkApiAccessForUser(user, "listVirtualMachines", "fixture-key");
         assertEquals(2L, new Gson().toJsonTree(first).getAsJsonObject().get("virtualmachinecount").getAsLong());
         assertEquals(0L, new Gson().toJsonTree(second).getAsJsonObject().get("virtualmachinecount").getAsLong());
     }
 
     @Test
     public void deniedVmApiDoesNotExposeMemberCountsOrQueryMembers() {
-        doThrow(new PermissionDeniedException("restricted role")).when(checker).checkAccess(user, "listVirtualMachines", null);
+        doThrow(new PermissionDeniedException("restricted role")).when(accountManager).checkApiAccessForUser(user, "listVirtualMachines", null);
         InstanceGroupResponse response = response("group");
-        manager.attachVmGroupMemberCounts(List.of(row(1L, "group")), List.of(response));
+        manager.attachVmGroupMemberCounts(List.of(row(1L, "group")), List.of(response), null);
         verifyNoInteractions(dao);
         assertFalse(new Gson().toJsonTree(response).getAsJsonObject().has("virtualmachinecount"));
     }
 
     @Test
-    public void missingAclConfigurationFailsClosed() {
-        manager.vmGroupMemberApiAclCheckers = null;
-        manager.attachVmGroupMemberCounts(List.of(row(1L, "group")), List.of(response("group")));
+    public void deniedRestrictedApiKeyDoesNotExposeMemberCounts() {
+        doThrow(new PermissionDeniedException("restricted key")).when(accountManager)
+                .checkApiAccessForUser(user, "listVirtualMachines", "restricted-key");
+        manager.attachVmGroupMemberCounts(List.of(row(1L, "group")), List.of(response("group")), "restricted-key");
         verifyNoInteractions(dao);
     }
 
     @Test
     public void noVisibleGroupsDoNotIssueAnAggregateQuery() {
-        manager.attachVmGroupMemberCounts(List.of(), List.of()); verifyNoInteractions(dao, checker);
+        manager.attachVmGroupMemberCounts(List.of(), List.of(), null); verifyNoInteractions(dao, accountManager);
     }
 
     @Test
     public void rootAdminUsesItsExistingHiddenVmVisibility() {
         when(accountManager.isRootAdmin(2L)).thenReturn(true);
         when(dao.listMemberStateCounts(List.of(1L), true)).thenReturn(Map.of(1L, Map.of()));
-        manager.attachVmGroupMemberCounts(List.of(row(1L, "group")), List.of(response("group")));
+        manager.attachVmGroupMemberCounts(List.of(row(1L, "group")), List.of(response("group")), null);
         verify(dao).listMemberStateCounts(List.of(1L), true);
     }
 }

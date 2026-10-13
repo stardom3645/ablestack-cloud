@@ -42,7 +42,6 @@ import com.cloud.network.dao.PublicIpQuarantineDao;
 import com.cloud.network.vo.PublicIpQuarantineVO;
 import com.cloud.user.UserVO;
 import org.apache.cloudstack.acl.RoleService;
-import org.apache.cloudstack.acl.APIAclChecker;
 import org.apache.cloudstack.acl.RoleVO;
 import org.apache.cloudstack.acl.dao.RoleDao;
 import com.cloud.dc.DataCenterVO;
@@ -419,9 +418,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
     @Inject
     InstanceGroupJoinDao _vmGroupJoinDao;
-
-    @Inject
-    protected List<APIAclChecker> vmGroupMemberApiAclCheckers;
 
     @Inject
     UserVmJoinDao _userVmJoinDao;
@@ -1224,23 +1220,18 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Pair<List<InstanceGroupJoinVO>, Integer> groups = searchForVmGroupsInternal(cmd);
         ListResponse<InstanceGroupResponse> response = new ListResponse<>();
         List<InstanceGroupResponse> grpResponses = ViewResponseHelper.createInstanceGroupResponse(groups.first().toArray(new InstanceGroupJoinVO[0]));
-        attachVmGroupMemberCounts(groups.first(), grpResponses);
+        attachVmGroupMemberCounts(groups.first(), grpResponses, cmd.getFullUrlParams() == null ? null : cmd.getFullUrlParams().get(ApiConstants.API_KEY));
         response.setResponses(grpResponses, groups.second());
         return response;
     }
 
-    void attachVmGroupMemberCounts(List<InstanceGroupJoinVO> groups, List<InstanceGroupResponse> responses) {
+    void attachVmGroupMemberCounts(List<InstanceGroupJoinVO> groups, List<InstanceGroupResponse> responses, String apiKey) {
         if (groups.isEmpty()) {
             return;
         }
         Account caller = CallContext.current().getCallingAccount();
         try {
-            if (vmGroupMemberApiAclCheckers == null || vmGroupMemberApiAclCheckers.isEmpty()) {
-                return;
-            }
-            for (APIAclChecker checker : vmGroupMemberApiAclCheckers) {
-                checker.checkAccess(CallContext.current().getCallingUser(), "listVirtualMachines", null);
-            }
+            accountMgr.checkApiAccessForUser(CallContext.current().getCallingUser(), "listVirtualMachines", apiKey);
         } catch (PermissionDeniedException e) {
             return;
         }
