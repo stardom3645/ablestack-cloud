@@ -51,11 +51,17 @@ it.each([['', { cleargroup: true }], ['B', { groupid: 'b' }], ['New', { group: '
     const initial = { displayname: 'vm', ostypeid: 'os', haenable: true, group: 'A', userdata: 'data' }
     const ctx = {
       formRef: { value: { validate: () => Promise.resolve() } },
-      form: { ...initial, group: value }, initialForm: initial,
-      resource, groups: { opts: groups }, apiParams: { groupid: {}, cleargroup: {} },
-      $toBase64AndURIEncoded: jest.fn(), $t: text => text,
-      $message: { success: jest.fn(), error: jest.fn() }, $emit: jest.fn(),
-      onCloseAction: jest.fn(), $notifyError: jest.fn()
+      form: { ...initial, group: value },
+      initialForm: initial,
+      resource,
+      groups: { opts: groups },
+      apiParams: { groupid: {}, cleargroup: {} },
+      $toBase64AndURIEncoded: jest.fn(),
+      $t: text => text,
+      $message: { success: jest.fn(), error: jest.fn() },
+      $emit: jest.fn(),
+      onCloseAction: jest.fn(),
+      $notifyError: jest.fn()
     }
     await EditVM.methods.handleSubmit.call(ctx)
     await Promise.resolve()
@@ -66,9 +72,12 @@ it('retains form values and submits nothing for a rejected whitespace name', asy
   postAPI.mockClear()
   const ctx = {
     formRef: { value: { validate: () => Promise.resolve() } },
-    form: { group: '   ' }, resource, groups: { opts: groups },
+    form: { group: '   ' },
+    resource,
+    groups: { opts: groups },
     apiParams: { groupid: {}, cleargroup: {} },
-    $t: text => text, $message: { error: jest.fn() }
+    $t: text => text,
+    $message: { error: jest.fn() }
   }
   await EditVM.methods.handleSubmit.call(ctx)
   await Promise.resolve()
