@@ -3735,7 +3735,7 @@
   "message.resource.not.found": "리소스를 찾을 수 없습니다.",
   "message.restart.mgmt.server": "새로운 설정을 사용 하기 위해 관리 서버를 재시작해 주십시오.",
   "message.restart.network": "현재 네트워크로 제공하는 모든 서비스가 중단됩니다. 이 네트워크를 재시작하시겠습니까?",
-  "message.restart.vm.to.update.settings": "이름 및 표시 이름 이외의 항목을 업데이트하려면 VM을 다시 시작해야 합니다.",
+  "message.restart.vm.to.update.settings": "이름, 표시 이름, 그룹 소속 변경은 재시작 없이 적용됩니다. 그 외 설정을 변경하면 VM을 다시 시작해야 합니다.",
   "message.restart.vpc": "VPC를 재시작하시겠습니까?",
   "message.restart.vpc.remark": "VPC를 다시 시작할 것인지 확인하십시오. <p> <small> <i> 참고 : 비 중복 VPC를 이중화하면 강제로 정리됩니다. 몇 분 동안 네트워크를 사용할 수 없습니다 </ i>. </ small> </ p>",
   "message.scale.processing": "진행중",
