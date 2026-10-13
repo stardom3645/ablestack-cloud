@@ -55,9 +55,10 @@ import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 
-@APICommand(name = "updateVirtualMachine", description = "Updates properties of an Instance. The Instance has to be stopped and restarted for the " +
-        "new properties to take effect. UpdateVirtualMachine does not first check whether the Instance is stopped. " +
-        "Therefore, stop the Instance manually before issuing this call.", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
+@APICommand(name = "updateVirtualMachine", description = "Updates properties of an Instance. Group membership changes take effect immediately without a restart. " +
+        "Other properties may require the Instance to be stopped and restarted to take effect. " +
+        "UpdateVirtualMachine does not first check whether the Instance is stopped. Stop it manually before changing properties that require a restart.",
+        responseObject = UserVmResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
     requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction, UserCmd {
     private static final String s_name = "updatevirtualmachineresponse";
