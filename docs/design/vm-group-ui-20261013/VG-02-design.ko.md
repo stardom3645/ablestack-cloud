@@ -29,7 +29,7 @@ Epic #1357 / issue #1359 / 누적 Draft PR #1364. Upstream Europa `9fa65ce2a27b9
 | 관리자 타계정 VM | 대상 VM account + domainid | 타계정 소유 후보 groupid, admin 그룹 제외 |
 | 일반 사용자 | 대상 VM account + domainid 및 기존 서버 ACL | 자기 그룹 ID, 타소유 요청은 서버에서 거부 |
 | 프로젝트 VM | 대상 VM projectid | 프로젝트 그룹 ID, 동일 이름 개인 그룹 제외 |
-| 제한 역할 | 위 대상 소유 범위 + listInstanceGroups API 권한 | 후보 API가 없거나 401/403이면 그룹 변경 차단 |
+| 제한 역할 | 위 대상 소유 범위 + listInstanceGroups API 권한 | 후보 API가 없거나 401/403/432/531이면 그룹 변경 차단 |
 | VM 생성 | 최종 선택 owner(projectid 또는 account + domainid) | 기존 deploy API의 group 이름과 같은 owner |
 
 로그인 사용자/상단 프로젝트를 VM 편집 대상의 소유 범위로 대체하지 않는다. 소유 정보가 없으면 넓은 listall 조회로 폴백하지 않는다. 프로젝트 ID가 있으면 계정 파라미터를 함께 보내지 않는다. 생성 owner가 불완전한 동안 로그인 계정으로 폴백하지 않는다.
@@ -48,7 +48,7 @@ Epic #1357 / issue #1359 / 누적 Draft PR #1364. Upstream Europa `9fa65ce2a27b9
 
 템플릿과 오퍼링은 빈 결과를 객체 기본값과 empty 상태로, 실패를 error로 처리한다. 관련 정보가 없으면 동적 확장 설정을 비활성화하고 제출 단계에서도 변경을 거부한다. 오퍼링을 확인하지 못했으면 HA 변경을 제출하지 않는다. 그룹만 바꿀 때는 VG-01의 metadata-only 요청을 사용해 하드웨어·전원·볼륨 속성을 변경하지 않는다.
 
-Zone/보안 그룹/OS 유형/네트워크/UserData 조회는 빈 결과·실패와 VM 문맥 변경을 방어한다. UserData 입력은 실제 VM의 데이터 조회와 디코딩을 완료한 뒤 열어 조회 실패를 빈 데이터로 덮어쓰지 않는다. 화면 종료 시 보조 조회의 세대를 무효화한다. 빈 SYSTEM Blank Template은 정상적으로 편집할 수 있으며 그룹 작업의 실패로 해석하지 않는다.
+Zone/보안 그룹/OS 유형/네트워크/UserData 조회는 빈 결과·실패와 VM 문맥 변경을 방어한다. UserData 입력은 실제 VM의 데이터 조회와 디코딩을 완료한 뒤 열어 조회 실패를 빈 데이터로 덮어쓰지 않는다. 화면 종료 시 보조 조회의 세대를 무효화한다. 폼 초기화 이전의 VM 문맥 변경과 생성 보조 검증 대기 중의 소유 문맥 변경은 제출 직전에도 재검증한다. 빈 SYSTEM Blank Template은 정상적으로 편집할 수 있으며 그룹 작업의 실패로 해석하지 않는다.
 
 ## 검증·배포 계획
 

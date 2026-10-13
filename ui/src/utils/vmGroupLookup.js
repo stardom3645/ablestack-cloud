@@ -32,7 +32,7 @@ export function vmGroupLookupReady (state, owner) {
 export function vmGroupLookupStatus (error) {
   const data = error?.response?.data || error || {}
   const body = data.errorresponse || Object.values(data).find(value => value?.errorcode) || data
-  return [401, 403, 432].includes(Number(body.errorcode || error?.response?.status)) ? 'forbidden' : 'error'
+  return [401, 403, 432, 531].includes(Number(body.errorcode || error?.response?.status)) ? 'forbidden' : 'error'
 }
 
 function ownsGroup (group, owner) {
