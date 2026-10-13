@@ -81,3 +81,10 @@ test('disposed view rejects delayed reads and remaining membership writes', asyn
   ctx.status = 'ready'; ctx.pending = false; ctx.modalSource = group; ctx.modalScope = ctx.scope; ctx.targets = [vm]
   await ctx.execute(); expect(postAPI).not.toHaveBeenCalled()
 })
+
+test('cancelled row membership action restores the connected table row focus', () => {
+  ctx.status = 'ready'; const row = document.createElement('tr'); row.setAttribute('tabindex', '0'); document.body.appendChild(row)
+  ctx.$refs.membersTable.$el = { querySelector: () => row }
+  ctx.openAction('clear', [vm]); ctx.closeModal()
+  expect(document.activeElement).toBe(row); row.remove()
+})

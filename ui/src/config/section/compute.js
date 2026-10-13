@@ -1281,8 +1281,8 @@ export default {
       permission: ['listInstanceGroups'],
       searchFilters: ['name', 'domainid', 'account'],
       columns: (store) => {
-        var fields = ['name', 'virtualmachinecount', 'virtualmachinestates', 'account']
-        if (store.listAllProjects) {
+        var fields = ['name', 'virtualmachinecount', 'virtualmachinestates', store.project?.id ? 'project' : 'account']
+        if (store.listAllProjects && !fields.includes('project')) {
           fields.push('project')
         }
         fields.push('domain')
