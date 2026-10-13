@@ -193,6 +193,7 @@ export default {
       securityGroupsEnabled: false,
       loading: false,
       initialForm: {},
+      initialResourceContextKey: '',
       securitygroups: {
         loading: false,
         opts: []
@@ -222,7 +223,7 @@ export default {
     resourceContextKey () {
       return JSON.stringify([this.resource.id, vmGroupOwnerKey(this.resource), this.resource.templateid, this.resource.serviceofferingid, this.resource.zoneid])
     },
-    groupLookupReady () { return vmGroupLookupReady(this.groups, this.resource) },
+    groupLookupReady () { return this.initialResourceContextKey === this.resourceContextKey && vmGroupLookupReady(this.groups, this.resource) },
     metadataReady () { return this.templateStatus === 'ready' && this.offeringStatus === 'ready' },
     dynamicScalingEditable () { return this.metadataReady && this.isDynamicScalingEnabled() },
     cloneEditRestricted () {
@@ -258,6 +259,7 @@ export default {
   beforeUnmount () { this.groupLookup.dispose(); this.metadataGeneration++ },
   methods: {
     initForm () {
+      this.initialResourceContextKey = this.resourceContextKey
       this.formRef = ref()
       this.form = reactive({
         name: this.resource.name,
@@ -436,6 +438,10 @@ export default {
     handleSubmit () {
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
+        if (this.initialResourceContextKey !== this.resourceContextKey) {
+          this.$message.error(this.$t('message.vm.group.lookup.blocked'))
+          return
+        }
         if ((values.group || '') !== (this.resource.group || '') && !this.groupLookupReady) {
           this.$message.error(this.$t('message.vm.group.lookup.blocked'))
           return

@@ -16,7 +16,7 @@
 // under the License.
 
 import DeployVM from '@/views/compute/DeployVM.vue'
-import { postAPI } from '@/api'
+import { getAPI, postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 
 it('queries the final selected creation owner rather than the login owner', () => {
@@ -48,6 +48,7 @@ it('uses only the selected project when ownership changes to a project', () => {
 it('prevents creation from a typed group while the group lookup has failed', async () => {
   const ctx = {
     loading: { deploy: false },
+    owner: { account: 'target', domainid: 'domain' },
     form: { group: 'typed-before-failure' },
     groupLookupReady: false,
     formRef: { value: { validate: () => Promise.resolve() } },
@@ -55,6 +56,48 @@ it('prevents creation from a typed group while the group lookup has failed', asy
     $t: key => key
   }
   await DeployVM.methods.handleSubmit.call(ctx)
+  await Promise.resolve()
+  expect(postAPI).not.toHaveBeenCalled()
+  expect(ctx.$message.error).toHaveBeenCalledWith('message.vm.group.lookup.blocked')
+})
+it('refuses to create a VM when the final owner is incomplete', async () => {
+  const ctx = {
+    loading: { deploy: false },
+    owner: {},
+    form: {},
+    formRef: { value: { validate: () => Promise.resolve() } },
+    $message: { error: jest.fn() },
+    $t: key => key
+  }
+  postAPI.mockClear()
+  await DeployVM.methods.handleSubmit.call(ctx)
+  await Promise.resolve()
+  expect(postAPI).not.toHaveBeenCalled()
+  expect(ctx.$message.error).toHaveBeenCalledWith('message.vm.group.lookup.unavailable')
+})
+it('rechecks ownership after an asynchronous capability check before creating the VM', async () => {
+  let finish
+  getAPI.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const ctx = {
+    loading: { deploy: false },
+    owner: { account: 'before', domainid: 'domain' },
+    form: { group: 'selected', templateid: 'template', computeofferingid: 'offering' },
+    groupLookupReady: true,
+    formRef: { value: { validate: () => Promise.resolve() } },
+    selectedDataDiskOffering: { id: 'disk' },
+    selectedDataDiskCount: 1,
+    selectedDataDiskSize: 1,
+    isoDataDiskSelection: {},
+    $store: { getters: { apis: { listHypervisorCapabilities: {} } } },
+    $message: { error: jest.fn() },
+    $t: key => key
+  }
+  postAPI.mockClear()
+  DeployVM.methods.handleSubmit.call(ctx)
+  await Promise.resolve()
+  ctx.owner = { projectid: 'after' }
+  finish({ listhypervisorcapabilitiesresponse: {} })
+  await Promise.resolve()
   await Promise.resolve()
   expect(postAPI).not.toHaveBeenCalled()
   expect(ctx.$message.error).toHaveBeenCalledWith('message.vm.group.lookup.blocked')

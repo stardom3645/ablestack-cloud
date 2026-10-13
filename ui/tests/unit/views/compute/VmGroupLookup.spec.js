@@ -151,6 +151,20 @@ it('rejects repeated pages rather than interpreting an incomplete list as comple
 
 describe('VM editor auxiliary data and submit guards', () => {
   beforeEach(() => { getAPI.mockReset(); postAPI.mockReset() })
+  it('rejects stale editor values before the resource-change watcher has reset the form', async () => {
+    const ctx = {
+      formRef: { value: { validate: () => Promise.resolve() } },
+      form: { group: 'old VM input' },
+      initialResourceContextKey: 'before',
+      resourceContextKey: 'after',
+      $message: { error: jest.fn() },
+      $t: key => key
+    }
+    await EditVM.methods.handleSubmit.call(ctx)
+    await Promise.resolve()
+    expect(postAPI).not.toHaveBeenCalled()
+    expect(ctx.$message.error).toHaveBeenCalledWith('message.vm.group.lookup.blocked')
+  })
   it.each([
     ['fetchTemplateData', 'template', 'templateStatus', 'listtemplatesresponse', 'template'],
     ['fetchServiceOfferingData', 'serviceOffering', 'offeringStatus', 'listserviceofferingsresponse', 'serviceoffering']

@@ -1243,7 +1243,7 @@ import DeploymentStorageSelection from '@views/compute/wizard/DeploymentStorageS
 import IsoAdditionalDataDisks from '@views/compute/wizard/IsoAdditionalDataDisks'
 import DiskQuantitySelection from './wizard/DiskQuantitySelection'
 import { deploymentStorageQuery, dataDiskRequest, dataDiskDeviceIds, completeIsoDiskDeployment, additionalIsoConfigDriveConflict } from '@/utils/vmDiskDeployment'
-import { createVmGroupLookup, vmGroupOwnerKey, vmGroupLookupReady } from '@/utils/vmGroupLookup'
+import { createVmGroupLookup, vmGroupOwner, vmGroupOwnerKey, vmGroupLookupReady } from '@/utils/vmGroupLookup'
 import DiskSizeSelection from '@views/compute/wizard/DiskSizeSelection'
 import MultiDiskSelection from '@views/compute/wizard/MultiDiskSelection'
 import TemplateIsoSelection from '@views/compute/wizard/TemplateIsoSelection'
@@ -3080,6 +3080,11 @@ export default {
       if (this.loading.deploy) return
       this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
+        const ownerKey = vmGroupOwnerKey(this.owner)
+        if (!vmGroupOwner(this.owner)) {
+          this.$message.error(this.$t('message.vm.group.lookup.unavailable'))
+          return
+        }
         if (values.group && !this.groupLookupReady) {
           this.$message.error(this.$t('message.vm.group.lookup.blocked'))
           return
@@ -3158,6 +3163,10 @@ export default {
               return
             }
           } catch (error) { this.$notifyError(error); return }
+        }
+        if (ownerKey !== vmGroupOwnerKey(this.owner) || (values.group && !this.groupLookupReady)) {
+          this.$message.error(this.$t('message.vm.group.lookup.blocked'))
+          return
         }
         this.loading.deploy = true
 
