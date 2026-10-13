@@ -101,7 +101,7 @@ it('does not publish a late result after the editor is closed', async () => {
   loader.dispose(); pending.resolve(reply([group])); await work
   expect(publish).toHaveBeenCalledTimes(1)
 })
-it.each([401, 403])('distinguishes permission failure %i from a legitimate empty list', async code => {
+it.each([401, 403, 432])('distinguishes permission failure %i from a legitimate empty list', async code => {
   const api = jest.fn().mockRejectedValue({ response: { data: { errorresponse: { errorcode: code } } } })
   const task = lookup(api)
   await task.loader.load(owner)
