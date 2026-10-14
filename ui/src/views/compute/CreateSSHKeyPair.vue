@@ -190,7 +190,7 @@ export default {
         }
         if (this.isValidValueForKey(values, 'publickey') && values.publickey.length > 0) {
           params.publickey = values.publickey
-          return postAPI('registerSSHKeyPair', params).then(() => {
+          return postAPI('registerSSHKeyPair', params, { preserveOnFailure: true }).then(() => {
             this.$message.success(this.$t('message.success.register.keypair') + ' ' + values.name)
             this.$emit('refresh-data')
             this.closeAction()
@@ -198,7 +198,7 @@ export default {
             this.$notifyError(error)
           })
         } else {
-          return postAPI('createSSHKeyPair', params).then(json => {
+          return postAPI('createSSHKeyPair', params, { preserveOnFailure: true }).then(json => {
             this.$message.success(this.$t('message.success.create.keypair') + ' ' + values.name)
             if (json.createsshkeypairresponse?.keypair?.privatekey) {
               this.isSubmitted = true

@@ -45,6 +45,7 @@ test.each(['invalid public key', 'duplicate name', 'HTTP 503', 'connection lost'
   expect(ctx.isSubmitted).toBe(false)
   expect(ctx.hiddenElement).toBe(null)
   expect(ctx.$notifyError).toHaveBeenCalledWith(failure)
+  expect(postAPI.mock.calls[0][2]).toEqual({ preserveOnFailure: true })
   expect(ctx.$message.success).not.toHaveBeenCalled()
   expect(ctx.$emit).not.toHaveBeenCalled()
 })
@@ -53,7 +54,7 @@ test('the same form can be corrected and registered after failure', async () => 
   await ctx.handleSubmit()
   ctx.form.publickey = 'ssh-ed25519 valid-key'
   await ctx.handleSubmit()
-  expect(postAPI).toHaveBeenNthCalledWith(2, 'registerSSHKeyPair', { name: 'retained-key', publickey: 'ssh-ed25519 valid-key', domainid: 'domain-1', account: 'owner-1' })
+  expect(postAPI).toHaveBeenNthCalledWith(2, 'registerSSHKeyPair', { name: 'retained-key', publickey: 'ssh-ed25519 valid-key', domainid: 'domain-1', account: 'owner-1' }, { preserveOnFailure: true })
   expect(ctx.$message.success).toHaveBeenCalledTimes(1)
   expect(ctx.$emit.mock.calls).toEqual([['refresh-data'], ['close-action']])
   expect(ctx.loading).toBe(false)
@@ -103,7 +104,7 @@ test('unexpected validation error is reported without losing the form', async ()
 test('hidden owner fields are omitted while visible input is preserved', async () => {
   ctx.$refs.account = null; ctx.$refs.domainid = null
   await ctx.handleSubmit()
-  expect(postAPI).toHaveBeenCalledWith('registerSSHKeyPair', { name: 'retained-key', publickey: 'invalid-key' })
+  expect(postAPI).toHaveBeenCalledWith('registerSSHKeyPair', { name: 'retained-key', publickey: 'invalid-key' }, { preserveOnFailure: true })
   expect(ctx.form.account).toBe('owner-1')
 })
 test('default domain does not add an owner domain to registration', async () => {
@@ -116,7 +117,7 @@ test('new key generation retains the private-key result and existing download/co
   const key = 'unit-test-private-key\n'
   postAPI.mockResolvedValueOnce({ createsshkeypairresponse: { keypair: { privatekey: key } } })
   await ctx.handleSubmit()
-  expect(postAPI).toHaveBeenCalledWith('createSSHKeyPair', { name: 'retained-key', domainid: 'domain-1', account: 'owner-1' })
+  expect(postAPI).toHaveBeenCalledWith('createSSHKeyPair', { name: 'retained-key', domainid: 'domain-1', account: 'owner-1' }, { preserveOnFailure: true })
   expect(ctx.isSubmitted).toBe(true)
   expect(ctx.loading).toBe(false)
   expect(ctx.$emit.mock.calls).toEqual([['refresh-data']])
