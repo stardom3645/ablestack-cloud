@@ -112,7 +112,7 @@
             />
           </span>
           <span v-if="isSshKeyPairList">
-            <router-link :to="sshKeyPairLink(record)">{{ record.hasannotations ? text : $t(text.toLowerCase()) }}</router-link>
+            <router-link :to="sshKeyPairLink(record)">{{ text }}</router-link>
             <router-link v-if="record.hasannotations" :to="sshKeyPairLink(record, 'comments')"><message-filled style="padding-left: 10px" size="small" /></router-link>
           </span>
           <span v-else-if="resourcePath && record.id" class="embedded-resource-name"><router-link :to="{ path: resourcePath === '/vm' ? createPathBasedOnVmType(record.vmtype, record.id) : resourcePath + '/' + record.id }">{{ text }}</router-link></span>
