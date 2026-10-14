@@ -926,7 +926,7 @@ import InstanceGroupDeleteSummary from '@/components/view/InstanceGroupDeleteSum
 import InstanceGroupQueryStatus from '@/components/view/InstanceGroupQueryStatus'
 import { vmGroupQuery, vmGroupQueryChanged, vmGroupQueryParams, vmGroupQueryScope, vmGroupQueryRows } from '@/utils/vmGroupQuery'
 import { vmGroupLookupStatus } from '@/utils/vmGroupLookup'
-import { isSshKeyPairDetailRoute, sshKeyPairDetailScope, sshKeyPairDetailTarget, sshKeyPairDetailParams, sshKeyPairMatchesTarget, sshKeyPairDetailResult, sshKeyPairDetailFailure } from '@/utils/sshKeyPairIdentity'
+import { isSshKeyPairDetailRoute, sshKeyPairDetailScope, sshKeyPairDetailTarget, sshKeyPairDetailParams, sshKeyPairMatchesTarget, sshKeyPairDetailResult, sshKeyPairDetailFailure, sshKeyPairVmParams } from '@/utils/sshKeyPairIdentity'
 import { normalizeVmGroupName, isVmGroupNameAction, isVmGroupAction, vmGroupErrorKey, vmGroupDeleteTargets } from '@/utils/vmGroupNames'
 
 export default {
@@ -1887,6 +1887,9 @@ export default {
         }
         params = sshKeyPairDetailParams(params, sshTarget)
         this.sshKeyPairDetailStatus = sameList ? 'refreshing' : 'loading'
+      }
+      if (['listVirtualMachines', 'listVirtualMachinesMetrics'].includes(requestApi)) {
+        params = sshKeyPairVmParams(params, this.$route.query)
       }
       const response = vmGroups || sshDetail ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
       const request = response.then(async json => {

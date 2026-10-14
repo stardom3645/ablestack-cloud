@@ -104,3 +104,16 @@ export function sshKeyPairDetailResult (json, target) {
   if (!sshKeyPairMatchesTarget(rows[0], target)) return { status: 'mismatch' }
   return { status: 'ready', rows }
 }
+
+export function sshKeyPairVmQuery (record) {
+  return { keypair: record.name, ...owner(record) }
+}
+
+export function sshKeyPairVmParams (params, query) {
+  if (!value(query?.keypair)) return params
+  if (value(query.projectid)) return { ...params, projectid: query.projectid }
+  if (!value(query.account) || !value(query.domainid)) return params
+  const result = { ...params, ignoreproject: true }
+  delete result.projectid
+  return result
+}

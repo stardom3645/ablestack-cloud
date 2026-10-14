@@ -159,3 +159,21 @@ test.each(['created', 'route'].flatMap(hook => ['ssh', 'vm'].map(kind => [hook, 
   else expect(ctx.switchProject).toHaveBeenCalledWith(b)
   expect(ctx.$route.query.projectid).toBe(b)
 })
+
+test.each(['listVirtualMachines', 'listVirtualMachinesMetrics'])('%s account-key links preserve their owner under all-projects selection', async api => {
+  ctx.$route = { path: '/vm', fullPath: '/vm?keypair=same&account=admin&domainid=' + a, params: {}, query: { keypair: 'same', account: 'admin', domainid: a }, meta: { name: 'vm', permission: [api], columns: ['name'], actions: [], searchFilters: [] } }
+  store.getters.apis[api] = {}; store.getters.listAllProjects = true
+  callAPI.mockResolvedValue({ listvirtualmachinesresponse: { count: 0, virtualmachine: [] } })
+  await ctx.fetchData()
+  const [command, params] = callAPI.mock.calls[0]
+  expect(command).toBe(api)
+  expect(params).toMatchObject({ keypair: 'same', account: 'admin', domainid: a, ignoreproject: true })
+  expect(params.projectid).toBeUndefined()
+})
+test('project-key VM links override an unrelated all-projects injection', async () => {
+  ctx.$route = { path: '/vm', fullPath: '/vm?keypair=same&projectid=' + b, params: {}, query: { keypair: 'same', projectid: b, domainid: a }, meta: { name: 'vm', permission: ['listVirtualMachines'], columns: ['name'], actions: [], searchFilters: [] } }
+  store.getters.apis.listVirtualMachines = {}; store.getters.listAllProjects = true
+  callAPI.mockResolvedValue({ listvirtualmachinesresponse: { count: 0, virtualmachine: [] } })
+  await ctx.fetchData()
+  expect(callAPI.mock.calls[0][1].projectid).toBe(b)
+})

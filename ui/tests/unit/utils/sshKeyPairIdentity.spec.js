@@ -14,7 +14,7 @@
 // KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { sshKeyPairLink, sshKeyPairNameLink, sshKeyPairDetailTarget, sshKeyPairDetailParams, sshKeyPairMatchesTarget, sshKeyPairDetailScope, sshKeyPairDetailResult } from '@/utils/sshKeyPairIdentity'
+import { sshKeyPairLink, sshKeyPairNameLink, sshKeyPairDetailTarget, sshKeyPairDetailParams, sshKeyPairMatchesTarget, sshKeyPairDetailScope, sshKeyPairDetailResult, sshKeyPairVmQuery, sshKeyPairVmParams } from '@/utils/sshKeyPairIdentity'
 const a = '11111111-1111-1111-1111-111111111111'
 const b = '22222222-2222-2222-2222-222222222222'
 const domain = '33333333-3333-3333-3333-333333333333'
@@ -80,4 +80,23 @@ test('tab changes retain scope while ownership, project, caller and session chan
   expect(sshKeyPairDetailScope(route(a), { ...getters, project: { id: project } }, 'session')).not.toBe(scope)
   expect(sshKeyPairDetailScope(route(a), { ...getters, userInfo: { id: 'other' } }, 'session')).not.toBe(scope)
   expect(sshKeyPairDetailScope(route(a), getters, 'next')).not.toBe(scope)
+})
+
+test('related VM links retain account/domain or explicit project ownership', () => {
+  expect(sshKeyPairVmQuery(key)).toEqual({ keypair: key.name, account: key.account, domainid: domain })
+  expect(sshKeyPairVmQuery({ ...key, projectid: project })).toEqual({ keypair: key.name, projectid: project, domainid: domain })
+})
+test('account-key VM lookup ignores an unrelated active or all-projects scope', () => {
+  for (const projectid of [project, '-1']) {
+    const params = sshKeyPairVmParams({ projectid, page: 2 }, { keypair: key.name, account: key.account, domainid: domain })
+    expect(params).toEqual({ page: 2, ignoreproject: true })
+  }
+})
+test('explicit SSH owner project overrides global all-projects injection', () => {
+  expect(sshKeyPairVmParams({ projectid: '-1', page: 1 }, { keypair: key.name, projectid: project })).toEqual({ projectid: project, page: 1 })
+})
+test('unscoped SSH searches and other VM queries retain the requested project scope', () => {
+  const params = { projectid: project }
+  expect(sshKeyPairVmParams(params, { keypair: key.name })).toBe(params)
+  expect(sshKeyPairVmParams(params, { account: key.account, domainid: domain })).toBe(params)
 })

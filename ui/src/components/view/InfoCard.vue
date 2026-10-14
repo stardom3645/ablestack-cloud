@@ -1166,7 +1166,7 @@
 
 <script>
 import { creationVmOsName } from '@/utils/creationVmPresentation'
-import { sshKeyPairNameLink } from '@/utils/sshKeyPairIdentity'
+import { sshKeyPairNameLink, sshKeyPairVmQuery } from '@/utils/sshKeyPairIdentity'
 import { attachedIsos } from '@/utils/vmIsoActions'
 import { getAPI, postAPI } from '@/api'
 import axios from 'axios'
@@ -1682,9 +1682,7 @@ export default {
           query[item.param] = this.resource.name
           query.domainid = this.resource.domainid
         } else if (item.param === 'keypair') {
-          query[item.param] = this.resource.name
-          query.account = this.resource.account
-          query.domainid = this.resource.domainid
+          return sshKeyPairVmQuery(this.resource)
         } else {
           query[item.param] = this.resource.id
         }
