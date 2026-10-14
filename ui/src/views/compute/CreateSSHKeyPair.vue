@@ -171,12 +171,12 @@ export default {
       this.selectedDomain = domain
     },
     handleSubmit (e) {
-      e.preventDefault()
-      if (this.loading) return
-      this.formRef.value.validate().then(() => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault()
+      if (this.loading || this.isSubmitted) return
+      this.loading = true
+      return this.formRef.value.validate().then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
-        this.loading = true
         const params = {
           name: values.name
         }
@@ -190,17 +190,15 @@ export default {
         }
         if (this.isValidValueForKey(values, 'publickey') && values.publickey.length > 0) {
           params.publickey = values.publickey
-          postAPI('registerSSHKeyPair', params).then(json => {
+          return postAPI('registerSSHKeyPair', params).then(() => {
             this.$message.success(this.$t('message.success.register.keypair') + ' ' + values.name)
+            this.$emit('refresh-data')
+            this.closeAction()
           }).catch(error => {
             this.$notifyError(error)
-          }).finally(() => {
-            this.$emit('refresh-data')
-            this.loading = false
-            this.closeAction()
           })
         } else {
-          postAPI('createSSHKeyPair', params).then(json => {
+          return postAPI('createSSHKeyPair', params).then(json => {
             this.$message.success(this.$t('message.success.create.keypair') + ' ' + values.name)
             if (json.createsshkeypairresponse?.keypair?.privatekey) {
               this.isSubmitted = true
@@ -211,15 +209,19 @@ export default {
               this.hiddenElement.target = '_blank'
               this.hiddenElement.download = values.name + '.key'
             }
+            this.$emit('refresh-data')
           }).catch(error => {
             this.$notifyError(error)
-          }).finally(() => {
-            this.$emit('refresh-data')
-            this.loading = false
           })
         }
       }).catch(error => {
-        this.formRef.value.scrollToField(error.errorFields[0].name)
+        if (error.errorFields?.length) {
+          this.formRef.value.scrollToField(error.errorFields[0].name)
+        } else {
+          this.$notifyError(error)
+        }
+      }).finally(() => {
+        this.loading = false
       })
     },
     downloadKey () {
