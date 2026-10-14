@@ -17,12 +17,14 @@
 
 <template>
   <div class="vm-group-members">
-    <p v-if="summary && canRead" class="member-summary">{{ $t('label.vm.group.members.total') }}: {{ summary.count }} <span v-for="[state, value] in summary.states" :key="state"><Status :text="state" /> {{ $t('label.' + state.toLowerCase()) }} {{ value }}</span></p>
     <div class="member-toolbar">
-      <a-button type="primary" :disabled="!!actionReason" @click="openLink"><template #icon><plus-outlined /></template>{{ $t('label.vm.group.members.link') }}</a-button>
-      <a-button :loading="pending" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
-      <a-input-search v-model:value="draftKeyword" :placeholder="$t('label.search')" allow-clear @search="searchMembers" />
+      <div class="member-toolbar-actions">
+        <a-button type="primary" :disabled="!!actionReason" @click="openLink"><template #icon><plus-outlined /></template>{{ $t('label.vm.group.members.link') }}</a-button>
+        <a-button :loading="pending" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+      </div>
+      <a-input-search class="member-toolbar-search" v-model:value="draftKeyword" :placeholder="$t('label.search')" allow-clear @search="searchMembers" />
     </div>
+    <p v-if="summary && canRead" class="member-summary">{{ $t('label.vm.group.members.total') }}: {{ summary.count }} <span v-for="[state, value] in summary.states" :key="state"><Status :text="state" /> {{ $t('label.' + state.toLowerCase()) }} {{ value }}</span></p>
     <p v-if="actionReason && actionReason !== 'message.vm.group.members.refresh' && !['error', 'forbidden'].includes(status)" role="status">{{ $t(actionReason) }}</p>
     <p v-if="['error', 'forbidden'].includes(status)" role="status">{{ $t('message.vm.group.members.' + status) }} <a-button type="link" @click="fetchData">{{ $t('label.retry') }}</a-button></p>
     <ListView
@@ -38,8 +40,8 @@ resource-path="/vm"
 :emptyText="$t('message.vm.group.members.' + (status === 'ready' ? 'empty' : status))"
 @selection-change="selection = $event"
 @table-change="sortMembers" />
+    <div v-if="status === 'ready' || rows.length" class="member-pagination">
     <a-pagination
-v-if="status === 'ready' || rows.length"
 :current="page"
 :pageSize="pagesize"
 :total="count"
@@ -48,6 +50,7 @@ show-size-changer
 :pageSizeOptions="['10', '20', '50', '100']"
 @change="changePage"
 @showSizeChange="changePage" />
+    </div>
 
     <a-modal :visible="modalVisible" :title="$t('label.vm.group.members.' + mode)" :maskClosable="false" :closable="!busy" :keyboard="!busy" :width="device === 'mobile' ? '96vw' : '760px'" @cancel="closeModal">
       <a-form layout="vertical">
@@ -73,7 +76,9 @@ resource-path="/vm"
 @selection-change="candidateSelection = $event" />
           </div>
           <p>{{ $t('message.vm.group.members.already') }}</p>
+          <div class="member-pagination">
           <a-pagination :current="candidatePage" :pageSize="20" :showSizeChanger="false" :total="candidateCount" @change="candidatePage = $event; fetchCandidates()" />
+          </div>
         </template>
         <template v-if="stage === 'choose' && mode === 'move'">
           <a-form-item :label="$t('label.vm.group.members.target')" required>
@@ -285,11 +290,13 @@ export default {
 </script>
 <style scoped>
 .member-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-.member-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-.member-toolbar .ant-input-search { flex: 1; min-width: 150px; }
+.member-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.member-toolbar-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.member-toolbar-search { width: 280px; max-width: 100%; margin-left: auto; }
+.member-pagination { display: flex; justify-content: flex-end; margin-top: 16px; }
+.member-pagination :deep(.ant-pagination) { text-align: right; }
 .vm-group-members { min-width: 0; }
 .vm-group-member-candidates { overflow-x: auto; }
-.vm-group-members :deep(.ant-pagination) { margin-top: 16px; }
 .vm-group-members :deep(.list-view-table-wrapper) { overflow-x: auto; }
 @media (max-width: 767px) {
   .vm-group-members :deep(.ant-table), .vm-group-member-candidates :deep(.ant-table) { min-width: 760px; }
