@@ -1279,31 +1279,25 @@ export default {
       docHelp: 'adminguide/virtual_machines.html#changing-the-vm-name-os-or-group',
       resourceType: 'VMInstanceGroup',
       permission: ['listInstanceGroups'],
-      searchFilters: ['name', 'zoneid', 'domainid', 'account'],
+      searchFilters: ['name', 'domainid', 'account'],
       columns: (store) => {
-        var fields = ['name', 'account']
-        if (store.listAllProjects) {
+        var fields = ['name', 'virtualmachinecount', 'virtualmachinestates', store.project?.id ? 'project' : 'account']
+        if (store.listAllProjects && !fields.includes('project')) {
           fields.push('project')
         }
         fields.push('domain')
         return fields
       },
-      details: ['name', 'id', 'account', 'domain', 'created'],
+      details: ['name', 'id', 'virtualmachinecount', 'virtualmachinestates', 'account', 'domain', 'project', 'created'],
       related: [{
         name: 'vm',
         title: 'label.instances',
         param: 'groupid'
       }],
-      tabs: [
-        {
-          name: 'details',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
-        },
-        {
-          name: 'comments',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
-        }
-      ],
+      tabs: [{
+        name: 'instancegroup',
+        component: shallowRef(defineAsyncComponent(() => import('@/views/compute/InstanceGroupTab.vue')))
+      }],
       actions: [
         {
           api: 'createInstanceGroup',
