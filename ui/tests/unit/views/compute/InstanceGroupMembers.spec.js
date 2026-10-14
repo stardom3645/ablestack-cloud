@@ -91,3 +91,14 @@ test('cancelled row membership action restores the connected table row focus', (
   expect(ctx.mode).toBe('clear'); expect(ctx.stage).toBe('confirm')
   expect(document.activeElement).toBe(row); ctx.$el.remove()
 })
+
+test('project modal displays the signed-in user when project API omits account', () => {
+  ctx.modalSource = { id, name: 'A', projectid: other }
+  ctx.$store.getters.userInfo.username = 'project-member'
+  expect(ctx.modalAccount).toBe('project-member')
+})
+test('admin viewing another account keeps the group owner account in the modal', () => {
+  ctx.modalSource = { id, name: 'A', account: 'vm-owner' }
+  ctx.$store.getters.userInfo.username = 'admin'
+  expect(ctx.modalAccount).toBe('vm-owner')
+})

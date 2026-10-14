@@ -65,7 +65,7 @@ show-size-changer
       <a-form layout="vertical">
         <a-descriptions :column="1" size="small" bordered>
           <a-descriptions-item :label="$t('label.instance.group')">{{ modalSource?.name }}</a-descriptions-item>
-          <a-descriptions-item :label="$t('label.account')">{{ modalSource?.account }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.account')">{{ modalAccount }}</a-descriptions-item>
         </a-descriptions>
         <template v-if="stage === 'choose' && mode === 'link'">
           <p>{{ $t('message.vm.group.members.link') }}</p>
@@ -173,6 +173,7 @@ export default {
     queryScope () { return JSON.stringify([this.scope, this.keyword, this.page, this.pagesize]) },
     canRead () { return 'listVirtualMachines' in this.$store.getters.apis },
     summary () { return vmGroupMemberSummary(this.resource) },
+    modalAccount () { return this.modalSource?.account || this.$store.getters.userInfo?.username || '' },
     selectedRows () { return this.rows.filter(row => this.selection.includes(row.id)) },
     actionReason () { if (!this.canRead) return 'message.vm.group.members.forbidden'; return vmGroupMemberActionReason(this.resource, this.selectedRows, this.$store.getters.apis, this.status === 'ready' && !this.pending && !this.busy && this.resourceActionReady()) },
     groupsReady () { return vmGroupLookupReady(this.groups, this.modalSource || {}) },

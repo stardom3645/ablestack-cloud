@@ -832,7 +832,7 @@
       </template>
       <template v-if="column.key === 'project'">
         <router-link
-          v-if="$router.resolve('/project/' + record.projectid).matched[0].redirect !== '/exception/404'"
+          v-if="canLinkProject(record)"
           :to="{ path: '/project/' + record.projectid }"
         >{{ text }}</router-link>
         <span v-else>{{ text }}</span>
@@ -1413,6 +1413,11 @@ export default {
     }
   },
   methods: {
+    canLinkProject (record) {
+      if (!record.projectid) return false
+      const matched = this.$router.resolve('/project/' + record.projectid).matched
+      return matched.length > 0 && matched[0].redirect !== '/exception/404'
+    },
     handleTableChange (pagination, filters, sorter) { this.$emit('table-change', pagination, filters, sorter) },
     snapshotRowEvents (record) {
       if (!this.keyboardContextMenu && !['vmsnapshot', 'kubernetes', 'kubernetesiso'].includes(this.$route.name)) return {}
