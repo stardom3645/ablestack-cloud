@@ -27,6 +27,8 @@ Epic #1369의 #1371을 구현하며 기존 Epic PR #1378에 누적한다. API UU
 
 VM 상세의 keypairs는 이름만 제공하므로 `sshKeyPairNameLink`에서 이름을 URL encode하고 VM의 account/domain 또는 project 범위를 전달한다. `keypairname` query는 UUID처럼 생긴 이름도 이름 조회로 구분하기 위한 UI 내부 표식이다. API에는 전달하지 않는다.
 
+SSH 상세의 명시적인 projectid는 공통 switchProject에서 전역 프로젝트를 변경하거나 query를 삭제하지 않는다. 기본 보기에 있는 사용자가 프로젝트 키 링크를 직접 열어도 그 소유 범위를 유지한다. 다른 리소스의 기존 프로젝트 전환은 보존한다.
+
 기존 일반 이름 URL은 유지한다. 소유 범위 없는 이름이 여러 키에 대응하면 모호한 결과로 처리하고 목록에서 다시 선택하도록 안내한다. UUID URL은 UUID로만 조회하며 이름 조회로 fallback하지 않는다.
 
 ## 응답 검증과 상태

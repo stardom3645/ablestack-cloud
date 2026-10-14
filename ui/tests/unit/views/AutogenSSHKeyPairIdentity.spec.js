@@ -148,3 +148,14 @@ test('ordinary SSH list still uses the common list pipeline', async () => {
   expect(getAPI).not.toHaveBeenCalled()
   expect(ctx.items).toEqual([{ ...row, key: 0 }])
 })
+test.each(['created', 'route'].flatMap(hook => ['ssh', 'vm'].map(kind => [hook, kind])))('%s entry in %s preserves SSH owner scope and retains other resource project switching', (hook, kind) => {
+  route(a, { projectid: b, domainid: a })
+  if (kind === 'vm') { ctx.$route.path = '/vm/' + a; ctx.$route.meta.name = 'vm'; ctx.$route.fullPath = '/vm/' + a + '?projectid=' + b }
+  ctx.onListEvent = jest.fn(); ctx.fetchData = jest.fn(); ctx.switchProject = jest.fn()
+  ctx.setModalWidthByScreen = jest.fn(); ctx.scheduleAutoRefresh = jest.fn(); ctx.clearAutoRefresh = jest.fn()
+  if (hook === 'created') Autogen.created.call(ctx)
+  else Autogen.watch.$route.call(ctx, ctx.$route, { path: '/' + kind + '/' + b, fullPath: '/' + kind + '/' + b, query: {}, meta: { name: kind } })
+  if (kind === 'ssh') expect(ctx.switchProject).not.toHaveBeenCalled()
+  else expect(ctx.switchProject).toHaveBeenCalledWith(b)
+  expect(ctx.$route.query.projectid).toBe(b)
+})
