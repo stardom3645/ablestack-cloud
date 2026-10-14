@@ -129,3 +129,21 @@ test('refresh keeps the established reason stable while independently disabling 
   expect(w.vm.blockReason).toBe('label.vmdevice.snapshotBlocked')
   w.unmount()
 })
+
+test.each([[[]], [[row]]])('empty and populated device results preserve presentation and scope guards (%j)', async rows => {
+  getAPI.mockImplementation(name => Promise.resolve(name === 'listVirtualMachines' ? { listvirtualmachinesresponse: { virtualmachine: [resource] } } : name === 'listVMSnapshot' ? { listvmsnapshotresponse: { count: 0 } } : { listvmdeviceassignmentsresponse: { vmdeviceassignment: rows } }))
+  const w = mount(); await w.vm.refresh()
+  const original = w.vm.rows
+  let finish
+  getAPI.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const pending = w.vm.refresh(); await flush()
+  expect(w.vm.loadedScope).toBe(w.vm.scopeKey)
+  expect(w.vm.loading).toBe(true)
+  expect(w.vm.submitDisabled).toBe(true)
+  finish({ listvirtualmachinesresponse: { virtualmachine: [resource] } }); await pending
+  expect(w.vm.rows).toBe(original)
+  await w.setProps({ resource: { ...resource, id: 'different' } })
+  expect(w.vm.loadedScope).toBeNull()
+  expect(w.vm.rows).toEqual([])
+  w.unmount()
+})
