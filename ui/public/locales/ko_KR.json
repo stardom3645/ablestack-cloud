@@ -8766,5 +8766,12 @@
   "message.vm.group.members.groups.forbidden": "대상 그룹 조회 권한이 없습니다.",
   "message.vm.group.members.groups.unavailable": "대상 소유 범위를 확인할 수 없습니다.",
   "message.volume.storage.rule.automatic": "규칙형 스토리지 태그는 서버에서 판정합니다. 해당 스토리지는 스토리지에 생성을 끄고 자동 배치를 사용해 주세요.",
-  "message.volume.storage.select.matching": "디스크 오퍼링 태그와 일치하는 사용 가능한 기본 스토리지를 선택해 주세요."
+  "message.volume.storage.select.matching": "디스크 오퍼링 태그와 일치하는 사용 가능한 기본 스토리지를 선택해 주세요.",
+  "message.ssh.keypair.detail.loading": "요청한 SSH 키 쌍을 조회하고 있습니다.",
+  "message.ssh.keypair.detail.refreshing": "요청한 SSH 키 쌍을 갱신하고 있습니다.",
+  "message.ssh.keypair.detail.missing": "요청한 SSH 키 쌍이 없거나 조회할 권한이 없습니다.",
+  "message.ssh.keypair.detail.ambiguous": "같은 이름의 SSH 키 쌍이 여러 개입니다. 목록에서 대상을 다시 선택하십시오.",
+  "message.ssh.keypair.detail.mismatch": "조회 결과가 요청한 SSH 키 쌍과 일치하지 않습니다. 목록에서 대상을 다시 선택하십시오.",
+  "message.ssh.keypair.detail.error": "요청한 SSH 키 쌍을 확인할 수 없습니다. 조회를 다시 시도하십시오.",
+  "message.ssh.keypair.detail.forbidden": "요청한 SSH 키 쌍을 조회할 권한이 없습니다."
 }

@@ -694,7 +694,7 @@
                     :key="keypair"
                     style="margin-top: 5px;">
                     <key-outlined />
-                    <router-link :to="{ path: '/ssh/' + keypair }" style="margin-right: 5px">{{ keypair }}</router-link>
+                    <router-link :to="sshKeyPairNameLink(keypair, resource)" style="margin-right: 5px">{{ keypair }}</router-link>
                   </div>
                 </div>
               </div>
@@ -1166,6 +1166,7 @@
 
 <script>
 import { creationVmOsName } from '@/utils/creationVmPresentation'
+import { sshKeyPairNameLink } from '@/utils/sshKeyPairIdentity'
 import { attachedIsos } from '@/utils/vmIsoActions'
 import { getAPI, postAPI } from '@/api'
 import axios from 'axios'
@@ -1400,6 +1401,7 @@ export default {
     }
   },
   methods: {
+    sshKeyPairNameLink,
     createPathBasedOnVmType: createPathBasedOnVmType,
     updateResourceAdditionalData () {
       if (!this.resource) return

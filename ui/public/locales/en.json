@@ -8801,5 +8801,12 @@
   "message.vm.group.members.groups.forbidden": "Target group access was denied.",
   "message.vm.group.members.groups.unavailable": "The target owner scope is unavailable.",
   "message.volume.storage.rule.automatic": "Rule-based storage tags are evaluated by the server. Turn off Create on storage to use automatic placement for these pools.",
-  "message.volume.storage.select.matching": "Select an available primary storage that matches the disk offering tags."
+  "message.volume.storage.select.matching": "Select an available primary storage that matches the disk offering tags.",
+  "message.ssh.keypair.detail.loading": "Loading the requested SSH key pair.",
+  "message.ssh.keypair.detail.refreshing": "Updating the requested SSH key pair.",
+  "message.ssh.keypair.detail.missing": "The requested SSH key pair does not exist or is not accessible.",
+  "message.ssh.keypair.detail.ambiguous": "More than one SSH key pair matches this name. Select the key pair from the list.",
+  "message.ssh.keypair.detail.mismatch": "The returned SSH key pair does not match the requested target. Select the key pair from the list.",
+  "message.ssh.keypair.detail.error": "Unable to verify the requested SSH key pair. Retry the lookup.",
+  "message.ssh.keypair.detail.forbidden": "You do not have permission to view the requested SSH key pair."
 }

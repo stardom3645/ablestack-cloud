@@ -1381,6 +1381,7 @@ export default {
           dataView: true,
           args: ['name', 'account', 'domainid', 'projectid'],
           mapping: {
+            ignoreproject: { value: record => record.projectid ? undefined : true },
             name: {
               value: (record, params) => { return record.name }
             },
@@ -1403,7 +1404,8 @@ export default {
                 name: data[0].name,
                 account: data[0].account,
                 domainid: data[0].domainid,
-                projectid: data[0].projectid
+                projectid: data[0].projectid,
+                ignoreproject: data[0].projectid ? undefined : true
               }
             })
           }
