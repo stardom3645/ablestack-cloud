@@ -102,3 +102,13 @@ test('admin viewing another account keeps the group owner account in the modal',
   ctx.$store.getters.userInfo.username = 'admin'
   expect(ctx.modalAccount).toBe('vm-owner')
 })
+
+test('forbidden member refresh hides stale aggregates until successful recovery', async () => {
+  ctx.resource.virtualmachinecount = 2
+  ctx.resource.virtualmachinestates = { Running: 1, Stopped: 1 }
+  await ctx.fetchData(); expect(ctx.summary.count).toBe(2)
+  getAPI.mockRejectedValue({ response: { status: 403 } }); await ctx.fetchData()
+  expect(ctx.summary).toBeNull(); expect(ctx.rows).toEqual([]); expect(ctx.memberActions).toEqual([])
+  getAPI.mockResolvedValue(response([vm])); await ctx.fetchData(); expect(ctx.summary.count).toBe(2)
+  delete ctx.$store.getters.apis.listVirtualMachines; expect(ctx.summary).toBeNull()
+})

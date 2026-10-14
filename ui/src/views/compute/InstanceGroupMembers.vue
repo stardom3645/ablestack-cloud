@@ -172,7 +172,7 @@ export default {
     queryKey () { return JSON.stringify(['memberkeyword', 'memberpage', 'memberpagesize', 'membersort', 'memberorder'].map(key => this.$route.query[key])) },
     queryScope () { return JSON.stringify([this.scope, this.keyword, this.page, this.pagesize]) },
     canRead () { return 'listVirtualMachines' in this.$store.getters.apis },
-    summary () { return vmGroupMemberSummary(this.resource) },
+    summary () { return this.canRead && this.status !== 'forbidden' ? vmGroupMemberSummary(this.resource) : null },
     modalAccount () { return this.modalSource?.account || this.$store.getters.userInfo?.username || '' },
     selectedRows () { return this.rows.filter(row => this.selection.includes(row.id)) },
     actionReason () { if (!this.canRead) return 'message.vm.group.members.forbidden'; return vmGroupMemberActionReason(this.resource, this.selectedRows, this.$store.getters.apis, this.status === 'ready' && !this.pending && !this.busy && this.resourceActionReady()) },
