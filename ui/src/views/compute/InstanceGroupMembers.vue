@@ -63,7 +63,7 @@ show-size-changer
       :width="device === 'mobile' ? '96vw' : '760px'"
       @cancel="closeModal">
       <a-form layout="vertical">
-        <a-descriptions :column="device === 'mobile' ? 1 : 2" size="small" bordered>
+        <a-descriptions :column="1" size="small" bordered>
           <a-descriptions-item :label="$t('label.instance.group')">{{ modalSource?.name }}</a-descriptions-item>
           <a-descriptions-item :label="$t('label.account')">{{ modalSource?.account }}</a-descriptions-item>
         </a-descriptions>
@@ -318,5 +318,6 @@ export default {
 .vm-group-member-modal .ant-modal-content { display: flex; flex-direction: column; overflow: hidden; max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); }
 .vm-group-member-modal .ant-modal-header, .vm-group-member-modal .ant-modal-footer { flex-shrink: 0; }
 .vm-group-member-modal .ant-modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.vm-group-member-modal .ant-descriptions-item-label { white-space: nowrap; }
 .vm-group-member-modal .ant-descriptions-item-content { overflow-wrap: anywhere; }
 </style>
