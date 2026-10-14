@@ -175,7 +175,7 @@ export default {
       const scope = this.scopeKey
       this.loading = true
       try {
-        const [v, a, s] = await Promise.all([getAPI('listVirtualMachines', { id: this.resource.id, details: 'all' }), getAPI('listVmDeviceAssignments', { virtualmachineid: this.resource.id }), this.canManage ? getAPI('listVMSnapshot', { virtualmachineid: this.resource.id, listall: true }) : Promise.resolve(null)])
+        const [v, a, s] = await Promise.all([getAPI('listVirtualMachines', { id: this.resource.id, details: 'all' }, { preserveOnFailure: true }), getAPI('listVmDeviceAssignments', { virtualmachineid: this.resource.id }, { preserveOnFailure: true }), this.canManage ? getAPI('listVMSnapshot', { virtualmachineid: this.resource.id, listall: true }, { preserveOnFailure: true }) : Promise.resolve(null)])
         if (version !== this.revision || scope !== this.scopeKey) return
         const vm = asArray(v.listvirtualmachinesresponse?.virtualmachine)[0]
         if (!vm) throw new Error(this.d('verifyFirst'))
@@ -191,7 +191,7 @@ export default {
     async openAllocate () {
       this.selected = null; this.mode = 'existing'; this.type = this.vm.state === 'Stopped' ? 'pci' : this.types.find(t => t !== 'pci' && this.allowed(t)); this.dialog = 'allocate'; this.dialogError = ''; this.ack = false; this.createdDevice = ''; this.hostId = this.vm.hostid
       if (!this.hostId) {
-        try { const r = await getAPI('listHosts', { zoneid: this.vm.zoneid, type: 'Routing' }); this.hosts = asArray(r.listhostsresponse?.host).filter(h => h.hypervisor === 'KVM' && h.state === 'Up'); this.hostId = this.rows.find(r => r.hostuuid)?.hostuuid } catch (e) { this.dialogError = this.d('loadFailed') }
+        try { const r = await getAPI('listHosts', { zoneid: this.vm.zoneid, type: 'Routing' }, { preserveOnFailure: true }); this.hosts = asArray(r.listhostsresponse?.host).filter(h => h.hypervisor === 'KVM' && h.state === 'Up'); this.hostId = this.rows.find(r => r.hostuuid)?.hostuuid } catch (e) { this.dialogError = this.d('loadFailed') }
       }
       await this.fetchCandidates()
     },
@@ -207,7 +207,7 @@ export default {
       const name = deviceTypes[type][0]
       const params = type === 'vhba' ? { hostid: hostId } : { id: hostId }
       if (type === 'lun') params.lunpathmode = this.pathMode
-      return deviceCandidates(await getAPI(name, params), type)
+      return deviceCandidates(await getAPI(name, params, { preserveOnFailure: true }), type)
     },
     async fetchCandidates () {
       const revision = ++this.candidateRevision

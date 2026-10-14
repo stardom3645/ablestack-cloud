@@ -33,7 +33,7 @@ export async function readStoragePools (getAPI, zoneid, isCurrent) {
   let page = 1
   let total = 0
   do {
-    const json = await getAPI('listStoragePools', { zoneid, showicon: true, page, pagesize: 100 })
+    const json = await getAPI('listStoragePools', { zoneid, showicon: true, page, pagesize: 100 }, { preserveOnFailure: true })
     if (!isCurrent()) return null
     const result = json.liststoragepoolsresponse
     if (!result) throw new Error('Missing storage pool response')

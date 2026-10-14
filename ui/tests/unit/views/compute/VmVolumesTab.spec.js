@@ -192,8 +192,8 @@ test('project VM ROOT and snapshot reads use the VM project even from the defaul
   const wrapper = mount(); await flush()
   await wrapper.setProps({ resource: { ...vm, projectid: 'project' } })
   await wrapper.vm.fetchData(); await flush()
-  expect(getAPI).toHaveBeenCalledWith('listVolumes', expect.objectContaining({ virtualmachineid: 'vm', projectid: 'project' }))
-  expect(getAPI).toHaveBeenCalledWith('listVMSnapshot', expect.objectContaining({ virtualmachineid: 'vm', projectid: 'project' }))
+  expect(getAPI).toHaveBeenCalledWith('listVolumes', expect.objectContaining({ virtualmachineid: 'vm', projectid: 'project' }), { preserveOnFailure: true })
+  expect(getAPI).toHaveBeenCalledWith('listVMSnapshot', expect.objectContaining({ virtualmachineid: 'vm', projectid: 'project' }), { preserveOnFailure: true })
   wrapper.unmount()
 })
 
@@ -212,4 +212,10 @@ test('snapshot verification retains display while blocking actions; failure repl
   getAPI.mockRejectedValue(new Error('offline')); await wrapper.vm.fetchData()
   expect(wrapper.vm.snapshotNotice).toBe('message.vmvolume.snapshots.unknown')
   wrapper.unmount()
+})
+
+test('tab refresh and safety reads opt into the existing failure-preserving transport contract', async () => {
+  const w = mount(); await flush()
+  expect(getAPI.mock.calls.filter(c => ['listVolumes', 'listVirtualMachines', 'listVMSnapshot'].includes(c[0])).every(c => c[2]?.preserveOnFailure === true)).toBe(true)
+  w.unmount()
 })

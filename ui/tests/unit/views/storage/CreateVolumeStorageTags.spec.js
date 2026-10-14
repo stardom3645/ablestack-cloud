@@ -50,7 +50,7 @@ test('late zone and toggle responses cannot restore obsolete candidates', async 
   wrapper.vm.onChangeCreateOnStorage(true); await flush()
   wrapper.vm.form.zoneid = 'other'; await flush()
   expect(wrapper.vm.createOnStorage).toBe(true)
-  expect(getAPI).toHaveBeenCalledWith('listStoragePools', expect.objectContaining({ zoneid: 'other' }))
+  expect(getAPI).toHaveBeenCalledWith('listStoragePools', expect.objectContaining({ zoneid: 'other' }), { preserveOnFailure: true })
   finish({ liststoragepoolsresponse: { storagepool: [{ ...pools[0], id: 'old' }] } }); await flush()
   expect(wrapper.vm.storagePools.map(p => p.id)).toEqual(['matching', 'wrong'])
   getAPI.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))

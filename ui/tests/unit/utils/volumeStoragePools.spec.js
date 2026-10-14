@@ -39,6 +39,7 @@ test('collects every page before filtering; duplicate or missing pages fail inst
   const api = jest.fn().mockResolvedValueOnce({ liststoragepoolsresponse: { count: 2, storagepool: [pools[1]] } }).mockResolvedValueOnce({ liststoragepoolsresponse: { count: 2, storagepool: [pools[0]] } })
   expect(offeringStoragePools(await readStoragePools(api, 'zone', () => true), { tags: 'fast,shared' }).map(p => p.id)).toEqual(['both'])
   expect(api.mock.calls[1][1]).toMatchObject({ page: 2, pagesize: 100, zoneid: 'zone' })
+  expect(api.mock.calls[1][2]).toEqual({ preserveOnFailure: true })
   api.mockResolvedValue({ liststoragepoolsresponse: { count: 2, storagepool: [pools[1]] } })
   await expect(readStoragePools(api, 'zone', () => true)).rejects.toThrow('Incomplete')
   api.mockResolvedValue({})

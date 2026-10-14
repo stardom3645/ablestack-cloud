@@ -239,7 +239,7 @@ export default {
         let page = 1
         let total = 0
         do {
-          const json = await getAPI('listResourceSchedule', { resourceid: this.resource.id, resourcetype: 'VirtualMachine', listall: true, page, pagesize: 100 })
+          const json = await getAPI('listResourceSchedule', { resourceid: this.resource.id, resourcetype: 'VirtualMachine', listall: true, page, pagesize: 100 }, { preserveOnFailure: true })
           if (scope !== this.scopeKey || !this.isListRequestCurrent('fetchSchedules', request)) return
           const result = json.listresourcescheduleresponse || {}
           const batch = result.resourceschedule || []

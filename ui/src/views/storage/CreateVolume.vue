@@ -421,7 +421,7 @@ export default {
       } else if (id !== null) {
         params.id = id
       }
-      getAPI('listZones', params).then(json => {
+      getAPI('listZones', params, { preserveOnFailure: true }).then(json => {
         this.zones = json.listzonesresponse.zone || []
         this.form.zoneid = this.zones[0]?.id || ''
         this.fetchDiskOfferings(this.form.zoneid)
@@ -442,7 +442,7 @@ export default {
         showunique: false,
         id: this.resource.id
       }
-      getAPI('listSnapshots', params).then(json => {
+      getAPI('listSnapshots', params, { preserveOnFailure: true }).then(json => {
         const snapshots = json.listsnapshotsresponse.snapshot || []
         for (const snapshot of snapshots) {
           if (!this.snapshotZoneIds.includes(snapshot.zoneid)) {
@@ -479,7 +479,7 @@ export default {
       } else {
         params.account = this.owner.account
       }
-      return getAPI('listDiskOfferings', params).then(json => {
+      return getAPI('listDiskOfferings', params, { preserveOnFailure: true }).then(json => {
         if (sequence !== this.offeringRequestId || zoneId !== this.form.zoneid) return
         this.offerings = json.listdiskofferingsresponse.diskoffering || []
         if (this.createVolumeFromVM) {
@@ -548,7 +548,7 @@ export default {
       var vmStates = ['Running', 'Stopped']
       vmStates.forEach((state) => {
         params.state = state
-        getAPI('listVirtualMachines', params).then(response => {
+        getAPI('listVirtualMachines', params, { preserveOnFailure: true }).then(response => {
           this.virtualmachines = this.virtualmachines.concat(response.listvirtualmachinesresponse.virtualmachine || [])
         }).catch(error => {
           this.$notifyError(error)
@@ -668,7 +668,7 @@ export default {
         projectid: this.owner.projectid,
         purpose: 'volume'
       }
-      getAPI('listKMSKeys', params).then(response => {
+      getAPI('listKMSKeys', params, { preserveOnFailure: true }).then(response => {
         const kmskeyMap = response.listkmskeysresponse.kmskey || []
         if (kmskeyMap.length > 0) {
           this.kmsKeys = kmskeyMap
