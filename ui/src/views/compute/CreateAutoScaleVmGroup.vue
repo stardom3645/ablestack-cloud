@@ -2830,7 +2830,7 @@ export default {
       }).catch(err => {
         if (err) {
           if (err.errorFields) {
-            this.formRef.value.scrollToField(err.errorFields[0].name)
+            this.formRef.value.scrollToField(err.errorFields[0].name, { block: 'center' })
           }
           if (err.licensesaccepted) {
             this.$notification.error({
