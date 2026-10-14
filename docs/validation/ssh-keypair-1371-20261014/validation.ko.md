@@ -36,9 +36,9 @@ Epic #1369 / 개선 이슈 #1371 / 기존 Epic PR #1378. 검증일은 2026-10-14
 ## 테스트와 빌드
 
 - 새 식별/링크/상태 테스트 54개와 공통 AutogenView·ResourceView·VM 그룹·계정/프로젝트/스냅샷/디스크 목록 회귀를 합쳐 **10개 suite / 253개 PASS**. 실패/skip 0.
-- 최종 변경 파일 lint: `DONE No lint errors found!`. Locale JSON parse와 변경 소스/문서 ASF header 확인 및 git diff --check 통과. UI에 대한 Maven RAT 실행으로 표현하지 않는다.
+- 최종 변경 파일 lint: `DONE No lint errors found!`. Locale JSON parse와 git diff --check 통과. 변경 소스·설계·검증 텍스트 15개는 분리한 검증 디렉터리에서 Apache RAT 0.15 check 목표만 실행해 15 Apache Licensed/Unknown 0으로 통과했다. 기존 RAT 제외 기준의 JSON·이미지는 별도 처리했다. 전체 Cloud 빌드나 UI Maven 모듈 빌드로 표현하지 않는다. [RAT 결과](changed-file-rat.log).
 - WSL Rocky ext4 분리 작업 트리에서 Node 20.20.2와 `NODE_OPTIONS=--openssl-legacy-provider npm run build`로 프로덕션 UI 빌드 성공. 기존 Browserslist 및 번들 크기 경고는 남아 있다.
-- 백엔드는 #1370에서 검증·배포한 JAR을 유지했다. 이번 작업에서 Java 변경·Maven 빌드·호스트/게스트 변경은 없다. 전체 Cloud/RPM/GitHub Actions CI는 실행하지 않았다.
+- 백엔드는 #1370에서 검증·배포한 JAR을 유지했다. 이번 작업에서 Java 변경·Maven 모듈 빌드·호스트/게스트 변경은 없다. 전체 Cloud/RPM/GitHub Actions CI는 실행하지 않았다.
 
 원시 실행 로그: WSL `/home/ablecloud/work/ssh-keypair-1371-20261014/targeted-tests-project-final.log`, `lint-final.log`, `lint-project-final.log`, `ui-build-project-final.log`.
 
@@ -87,7 +87,7 @@ Epic #1369 / 개선 이슈 #1371 / 기존 Epic PR #1378. 검증일은 2026-10-14
 
 [API 정리 결과](cleanup-verification.json), [DB와 최종 서비스 상태](db-cleanup-verification.txt).
 
-기존 Epic PR #1378에 #1370과 #1371 구현을 누적한다. #1371은 사용자 요청에 따라 검증 후 completed로 닫는다. PR은 미병합이며 Epic #1369 및 #1372~#1377은 OPEN으로 남긴다. 사용자 키 이름의 원문 표시(#1374), 관련 VM 조회(#1372), 대화상자/사용 VM 탭(#1375~#1377)의 완료로 간주하지 않는다.
+기존 Epic PR #1378에 #1370과 #1371 구현을 누적한다. #1371은 사용자 요청에 따라 검증 근거를 기록하고 completed로 닫았다. PR은 미병합이며 Epic #1369 및 #1372~#1377은 OPEN으로 남긴다. 사용자 키 이름의 원문 표시(#1374), 관련 VM 조회(#1372), 대화상자/사용 VM 탭(#1375~#1377)의 완료로 간주하지 않는다.
 
 ## 화면 근거
 
