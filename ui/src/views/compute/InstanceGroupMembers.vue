@@ -52,11 +52,20 @@ show-size-changer
 @showSizeChange="changePage" />
     </div>
 
-    <a-modal :visible="modalVisible" :title="$t('label.vm.group.members.' + mode)" :maskClosable="false" :closable="!busy" :keyboard="!busy" :width="device === 'mobile' ? '96vw' : '760px'" @cancel="closeModal">
+    <a-modal
+      centered
+      wrap-class-name="vm-group-member-modal"
+      :visible="modalVisible"
+      :title="$t('label.vm.group.members.' + mode)"
+      :maskClosable="false"
+      :closable="!busy"
+      :keyboard="!busy"
+      :width="device === 'mobile' ? '96vw' : '760px'"
+      @cancel="closeModal">
       <a-form layout="vertical">
         <a-descriptions :column="device === 'mobile' ? 1 : 2" size="small" bordered>
-          <a-descriptions-item :label="$t('label.instance.group')">{{ modalSource?.name }} ({{ modalSource?.id }})</a-descriptions-item>
-          <a-descriptions-item :label="$t('label.account')">{{ modalSource?.project || modalSource?.account }} / {{ modalSource?.domain }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.instance.group')">{{ modalSource?.name }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.account')">{{ modalSource?.account }}</a-descriptions-item>
         </a-descriptions>
         <template v-if="stage === 'choose' && mode === 'link'">
           <p>{{ $t('message.vm.group.members.link') }}</p>
@@ -301,4 +310,13 @@ export default {
 @media (max-width: 767px) {
   .vm-group-members :deep(.ant-table), .vm-group-member-candidates :deep(.ant-table) { min-width: 760px; }
 }
+</style>
+
+<style>
+.vm-group-member-modal { overflow: hidden; }
+.vm-group-member-modal .ant-modal { top: 0; padding-bottom: 0; max-width: calc(100vw - 32px); }
+.vm-group-member-modal .ant-modal-content { display: flex; flex-direction: column; overflow: hidden; max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); }
+.vm-group-member-modal .ant-modal-header, .vm-group-member-modal .ant-modal-footer { flex-shrink: 0; }
+.vm-group-member-modal .ant-modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.vm-group-member-modal .ant-descriptions-item-content { overflow-wrap: anywhere; }
 </style>
