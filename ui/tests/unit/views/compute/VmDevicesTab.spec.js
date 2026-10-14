@@ -19,6 +19,7 @@ import { shallowMount } from '@vue/test-utils'
 import VmDevicesTab from '@/views/compute/VmDevicesTab.vue'
 import { getAPI, postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
+jest.mock('@/utils/listRefresh', () => ({ ...jest.requireActual('@/utils/listRefresh'), canRefreshList: () => true }))
 const resource = { id: 'vm1', state: 'Running', hypervisor: 'KVM', hostid: 'host1' }
 const row = { hostuuid: 'host1', hostid: 3, devicetype: 'usb', hostdevicesname: '002:004', hostdevicestext: 'USB Serial Adapter' }
 const flush = async () => { for (let i = 0; i < 20; i++) await Promise.resolve() }
@@ -146,4 +147,29 @@ test.each([[[]], [[row]]])('empty and populated device results preserve presenta
   expect(w.vm.loadedScope).toBeNull()
   expect(w.vm.rows).toEqual([])
   w.unmount()
+})
+
+test('a fresh safety refresh supersedes an in-flight background read', async () => {
+  const w = mount()
+  let finishOld
+  getAPI.mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve }))
+  const old = w.vm.refresh(); await flush()
+  await w.vm.refresh()
+  expect(getAPI.mock.calls.filter(c => c[0] === 'listVirtualMachines')).toHaveLength(2)
+  finishOld({ listvirtualmachinesresponse: { virtualmachine: [{ ...resource, state: 'Stopped' }] } }); await old
+  expect(w.vm.vm.state).toBe('Running')
+  w.unmount()
+})
+test('only the active device tab performs periodic refresh and preserves the loaded result', async () => {
+  jest.useFakeTimers()
+  Object.defineProperty(document, 'hidden', { configurable: true, value: false })
+  const w = mount()
+  jest.advanceTimersByTime(10000); await flush()
+  expect(getAPI).not.toHaveBeenCalled()
+  await w.setProps({ active: true }); await flush()
+  const original = w.vm.rows
+  jest.advanceTimersByTime(10000); await flush()
+  expect(getAPI.mock.calls.filter(c => c[0] === 'listVmDeviceAssignments')).toHaveLength(2)
+  expect(w.vm.rows).toBe(original)
+  w.unmount(); jest.useRealTimers()
 })

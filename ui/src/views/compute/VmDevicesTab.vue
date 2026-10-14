@@ -102,11 +102,10 @@ wrap-class-name="vm-device-dialog"
 
 <script>
 import { getAPI, postAPI } from '@/api'
-import { listRefreshMixin } from '@/utils/listRefreshMixin'
+import { createListRefresh, canRefreshList } from '@/utils/listRefresh'
 import { deviceTypes, asArray, deviceCandidates, deviceSummary, deviceXml, vhbaXml, deviceBlocked, deviceSafetyKey } from '@/utils/vmDevices'
 export default {
   name: 'VmDevicesTab',
-  mixins: [listRefreshMixin(['refresh'], { active: vm => vm.active })],
   props: { resource: { type: Object, required: true }, active: Boolean },
   data () {
     return { vm: this.resource, rows: [], loadedScope: null, loading: false, busy: false, submitting: false, error: '', snapshots: null, search: '', filter: '', page: 1, pageSize: 10, dialog: '', selected: null, ack: false, dialogError: '', mode: 'existing', type: 'usb', pathMode: 'multipath', candidates: [], candidateLoading: false, choice: undefined, hostId: this.resource.hostid, hosts: [], address: undefined, scsiDevices: [], vhbaName: '', createdDevice: '', createdHost: '', resultFailed: false, steps: [], revision: 0, candidateRevision: 0 }
@@ -147,7 +146,13 @@ export default {
     scopeKey () { this.loadedScope = null; this.error = ''; this.vm = this.resource; this.page = 1; this.search = ''; this.filter = ''; this.revision++; this.candidateRevision++; this.dialog = ''; this.rows = []; this.snapshots = null; if (this.active) this.refresh() }
   },
   created () { if (this.active) this.refresh() },
-  beforeUnmount () { this.revision++; this.candidateRevision++ },
+  mounted () {
+    this.refreshController = createListRefresh({
+      active: () => this.active && canRefreshList(this.$el),
+      refresh: async () => { await this.refresh(); if (this.error) throw new Error(this.error) }
+    })
+  },
+  beforeUnmount () { if (this.refreshController) this.refreshController.stop(); this.revision++; this.candidateRevision++ },
   methods: {
     d (key) { return this.$t('label.vmdevice.' + key) },
     api (name) { return name in this.$store.getters.apis },
@@ -168,11 +173,10 @@ export default {
     async refresh () {
       const version = ++this.revision
       const scope = this.scopeKey
-      const request = this.listRequestToken('refresh')
       this.loading = true
       try {
         const [v, a, s] = await Promise.all([getAPI('listVirtualMachines', { id: this.resource.id, details: 'all' }), getAPI('listVmDeviceAssignments', { virtualmachineid: this.resource.id }), this.canManage ? getAPI('listVMSnapshot', { virtualmachineid: this.resource.id, listall: true }) : Promise.resolve(null)])
-        if (version !== this.revision || scope !== this.scopeKey || !this.isListRequestCurrent('refresh', request)) return
+        if (version !== this.revision || scope !== this.scopeKey) return
         const vm = asArray(v.listvirtualmachinesresponse?.virtualmachine)[0]
         if (!vm) throw new Error(this.d('verifyFirst'))
         this.vm = vm
@@ -182,7 +186,7 @@ export default {
         this.snapshots = s ? (s.listvmsnapshotresponse?.count || asArray(s.listvmsnapshotresponse?.vmSnapshot || s.listvmsnapshotresponse?.vmsnapshot).length) : null
         this.page = Math.min(this.page, Math.max(1, Math.ceil(this.filteredRows.length / this.pageSize)))
         this.error = ''
-      } catch (e) { if (version === this.revision) { request.failed = true; this.listRefreshFailed = true; this.error = this.d('loadFailed'); this.snapshots = null } } finally { if (version === this.revision) this.loading = false }
+      } catch (e) { if (version === this.revision) { this.error = this.d('loadFailed'); this.snapshots = null } } finally { if (version === this.revision) this.loading = false }
     },
     async openAllocate () {
       this.selected = null; this.mode = 'existing'; this.type = this.vm.state === 'Stopped' ? 'pci' : this.types.find(t => t !== 'pci' && this.allowed(t)); this.dialog = 'allocate'; this.dialogError = ''; this.ack = false; this.createdDevice = ''; this.hostId = this.vm.hostid
