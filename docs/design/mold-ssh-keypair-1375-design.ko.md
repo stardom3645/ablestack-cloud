@@ -23,7 +23,7 @@ Epic #1369 및 기존 PR #1378에 누적한다. 기준 upstream Europa와 기존
 
 ## 프레임과 기존 본문
 
-기존 MoldDialog에 선택적 sm/md/lg/xl preset을 추가하고 preset을 선택한 화면만 MD-03~MD-05의 viewport 상한·padding·제목·Footer 42px 버튼·테마 토큰을 적용한다. 기존 width 760/화면별 width와 VM 대화상자 배치는 유지한다. preset wrapper에만 scrollbar-gutter:auto와 overflow:hidden을 적용해 전역 stable gutter의 5px 중앙 편차를 없애고, 닫기 버튼 내부 48px을 외부와 맞춰 8px 넘침을 막는다. SSH는 md=720px를 사용한다. Header/Footer는 독립 영역, Body만 스크롤하며 별도 SSH 모달 프레임이나 중첩 모달을 만들지 않는다. AutogenView의 selfManagedDialog 분기에 refresh-data 연결만 추가해 성공 목록 갱신을 보존한다.
+기존 MoldDialog에 선택적 sm/md/lg/xl preset을 추가하고 preset을 선택한 화면만 MD-03~MD-05의 viewport 상한·padding·제목·Footer 42px 버튼·테마 토큰을 적용한다. 기존 width 760/화면별 width와 VM 대화상자 배치는 유지한다. preset wrapper/mask에만 width:100vw를 적용하고 wrapper에 scrollbar-gutter:auto와 overflow:hidden을 적용해 html의 stable gutter로 생기는 5px 중앙 편차를 없애고, 닫기 버튼 내부 48px을 외부와 맞춰 8px 넘침을 막는다. SSH는 md=720px를 사용한다. Header/Footer는 독립 영역, Body만 스크롤하며 별도 SSH 모달 프레임이나 중첩 모달을 만들지 않는다. AutogenView의 selfManagedDialog 분기에 refresh-data 연결만 추가해 성공 목록 갱신을 보존한다.
 
 설명→이름→공개 키→도메인→계정 순서와 기존 input/select를 유지한다. 공개 키는 등록 모드에만 해당하는 조건부 필드로 처리한다. 계정 필드는 선택 도메인이 있을 때만 표시한다. 생성과 등록은 API별 독립 액션으로 노출하고 각 권한이 있어야 열고 제출할 수 있다. 등록 빈 공개 키는 검증 오류이며 생성으로 전환되지 않는다. 생성 모드는 오래된 공개 키 값이 있어도 register API를 실행하지 않는다. 각 Footer 문구는 생성/등록이다.
 

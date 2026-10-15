@@ -13,6 +13,7 @@ for the specific language governing permissions and limitations. -->
     class="mold-dialog"
     :class="{ 'mold-dialog-standard': size }"
     :wrap-class-name="size ? 'mold-dialog-standard-wrap' : undefined"
+    :mask-style="size ? { ...($attrs.maskStyle || {}), width: '100vw' } : $attrs.maskStyle"
     centered
     :mask-closable="false"
     :wrap-props="{ 'aria-modal': true }"

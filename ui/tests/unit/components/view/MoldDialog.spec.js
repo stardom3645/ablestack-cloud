@@ -16,10 +16,10 @@
 // under the License.
 import { shallowMount } from '@vue/test-utils'
 import MoldDialog from '@/components/view/MoldDialog'
-const modal = { name: 'AModal', props: ['width', 'maskClosable', 'wrapProps'], template: '<section><slot name="title" /><main><slot /></main><footer><slot name="footer" /></footer></section>' }
+const modal = { name: 'AModal', props: ['width', 'maskClosable', 'wrapProps', 'wrapClassName', 'maskStyle'], template: '<section><slot name="title" /><main><slot /></main><footer><slot name="footer" /></footer></section>' }
 function mount (props = {}) { return shallowMount(MoldDialog, { props, global: { mocks: { $t: key => key }, stubs: { 'a-modal': modal } }, slots: { default: '<input />', footer: '<button>Submit</button>' } }) }
 test.each([['sm', 480], ['md', 720], ['lg', 960], ['xl', 1120]])('shared %s preset exposes one body and an independent footer at width %s', (size, width) => {
-  const wrapper = mount({ size }); expect(wrapper.findComponent(modal).props('width')).toBe(width); expect(wrapper.classes()).toContain('mold-dialog-standard'); expect(wrapper.find('main input').exists()).toBe(true); expect(wrapper.find('footer button').text()).toBe('Submit'); expect(wrapper.findComponent(modal).props('maskClosable')).toBe(false); expect(wrapper.findComponent(modal).props('wrapProps')).toEqual({ 'aria-modal': true }); wrapper.unmount()
+  const wrapper = mount({ size }); expect(wrapper.findComponent(modal).props('width')).toBe(width); expect(wrapper.classes()).toContain('mold-dialog-standard'); expect(wrapper.find('main input').exists()).toBe(true); expect(wrapper.find('footer button').text()).toBe('Submit'); expect(wrapper.findComponent(modal).props('maskClosable')).toBe(false); expect(wrapper.findComponent(modal).props('wrapClassName')).toBe('mold-dialog-standard-wrap'); expect(wrapper.findComponent(modal).props('maskStyle')).toEqual({ width: '100vw' }); expect(wrapper.findComponent(modal).props('wrapProps')).toEqual({ 'aria-modal': true }); wrapper.unmount()
 })
 test('legacy dialog width and custom width remain unchanged without a preset', () => {
   const wrapper = mount(); expect(wrapper.findComponent(modal).props('width')).toBe(760); expect(wrapper.classes()).not.toContain('mold-dialog-standard'); wrapper.unmount()
