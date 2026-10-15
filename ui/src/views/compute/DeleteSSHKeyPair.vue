@@ -59,7 +59,7 @@ class="ssh-keypair-delete-table">
     <template #footer>
       <a-button ref="cancel" :disabled="busy" @click="close">{{ $t(started ? 'label.close' : 'label.cancel') }}</a-button>
       <a-button v-if="checkableRows.length" :disabled="busy || !allowed" @click="checkUnknown">{{ $t('label.ssh.keypair.delete.check') }}</a-button>
-      <a-button v-if="eligibleRows.length || deleting" type="primary" danger :disabled="!allowed || busy || usageBusy" :loading="busy" @click="execute">{{ $t(started ? 'label.ssh.keypair.delete.retry' : 'label.delete') }}</a-button>
+      <a-button v-if="eligibleRows.length || deleting" type="primary" danger :disabled="!allowed || busy || usageBusy" :loading="busy" :aria-label="submitLabel" @click="execute">{{ submitLabel }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -79,6 +79,7 @@ export default {
     return { rows: (this.currentAction.sshKeyPairTargets || []).map(target => ({ target, status: sshKeyPairDeleteParams(target) ? 'ready' : 'blocked', reason: '', usage: { state: 'loading' } })), busy: false, deleting: false, usageBusy: false, started: false, disposed: false, usageGeneration: 0, session: '' }
   },
   computed: {
+    submitLabel () { return this.$t(this.started && !this.deleting ? 'label.ssh.keypair.delete.retry' : 'label.delete') },
     allowed () { return ['listSSHKeyPairs', 'deleteSSHKeyPair'].every(api => api in this.$store.getters.apis) },
     eligibleRows () { return this.rows.filter(row => ['ready', 'failed'].includes(row.status)) },
     unknownRows () { return this.rows.filter(row => row.status === 'unknown') },
