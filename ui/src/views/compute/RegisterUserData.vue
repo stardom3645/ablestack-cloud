@@ -321,11 +321,13 @@ export default {
       }).finally(() => {
         this.loading = false
         if (this.disposed) return
-        if (invalidField) this.$nextTick(() => {
-          this.formRef.value.scrollToField(invalidField)
-          this.$refs[invalidField[0] + 'Input']?.focus()
-        })
-        else this.restoreFormPosition(position)
+        if (invalidField) {
+          this.$nextTick(() => {
+            this.formRef.value.scrollToField(invalidField)
+            const input = this.$refs[invalidField[0] + 'Input']
+            if (input) input.focus()
+          })
+        } else this.restoreFormPosition(position)
       })
     },
     beforeUnload (event) { if (this.loading) { event.preventDefault(); event.returnValue = '' } },
