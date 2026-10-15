@@ -2146,6 +2146,7 @@ export default {
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
       if (action.api === 'deleteSSHKeyPair') {
+        if (this.actionTrigger?.closest('.resource-context-menu')) this.actionTrigger = this.$refs?.detailActionsTrigger?.$el || this.$el?.querySelector('.ant-table-selection-column input') || this.actionTrigger
         const request = { ...action, invokedAsGroupAction: !!isGroupAction }
         this.currentAction = { ...request, sshKeyPairTargets: sshKeyPairDeleteTargets(request, this.selectedItems) }
         this.resource = action.resource || {}
