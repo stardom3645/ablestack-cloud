@@ -1359,8 +1359,13 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
         },
         {
+          name: 'ssh.keypair.usage',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/SSHKeyPairUsage.vue')))
+        },
+        {
           name: 'comments',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue'))),
+          show: () => 'listAnnotations' in store.getters.apis
         }
       ],
       actions: [

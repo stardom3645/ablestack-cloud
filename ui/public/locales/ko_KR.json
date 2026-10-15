@@ -8825,5 +8825,17 @@
   "message.ssh.privatekey.download.started": "다운로드를 시작했습니다. 파일이 저장됐는지 확인한 뒤 닫으세요.",
   "message.ssh.privatekey.download.failed": "다운로드를 시작하지 못했습니다. 다시 시도하거나 개인 키를 복사하세요.",
   "message.ssh.privatekey.copy.failed": "복사하지 못했습니다. 다시 시도하거나 개인 키를 다운로드하세요.",
-  "message.ssh.privatekey.missing": "키 쌍은 생성됐지만 개인 키가 응답에 없습니다. 다시 생성하기 전에 목록을 확인하세요."
+  "message.ssh.privatekey.missing": "키 쌍은 생성됐지만 개인 키가 응답에 없습니다. 다시 생성하기 전에 목록을 확인하세요.",
+  "label.ssh.keypair.usage": "사용 가상머신",
+  "message.ssh.keypair.usage.contract": "현재 계정에서 조회 가능한 Cloud 키 연결 관계입니다. 게스트의 authorized_keys 설치·회수 상태를 확인하지 않습니다.",
+  "message.ssh.keypair.usage.search": "검색은 조건에 맞는 전체 가상머신에 적용하며, 열 정렬은 현재 페이지에만 적용합니다.",
+  "message.ssh.keypair.usage.page.states": "현재 페이지 상태:",
+  "message.ssh.keypair.usage.total": "조회 가능한 검색 결과: {0}개",
+  "message.ssh.keypair.usage.loading": "키 사용 정보를 조회하고 있습니다.",
+  "message.ssh.keypair.usage.empty": "조회 가능한 사용 가상머신이 없습니다.",
+  "message.ssh.keypair.usage.error": "키 사용 정보를 조회하지 못했습니다. 미사용을 의미하지 않습니다.",
+  "message.ssh.keypair.usage.forbidden": "가상머신을 조회할 권한이 없습니다.",
+  "message.ssh.keypair.usage.mismatch": "키 식별 정보 또는 소유 범위가 변경되었습니다. SSH 키 상세를 다시 열어 주세요.",
+  "message.ssh.keypair.usage.missing": "원래 SSH 키가 더 이상 존재하지 않습니다.",
+  "message.ssh.keypair.usage.stale": "마지막 성공 결과를 표시합니다. 업데이트 후 현재 사용 상태를 확인해 주세요."
 }

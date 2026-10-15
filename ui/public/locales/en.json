@@ -8860,5 +8860,17 @@
   "message.ssh.privatekey.download.started": "Download started. Confirm that the file was saved before closing.",
   "message.ssh.privatekey.download.failed": "Unable to start the download. Try again or copy the private key.",
   "message.ssh.privatekey.copy.failed": "Unable to copy. Try again or download the private key.",
-  "message.ssh.privatekey.missing": "The key pair was created, but no private key was returned. Check the key pair list before retrying."
+  "message.ssh.privatekey.missing": "The key pair was created, but no private key was returned. Check the key pair list before retrying.",
+  "label.ssh.keypair.usage": "Using virtual machines",
+  "message.ssh.keypair.usage.contract": "Shows Cloud key associations visible to your account. This does not inspect or verify guest authorized_keys.",
+  "message.ssh.keypair.usage.search": "Search covers all matching VMs; column sorting applies to the current page only.",
+  "message.ssh.keypair.usage.page.states": "States on this page:",
+  "message.ssh.keypair.usage.total": "Visible matching VMs: {0}",
+  "message.ssh.keypair.usage.loading": "Loading key usage…",
+  "message.ssh.keypair.usage.empty": "No visible VMs use this key.",
+  "message.ssh.keypair.usage.error": "Could not load key usage. This does not mean the key is unused.",
+  "message.ssh.keypair.usage.forbidden": "You do not have permission to view these virtual machines.",
+  "message.ssh.keypair.usage.mismatch": "The key identity or owner has changed. Reopen the SSH key detail.",
+  "message.ssh.keypair.usage.missing": "The original SSH key no longer exists.",
+  "message.ssh.keypair.usage.stale": "Showing the last successful result. Refresh to verify current usage."
 }
