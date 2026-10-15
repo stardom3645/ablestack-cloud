@@ -927,6 +927,7 @@ import InstanceGroupDeleteSummary from '@/components/view/InstanceGroupDeleteSum
 import InstanceGroupQueryStatus from '@/components/view/InstanceGroupQueryStatus'
 import { vmGroupQuery, vmGroupQueryChanged, vmGroupQueryParams, vmGroupQueryScope, vmGroupQueryRows } from '@/utils/vmGroupQuery'
 import { vmGroupLookupStatus } from '@/utils/vmGroupLookup'
+import { sshKeyPairDeleteTargets } from '@/utils/sshKeyPairDeletion'
 import { isSshKeyPairDetailRoute, sshKeyPairDetailScope, sshKeyPairDetailTarget, sshKeyPairDetailParams, sshKeyPairMatchesTarget, sshKeyPairDetailResult, sshKeyPairDetailFailure, sshKeyPairVmParams } from '@/utils/sshKeyPairIdentity'
 import { normalizeVmGroupName, isVmGroupNameAction, isVmGroupAction, vmGroupErrorKey, vmGroupDeleteTargets } from '@/utils/vmGroupNames'
 
@@ -2083,13 +2084,16 @@ export default {
       }
       return request
     },
-    closeAction () {
+    closeAction (result) {
+      const deletedSshDetail = this.currentAction?.api === 'deleteSSHKeyPair' && isSshKeyPairDetailRoute(this.$route) && result?.removed?.includes(this.resource?.id)
+      if (this.currentAction?.api === 'deleteSSHKeyPair' && result?.clearSelection) { this.selectedRowKeys = []; this.selectedItems = [] }
       const trigger = this.actionTrigger
       this.actionTrigger = null
       this.actionLoading = false
       this.showAction = false
       this.currentAction = {}
       this.actionConfirmText = ''
+      if (deletedSshDetail) this.$router.push('/ssh')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.
       this.$nextTick(() => {
         if (!this.showAction && trigger?.isConnected && trigger !== document.body) {
@@ -2141,6 +2145,13 @@ export default {
     execAction (action, isGroupAction) {
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
+      if (action.api === 'deleteSSHKeyPair') {
+        const request = { ...action, invokedAsGroupAction: !!isGroupAction }
+        this.currentAction = { ...request, sshKeyPairTargets: sshKeyPairDeleteTargets(request, this.selectedItems) }
+        this.resource = action.resource || {}
+        this.showAction = true
+        return
+      }
       if (action.api === 'createVMSnapshot') action = { ...action, resource: Object.freeze({ ...action.resource }) }
       if (action.snapshotMode) {
         this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, snapshotTargets: Object.freeze((isGroupAction ? this.selectedItems : [action.resource]).filter(Boolean).map(row => Object.freeze({ ...row }))) }

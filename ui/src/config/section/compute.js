@@ -1386,6 +1386,8 @@ export default {
         },
         {
           api: 'deleteSSHKeyPair',
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DeleteSSHKeyPair.vue'))),
           icon: 'delete-outlined',
           label: 'label.remove.ssh.key.pair',
           message: 'message.please.confirm.remove.ssh.key.pair',
