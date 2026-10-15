@@ -35,7 +35,7 @@ ENDPOINT = 'http://10.10.31.10:8080/client/api'
 RESULTS = []
 
 def save(name, value):
-    (ROOT / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (ROOT / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
 
 class Mold:
     def __init__(self, username='admin', password=None, domain='/'):
@@ -115,9 +115,9 @@ def matrix(api):
     try:
         cap = api.call('listCapabilities')['capability']
         record('capability-limit', cap.get('userdatamaxlength') == limit, actual=cap.get('userdatamaxlength'), expected=limit)
-        for i, name in enumerate([' ', '\t\n', '\u00a0\u3000', 'x' * 256]):
+        for i, name in enumerate([' ', '\t\n', '\u00a0\u3000', '\ufeff', 'x' * 256]):
             register('invalid-name-' + str(i), name=name, success=False)
-        for i, value in enumerate([' ', '', 'IAkK', content('\u00a0\u3000'), '%', '%GG', 'A', 'eA=', 'eA===', 'eA==Yg==', '!!!!']):
+        for i, value in enumerate([' ', '', 'IAkK', content('\u00a0\u3000'), content('\ufeff'), '%', '%GG', 'A', 'eA=', 'eA===', 'eA==Yg==', '!!!!']):
             register('invalid-body-' + str(i), encoded=value, success=False)
         canonical = register('canonical', encoded='eA==', name='  ' + PREFIX + '-trimmed  ')
         record('trimmed-name', canonical['name'] == PREFIX + '-trimmed')

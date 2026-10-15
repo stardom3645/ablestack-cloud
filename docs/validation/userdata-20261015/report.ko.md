@@ -122,7 +122,7 @@ under the License.
 
 ## 업스트림 Epic과 하위 이슈
 
-[Epic #1381](https://github.com/ablecloud-team/ablestack-cloud/issues/1381)에 하위 11개 이슈가 GitHub sub-issue로 연결되어 있으며 모두 OPEN이다. 결함 수정 6개, 기능/UX 보완 4개, 최종 UI 표준 검토 1개다. 제목·본문의 한글과 부모 연결을 API로 다시 읽어 검증했다.
+[Epic #1381](https://github.com/ablecloud-team/ablestack-cloud/issues/1381)에 하위 11개 이슈가 GitHub sub-issue로 연결되어 있다. 결함 수정 6개, 기능/UX 보완 4개, 최종 UI 표준 검토 1개다. UD-01 #1382는 [Epic PR #1393](https://github.com/ablecloud-team/ablestack-cloud/pull/1393)에서 설계·구현·31번 배포·범위 내 검증을 완료했다. [구현 검증 보고서](../userdata-1382-20261015/report.ko.md). 나머지 10개 이슈와 Epic 전체 UI 최종 검토는 계속 진행 대상으로 유지한다. 아래 초기 결함/실화면 증거는 구현 전 조사 결과다.
 
 | 작업 | 우선순위 | 이슈 |
 | --- | --- | --- |
