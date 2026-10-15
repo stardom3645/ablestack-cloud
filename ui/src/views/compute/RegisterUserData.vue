@@ -29,118 +29,118 @@
     <div ref="content" class="userdata-registration-content" :aria-busy="loading">
       <p v-if="loading" role="status">{{ $t('message.userdata.submitting') }}</p>
       <a-alert v-if="error" class="mold-dialog-section" role="alert" type="error" show-icon :message="error" />
-    <a-spin :spinning="loading">
-      <p v-html="$route.name === 'userdata' ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
-      <a-form
-        id="userdata-registration-form"
-        @keydown.ctrl.enter.prevent="handleSubmit"
-        :ref="formRef"
-        :model="form"
-        :rules="rules"
-        @finish="handleSubmit"
-        layout="vertical">
-        <a-form-item name="name" ref="name">
-          <template #label>
-            <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
-          </template>
-          <a-input
-            ref="nameInput"
-            v-model:value="form.name"
-            :disabled="loading"
-            :placeholder="apiParams.name.description"
-            v-focus="true" />
-        </a-form-item>
-        <div v-if="$route.name === 'userdata'">
-          <a-form-item name="userdata" ref="userdata">
+      <a-spin :spinning="loading">
+        <p v-html="$route.name === 'userdata' ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
+        <a-form
+          id="userdata-registration-form"
+          @keydown.ctrl.enter.prevent="handleSubmit"
+          :ref="formRef"
+          :model="form"
+          :rules="rules"
+          @finish="handleSubmit"
+          @finishFailed="focusValidationError"
+          layout="vertical">
+          <a-form-item name="name" ref="name">
             <template #label>
-              <tooltip-label :title="$t('label.user.data')" :tooltip="$t('label.register.user.data.details')"/>
+              <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
             </template>
-            <a-textarea
-              ref="userdataInput"
-              v-model:value="form.userdata"
+            <a-input
+              ref="nameInput"
+              @keydown.enter.prevent="handleSubmit"
+              v-model:value="form.name"
               :disabled="loading"
-              :placeholder="$t('label.register.user.data.details')"/>
+              :placeholder="apiParams.name.description"
+              v-focus="true" />
           </a-form-item>
-        </div>
-        <div v-else>
-          <a-form-item name="cniconfig" ref="cniconfig">
+          <div v-if="$route.name === 'userdata'">
+            <a-form-item name="userdata" ref="userdata">
+              <template #label>
+                <tooltip-label :title="$t('label.user.data')" :tooltip="$t('label.register.user.data.details')"/>
+              </template>
+              <a-textarea
+                ref="userdataInput"
+                v-model:value="form.userdata"
+                :disabled="loading"
+                :placeholder="$t('label.register.user.data.details')"/>
+            </a-form-item>
+          </div>
+          <div v-else>
+            <a-form-item name="cniconfig" ref="cniconfig">
+              <template #label>
+                <tooltip-label :title="$t('label.cniconfiguration')" :tooltip="apiParams.cniconfig.description"/>
+              </template>
+              <a-textarea
+                ref="cniconfigInput"
+                v-model:value="form.cniconfig"
+                :disabled="loading"
+                :placeholder="apiParams.cniconfig.description"/>
+            </a-form-item>
+          </div>
+          <a-form-item name="isbase64" ref="isbase64" :label="$t('label.is.base64.encoded')">
+            <a-checkbox v-model:checked="form.isbase64" :disabled="loading"></a-checkbox>
+          </a-form-item>
+          <a-form-item name="params" ref="params">
             <template #label>
-              <tooltip-label :title="$t('label.cniconfiguration')" :tooltip="apiParams.cniconfig.description"/>
+              <tooltip-label
+                :title="$route.name === 'userdata' ? $t('label.userdataparams') : $t('label.cniconfigparams')"
+                :tooltip="$route.name === 'userdata' ? $t('message.userdata.validation.help') : apiParams.params.description"/>
             </template>
-            <a-textarea
-              ref="cniconfigInput"
-              v-model:value="form.cniconfig"
+            <a-select
+              ref="paramsInput"
+              mode="tags"
+              v-model:value="form.params"
               :disabled="loading"
-              :placeholder="apiParams.cniconfig.description"/>
+              showSearch
+              optionFilterProp="value"
+              :filterOption="(input, option) => {
+                return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }"
+              :placeholder="apiParams.params.description">
+            </a-select>
           </a-form-item>
-        </div>
-        <a-form-item name="isbase64" ref="isbase64" :label="$t('label.is.base64.encoded')">
-          <a-checkbox v-model:checked="form.isbase64" :disabled="loading"></a-checkbox>
-        </a-form-item>
-        <a-form-item name="params" ref="params">
-          <template #label>
-            <tooltip-label
-              :title="$route.name === 'userdata' ? $t('label.userdataparams') : $t('label.cniconfigparams')"
-              :tooltip="$route.name === 'userdata' ? $t('message.userdata.validation.help') : apiParams.params.description"/>
-          </template>
-          <a-select
-            ref="paramsInput"
-            mode="tags"
-            v-model:value="form.params"
-            :disabled="loading"
-            showSearch
-            optionFilterProp="value"
-            :filterOption="(input, option) => {
-              return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }"
-            :placeholder="apiParams.params.description">
-            <a-select-option v-for="opt in params" :key="opt">
-              {{ opt }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item name="domainid" ref="domainid" v-if="isAdminOrDomainAdmin()">
-          <template #label>
-            <tooltip-label :title="$t('label.domainid')" :tooltip="apiParams.domainid.description"/>
-          </template>
-          <a-select
-            id="domain-selection"
-            v-model:value="form.domainid"
-            :disabled="loading"
-            showSearch
-            optionFilterProp="label"
-            :filterOption="(input, option) => {
-              return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }"
-              :loading="domainLoading"
-            :placeholder="apiParams.domainid.description"
-            @change="val => { handleDomainChanged(domains[val]) }">
-            <a-select-option
-              v-for="(opt, optIndex) in domains"
-              :key="optIndex"
-              :label="opt.path || opt.name || opt.description || ''">
-              {{ opt.path || opt.name || opt.description }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item name="account" ref="account" v-if="isAdminOrDomainAdmin() && !isObjectEmpty(selectedDomain) && selectedDomain.id !== null">
-          <template #label>
-            <tooltip-label :title="$t('label.account')" :tooltip="apiParams.account.description"/>
-          </template>
-          <a-input
-            v-model:value="form.account"
-            :disabled="loading"
-            :placeholder="apiParams.account.description"/>
-        </a-form-item>
+          <a-form-item name="domainid" ref="domainid" v-if="isAdminOrDomainAdmin()">
+            <template #label>
+              <tooltip-label :title="$t('label.domainid')" :tooltip="apiParams.domainid.description"/>
+            </template>
+            <a-select
+              id="domain-selection"
+              v-model:value="form.domainid"
+              :disabled="loading"
+              showSearch
+              optionFilterProp="label"
+              :filterOption="(input, option) => {
+                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }"
+                :loading="domainLoading"
+              :placeholder="apiParams.domainid.description"
+              @change="val => { handleDomainChanged(domains[val]) }">
+              <a-select-option
+                v-for="(opt, optIndex) in domains"
+                :key="optIndex"
+                :label="opt.path || opt.name || opt.description || ''">
+                {{ opt.path || opt.name || opt.description }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item name="account" ref="account" v-if="isAdminOrDomainAdmin() && !isObjectEmpty(selectedDomain) && selectedDomain.id !== null">
+            <template #label>
+              <tooltip-label :title="$t('label.account')" :tooltip="apiParams.account.description"/>
+            </template>
+            <a-input
+              v-model:value="form.account"
+              @keydown.enter.prevent="handleSubmit"
+              :disabled="loading"
+              :placeholder="apiParams.account.description"/>
+          </a-form-item>
 
-        <!-- Native Enter submits; textarea and select keep their own Enter behavior. -->
-        <button type="submit" hidden aria-hidden="true" tabindex="-1"></button>
-      </a-form>
-    </a-spin>
+          <!-- Native Enter submits; textarea and select keep their own Enter behavior. -->
+          <button type="submit" hidden aria-hidden="true" tabindex="-1"></button>
+        </a-form>
+      </a-spin>
     </div>
     <template #footer>
       <a-button :disabled="loading" @click="closeAction">{{ $t('label.cancel') }}</a-button>
-      <a-button ref="submit" form="userdata-registration-form" html-type="submit" :loading="loading" :disabled="!allowedApi" type="primary" @keydown.ctrl.enter.prevent="handleSubmit">{{ $t('label.register.userdata.action') }}</a-button>
+      <a-button ref="submit" form="userdata-registration-form" html-type="submit" :loading="loading" :disabled="!allowedApi" type="primary" @click="handleSubmit" @keydown.ctrl.enter.prevent="handleSubmit">{{ $t('label.register.userdata.action') }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -268,6 +268,15 @@ export default {
       const response = Object.values(error?.response?.data || {}).find(value => value?.errortext)
       return response?.errortext || error?.message || this.$t('message.network.error')
     },
+    focusValidationError (error) {
+      const field = error?.errorFields?.[0]?.name
+      if (!field || this.disposed) return
+      this.$nextTick(() => {
+        this.formRef.value.scrollToField(field)
+        const input = this.$refs[field[0] + 'Input']
+        if (input) input.focus()
+      })
+    },
     handleSubmit (e) {
       if (e && typeof e.preventDefault === 'function') e.preventDefault()
       if (this.loading || this.disposed) return
@@ -322,11 +331,7 @@ export default {
         this.loading = false
         if (this.disposed) return
         if (invalidField) {
-          this.$nextTick(() => {
-            this.formRef.value.scrollToField(invalidField)
-            const input = this.$refs[invalidField[0] + 'Input']
-            if (input) input.focus()
-          })
+          this.focusValidationError({ errorFields: [{ name: invalidField }] })
         } else this.restoreFormPosition(position)
       })
     },
