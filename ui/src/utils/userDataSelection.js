@@ -41,9 +41,9 @@ export const userDataSelectionConsumer = {
     },
     userDataScopeKey () { return JSON.stringify([this.userDataOwner, this.zoneId || this.resource?.zoneid]) },
     userDataSelectionBlocked () {
-      return this.userdataTabKey === 'userdataregistered' &&
+      return Boolean(this.userdataTabKey === 'userdataregistered' &&
         (!this.userdataDefaultOverridePolicy || this.doUserdataOverride || this.doUserdataAppend) &&
-        !this.userDataSelectionReady
+        !this.userDataSelectionReady)
     }
   },
   watch: {
