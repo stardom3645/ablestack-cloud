@@ -12,6 +12,7 @@ for the specific language governing permissions and limitations. -->
     v-bind="$attrs"
     class="mold-dialog"
     :class="{ 'mold-dialog-standard': size }"
+    :wrap-class-name="size ? 'mold-dialog-standard-wrap' : undefined"
     centered
     :mask-closable="false"
     :wrap-props="{ 'aria-modal': true }"

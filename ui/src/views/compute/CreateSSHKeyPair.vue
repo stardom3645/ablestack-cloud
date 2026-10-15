@@ -227,7 +227,7 @@ export default {
     notifyCopied () { this.error = ''; this.resultFeedback = this.$t('message.success.copy.clipboard') },
     copyFailed () { this.error = this.$t('message.ssh.privatekey.copy.failed'); this.resultFeedback = '' },
     beforeUnload (event) {
-      if (this.isSubmitted && !this.savedAcknowledged) { event.preventDefault(); event.returnValue = '' }
+      if (this.loading || (this.isSubmitted && !this.savedAcknowledged)) { event.preventDefault(); event.returnValue = '' }
     },
     closeAction () {
       if (this.loading) return

@@ -219,6 +219,7 @@ body .detail-tab-toolbar > .ant-btn { margin: 0; }
 
 /* Opt-in MOLD-DIALOG-1.0 presets share the existing MoldDialog shell.
  * Legacy dialogs retain their width, spacing and body contracts. */
+.mold-dialog-standard-wrap { scrollbar-gutter: auto; overflow: hidden; }
 .mold-dialog-standard {
   --dialog-chrome: var(--ui-bg-navigation);
   --ui-text-placeholder: var(--ui-text-muted);
@@ -236,6 +237,7 @@ body .detail-tab-toolbar > .ant-btn { margin: 0; }
   .ant-modal-header, .ant-modal-footer { background: var(--dialog-chrome); }
   .ant-modal-header { padding: 20px 28px; border-bottom: 1px solid var(--ui-border); }
   .ant-modal-title { padding-right: 24px; font-size: 22px; line-height: 1.45; font-weight: 600; color: var(--ui-text-primary); overflow-wrap: anywhere; }
+  .ant-modal-close-x { width: 48px; height: 48px; line-height: 48px; }
   .ant-modal-close { width: 48px; min-height: 48px; color: var(--ui-text-secondary); }
   .ant-modal-body { padding: 24px 28px; color: var(--ui-text-primary); background: var(--ui-bg-surface); }
   .ant-modal-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 16px 28px; border-top: 1px solid var(--ui-border); }

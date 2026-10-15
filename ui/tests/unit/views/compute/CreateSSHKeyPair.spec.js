@@ -197,3 +197,9 @@ test('late create response after unmount cannot retain or display a private key'
   finish({ createsshkeypairresponse: { keypair: { privatekey: 'unit-only-key' } } }); await pending
   expect(ctx.privateKey).toBe(''); expect(ctx.isSubmitted).toBe(false); expect(ctx.$emit).not.toHaveBeenCalled()
 })
+
+test('pending submission also warns on browser refresh instead of implying request cancellation', () => {
+  ctx.loading = true
+  const event = { preventDefault: jest.fn() }; ctx.beforeUnload(event)
+  expect(event.preventDefault).toHaveBeenCalledTimes(1); expect(event.returnValue).toBe('')
+})

@@ -23,7 +23,7 @@ Epic #1369 및 기존 PR #1378에 누적한다. 기준 upstream Europa와 기존
 
 ## 프레임과 기존 본문
 
-기존 MoldDialog에 선택적 sm/md/lg/xl preset을 추가하고 preset을 선택한 화면만 MD-03~MD-05의 viewport 상한·padding·제목·Footer 42px 버튼·테마 토큰을 적용한다. 기존 width 760/화면별 width와 VM 대화상자 배치는 유지한다. SSH는 md=720px를 사용한다. Header/Footer는 독립 영역, Body만 스크롤하며 별도 SSH 모달 프레임이나 중첩 모달을 만들지 않는다. AutogenView의 selfManagedDialog 분기에 refresh-data 연결만 추가해 성공 목록 갱신을 보존한다.
+기존 MoldDialog에 선택적 sm/md/lg/xl preset을 추가하고 preset을 선택한 화면만 MD-03~MD-05의 viewport 상한·padding·제목·Footer 42px 버튼·테마 토큰을 적용한다. 기존 width 760/화면별 width와 VM 대화상자 배치는 유지한다. preset wrapper에만 scrollbar-gutter:auto와 overflow:hidden을 적용해 전역 stable gutter의 5px 중앙 편차를 없애고, 닫기 버튼 내부 48px을 외부와 맞춰 8px 넘침을 막는다. SSH는 md=720px를 사용한다. Header/Footer는 독립 영역, Body만 스크롤하며 별도 SSH 모달 프레임이나 중첩 모달을 만들지 않는다. AutogenView의 selfManagedDialog 분기에 refresh-data 연결만 추가해 성공 목록 갱신을 보존한다.
 
 설명→이름→공개 키→도메인→계정 순서와 기존 input/select를 유지한다. 공개 키는 등록 모드에만 해당하는 조건부 필드로 처리한다. 계정 필드는 선택 도메인이 있을 때만 표시한다. 생성과 등록은 API별 독립 액션으로 노출하고 각 권한이 있어야 열고 제출할 수 있다. 등록 빈 공개 키는 검증 오류이며 생성으로 전환되지 않는다. 생성 모드는 오래된 공개 키 값이 있어도 register API를 실행하지 않는다. 각 Footer 문구는 생성/등록이다.
 
@@ -35,7 +35,7 @@ Footer·Enter·기존 Ctrl+Enter는 같은 제출 경로다. 검증 시작부터
 
 이름·지문·account/domain/project와 최초 저장/재조회 불가 안내를 Body에 표시한다. 원문 개인 키를 본문/DOM 속성/저장소/로그에 표시하지 않고 인메모리에서만 복사·다운로드에 사용하며 닫기/해제 시 지운다. Footer는 닫기→복사→다운로드(유일한 primary)다. 복사 성공 콜백 후에만 성공 피드백을 표시하고 실패는 Body에 표시한다. 다운로드는 Blob URL로 시작한 뒤 URL을 해제하며 시작을 완료로 표현하지 않는다.
 
-복사/다운로드로 영구 저장 여부를 알 수 없으므로 자동 저장 완료 처리하지 않는다. 사용자가 안전한 곳에 저장했다는 확인을 선택하면 바로 닫는다. 미확인 닫기/닫기 아이콘/Escape는 같은 모달의 경고와 계속 저장/저장 없이 닫기 Footer로 전환해 모달 중첩을 피한다. 생성된 키 쌍이 남는 의미도 안내한다. 브라우저 새로고침/이탈은 beforeunload 기본 확인을 사용한다. 공개 키 재조회·알고리즘 선택·개인 키 재조회는 추가하지 않는다.
+복사/다운로드로 영구 저장 여부를 알 수 없으므로 자동 저장 완료 처리하지 않는다. 사용자가 안전한 곳에 저장했다는 확인을 선택하면 바로 닫는다. 미확인 닫기/닫기 아이콘/Escape는 같은 모달의 경고와 계속 저장/저장 없이 닫기 Footer로 전환해 모달 중첩을 피한다. 생성된 키 쌍이 남는 의미도 안내한다. 브라우저 새로고침/이탈은 미저장 결과 또는 제출 중일 때 beforeunload 기본 확인을 사용한다. 공개 키 재조회·알고리즘 선택·개인 키 재조회는 추가하지 않는다.
 
 ## 검증·배포·종료
 
