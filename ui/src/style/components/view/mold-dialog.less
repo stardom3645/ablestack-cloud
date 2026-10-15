@@ -259,3 +259,22 @@ body .detail-tab-toolbar > .ant-btn { margin: 0; }
     .ant-modal-title { font-size: 18px; }
   }
 }
+
+/* Standard presets must win over legacy dark input selectors in every state. */
+body .mold-dialog-standard {
+  .ant-input:not(:disabled), .ant-select:not(.ant-select-disabled) .ant-select-selector {
+    color: var(--ui-text-primary);
+    background: var(--ui-bg-input);
+    border-color: var(--ui-border-strong);
+  }
+  .ant-input:not(:disabled):hover, .ant-input:not(:disabled):focus,
+  .ant-select-focused:not(.ant-select-disabled) .ant-select-selector { border-color: var(--ui-focus); }
+  .ant-input::placeholder, .ant-select-selection-placeholder { color: var(--ui-text-muted); opacity: 1; }
+  .ant-input:disabled { color: var(--ui-text-secondary); background: var(--ui-bg-disabled); }
+  .ant-form-item-has-error .ant-input:not(:disabled),
+  .ant-form-item-has-error .ant-select:not(.ant-select-disabled) .ant-select-selector {
+    color: var(--ui-text-primary) !important;
+    background: var(--ui-bg-input) !important;
+    border-color: var(--ui-error-icon) !important;
+  }
+}
