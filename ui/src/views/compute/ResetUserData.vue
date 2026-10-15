@@ -362,10 +362,9 @@ export default {
         this.loadingData = false
         this.closeAction()
       }).catch(error => {
-        this.submitError = error?.response?.data?.errorresponse?.errortext || error?.message || this.$t('message.request.failed')
-        if (resetUserDataApiName === 'updateAutoScaleVmProfile') {
-          this.$notification.error({ message: this.$t('label.error'), description: autoScaleMutationDescription(error, this.$t) })
-        } else this.$notifyError(error)
+        this.submitError = resetUserDataApiName === 'updateAutoScaleVmProfile'
+          ? autoScaleMutationDescription(error, this.$t)
+          : (error?.response?.data?.errorresponse?.errortext || error?.message || this.$t('message.request.failed'))
       }).finally(() => {
         this.loadingData = false
       })

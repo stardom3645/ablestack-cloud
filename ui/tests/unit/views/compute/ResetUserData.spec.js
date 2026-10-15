@@ -113,6 +113,7 @@ test('failed mutation keeps the dialog, active mode and drafts; retry submits on
   const w = mount({ userdata: encode('current') }); await flush(); w.vm.editCurrent = true; w.vm.form.userdata = '수정'
   postAPI.mockRejectedValueOnce({ response: { data: { errorresponse: { errortext: '503 test' } } } })
   await w.vm.handleSubmit(); expect(w.vm.submitError).toBe('503 test'); expect(w.vm.form.userdata).toBe('수정'); expect(w.emitted('close-action')).toBeUndefined()
+  expect(w.vm.$notifyError).not.toHaveBeenCalled()
   await w.vm.handleSubmit(); expect(postAPI).toHaveBeenLastCalledWith('resetUserDataForVirtualMachine', { id: 'vm', userdata: encode('수정') }, { preserveOnFailure: true }); w.unmount()
 })
 test('late current read after unmount cannot initialize a closed dialog', async () => {
