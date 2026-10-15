@@ -117,17 +117,62 @@ def cleanup(api):
     for n in s.get('networks',[]):api.job('deleteNetwork',id=n['id'])
     if s.get('project_id'):api.job('deleteProject',id=s['project_id'])
     for a in s.get('accounts',[]):api.job('deleteAccount',id=a['id'])
+    for id in s.get('roles',[]):ok(api,'deleteRole',id=id)
     if s.get('domain_id'):api.job('deleteDomain',id=s['domain_id'])
     remaining=ud.inventory(api)
     assert remaining==json.loads((ROOT/'baseline.private.json').read_text(encoding='utf-8'))['userdata']
-    result=dict(userdata_residuals=sum(r['name'].startswith(PREFIX) for r in remaining),vm_residuals=len(ok(api,'listVirtualMachines',keyword=PREFIX,listall='true').get('virtualmachine',[])),template_residuals=sum(t['name'].startswith(PREFIX) for t in ok(api,'listTemplates',templatefilter='all',keyword=PREFIX).get('template',[])),original_userdata_exact_match=True)
+    result=dict(userdata_residuals=sum(r['name'].startswith(PREFIX) for r in remaining),vm_residuals=len(ok(api,'listVirtualMachines',keyword=PREFIX,listall='true').get('virtualmachine',[])),template_residuals=sum(t['name'].startswith(PREFIX) for t in ok(api,'listTemplates',templatefilter='all',keyword=PREFIX).get('template',[])),role_residuals=sum(r['name'].startswith(PREFIX) for r in ok(api,'listRoles').get('role',[])),original_userdata_exact_match=True)
     assert all(v==0 for k,v in result.items() if k.endswith('residuals'))
     save('cleanup-summary.json',result);s['cleaned']=True;save('runtime-state.json',s);print(json.dumps(result))
+
+def enable_reset_roles(api):
+    s=state();assert not s.get('roles'), 'Roles already prepared'
+    s['roles']=[]
+    results=[]
+    for account,kind in zip(s['accounts'],['User','DomainAdmin']):
+        caller=ud.Mold(account['username'],domain='/'+PREFIX.lower()+'/')
+        vm=next(v for v in s['vms'] if v['suffix']==account['suffix'])
+        denied=caller.call('resetUserDataForVirtualMachine',id=vm['id'],userdata='')
+        assert denied.get('errorcode')==432
+        role=ok(api,'createRole',name=PREFIX+'-'+kind+'-reset',type=kind,ispublic='false')['role']
+        s['roles'].append(role['id']);save('runtime-state.json',s)
+        for rule in ['list*','get*','query*','resetUserDataForVirtualMachine','logout']:ok(api,'createRolePermission',roleid=role['id'],rule=rule,permission='allow')
+        ok(api,'createRolePermission',roleid=role['id'],rule='*',permission='deny')
+        ok(api,'updateAccount',id=account['id'],roleid=role['id'])
+        results.append(dict(type=kind,default_errorcode=432,test_role_id=role['id']))
+    save('role-fixtures.json',results)
+
+def final_smoke_prepare(api):
+    s=state();assert s.get('cleaned') and not s.get('final_smoke')
+    data=ok(api,'registerUserData',name=PREFIX+'-final-smoke',userdata=ud.content('#cloud-config\n# '+PREFIX+'-final-smoke\n'),params='VAR1')['userdata']
+    s['final_smoke']=dict(userdata_id=data['id']);save('runtime-state.json',s)
+    params=dict(zoneid=s['zoneid'],templateid='e3d8677e-70f0-44bd-917e-6068636b97a8',serviceofferingid='cd928fb0-6e2b-4ec8-b02b-023aed55b2b1',networkids='ae274fff-3d8e-4285-ac73-26a767c1fea7',name=PREFIX+'-final-smoke',displayname=PREFIX+'-final-smoke',startvm='false',userdataid=data['id'])
+    params['userdatadetails[0].VAR1']='마지막 한글, 값=4'
+    vm=api.job('deployVirtualMachine',**params)['virtualmachine'];s['final_smoke']['vm_id']=vm['id'];save('runtime-state.json',s)
+    save('final-smoke-fixture.json',s['final_smoke']);print(json.dumps(s['final_smoke']))
+
+def final_smoke_cleanup(api):
+    s=state();target=s['final_smoke']
+    api.job('destroyVirtualMachine',id=target['vm_id'],expunge='true')
+    ok(api,'deleteUserData',id=target['userdata_id'])
+    remaining=ud.inventory(api)
+    assert remaining==json.loads((ROOT/'baseline.private.json').read_text(encoding='utf-8'))['userdata']
+    save('cleanup-final.json',dict(test_vm_residuals=len(ok(api,'listVirtualMachines',keyword=PREFIX,listall='true').get('virtualmachine',[])),test_userdata_residuals=sum(r['name'].startswith(PREFIX) for r in remaining),original_userdata_exact_match=True,original_userdata_count=len(remaining)))
+    target['cleaned']=True;save('runtime-state.json',s);print('Final smoke resources cleaned')
+
+def final_smoke_snapshot(api,label):
+    vm=ok(api,'listVirtualMachines',id=state()['final_smoke']['vm_id'],userdata='true')['virtualmachine'][0]
+    data={k:vm.get(k) for k in ['id','name','state','userdata','userdataid','userdataname','userdatadetails','templateid']}
+    assert data['state']=='Stopped';save(label+'.json',data);print(json.dumps(data,ensure_ascii=False))
 
 if __name__=='__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     api=ud.Mold()
     if sys.argv[1]=='prepare':prepare(api)
     elif sys.argv[1]=='prepare-owners':prepare_owners(api)
+    elif sys.argv[1]=='enable-reset-roles':enable_reset_roles(api)
+    elif sys.argv[1]=='final-smoke-prepare':final_smoke_prepare(api)
+    elif sys.argv[1]=='final-smoke-cleanup':final_smoke_cleanup(api)
+    elif sys.argv[1]=='snapshot-final':final_smoke_snapshot(api,sys.argv[2])
     elif sys.argv[1]=='snapshot':snapshot(api,sys.argv[2],sys.argv[3] if len(sys.argv)>3 else 'base')
     elif sys.argv[1]=='cleanup':cleanup(api)
