@@ -16,6 +16,13 @@
 // under the License.
 
 <template>
+  <MoldDialog
+    class="userdata-reset-dialog"
+    size="md"
+    :title="$t(isAutoScaleProfile ? 'label.reset.user.data.on.autoscale.vm.group' : 'label.reset.user.data.on.vm')"
+    :closable="!loadingData"
+    :keyboard="!loadingData"
+    @cancel="closeAction">
   <a-spin :spinning="loadingData">
     <a-form
             :ref="formRef"
@@ -70,18 +77,16 @@
                 :activeTabKey="userdataTabKey"
                 @tabChange="key => onUserdataTabChange(key, 'userdataTabKey')">
                 <div v-if="userdataTabKey === 'userdataregistered'">
-                  <a-step
-                    v-if="isUserAllowedToListUserDatas">
+                  <a-step>
                     <template #description>
                       <div>
                         <user-data-selection
-                          :items="items"
-                          :row-count="rowCount.userDatas"
+                          :scope="userDataOwner"
+                          :value="form.userdataid"
                           :disabled="template.userdatapolicy === 'DENYOVERRIDE'"
-                          :loading="loading.userDatas"
                           :preFillContent="dataPreFill"
-                          @select-user-data-item="($event) => updateUserData($event)"
-                          @handle-search-filter="($event) => handleSearchFilter('userData', $event)"
+                          @select-user-data-item="updateUserData"
+                          @ready="userDataSelectionReady = $event"
                         />
                         <div v-if="userDataParams.length > 0">
                           <a-input-group>
@@ -117,12 +122,13 @@
           </template>
         </a-step>
       </div>
-      <div :span="24" class="action-button">
-        <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-        <a-button :loading="loadingData" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-      </div>
     </a-form>
   </a-spin>
+    <template #footer>
+      <a-button :disabled="loadingData" @click="closeAction">{{ $t('label.cancel') }}</a-button>
+      <a-button :loading="loadingData" :disabled="userDataSelectionBlocked" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+    </template>
+  </MoldDialog>
 </template>
 
 <script>
@@ -130,12 +136,15 @@ import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import { runAutoScaleMutation, autoScaleMutationDescription, autoScaleOwnerParams } from '@/utils/autoScaleEditing'
 import { autoScaleTemplateById } from '@/utils/autoScaleUi'
-import { genericCompare } from '@/utils/sort.js'
 import UserDataSelection from '@views/compute/wizard/UserDataSelection'
+import MoldDialog from '@/components/view/MoldDialog'
+import { applyUserDataSelection, userDataSelectionConsumer } from '@/utils/userDataSelection'
 
 export default {
   name: 'ResetUserData',
+  mixins: [userDataSelectionConsumer],
   components: {
+    MoldDialog,
     UserDataSelection
   },
   props: {
@@ -145,43 +154,11 @@ export default {
     },
     preFillContent: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     }
   },
   data () {
     return {
-      items: [],
-      total: 0,
-      columns: [
-        {
-          dataIndex: 'name',
-          title: this.$t('label.name'),
-          sorter: (a, b) => genericCompare(a?.name || '', b?.name || ''),
-          width: '40%'
-        },
-        {
-          dataIndex: 'account',
-          title: this.$t('account'),
-          width: '30%'
-        },
-        {
-          dataIndex: 'domain',
-          title: this.$t('domain'),
-          width: '30%'
-        }
-      ],
-      selectedRowKeys: [],
-      options: {
-        page: 1,
-        pageSize: 10,
-        listall: false,
-        response: 'json'
-      },
-      filter: '',
-      rowCount: {},
-      loading: {
-        userDatas: false
-      },
       loadingData: false,
       doUserdataOverride: false,
       doUserdataAppend: false,
@@ -220,11 +197,12 @@ export default {
     }
   },
   computed: {
+    blocksNavigation () { return this.loadingData },
+    isUserAllowedToListUserDatas () { return Boolean(this.$store.getters.apis.listUserData) },
     isAutoScaleProfile () { return this.resource.resetUserDataApiName === 'updateAutoScaleVmProfile' }
   },
   created () {
     this.initForm()
-    this.fetchData()
     this.loadUserdataTabList()
     this.fetchTemplateData()
     this.dataPreFill = this.preFillContent && Object.keys(this.preFillContent).length > 0 ? this.preFillContent : {}
@@ -234,19 +212,6 @@ export default {
       this.formRef = ref()
       this.form = reactive({})
       this.rules = reactive({})
-    },
-    fetchData () {
-      this.loadingData = true
-      this.items = []
-      this.total = 0
-      getAPI('listUserData', this.options).then(response => {
-        this.total = response.listuserdataresponse.count
-        if (this.total !== 0) {
-          this.items = response.listuserdataresponse.userdata
-        }
-      }).finally(() => {
-        this.loadingData = false
-      })
     },
     fetchTemplateData () {
       if (this.isAutoScaleProfile) {
@@ -270,7 +235,7 @@ export default {
       })
     },
     updateTemplateLinkedUserData (id) {
-      if (id === '0') {
+      if (!id || id === '0') {
         return
       }
       this.templateUserDataParams = []
@@ -313,57 +278,11 @@ export default {
         this.userDataValues = {}
       }
     },
-    isUserAllowedToListUserDatas () {
-      return Boolean('listUserData' in this.$store.getters.apis)
-    },
-    updateUserData (id) {
-      if (this.isAutoScaleProfile) {
-        this.userDataParams = []
-        this.userDataValues = {}
-        if (id === '0' || id === this.$t('label.noselect')) {
-          this.form.userdataid = undefined
-          return
-        }
-      }
-      if (id === '0') {
-        this.form.userdataid = undefined
-        return
-      }
-      this.form.userdataid = id
-      this.userDataParams = []
-      getAPI('listUserData', { id: id }).then(json => {
-        if (this.isAutoScaleProfile && this.form.userdataid !== id) return
-        const resp = json?.listuserdataresponse?.userdata || []
-        if (resp.length > 0) {
-          var params = resp[0].params
-          if (params) {
-            var dataParams = params.split(',')
-          }
-          var that = this
-          ;(dataParams || []).forEach(function (val, index) {
-            that.userDataParams.push({
-              id: index,
-              key: val
-            })
-          })
-        }
-      })
-    },
-    onSelectChange (selectedRowKeys) {
-      this.selectedRowKeys = selectedRowKeys
-    },
-    handleSearch (keyword) {
-      this.filter = keyword
-      this.options.keyword = keyword
-      this.fetchData()
-    },
-    handleTableChange (pagination) {
-      this.options.page = pagination.current
-      this.options.pageSize = pagination.pageSize
-      this.fetchData()
+    updateUserData (id, item) {
+      applyUserDataSelection(this, id, item)
     },
     handleSubmit () {
-      if (this.loadingData) return
+      if (this.loadingData || this.userDataSelectionBlocked) return
       const values = toRaw(this.form)
       this.loadingData = true
       const params = {
@@ -401,6 +320,7 @@ export default {
           duration: 2
         })
         this.$emit('refresh-data')
+        this.loadingData = false
         this.closeAction()
       }).catch(error => {
         if (resetUserDataApiName === 'updateAutoScaleVmProfile') {
@@ -411,6 +331,7 @@ export default {
       })
     },
     closeAction () {
+      if (this.loadingData) return
       this.$emit('close-action')
     }
   }
@@ -419,12 +340,10 @@ export default {
 
 <style scoped lang="scss">
 .form {
-  width: 90vw;
-  @media (min-width: 800px) {
-    width: 45vw;
-  }
+  width: 100%;
+  min-width: 0;
 }
-.form.autoscale-userdata-form {
+.form {
   width: 100%;
   max-width: 100%;
   min-width: 0;

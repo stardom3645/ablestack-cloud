@@ -8881,5 +8881,10 @@
   "message.ssh.keypair.usage.forbidden": "You do not have permission to view these virtual machines.",
   "message.ssh.keypair.usage.mismatch": "The key identity or owner has changed. Reopen the SSH key detail.",
   "message.ssh.keypair.usage.missing": "The original SSH key no longer exists.",
-  "message.ssh.keypair.usage.stale": "Showing the last successful result. Refresh to verify current usage."
+  "message.ssh.keypair.usage.stale": "Showing the last successful result. Refresh to verify current usage.",
+  "message.userdata.selection.selected": "Selected user data: {name}",
+  "message.userdata.selection.failed": "Unable to load user data. The previous list and selection are preserved. Please retry.",
+  "message.userdata.selection.forbidden": "You do not have permission to list user data.",
+  "message.userdata.selection.scope": "Select an owner account or project.",
+  "message.userdata.selection.missing": "The selected user data is unavailable. Select another item or None."
 }

@@ -569,6 +569,7 @@ export default {
         },
         {
           api: 'resetUserDataForVirtualMachine',
+          selfManagedDialog: true,
           icon: 'solution-outlined',
           label: 'label.reset.user.data.on.vm',
           message: 'message.desc.reset.userdata',
