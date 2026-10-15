@@ -222,3 +222,4 @@
 - alert:
   - img "info-circle":
   - generic: Wall 모니터링을 사용할 수 없습니다. 기존 알림은 최신 정보가 아닐 수 있으며 Mold는 계속 사용할 수 있습니다. 비활성
+- tooltip "오름차순으로 정렬"

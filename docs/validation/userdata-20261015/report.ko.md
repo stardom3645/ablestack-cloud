@@ -119,3 +119,20 @@ under the License.
 ![짧은 화면 일반 모드](register-light-short.png)
 
 ![짧은 화면 다크 모드](register-dark-short.png)
+
+## 업스트림 Epic과 하위 이슈
+
+[Epic #1381](https://github.com/ablecloud-team/ablestack-cloud/issues/1381)에 하위 10개 이슈가 GitHub sub-issue로 연결되어 있으며 모두 OPEN이다. 제목·본문의 한글과 부모 연결을 API로 다시 읽어 검증했다.
+
+| 작업 | 우선순위 | 이슈 |
+| --- | --- | --- |
+| UD-01 | P1 | [[UD-01][Europa][P1][사용자 데이터] 등록 입력 검증과 Base64 정규화 정합성 개선](https://github.com/ablecloud-team/ablestack-cloud/issues/1382) |
+| UD-02 | P1 | [[UD-02][Europa][P1][사용자 데이터] 등록 대화상자 오류 복구와 공통 모달 표준 적용](https://github.com/ablecloud-team/ablestack-cloud/issues/1383) |
+| UD-03 | P1 | [[UD-03][Europa][P1][사용자 데이터] VM 사용자 데이터 선택기 검색과 서버 페이지 처리 복구](https://github.com/ablecloud-team/ablestack-cloud/issues/1384) |
+| UD-04 | P1 | [[UD-04][Europa][P1][사용자 데이터] VM 재설정 입력 모드와 설정 안함 및 현재값 복원 정합성 개선](https://github.com/ablecloud-team/ablestack-cloud/issues/1385) |
+| UD-05 | P1 | [[UD-05][Europa][P1][사용자 데이터] 사용자 데이터 적용 실패의 VM 상태 정합성과 지원 조건 검증](https://github.com/ablecloud-team/ablestack-cloud/issues/1386) |
+| UD-06 | P1 | [[UD-06][Europa][P1][사용자 데이터] 목록 선택 후 일괄 삭제 작업 노출과 결과 처리 복구](https://github.com/ablecloud-team/ablestack-cloud/issues/1387) |
+| UD-07 | P1 | [[UD-07][Europa][P1][사용자 데이터] 사용 VM 및 템플릿 ISO 참조와 삭제 차단 사유 가시화](https://github.com/ablecloud-team/ablestack-cloud/issues/1388) |
+| UD-08 | P1 | [[UD-08][Europa][P1][사용자 데이터] 목록 상세 본문 탭의 VM UI 표준과 일반 다크 테마 일치](https://github.com/ablecloud-team/ablestack-cloud/issues/1389) |
+| UD-09 | P2 | [[UD-09][Europa][P2][사용자 데이터] VM 저장 사용자 데이터 조회 API의 UI 접근 경로 제공](https://github.com/ablecloud-team/ablestack-cloud/issues/1390) |
+| UD-10 | P2 | [[UD-10][Europa][P2][사용자 데이터] 라이브러리 복제와 버전 관리 및 변경 정책 수립](https://github.com/ablecloud-team/ablestack-cloud/issues/1391) |
