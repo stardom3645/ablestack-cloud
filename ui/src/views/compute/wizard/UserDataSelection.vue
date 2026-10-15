@@ -19,17 +19,29 @@
   <section class="userdata-selection">
     <div class="userdata-selection-toolbar">
       <a-radio :checked="selectedId === noSelection" :disabled="selectionDisabled" @change="selectItem()">{{ $t('label.noselect') }}</a-radio>
-      <a-input-search v-if="showSearch" v-model:value="filter"
-        :disabled="disabled || !allowed || !ownerReady" :placeholder="$t('label.search')"
-        :aria-label="$t('label.user.data') + ' ' + $t('label.search')" @search="handleSearch" />
+      <a-input-search
+        v-if="showSearch"
+        v-model:value="filter"
+        :disabled="disabled || !allowed || !ownerReady"
+        :placeholder="$t('label.search')"
+        :aria-label="$t('label.user.data') + ' ' + $t('label.search')"
+        @search="handleSearch" />
     </div>
     <a-alert v-if="listError || selectionError" type="error" show-icon role="alert" :message="$t(listError || selectionError)">
       <template #action><a-button size="small" :loading="loading" @click="load(requestedQuery)">{{ $t('label.refresh') }}</a-button></template>
     </a-alert>
     <p v-if="selectedId !== noSelection" role="status">{{ $t('message.userdata.selection.selected', { name: selectedItem?.name || selectedId }) }}</p>
-    <a-table :loading="loading" :columns="columns" :data-source="items" row-key="id"
-      :row-selection="rowSelection" :custom-row="onClickRow" :pagination="pagination"
-      size="middle" :scroll="{ x: 480, y: 225 }" @change="handleTableChange">
+    <a-table
+      :loading="loading"
+      :columns="columns"
+      :data-source="items"
+      row-key="id"
+      :row-selection="rowSelection"
+      :custom-row="onClickRow"
+      :pagination="pagination"
+      size="middle"
+      :scroll="{ x: 480, y: 225 }"
+      @change="handleTableChange">
       <template #headerCell="{ column }">
         <template v-if="column.key === 'name'"><solution-outlined /> {{ $t('label.user.data') }}</template>
         <template v-if="column.key === 'account'"><user-outlined /> {{ $t('label.account') }}</template>
@@ -86,14 +98,18 @@ export default {
     ready () { return !this.loading && !this.listError && !this.selectionError && this.allowed && this.ownerReady },
     pagination () {
       return {
-        current: this.query.page, pageSize: this.query.pageSize, total: this.total,
-        showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'],
+        current: this.query.page,
+        pageSize: this.query.pageSize,
+        total: this.total,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '50', '100'],
         showTotal: total => this.$t('label.total') + ': ' + total
       }
     },
     rowSelection () {
       return {
-        type: 'radio', selectedRowKeys: this.selectedId === NO_USER_DATA ? [] : [this.selectedId],
+        type: 'radio',
+        selectedRowKeys: this.selectedId === NO_USER_DATA ? [] : [this.selectedId],
         preserveSelectedRowKeys: true,
         getCheckboxProps: () => ({ disabled: this.selectionDisabled }),
         onChange: (keys, rows) => this.selectItem(rows[0])
@@ -138,7 +154,7 @@ export default {
       }
       const owner = { ...this.owner, ignoreproject: true, listall: false }
       try {
-        let requested = { ...query }
+        const requested = { ...query }
         let result
         // Recover deleted pages with a bounded fallback, never an unbounded retry.
         for (let attempt = 0; attempt < 3; attempt++) {

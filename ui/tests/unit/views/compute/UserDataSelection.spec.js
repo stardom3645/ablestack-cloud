@@ -147,8 +147,8 @@ test('disabled selector rejects row clicks and None', async () => {
 })
 
 test('unmount discards an outstanding response', async () => {
-  let resolve; getAPI.mockImplementation(() => new Promise(done => { resolve = done }))
-  const w = mount(); const vm = w.vm; w.unmount(); resolve(reply([row(1)])); await flush(); expect(vm.items).toEqual([])
+  let finish; getAPI.mockImplementation(() => new Promise(resolve => { finish = resolve }))
+  const w = mount(); const vm = w.vm; w.unmount(); finish(reply([row(1)])); await flush(); expect(vm.items).toEqual([])
 })
 
 test.each([Reset, Deploy, Vnf])('consumer $name receives a verified row and clears stale variables on None', component => {
