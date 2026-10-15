@@ -26,8 +26,24 @@
   <a-alert v-if="templateError" type="error" show-icon role="alert" :message="$t('message.request.failed')">
     <template #description><a-button size="small" @click="fetchTemplateData">{{ $t('label.refresh') }}</a-button></template>
   </a-alert>
+  <a-alert v-if="submitError" type="error" show-icon role="alert" :message="submitError" />
   <a-spin :spinning="loadingData || templateLoading">
-    <a-form
+    <template v-if="currentLoaded">
+      <a-alert type="info" show-icon :message="$t('message.userdata.reset.keep')" />
+      <p class="userdata-current-summary">{{ $t('label.userdata.current') }}: {{ current.userdataname || $t(current.userdata ? 'label.user.data.text' : 'label.noselect') }}</p>
+      <a-descriptions v-if="Object.keys(currentValues).length" size="small" :column="1">
+        <a-descriptions-item v-for="(value, key) in currentValues" :key="key" :label="key">{{ value }}</a-descriptions-item>
+      </a-descriptions>
+      <a-collapse v-if="current.userdata" class="userdata-current-content">
+        <a-collapse-panel key="current" :header="$t('label.userdata.current.content')">
+          <a-textarea :value="currentText" readonly :auto-size="{ minRows: 3, maxRows: 8 }" :aria-label="$t('label.userdata.current.content')" />
+        </a-collapse-panel>
+      </a-collapse>
+      <a-form-item :label="$t('label.userdata.reset.change')">
+        <a-switch v-model:checked="editCurrent" :disabled="loadingData" :aria-label="$t('label.userdata.reset.change')" />
+      </a-form-item>
+    </template>
+    <a-form v-if="currentLoaded && editCurrent"
             :ref="formRef"
             :model="form"
             :rules="rules"
@@ -39,12 +55,12 @@
       <div v-if="template && template.userdataid">
         <a-typography-text>
             <template v-if="isAutoScaleProfile">{{ $t('message.autoscale.userdata.template', { template: template.name, userdata: template.userdataname, policy: template.userdatapolicy }) }}</template>
-            <template v-else>The template "{{ $t(this.template.name) }}" is linked to Userdata "{{ $t(this.template.userdataname) }}" with override policy "{{ $t(this.template.userdatapolicy) }}"</template>
+            <template v-else>{{ $t('message.autoscale.userdata.template', { template: template.name, userdata: template.userdataname, policy: template.userdatapolicy }) }}</template>
         </a-typography-text><br/><br/>
-        <div v-if="templateUserDataParams.length > 0 && !doUserdataOverride">
+        <div v-if="templateUserDataParams.length > 0 && (userdataDefaultOverridePolicy === 'APPEND' || !doUserdataOverride)">
           <a-typography-text v-if="this.template && this.template.userdataid && templateUserDataParams.length > 0">
               <template v-if="isAutoScaleProfile">{{ $t('message.autoscale.userdata.variables') }}</template>
-              <template v-else>Enter the values for the variables in userdata</template>
+              <template v-else>{{ $t('message.autoscale.userdata.variables') }}</template>
           </a-typography-text>
           <a-input-group>
             <a-table
@@ -83,6 +99,7 @@
                   <a-step>
                     <template #description>
                       <div>
+                        <a-alert type="info" show-icon :message="$t(template.userdataid ? 'message.userdata.reset.none.template' : 'message.userdata.reset.none.clear')" />
                         <user-data-selection
                           :scope="userDataOwner"
                           :value="form.userdataid"
@@ -113,9 +130,11 @@
                   </a-step>
                 </div>
                 <div v-else>
+                  <a-alert v-if="appendManualCurrent" type="info" show-icon :message="$t('message.userdata.reset.append.current')" />
                   <a-form-item name="userdata" ref="userdata" >
                     <a-textarea
-                      :placeholder="isAutoScaleProfile ? $t('label.user.data') : 'Userdata'"
+                      :placeholder="$t('label.user.data')"
+                      :aria-label="$t('label.user.data.text')"
                       v-model:value="form.userdata">
                     </a-textarea>
                   </a-form-item>
@@ -129,19 +148,20 @@
   </a-spin>
     <template #footer>
       <a-button :disabled="loadingData" @click="closeAction">{{ $t('label.cancel') }}</a-button>
-      <a-button :loading="loadingData" :disabled="templateLoading || templateError || userDataSelectionBlocked" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+      <a-button :loading="loadingData" :disabled="templateLoading || templateError || !currentLoaded || (editCurrent && userDataSelectionBlocked)" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
     </template>
   </MoldDialog>
 </template>
 
 <script>
-import { ref, reactive, toRaw } from 'vue'
+import { ref, reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import { runAutoScaleMutation, autoScaleMutationDescription, autoScaleOwnerParams } from '@/utils/autoScaleEditing'
 import { autoScaleTemplateById } from '@/utils/autoScaleUi'
 import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 import MoldDialog from '@/components/view/MoldDialog'
 import { applyUserDataSelection, userDataSelectionConsumer } from '@/utils/userDataSelection'
+import { decodeResetUserData, resetUserDataPayload, resetUserDataValues, userDataKeys } from '@/utils/userDataReset'
 
 export default {
   name: 'ResetUserData',
@@ -165,6 +185,16 @@ export default {
       loadingData: false,
       templateLoading: false,
       templateError: false,
+      currentLoaded: false,
+      current: {},
+      currentText: '',
+      currentValues: {},
+      editCurrent: false,
+      appendManualCurrent: false,
+      restoringSelectionId: null,
+      submitError: '',
+      readGeneration: 0,
+      readActive: true,
       doUserdataOverride: false,
       doUserdataAppend: false,
       userdataTabList: [],
@@ -210,7 +240,12 @@ export default {
     this.initForm()
     this.loadUserdataTabList()
     this.fetchTemplateData()
-    this.dataPreFill = this.preFillContent && Object.keys(this.preFillContent).length > 0 ? this.preFillContent : {}
+
+  },
+  beforeUnmount () { this.readActive = false; this.readGeneration++ },
+  watch: {
+    'resource.id' () { this.fetchTemplateData() },
+    'resource.resetUserDataResourceId' () { this.fetchTemplateData() }
   },
   methods: {
     initForm () {
@@ -219,31 +254,68 @@ export default {
       this.rules = reactive({})
     },
     async fetchTemplateData () {
+      const generation = ++this.readGeneration
+      const current = () => this.readActive && generation === this.readGeneration
       this.templateLoading = true
       this.templateError = false
+      this.currentLoaded = false
+      this.editCurrent = false
       try {
-        const params = { ...autoScaleOwnerParams(this.resource), id: this.resource.templateid, isready: true, ignoreproject: true }
         const request = (command, args) => getAPI(command, args, { preserveOnFailure: true, timeout: 15000 })
-        const json = await autoScaleTemplateById(request, { ...params, zoneid: this.resource.zoneid })
-        const template = json.listtemplatesresponse?.template?.find(item => item.id === this.resource.templateid)
+        const owner = { ...autoScaleOwnerParams(this.resource), ignoreproject: true }
+        const id = this.resource.resetUserDataResourceId || this.resource.id
+        const command = this.isAutoScaleProfile ? 'listAutoScaleVmProfiles' : 'listVirtualMachines'
+        const result = await request(command, { ...owner, id, listall: true, ...(this.isAutoScaleProfile ? {} : { userdata: true }) })
+        if (!current()) return
+        const row = this.isAutoScaleProfile ? result.listautoscalevmprofilesresponse?.autoscalevmprofile?.find(r => r.id === id) : result.listvirtualmachinesresponse?.virtualmachine?.find(r => r.id === id)
+        if (!row) throw new Error('Current user data unavailable')
+        const templateId = row.templateid || this.resource.templateid
+        const json = await autoScaleTemplateById(request, { ...owner, id: templateId, zoneid: row.zoneid || this.resource.zoneid, isready: true })
+        if (!current()) return
+        const template = json.listtemplatesresponse?.template?.find(item => item.id === templateId)
         if (!template) throw new Error('Template unavailable')
+        const find = async id => {
+          if (!id || id === '0') return null
+          const response = await request('listUserData', { ...owner, id })
+          const data = response.listuserdataresponse?.userdata?.find(r => r.id === id)
+          if (!data) throw new Error('Linked user data unavailable')
+          return data
+        }
+        // Template metadata carries the declared variables even when its
+        // library belongs to another account. Do not require cross-owner reads.
+        let templateData = template.userdataid ? { id: template.userdataid, params: template.userdataparams || '' } : null
+        if (template.userdataid && template.account === this.resource.account && template.domainid === this.resource.domainid) templateData = await find(template.userdataid)
+        const selected = row.userdataid === template.userdataid ? templateData : await find(row.userdataid)
+        if (!current()) return
+        const keys = [...new Set([...userDataKeys(templateData), ...userDataKeys(selected)])]
+        const values = resetUserDataValues(row.userdatadetails, keys)
+        this.currentText = decodeResetUserData(row.userdata)
+        this.current = row
+        this.currentValues = values
         this.template = template
         this.userdataDefaultOverridePolicy = template.userdatapolicy
-        await this.updateTemplateLinkedUserData(template.userdataid)
+        this.templateUserDataParams = userDataKeys(templateData).map(key => ({ key }))
+        this.templateUserDataValues = Object.fromEntries(userDataKeys(templateData).map(key => [key, values[key] ?? '']))
+        this.userDataParams = userDataKeys(selected).map(key => ({ key }))
+        this.userDataValues = Object.fromEntries(userDataKeys(selected).map(key => [key, values[key] ?? '']))
+        this.form.userdataid = row.userdataid || undefined
+        this.restoringSelectionId = row.userdataid || null
+        const hasCustom = Boolean(row.userdataid || (row.userdata && row.userdata !== templateData?.userdata))
+        this.doUserdataOverride = template.userdatapolicy === 'ALLOWOVERRIDE' && hasCustom
+        this.doUserdataAppend = template.userdatapolicy === 'APPEND' && hasCustom
+        this.appendManualCurrent = Boolean(template.userdatapolicy === 'APPEND' && hasCustom && !row.userdataid)
+        // APPEND stores the merged effective body; it is not an append input.
+        // Keep it visible above, and require new append content explicitly.
+        this.form.userdata = this.appendManualCurrent ? '' : (!row.userdataid ? this.currentText : '')
+        this.userdataTabKey = row.userdataid || !hasCustom ? 'userdataregistered' : 'userdatatext'
+        this.userDataSelectionReady = false
+        this.submitError = ''
+        this.currentLoaded = true
       } catch (error) {
-        this.templateError = true
+        if (current()) this.templateError = true
       } finally {
-        this.templateLoading = false
+        if (current()) this.templateLoading = false
       }
-    },
-    async updateTemplateLinkedUserData (id) {
-      this.templateUserDataParams = []
-      if (!id || id === '0') return
-      const json = await getAPI('listUserData', { ...autoScaleOwnerParams(this.resource), ignoreproject: true, id }, { preserveOnFailure: true, timeout: 15000 })
-      const item = json?.listuserdataresponse?.userdata?.find(item => item.id === id)
-      if (!item) throw new Error('Template user data unavailable')
-      const keys = typeof item.params === 'string' ? item.params.split(',').map(key => key.trim()).filter(Boolean) : []
-      this.templateUserDataParams = keys.map((key, index) => ({ id: index, key }))
     },
     loadUserdataTabList () {
       this.userdataTabList = [{
@@ -257,48 +329,25 @@ export default {
     },
     onUserdataTabChange (key, type) {
       this[type] = key
-      this.userDataParams = []
-      if (this.isAutoScaleProfile && type === 'userdataTabKey' && key === 'userdataregistered') {
-        this.form.userdataid = undefined
-        this.userDataValues = {}
-      }
     },
     updateUserData (id, item) {
+      const restored = id && id === this.form.userdataid ? { ...this.userDataValues } : null
       applyUserDataSelection(this, id, item)
+      if (restored) this.userDataValues = Object.fromEntries(this.userDataParams.map(p => [p.key, restored[p.key] ?? '']))
+      this.restoringSelectionId = null
     },
     handleSubmit () {
-      if (this.loadingData || this.templateLoading || this.templateError || this.userDataSelectionBlocked) return
-      const values = toRaw(this.form)
+      if (this.loadingData || this.templateLoading || this.templateError || !this.currentLoaded || (this.editCurrent && this.userDataSelectionBlocked)) return
+      const params = resetUserDataPayload(this, this.$toBase64AndURIEncoded)
+      if (!params) { this.closeAction(); return }
       this.loadingData = true
-      const params = {
-      }
-      if ((!this.isAutoScaleProfile || this.userdataTabKey === 'userdatatext') && values.userdata && values.userdata.length > 0) {
-        params.userdata = this.$toBase64AndURIEncoded(values.userdata)
-      }
-      if ((!this.isAutoScaleProfile || this.userdataTabKey === 'userdataregistered') && values.userdataid) {
-        params.userdataid = values.userdataid
-      }
-      var idx = 0
-      if (this.templateUserDataValues) {
-        for (const [key, value] of Object.entries(this.templateUserDataValues)) {
-          params['userdatadetails[' + idx + '].' + `${key}`] = value
-          idx++
-        }
-      }
-      if ((!this.isAutoScaleProfile || params.userdataid) && this.userDataValues) {
-        for (const [key, value] of Object.entries(this.userDataValues)) {
-          params['userdatadetails[' + idx + '].' + `${key}`] = value
-          idx++
-        }
-      }
-      params.id = this.resource.resetUserDataResourceId ? this.resource.resetUserDataResourceId : this.resource.id
-
+      this.submitError = ''
       const resetUserDataApiName = this.resource.resetUserDataApiName ? this.resource.resetUserDataApiName : 'resetUserDataForVirtualMachine'
 
       if (resetUserDataApiName === 'updateAutoScaleVmProfile' && !params.userdataid && !params.userdata) params.userdata = ''
       const update = resetUserDataApiName === 'updateAutoScaleVmProfile'
         ? runAutoScaleMutation(postAPI, getAPI, resetUserDataApiName, params)
-        : postAPI(resetUserDataApiName, params)
+        : postAPI(resetUserDataApiName, params, { preserveOnFailure: true })
       return update.then(json => {
         this.$message.success({
           content: `${this.$t('label.action.user.data.reset')} - ${this.$t('label.success')}`,
@@ -308,6 +357,7 @@ export default {
         this.loadingData = false
         this.closeAction()
       }).catch(error => {
+        this.submitError = error?.response?.data?.errorresponse?.errortext || error?.message || this.$t('message.request.failed')
         if (resetUserDataApiName === 'updateAutoScaleVmProfile') {
           this.$notification.error({ message: this.$t('label.error'), description: autoScaleMutationDescription(error, this.$t) })
         } else this.$notifyError(error)
@@ -324,10 +374,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.form {
-  width: 100%;
-  min-width: 0;
-}
+.userdata-current-summary, .userdata-current-content, .ant-alert { margin-bottom: 12px; }
 .form {
   width: 100%;
   max-width: 100%;

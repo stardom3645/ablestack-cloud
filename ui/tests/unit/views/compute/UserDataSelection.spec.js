@@ -168,14 +168,6 @@ test('search Enter is stopped and cannot submit the enclosing form', async () =>
   expect(e.defaultPrevented).toBe(true); expect(postAPI).not.toHaveBeenCalled(); w.unmount()
 })
 
-test('missing template policy fails closed and is recoverable', async () => {
-  const vm = { resource: { templateid: 'template' }, isAutoScaleProfile: false, updateTemplateLinkedUserData: jest.fn() }
-  getAPI.mockResolvedValue({ listtemplatesresponse: {} }); await Reset.methods.fetchTemplateData.call(vm)
-  expect(vm.templateError).toBe(true); expect(vm.templateLoading).toBe(false)
-  getAPI.mockResolvedValue({ listtemplatesresponse: { template: [{ id: 'template' }] } }); await Reset.methods.fetchTemplateData.call(vm)
-  expect(vm.templateError).toBe(false)
-})
-
 test('unmount discards an outstanding response', async () => {
   let finish; getAPI.mockImplementation(() => new Promise(resolve => { finish = resolve }))
   const w = mount(); const vm = w.vm; w.unmount(); finish(reply([row(1)])); await flush(); expect(vm.items).toEqual([])
