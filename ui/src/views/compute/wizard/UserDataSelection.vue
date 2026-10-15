@@ -223,7 +223,7 @@ export default {
 <style lang="less" scoped>
 .userdata-selection { min-width: 0; max-width: 100%; }
 .userdata-selection-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-.userdata-selection-toolbar .ant-input-search { width: min(320px, 100%); }
+.userdata-selection-toolbar .ant-input-search { width: 320px; max-width: 100%; }
 .userdata-selection .ant-alert { margin-bottom: 12px; }
 .userdata-selection .ant-table-wrapper { margin: 12px 0; }
 :deep(.ant-table-cell) { overflow-wrap: anywhere; }
