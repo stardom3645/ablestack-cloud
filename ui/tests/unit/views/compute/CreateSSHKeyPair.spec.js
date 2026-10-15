@@ -203,3 +203,10 @@ test('pending submission also warns on browser refresh instead of implying reque
   const event = { preventDefault: jest.fn() }; ctx.beforeUnload(event)
   expect(event.preventDefault).toHaveBeenCalledTimes(1); expect(event.returnValue).toBe('')
 })
+
+test('first invalid field receives focus only after loading has been released', async () => {
+  const focus = jest.fn(() => { expect(ctx.loading).toBe(false) }); ctx.$refs.nameInput = { focus }
+  ctx.formRef.value.validate.mockRejectedValueOnce({ errorFields: [{ name: ['name'] }] })
+  await ctx.handleSubmit(); await flush()
+  expect(focus).toHaveBeenCalledTimes(1); expect(ctx.formRef.value.scrollToField).toHaveBeenCalledWith(['name'])
+})

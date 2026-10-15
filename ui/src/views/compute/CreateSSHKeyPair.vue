@@ -32,14 +32,14 @@
         <p>{{ $t(mode === 'register' ? 'message.ssh.keypair.register' : 'message.ssh.keypair.generate') }}</p>
         <p v-if="loading" role="status">{{ $t('message.ssh.keypair.submitting') }}</p>
         <a-spin :spinning="loading">
-          <a-form v-ctrl-enter="handleSubmit" :ref="formRef" :model="form" :rules="rules" @finish="handleSubmit" layout="vertical">
+          <a-form id="ssh-keypair-form" @keydown.ctrl.enter.prevent="handleSubmit" :ref="formRef" :model="form" :rules="rules" @finish="handleSubmit" layout="vertical">
             <a-form-item name="name" ref="name">
               <template #label><tooltip-label :title="$t('label.name')" :tooltip="apiParams.name?.description" /></template>
-              <a-input v-model:value="form.name" :disabled="loading" :placeholder="apiParams.name?.description" v-focus="true" />
+              <a-input ref="nameInput" v-model:value="form.name" :disabled="loading" :placeholder="apiParams.name?.description" v-focus="true" />
             </a-form-item>
             <a-form-item v-if="mode === 'register'" name="publickey" ref="publickey">
               <template #label><tooltip-label :title="$t('label.publickey')" :tooltip="apiParams.publickey?.description" /></template>
-              <a-input v-model:value="form.publickey" :disabled="loading" :placeholder="apiParams.publickey?.description" />
+              <a-input ref="publickeyInput" v-model:value="form.publickey" :disabled="loading" :placeholder="apiParams.publickey?.description" />
             </a-form-item>
             <a-form-item name="domainid" ref="domainid" v-if="isAdminOrDomainAdmin()">
               <template #label><tooltip-label :title="$t('label.domainid')" :tooltip="apiParams.domainid?.description" /></template>
@@ -76,8 +76,16 @@ optionFilterProp="label"
     </div>
     <template #footer>
       <template v-if="!isSubmitted">
-        <a-button :disabled="loading" @click="closeAction">{{ $t('label.cancel') }}</a-button>
-        <a-button ref="submit" type="primary" :loading="loading" :disabled="!allowedApi" @click="handleSubmit">{{ $t(mode === 'register' ? 'label.ssh.keypair.register' : 'label.create') }}</a-button>
+        <a-button :disabled="loading" @keydown.ctrl.enter.prevent="handleSubmit" @click="closeAction">{{ $t('label.cancel') }}</a-button>
+        <a-button
+ref="submit"
+html-type="submit"
+form="ssh-keypair-form"
+@keydown.ctrl.enter.prevent="handleSubmit"
+type="primary"
+:loading="loading"
+:disabled="!allowedApi"
+@click="handleSubmit">{{ $t(mode === 'register' ? 'label.ssh.keypair.register' : 'label.create') }}</a-button>
       </template>
       <template v-else-if="confirmDiscard">
         <a-button @click="continueSaving">{{ $t('label.ssh.privatekey.continue') }}</a-button>
@@ -169,7 +177,7 @@ export default {
       if (this.loading || this.isSubmitted || this.disposed) return
       if (!this.allowedApi) { this.error = this.$t('message.ssh.keypair.permission'); return }
       const position = this.formPosition()
-      let validationFailed = false
+      let invalidField = null
       this.loading = true
       this.error = ''
       return this.formRef.value.validate().then(() => {
@@ -202,14 +210,13 @@ export default {
         })
       }).catch(error => {
         if (error.errorFields?.length) {
-          validationFailed = true
-          this.formRef.value.scrollToField(error.errorFields[0].name)
-          this.$nextTick(() => this.$refs[error.errorFields[0].name[0]]?.$el?.querySelector('input')?.focus())
+          invalidField = error.errorFields[0].name
         } else { this.error = error.message || this.$t('error.fetching.data'); this.$notifyError(error) }
       }).finally(() => {
         this.loading = false
         if (this.isSubmitted) this.$nextTick(() => this.$refs.copy?.$el?.focus())
-        else if (!validationFailed) this.restoreFormPosition(position)
+        else if (invalidField) this.$nextTick(() => { this.formRef.value.scrollToField(invalidField); const input = this.$refs[invalidField[0] + 'Input']; if (input) input.focus() })
+        else this.restoreFormPosition(position)
       })
     },
     downloadKey () {

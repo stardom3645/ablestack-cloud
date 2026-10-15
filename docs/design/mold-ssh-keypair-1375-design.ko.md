@@ -29,7 +29,7 @@ Epic #1369 및 기존 PR #1378에 누적한다. 기준 upstream Europa와 기존
 
 ## 요청·오류·포커스
 
-Footer·Enter·기존 Ctrl+Enter는 같은 제출 경로다. 검증 시작부터 loading을 잠그며 요청 중 취소/닫기/Escape를 비활성화하고 Body 상태 문구를 표시한다. #1373 preserveOnFailure 정책과 값·소유 범위를 보존한다. API 오류를 Body에 표시하고 기존 포커스/Body 스크롤을 복원하며 필수값 검증은 첫 오류로 이동한다. 성공 등록은 갱신 후 닫고 성공 생성만 결과로 전환한다. 열 때 첫 입력, 결과 전환 시 복사, 닫기 후 기존 AutogenView 트리거에 포커스를 복원한다. 기본 maskClosable=false와 AntD focus trap을 재사용한다.
+Footer·Enter·기존 Ctrl+Enter는 같은 제출 경로다. Footer의 외부 submit 버튼을 form 속성으로 연결하고, Ctrl+Enter는 keydown에서 직접 처리한다. 기존 directive가 Footer로 포커스를 옮겨 form 밖의 keyup을 놓치는 문제를 피한다. 검증 시작부터 loading을 잠그며 요청 중 취소/닫기/Escape를 비활성화하고 Body 상태 문구를 표시한다. #1373 preserveOnFailure 정책과 값·소유 범위를 보존한다. API 오류를 Body에 표시하고 기존 포커스/Body 스크롤을 복원하며 필수값 검증은 loading 해제 후 nextTick에서 첫 오류로 스크롤하고 명시적 Input ref에 포커스를 적용한다. AFormItem의 fragment $el과 비활성 입력에 대한 이른 포커스 호출에 의존하지 않는다. 성공 등록은 갱신 후 닫고 성공 생성만 결과로 전환한다. 열 때 첫 입력, 결과 전환 시 복사, 닫기 후 기존 AutogenView 트리거에 포커스를 복원한다. 기본 maskClosable=false와 AntD focus trap을 재사용한다.
 
 ## 개인 키 결과·저장 정책
 

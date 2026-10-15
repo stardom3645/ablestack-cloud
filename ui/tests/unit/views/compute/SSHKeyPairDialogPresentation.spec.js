@@ -43,3 +43,10 @@ test.each(['createSSHKeyPair', 'registerSSHKeyPair'])('%s-only role sees its mat
   const visible = AutogenView.computed.visibleListActions.call({ actions, dataView: false, selectedRowKeys: [], $store: { getters: { apis: { [api]: {} } } } })
   expect(visible.map(action => action.api)).toEqual([api]); expect(visible[0].selfManagedDialog).toBe(true)
 })
+
+test('the external Footer submit belongs to the form and Ctrl+Enter uses the same handler', async () => {
+  const submit = jest.spyOn(CreateSSHKeyPair.methods, 'handleSubmit').mockImplementation(() => {}); const wrapper = mount('registerSSHKeyPair')
+  expect(wrapper.find('form').attributes('id')).toBe('ssh-keypair-form'); expect(wrapper.find('footer button[data-primary="true"]').attributes('form')).toBe('ssh-keypair-form')
+  await wrapper.find('form').trigger('keydown', { key: 'Enter', ctrlKey: true }); expect(submit).toHaveBeenCalledTimes(1)
+  await wrapper.find('footer button[data-primary="true"]').trigger('keydown', { key: 'Enter', ctrlKey: true }); expect(submit).toHaveBeenCalledTimes(2); wrapper.unmount(); submit.mockRestore()
+})
