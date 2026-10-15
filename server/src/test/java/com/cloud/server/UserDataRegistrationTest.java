@@ -132,7 +132,7 @@ public class UserDataRegistrationTest {
 
     @Test
     public void blankAndLongNamesAreRejected() {
-        for (String value : new String[] {null, "", " \t\n", "\u00a0\u3000", "x".repeat(256)}) {
+        for (String value : new String[] {null, "", " \t\n", "\u00a0\u3000", "\uFEFF", "x".repeat(256)}) {
             assertThrows(InvalidParameterValueException.class, () -> UserDataRegistrationValidation.name(value));
         }
         assertEquals("name", UserDataRegistrationValidation.name("\u3000name\u00a0"));
@@ -140,7 +140,7 @@ public class UserDataRegistrationTest {
 
     @Test
     public void blankContentIsRejectedButBinaryAndNewlinesArePreserved() {
-        for (String value : new String[] {null, "", "IAkK", "44CAwqA="}) {
+        for (String value : new String[] {null, "", "IAkK", "44CAwqA=", "77u/"}) {
             assertThrows(InvalidParameterValueException.class, () -> UserDataRegistrationValidation.requireContent(value));
         }
         UserDataRegistrationValidation.requireContent("/wAB");

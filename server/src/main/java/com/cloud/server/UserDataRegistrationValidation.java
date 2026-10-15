@@ -30,7 +30,7 @@ final class UserDataRegistrationValidation {
     private UserDataRegistrationValidation() { }
 
     private static String strip(String value) {
-        return value == null ? "" : value.replaceAll("(?U)^\\s+|\\s+$", "");
+        return value == null ? "" : value.replaceAll("(?U)^[\\s\\uFEFF]+|[\\s\\uFEFF]+$", "");
     }
 
     static String name(String value) {

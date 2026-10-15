@@ -44,11 +44,12 @@ class Mold:
         login = self.call('login', username=username, password=password or os.environ['MOLD_TEST_PASSWORD'], domain=domain)
         self.key = login['sessionkey']
 
-    def call(self, command, **params):
+    def call(self, command, _http_method='POST', **params):
         values = dict(command=command, response='json', **params)
         if self.key:
             values['sessionkey'] = self.key
-        req = urllib.request.Request(ENDPOINT, data=urllib.parse.urlencode(values).encode())
+        encoded = urllib.parse.urlencode(values)
+        req = urllib.request.Request(ENDPOINT + '?' + encoded) if _http_method == 'GET' else urllib.request.Request(ENDPOINT, data=encoded.encode())
         try:
             response = self.opener.open(req, timeout=45)
         except urllib.error.HTTPError as error:
@@ -166,7 +167,7 @@ def matrix(api):
         rootdomain = api.call('listDomains')['domain'][0]['id']
         domain = api.call('createDomain', name=PREFIX + '-domain', parentdomainid=rootdomain)['domain']
         domains.append(domain['id'])
-        password = secrets.token_urlsafe(15) + 'aA1!'
+        password = secrets.token_urlsafe(6) + 'aA1!'
         clients = []
         for accounttype, suffix in [(0, 'user'), (2, 'domainadmin')]:
             username = PREFIX.lower() + '-' + suffix
@@ -214,7 +215,51 @@ def cleanup(api):
                                  'domain_residuals': api.call('listDomains', name=PREFIX+'-domain', listall='true').get('count', 0)})
     print('CLEANUP VERIFIED; baseline libraries and configuration preserved')
 
+def prepare_ui(api):
+    domain = api.call('createDomain', name=PREFIX + '-domain')['domain']
+    state = {'domain_id': domain['id'], 'domain_path': '/' + domain['name'] + '/', 'accounts': []}
+    save('runtime-state.json', state)
+    for accounttype, suffix in [(0, 'user'), (2, 'domainadmin')]:
+        username = PREFIX.lower() + '-' + suffix
+        result = api.call('createAccount', username=username, password=os.environ['MOLD_TEST_PASSWORD'], firstname='UD1382', lastname='UI', email='ud1382@example.invalid', accounttype=accounttype, account=username, domainid=domain['id'])
+        assert 'account' in result, result
+        state['accounts'].append({'id': result['account']['id'], 'username': username, 'role': suffix})
+        save('runtime-state.json', state)
+    project = api.job('createProject', name=PREFIX + '-project', displaytext=PREFIX + ' UI project')['project']
+    state['project_id'] = project['id']
+    save('runtime-state.json', state)
+    print(json.dumps(state))
+
+def get_boundaries(api):
+    RESULTS.extend(json.loads((ROOT / 'api-results.json').read_text(encoding='utf-8')))
+    uid = None
+    try:
+        response = api.call('registerUserData', _http_method='GET', name=PREFIX+'-get-limit', userdata=content(b'g'*3072))
+        row = response.get('userdata')
+        uid = row['id'] if row else None
+        record('http-get-4096-boundary', bool(row) and len(row['userdata']) == 4096, id=uid)
+        response = api.call('registerUserData', _http_method='GET', name=PREFIX+'-get-over', userdata=content(b'g'*3073).rstrip('='))
+        record('http-get-over-canonical-boundary', response.get('errorcode') == 431, errorcode=response.get('errorcode'), message=response.get('errortext'))
+    finally:
+        if uid:
+            assert 'errorcode' not in api.call('deleteUserData', id=uid)
+    record('get-test-resources-cleaned', not api.call('listUserData', keyword=PREFIX+'-get-').get('userdata'))
+
+def cleanup_ui(api):
+    state = json.loads((ROOT / 'runtime-state.json').read_text())
+    for row in api.call('listUserData', projectid=state['project_id']).get('userdata', []):
+        assert row['name'].startswith(PREFIX), 'Unexpected non-test project data'
+        assert 'errorcode' not in api.call('deleteUserData', id=row['id'], projectid=state['project_id'])
+    for row in inventory(api):
+        if row['name'].startswith(PREFIX):
+            assert 'errorcode' not in api.call('deleteUserData', id=row['id'], account=row.get('account'), domainid=row['domainid'])
+    api.job('deleteProject', id=state['project_id'])
+    for account in state['accounts']:
+        api.job('deleteAccount', id=account['id'])
+    api.job('deleteDomain', id=state['domain_id'])
+    cleanup(api)
+
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     api = Mold()
-    {'baseline': baseline, 'matrix': matrix, 'cleanup': cleanup}[sys.argv[1]](api)
+    {'baseline': baseline, 'matrix': matrix, 'cleanup': cleanup, 'prepare-ui': prepare_ui, 'cleanup-ui': cleanup_ui, 'get-boundaries': get_boundaries}[sys.argv[1]](api)
