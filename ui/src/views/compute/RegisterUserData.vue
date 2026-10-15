@@ -27,8 +27,6 @@
       <a v-if="currentAction.docHelp && $config?.docBase" :href="$config.docBase + '/' + currentAction.docHelp" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
     </template>
     <div ref="content" class="userdata-registration-content" :aria-busy="loading">
-      <p v-if="loading" role="status">{{ $t('message.userdata.submitting') }}</p>
-      <a-alert v-if="error" class="mold-dialog-section" role="alert" type="error" show-icon :message="error" />
       <a-spin :spinning="loading">
         <p v-html="$route.name === 'userdata' ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
         <a-form
@@ -137,6 +135,8 @@
           <button type="submit" hidden aria-hidden="true" tabindex="-1"></button>
         </a-form>
       </a-spin>
+      <p v-if="loading" role="status">{{ $t('message.userdata.submitting') }}</p>
+      <a-alert v-if="error" class="mold-dialog-section" role="alert" type="error" show-icon :message="error" />
     </div>
     <template #footer>
       <a-button :disabled="loading" @click="closeAction">{{ $t('label.cancel') }}</a-button>
@@ -353,5 +353,5 @@ export default {
 </script>
 
 <style scoped lang="less">
-  .userdata-registration-content { min-width: 0; overflow-wrap: anywhere; }
+  .userdata-registration-content { min-width: 0; overflow-wrap: anywhere; overflow-anchor: none; }
 </style>
