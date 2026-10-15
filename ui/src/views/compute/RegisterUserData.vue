@@ -223,7 +223,7 @@ export default {
       this.selectedDomain = domain
     },
     handleSubmit (e) {
-      e?.preventDefault?.()
+      if (e && typeof e.preventDefault === 'function') e.preventDefault()
       if (this.loading) return
       this.formRef.value.validate().then(() => {
         if (this.loading) return
