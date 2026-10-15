@@ -28,6 +28,20 @@ spec.loader.exec_module(ud)
 ud.ROOT = ROOT
 ud.PREFIX = 'UD1383-31-20261015'
 
+def readonly(api):
+    import os
+    state = json.loads((ROOT / 'runtime-state.json').read_text())
+    role = next(row for row in api.call('listRoles')['role'] if row['name'] == 'Read-Only User - Default')
+    name = ud.PREFIX.lower() + '-readonly'
+    account = api.call('createAccount', username=name, password=os.environ['MOLD_TEST_PASSWORD'], firstname='UD1383', lastname='UI', email='ud1383@example.invalid', account=name, domainid=state['domain_id'], roleid=role['id'])['account']
+    state['accounts'].append(dict(id=account['id'], username=name, role='readonly'))
+    ud.save('runtime-state.json', state)
+    client = ud.Mold(name, domain=state['domain_path'])
+    denial = client.call('registerUserData', name=ud.PREFIX+'-denied', userdata=ud.content('UD1383 denied'))
+    assert denial.get('errorcode') == 432, denial
+    ud.save('permission-api.json', dict(role=role['name'], username=name, errorcode=denial['errorcode'], errortext=denial['errortext']))
+    print('Read-only fixture prepared; direct registration denied')
+
 def verify(api):
     state = json.loads((ROOT / 'runtime-state.json').read_text())
     rows = [row for row in ud.inventory(api) if row['name'].startswith(ud.PREFIX)]
@@ -43,4 +57,4 @@ def verify(api):
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     api = ud.Mold()
-    {'baseline': ud.baseline, 'prepare': ud.prepare_ui, 'verify': verify, 'cleanup': ud.cleanup_ui}[sys.argv[1]](api)
+    {'baseline': ud.baseline, 'prepare': ud.prepare_ui, 'readonly': readonly, 'verify': verify, 'cleanup': ud.cleanup_ui}[sys.argv[1]](api)
