@@ -25,6 +25,8 @@
         :disabled="disabled || !allowed || !ownerReady"
         :placeholder="$t('label.search')"
         :aria-label="$t('label.user.data') + ' ' + $t('label.search')"
+        @keydown.enter.stop.prevent
+        @keyup.enter.stop
         @search="handleSearch" />
     </div>
     <a-alert v-if="listError || selectionError" type="error" show-icon role="alert" :message="$t(listError || selectionError)">
@@ -199,6 +201,7 @@ export default {
     },
     selectItem (item, force = false) {
       if (!force && this.selectionDisabled) return
+      if (item?.id === this.selectedId && this.selectedItem && !this.selectionError) return
       this.selectedId = item?.id || NO_USER_DATA
       this.selectedItem = item || null
       this.selectionError = ''

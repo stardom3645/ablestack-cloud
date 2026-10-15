@@ -23,7 +23,10 @@
     :closable="!loadingData"
     :keyboard="!loadingData"
     @cancel="closeAction">
-  <a-spin :spinning="loadingData">
+  <a-alert v-if="templateError" type="error" show-icon role="alert" :message="$t('message.request.failed')">
+    <template #action><a-button size="small" @click="fetchTemplateData">{{ $t('label.refresh') }}</a-button></template>
+  </a-alert>
+  <a-spin :spinning="loadingData || templateLoading">
     <a-form
             :ref="formRef"
             :model="form"
@@ -126,7 +129,7 @@
   </a-spin>
     <template #footer>
       <a-button :disabled="loadingData" @click="closeAction">{{ $t('label.cancel') }}</a-button>
-      <a-button :loading="loadingData" :disabled="userDataSelectionBlocked" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+      <a-button :loading="loadingData" :disabled="templateLoading || templateError || userDataSelectionBlocked" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -160,6 +163,8 @@ export default {
   data () {
     return {
       loadingData: false,
+      templateLoading: false,
+      templateError: false,
       doUserdataOverride: false,
       doUserdataAppend: false,
       userdataTabList: [],
@@ -213,52 +218,33 @@ export default {
       this.form = reactive({})
       this.rules = reactive({})
     },
-    fetchTemplateData () {
-      if (this.isAutoScaleProfile) {
-        return autoScaleTemplateById(getAPI, { ...autoScaleOwnerParams(this.resource), id: this.resource.templateid, isready: true, zoneid: this.resource.zoneid }).then(json => {
-          this.template = json.listtemplatesresponse?.template?.[0] || {}
-          this.userdataDefaultOverridePolicy = this.template.userdatapolicy
-          if (this.template.userdataid && this.template.userdataid !== '0') this.updateTemplateLinkedUserData(this.template.userdataid)
-        }).catch(error => this.$notifyError(error))
+    async fetchTemplateData () {
+      this.templateLoading = true
+      this.templateError = false
+      try {
+        const params = { ...autoScaleOwnerParams(this.resource), id: this.resource.templateid, isready: true, ignoreproject: true }
+        const json = this.isAutoScaleProfile
+          ? await autoScaleTemplateById(getAPI, { ...params, zoneid: this.resource.zoneid })
+          : await getAPI('listTemplates', { ...params, templatefilter: 'all', isrecursive: true }, { preserveOnFailure: true, timeout: 15000 })
+        const template = json.listtemplatesresponse?.template?.find(item => item.id === this.resource.templateid)
+        if (!template) throw new Error('Template unavailable')
+        this.template = template
+        this.userdataDefaultOverridePolicy = template.userdatapolicy
+        await this.updateTemplateLinkedUserData(template.userdataid)
+      } catch (error) {
+        this.templateError = true
+      } finally {
+        this.templateLoading = false
       }
-      const params = {}
-      params.id = this.resource.templateid
-      params.isrecursive = true
-      params.templatefilter = 'all'
-      params.isready = true
-      var apiName = 'listTemplates'
-      getAPI(apiName, params).then(json => {
-        const templateResponses = json.listtemplatesresponse.template
-        this.template = templateResponses[0]
-        this.updateTemplateLinkedUserData(this.template.userdataid)
-        this.userdataDefaultOverridePolicy = this.template.userdatapolicy
-      })
     },
-    updateTemplateLinkedUserData (id) {
-      if (!id || id === '0') {
-        return
-      }
+    async updateTemplateLinkedUserData (id) {
       this.templateUserDataParams = []
-
-      getAPI('listUserData', { id: id }).then(json => {
-        const resp = json?.listuserdataresponse?.userdata || []
-        if (resp) {
-          var params = resp[0].params
-          if (params) {
-            var dataParams = params.split(',')
-          }
-          var that = this
-          that.templateUserDataParams = []
-          if (dataParams) {
-            ;(dataParams || []).forEach(function (val, index) {
-              that.templateUserDataParams.push({
-                id: index,
-                key: val
-              })
-            })
-          }
-        }
-      })
+      if (!id || id === '0') return
+      const json = await getAPI('listUserData', { ...autoScaleOwnerParams(this.resource), ignoreproject: true, id }, { preserveOnFailure: true, timeout: 15000 })
+      const item = json?.listuserdataresponse?.userdata?.find(item => item.id === id)
+      if (!item) throw new Error('Template user data unavailable')
+      const keys = typeof item.params === 'string' ? item.params.split(',').map(key => key.trim()).filter(Boolean) : []
+      this.templateUserDataParams = keys.map((key, index) => ({ id: index, key }))
     },
     loadUserdataTabList () {
       this.userdataTabList = [{
@@ -282,7 +268,7 @@ export default {
       applyUserDataSelection(this, id, item)
     },
     handleSubmit () {
-      if (this.loadingData || this.userDataSelectionBlocked) return
+      if (this.loadingData || this.templateLoading || this.templateError || this.userDataSelectionBlocked) return
       const values = toRaw(this.form)
       this.loadingData = true
       const params = {
