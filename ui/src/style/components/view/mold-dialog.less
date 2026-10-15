@@ -278,3 +278,11 @@ body .mold-dialog-standard {
     border-color: var(--ui-error-icon) !important;
   }
 }
+
+body .mold-dialog-standard {
+  .ant-checkbox .ant-checkbox-inner { background: var(--ui-bg-input); border-color: var(--ui-border-strong); }
+  .ant-checkbox-checked .ant-checkbox-inner { background: var(--ui-action-primary-bg); border-color: var(--ui-link); }
+  .ant-checkbox-checked .ant-checkbox-inner::after { border-color: var(--ui-action-primary-text); }
+  .ant-checkbox-input:focus-visible + .ant-checkbox-inner,
+  .ant-modal-footer .ant-btn:focus-visible, .ant-modal-close:focus-visible { outline: 2px solid var(--ui-link); outline-offset: 2px; }
+}
