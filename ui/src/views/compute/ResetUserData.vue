@@ -30,7 +30,7 @@
   <a-spin :spinning="loadingData || templateLoading">
     <template v-if="currentLoaded">
       <a-alert type="info" show-icon :message="$t('message.userdata.reset.keep')" />
-      <p class="userdata-current-summary">{{ $t('label.userdata.current') }}: {{ current.userdataname || $t(current.userdata ? 'label.user.data.text' : 'label.noselect') }}</p>
+      <p class="userdata-current-summary">{{ $t('label.userdata.current') }}: {{ current.userdataname || $t(currentKind) }}</p>
       <a-descriptions v-if="Object.keys(currentValues).length" size="small" :column="1">
         <a-descriptions-item v-for="(value, key) in currentValues" :key="key" :label="key">{{ value }}</a-descriptions-item>
       </a-descriptions>
@@ -189,6 +189,7 @@ export default {
       currentLoaded: false,
       current: {},
       currentText: '',
+      currentKind: 'label.noselect',
       currentValues: {},
       editCurrent: false,
       appendManualCurrent: false,
@@ -302,6 +303,9 @@ export default {
         this.form.userdataid = row.userdataid || undefined
         this.restoringSelectionId = row.userdataid || null
         const hasCustom = Boolean(row.userdataid || (row.userdata && row.userdata !== templateData?.userdata))
+        this.currentKind = template.userdataid && (!hasCustom || template.userdatapolicy === 'DENYOVERRIDE')
+          ? 'label.userdata.template.default'
+          : (template.userdataid && !templateData?.userdata && !row.userdataid ? 'label.userdata.current.content' : (row.userdata ? 'label.user.data.text' : 'label.noselect'))
         this.doUserdataOverride = template.userdatapolicy === 'ALLOWOVERRIDE' && hasCustom
         this.doUserdataAppend = template.userdatapolicy === 'APPEND' && hasCustom
         this.appendManualCurrent = Boolean(template.userdatapolicy === 'APPEND' && hasCustom && !row.userdataid)
@@ -351,7 +355,7 @@ export default {
         : postAPI(resetUserDataApiName, params, { preserveOnFailure: true })
       return update.then(json => {
         this.$message.success({
-          content: `${this.$t('label.action.user.data.reset')} - ${this.$t('label.success')}`,
+          content: `${this.$t(this.isAutoScaleProfile ? 'label.reset.user.data.on.autoscale.vm.group' : 'label.reset.user.data.on.vm')} - ${this.$t('label.success')}`,
           duration: 2
         })
         this.$emit('refresh-data')

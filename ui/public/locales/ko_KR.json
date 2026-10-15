@@ -8853,5 +8853,6 @@
   "message.userdata.reset.keep": "사용자 데이터 변경을 끄면 현재 설정을 유지하며 재설정 요청을 보내지 않습니다. 변경을 켜면 아래 설정을 적용합니다.",
   "message.userdata.reset.none.clear": "설정 안함은 라이브러리 연결과 사용자 지정 본문·변수값을 지웁니다. 취소하면 현재 설정을 유지합니다.",
   "message.userdata.reset.none.template": "설정 안함은 사용자 지정 데이터를 제거하고 템플릿 사용자 데이터와 변수값으로 돌아갑니다. 템플릿 정책은 계속 적용됩니다.",
-  "message.userdata.reset.append.current": "APPEND는 템플릿과 사용자 지정 본문을 합쳐 저장합니다. 현재 합쳐진 본문은 위에서 확인할 수 있습니다. 여기에는 새로 추가할 사용자 지정 본문만 입력하며, 비우면 템플릿만 적용합니다."
+  "message.userdata.reset.append.current": "APPEND는 템플릿과 사용자 지정 본문을 합쳐 저장합니다. 현재 합쳐진 본문은 위에서 확인할 수 있습니다. 여기에는 새로 추가할 사용자 지정 본문만 입력하며, 비우면 템플릿만 적용합니다.",
+  "label.userdata.template.default": "템플릿 기본값"
 }

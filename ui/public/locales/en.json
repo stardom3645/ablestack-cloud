@@ -8888,5 +8888,6 @@
   "message.userdata.reset.keep": "Leave Change user data off to keep the current setting without sending a reset request. Enable it to apply the settings below.",
   "message.userdata.reset.none.clear": "None detaches the selected library and clears custom user data and its variables. Cancel keeps the current setting.",
   "message.userdata.reset.none.template": "None removes custom data and restores the template user data with its variables. Template policy remains in effect.",
-  "message.userdata.reset.append.current": "APPEND stores the combined template and custom content. The current combined content is shown above. Enter only new custom content here; leaving it empty restores the template alone."
+  "message.userdata.reset.append.current": "APPEND stores the combined template and custom content. The current combined content is shown above. Enter only new custom content here; leaving it empty restores the template alone.",
+  "label.userdata.template.default": "Template default"
 }

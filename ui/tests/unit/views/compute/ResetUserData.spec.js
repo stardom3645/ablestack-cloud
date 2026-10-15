@@ -101,7 +101,7 @@ test('APPEND current combined body is visible, never used as a new append input'
 })
 test('template-only variables load even without a VM library ID', async () => {
   const w = mount({ userdata: encode('#cloud-config\nT'), userdatadetails: '{T=템플릿 한글}' }, { ...template, userdataid: 'template-data', userdatapolicy: 'DENYOVERRIDE' }); await flush()
-  expect(w.vm.templateUserDataValues).toEqual({ T: '템플릿 한글' }); expect(w.vm.currentValues.T).toBe('템플릿 한글'); w.unmount()
+  expect(w.vm.templateUserDataValues).toEqual({ T: '템플릿 한글' }); expect(w.vm.currentValues.T).toBe('템플릿 한글'); expect(w.vm.currentKind).toBe('label.userdata.template.default'); w.unmount()
 })
 test('current/policy failures block submit and retry recovers', async () => {
   const w = mount(); getAPI.mockRejectedValue(new Error('503')); await flush()
