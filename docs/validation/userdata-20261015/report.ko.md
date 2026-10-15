@@ -122,7 +122,7 @@ under the License.
 
 ## 업스트림 Epic과 하위 이슈
 
-[Epic #1381](https://github.com/ablecloud-team/ablestack-cloud/issues/1381)에 하위 10개 이슈가 GitHub sub-issue로 연결되어 있으며 모두 OPEN이다. 제목·본문의 한글과 부모 연결을 API로 다시 읽어 검증했다.
+[Epic #1381](https://github.com/ablecloud-team/ablestack-cloud/issues/1381)에 하위 11개 이슈가 GitHub sub-issue로 연결되어 있으며 모두 OPEN이다. 결함 수정 6개, 기능/UX 보완 4개, 최종 UI 표준 검토 1개다. 제목·본문의 한글과 부모 연결을 API로 다시 읽어 검증했다.
 
 | 작업 | 우선순위 | 이슈 |
 | --- | --- | --- |
@@ -136,3 +136,12 @@ under the License.
 | UD-08 | P1 | [[UD-08][Europa][P1][사용자 데이터] 목록 상세 본문 탭의 VM UI 표준과 일반 다크 테마 일치](https://github.com/ablecloud-team/ablestack-cloud/issues/1389) |
 | UD-09 | P2 | [[UD-09][Europa][P2][사용자 데이터] VM 저장 사용자 데이터 조회 API의 UI 접근 경로 제공](https://github.com/ablecloud-team/ablestack-cloud/issues/1390) |
 | UD-10 | P2 | [[UD-10][Europa][P2][사용자 데이터] 라이브러리 복제와 버전 관리 및 변경 정책 수립](https://github.com/ablecloud-team/ablestack-cloud/issues/1391) |
+| UD-11 | P1 | [[UD-11][Europa][P1][사용자 데이터] 전체 UI 표준 준수 최종 통합 검토 및 회귀 검증](https://github.com/ablecloud-team/ablestack-cloud/issues/1392) |
+
+## 후속 요구 반영 — 사용 가상머신 탭과 최종 UI 표준 검토
+
+라이브러리를 적용한 VM 목록은 기존 UD-07 #1388 및 UD-08 #1389에 포함되어 있었다. 다만 UD-07의 “탭 또는 공통 목록” 표현을 **선택한 라이브러리 상세 화면의 전용 `사용 가상머신` 탭**으로 구체화했다. 외부 VM 목록 이동 링크만으로 대체하지 않으며, 라이브러리 UUID 필터·계정/도메인/프로젝트 ACL·서버 총 건수/페이지·VM 상세 링크·연결/변경/해제 후 갱신을 완료 기준에 추가했다. 목록은 Cloud 연결 관계를 의미하며 게스트 cloud-init 실행 성공과 구분한다.
+
+UD-11 #1392는 관련 구현 통합 후 목록·상세·모든 탭의 이름/URL/실제 콘텐츠·대화상자를 VM 기준과 최종 대조하는 별도 검토 이슈다. 일반/다크, 공통 컴포넌트/스타일 재사용, 반응형/200% 확대, 키보드 접근성, MD-01~MD-12 및 실제 좌표/대비 측정·UI/API 회귀 증거를 포함한다. Epic의 마지막 단계와 완료 조건에 연결했으며, 범위 내 미준수/미검증이 남으면 완료 처리하지 않는다.
+
+이번 후속 작업은 기존 이슈의 요구사항 보완과 최종 검토 이슈 등록이다. 제품 구현·추가 배포 또는 최종 UI 표준 적합성 검증이 완료된 것은 아니다.

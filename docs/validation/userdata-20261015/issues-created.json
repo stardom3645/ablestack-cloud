@@ -4,7 +4,7 @@
     "url": "https://github.com/ablecloud-team/ablestack-cloud/issues/1381",
     "number": 1381
   },
-  "verified_children": 10,
+  "verified_children": 11,
   "children": [
     {
       "key": "UD-01",
@@ -85,6 +85,14 @@
       "title": "[UD-10][Europa][P2][사용자 데이터] 라이브러리 복제와 버전 관리 및 변경 정책 수립",
       "url": "https://github.com/ablecloud-team/ablestack-cloud/issues/1391",
       "number": 1391
+    },
+    {
+      "key": "UD-11",
+      "priority": "P1",
+      "kind": "validation",
+      "title": "[UD-11][Europa][P1][사용자 데이터] 전체 UI 표준 준수 최종 통합 검토 및 회귀 검증",
+      "url": "https://github.com/ablecloud-team/ablestack-cloud/issues/1392",
+      "number": 1392
     }
   ]
 }
