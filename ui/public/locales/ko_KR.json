@@ -1,4 +1,6 @@
 {
+  "label.register.userdata.action": "등록",
+  "message.userdata.submitting": "등록 중입니다. 결과를 받을 때까지 이 창과 페이지를 유지해 주세요.",
   "message.userdata.validation.name": "앞뒤 공백을 제외한 1~255자의 이름을 입력하세요.",
   "message.userdata.validation.empty": "사용자 데이터는 비어 있거나 공백으로만 구성될 수 없습니다.",
   "message.userdata.validation.base64": "올바른 Base64를 입력하세요. 패딩 생략, URL 인코딩, 줄바꿈을 지원합니다.",

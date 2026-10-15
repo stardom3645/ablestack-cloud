@@ -57,8 +57,9 @@ test('name and variable normalization and duplicate policy', () => {
 })
 
 function context () {
-  const ctx = { $route: { name: 'userdata' }, $t: key => key, $store: { getters: { userInfo: { roletype: 'User' } } }, $emit: jest.fn(), $notifyError: jest.fn(), $message: { success: jest.fn() } }
+  const ctx = { $route: { name: 'userdata' }, $t: key => key, $store: { getters: { userInfo: { roletype: 'User' }, apis: { registerUserData: {}, registerCniConfiguration: {} } } }, $refs: {}, $nextTick: callback => Promise.resolve().then(callback), $emit: jest.fn(), $message: { success: jest.fn() } }
   Object.assign(ctx, RegisterUserData.data.call(ctx))
+  Object.entries(RegisterUserData.computed).forEach(([key, getter]) => Object.defineProperty(ctx, key, { get: () => getter.call(ctx) }))
   Object.entries(RegisterUserData.methods).forEach(([key, method]) => { ctx[key] = method.bind(ctx) })
   ctx.form = { name: '  name  ', userdata: 'eA==', isbase64: false, params: [' USER '] }
   ctx.formRef = { value: { validate: jest.fn().mockResolvedValue(), scrollToField: jest.fn() } }
@@ -70,7 +71,7 @@ test('server validation failures retain the complete form and allow retry', asyn
   postAPI.mockRejectedValueOnce(error)
   ctx.handleSubmit(); await flush()
   expect(ctx.form).toEqual(before); expect(ctx.loading).toBe(false)
-  expect(ctx.$emit).not.toHaveBeenCalled(); expect(ctx.$notifyError).toHaveBeenCalledWith(error)
+  expect(ctx.$emit).not.toHaveBeenCalled(); expect(ctx.error).toBe('duplicate')
   expect(postAPI).toHaveBeenCalledWith('registerUserData', { name: 'name', userdata: 'ZUE9PQ==', params: 'USER' }, { preserveOnFailure: true })
   postAPI.mockResolvedValueOnce({}); ctx.handleSubmit(); await flush()
   expect(ctx.$emit.mock.calls).toEqual([['refresh-data'], ['close-action']])
@@ -79,4 +80,67 @@ test('two queued validations submit only once', async () => {
   const ctx = context(); postAPI.mockReturnValue(new Promise(() => {}))
   ctx.handleSubmit(); ctx.handleSubmit(); await flush()
   expect(postAPI).toHaveBeenCalledTimes(1)
+})
+test.each(['duplicate name', 'HTTP 503', 'Network Error'])('%s preserves ownership, values, focus and body scroll', async reason => {
+  const ctx = context()
+  const input = document.createElement('input'); document.body.appendChild(input); input.focus()
+  const body = { scrollTop: 137 }; ctx.$refs.content = { closest: () => body }
+  ctx.form.domainid = 1; ctx.form.account = 'owner'; ctx.form.isbase64 = true
+  ctx.domains = [{ id: null }, { id: 'domain-1' }]; ctx.selectedDomain = ctx.domains[1]
+  const before = JSON.stringify(ctx.form)
+  postAPI.mockImplementationOnce(async () => { body.scrollTop = 0; input.blur(); throw new Error(reason) })
+  await ctx.handleSubmit(); await flush()
+  expect(ctx.error).toBe(reason); expect(JSON.stringify(ctx.form)).toBe(before)
+  expect(ctx.selectedDomain.id).toBe('domain-1'); expect(document.activeElement).toBe(input)
+  expect(body.scrollTop).toBe(137); expect(ctx.$emit).not.toHaveBeenCalled()
+  input.remove()
+})
+test.each(['name', 'userdata', 'params'])('validation focuses the first invalid %s field without posting', async field => {
+  const ctx = context(); ctx.$refs[field + 'Input'] = { focus: jest.fn() }
+  ctx.formRef.value.validate.mockRejectedValue({ errorFields: [{ name: [field] }, { name: ['other'] }] })
+  await ctx.handleSubmit(); await flush()
+  expect(ctx.$refs[field + 'Input'].focus).toHaveBeenCalledTimes(1)
+  expect(ctx.formRef.value.scrollToField).toHaveBeenCalledWith([field])
+  expect(postAPI).not.toHaveBeenCalled(); expect(ctx.loading).toBe(false)
+})
+test('validation, requests, close and navigation share a synchronous lock', async () => {
+  const ctx = context(); let validate, complete
+  ctx.formRef.value.validate.mockReturnValue(new Promise(resolve => { validate = resolve }))
+  postAPI.mockReturnValue(new Promise(resolve => { complete = resolve }))
+  const pending = ctx.handleSubmit(); ctx.handleSubmit(); ctx.closeAction()
+  expect(ctx.blocksNavigation).toBe(true); expect(ctx.$emit).not.toHaveBeenCalled()
+  expect(ctx.formRef.value.validate).toHaveBeenCalledTimes(1)
+  validate(); await flush(); ctx.handleSubmit(); ctx.closeAction()
+  expect(postAPI).toHaveBeenCalledTimes(1); expect(ctx.$emit).not.toHaveBeenCalled()
+  const event = { preventDefault: jest.fn() }; ctx.beforeUnload(event)
+  expect(event.preventDefault).toHaveBeenCalledTimes(1)
+  complete({}); await pending
+  expect(ctx.blocksNavigation).toBe(false)
+  expect(ctx.$emit.mock.calls).toEqual([['refresh-data'], ['close-action']])
+})
+test('revoked API permission blocks submission, including after validation', async () => {
+  const ctx = context(); ctx.$store.getters.apis = {}
+  await ctx.handleSubmit(); expect(postAPI).not.toHaveBeenCalled(); expect(ctx.error).toBe('label.forbidden')
+  ctx.$store.getters.apis.registerUserData = {}; let done
+  ctx.formRef.value.validate.mockReturnValue(new Promise(resolve => { done = resolve }))
+  const pending = ctx.handleSubmit(); delete ctx.$store.getters.apis.registerUserData; done(); await pending
+  expect(postAPI).not.toHaveBeenCalled(); expect(ctx.loading).toBe(false)
+})
+test('late result from a disposed dialog neither refreshes nor closes another dialog', async () => {
+  const ctx = context(); let done
+  postAPI.mockReturnValue(new Promise(resolve => { done = resolve }))
+  const pending = ctx.handleSubmit(); await flush(); ctx.disposed = true; done({}); await pending
+  expect(ctx.$emit).not.toHaveBeenCalled(); expect(ctx.$message.success).not.toHaveBeenCalled()
+})
+test('CNI retains its API, encoding, owner and variable contract', async () => {
+  const ctx = context(); ctx.$route.name = 'cniconfiguration'; ctx.$toBase64AndURIEncoded = jest.fn().mockReturnValue('encoded-cni')
+  ctx.form.cniconfig = '{"cniVersion":"0.3.1"}'; postAPI.mockResolvedValue({})
+  await ctx.handleSubmit()
+  expect(postAPI).toHaveBeenCalledWith('registerCniConfiguration', { name: '  name  ', cniconfig: 'encoded-cni', params: ' USER ' }, { preserveOnFailure: true })
+  expect(ctx.$emit.mock.calls).toEqual([['refresh-data'], ['close-action']])
+})
+test('API response text is rendered as an inline string with a network fallback', () => {
+  const ctx = context()
+  expect(ctx.errorMessage({ response: { data: { registeruserdataresponse: { errortext: '<script>unsafe</script>' } } } })).toBe('<script>unsafe</script>')
+  expect(ctx.errorMessage({})).toBe('message.network.error')
 })

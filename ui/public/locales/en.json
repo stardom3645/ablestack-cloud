@@ -1,4 +1,6 @@
 {
+  "label.register.userdata.action": "Register",
+  "message.userdata.submitting": "Registering. Wait for the result before closing or leaving this page.",
   "message.userdata.validation.name": "Enter a name of 1 to 255 characters after trimming whitespace.",
   "message.userdata.validation.empty": "User data must not be empty or contain only whitespace.",
   "message.userdata.validation.base64": "Enter valid Base64. Optional padding, URL encoding and line breaks are supported.",

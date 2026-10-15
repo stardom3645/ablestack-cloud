@@ -16,11 +16,24 @@
 // under the License.
 
 <template>
-  <div class="form-layout">
-    <a-spin :spinning="loading" v-if="!isSubmitted">
+  <MoldDialog
+    class="userdata-registration-dialog"
+    size="md"
+    :closable="!loading"
+    :keyboard="!loading"
+    @cancel="closeAction">
+    <template #title>
+      {{ $t(isUserData ? 'label.register.user.data' : 'label.register.cni.config') }}
+      <a v-if="currentAction.docHelp && $config?.docBase" :href="$config.docBase + '/' + currentAction.docHelp" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
+    </template>
+    <div ref="content" class="userdata-registration-content" :aria-busy="loading">
+      <p v-if="loading" role="status">{{ $t('message.userdata.submitting') }}</p>
+      <a-alert v-if="error" class="mold-dialog-section" role="alert" type="error" show-icon :message="error" />
+    <a-spin :spinning="loading">
       <p v-html="$route.name === 'userdata' ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
       <a-form
-        v-ctrl-enter="handleSubmit"
+        id="userdata-registration-form"
+        @keydown.ctrl.enter.prevent="handleSubmit"
         :ref="formRef"
         :model="form"
         :rules="rules"
@@ -31,7 +44,9 @@
             <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
           </template>
           <a-input
+            ref="nameInput"
             v-model:value="form.name"
+            :disabled="loading"
             :placeholder="apiParams.name.description"
             v-focus="true" />
         </a-form-item>
@@ -41,7 +56,9 @@
               <tooltip-label :title="$t('label.user.data')" :tooltip="$t('label.register.user.data.details')"/>
             </template>
             <a-textarea
+              ref="userdataInput"
               v-model:value="form.userdata"
+              :disabled="loading"
               :placeholder="$t('label.register.user.data.details')"/>
           </a-form-item>
         </div>
@@ -51,12 +68,14 @@
               <tooltip-label :title="$t('label.cniconfiguration')" :tooltip="apiParams.cniconfig.description"/>
             </template>
             <a-textarea
+              ref="cniconfigInput"
               v-model:value="form.cniconfig"
+              :disabled="loading"
               :placeholder="apiParams.cniconfig.description"/>
           </a-form-item>
         </div>
         <a-form-item name="isbase64" ref="isbase64" :label="$t('label.is.base64.encoded')">
-          <a-checkbox v-model:checked="form.isbase64"></a-checkbox>
+          <a-checkbox v-model:checked="form.isbase64" :disabled="loading"></a-checkbox>
         </a-form-item>
         <a-form-item name="params" ref="params">
           <template #label>
@@ -65,8 +84,10 @@
               :tooltip="$route.name === 'userdata' ? $t('message.userdata.validation.help') : apiParams.params.description"/>
           </template>
           <a-select
+            ref="paramsInput"
             mode="tags"
             v-model:value="form.params"
+            :disabled="loading"
             showSearch
             optionFilterProp="value"
             :filterOption="(input, option) => {
@@ -85,6 +106,7 @@
           <a-select
             id="domain-selection"
             v-model:value="form.domainid"
+            :disabled="loading"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -107,37 +129,35 @@
           </template>
           <a-input
             v-model:value="form.account"
+            :disabled="loading"
             :placeholder="apiParams.account.description"/>
         </a-form-item>
 
-        <div :span="24" class="action-button">
-          <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-          <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-        </div>
+        <!-- Native Enter submits; textarea and select keep their own Enter behavior. -->
+        <button type="submit" hidden aria-hidden="true" tabindex="-1"></button>
       </a-form>
     </a-spin>
-    <div v-if="isSubmitted">
-      <p v-html="$t('message.desc.registered.user.data')"></p>
-      <div :span="24" class="action-button">
-        <a-button @click="notifyCopied" v-clipboard:copy="hiddenElement.innerHTML" type="primary">{{ $t('label.copy.clipboard') }}</a-button>
-        <a-button @click="downloadKey" type="primary">{{ $t('label.download') }}</a-button>
-        <a-button @click="closeAction">{{ $t('label.close') }}</a-button>
-      </div>
     </div>
-  </div>
+    <template #footer>
+      <a-button :disabled="loading" @click="closeAction">{{ $t('label.cancel') }}</a-button>
+      <a-button ref="submit" form="userdata-registration-form" html-type="submit" :loading="loading" :disabled="!allowedApi" type="primary" @keydown.ctrl.enter.prevent="handleSubmit">{{ $t('label.register.userdata.action') }}</a-button>
+    </template>
+  </MoldDialog>
 </template>
 
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
+import MoldDialog from '@/components/view/MoldDialog'
 import { canonicalUserData, userDataName, userDataParams } from '@/utils/userDataRegistration'
 
 export default {
   name: 'registerUserData',
-  props: {},
+  props: { currentAction: { type: Object, default: () => ({}) } },
+  emits: ['refresh-data', 'close-action'],
   components: {
-    TooltipLabel
+    TooltipLabel, MoldDialog
   },
   data () {
     return {
@@ -145,10 +165,16 @@ export default {
       domainLoading: false,
       selectedDomain: {},
       loading: false,
-      isSubmitted: false,
-      hiddenElement: null,
+      error: '',
+      disposed: false,
       maxEncodedLength: 1048576
     }
+  },
+  computed: {
+    isUserData () { return this.$route.name === 'userdata' },
+    apiName () { return this.isUserData ? 'registerUserData' : 'registerCniConfiguration' },
+    allowedApi () { return this.apiName in this.$store.getters.apis },
+    blocksNavigation () { return this.loading }
   },
   beforeCreate () {
     this.apiParams = this.$route.name === 'userdata' ? this.$getApiParams('registerUserData') : this.$getApiParams('registerCniConfiguration')
@@ -163,6 +189,8 @@ export default {
     ]
     this.fetchData()
   },
+  mounted () { window.addEventListener('beforeunload', this.beforeUnload) },
+  beforeUnmount () { this.disposed = true; window.removeEventListener('beforeunload', this.beforeUnload) },
   methods: {
     initForm () {
       this.formRef = ref()
@@ -171,7 +199,8 @@ export default {
       })
       this.rules = reactive({
         name: [{ required: true, message: this.$t('message.error.name') }],
-        userdata: [{ required: true, message: this.$t('message.error.user.data') }]
+        userdata: [{ required: true, message: this.$t('message.error.user.data') }],
+        cniconfig: [{ required: true, message: this.$t('message.error.user.data') }]
       })
       if (this.$route.name === 'userdata') {
         const validate = fn => async () => {
@@ -186,7 +215,7 @@ export default {
       if (this.$route.name === 'userdata') {
         getAPI('listCapabilities', {}, { preserveOnFailure: true }).then(json => {
           const max = json.listcapabilitiesresponse?.capability?.userdatamaxlength
-          if (Number.isInteger(max) && max > 0) this.maxEncodedLength = Math.min(max, 1048576)
+          if (!this.disposed && Number.isInteger(max) && max > 0) this.maxEncodedLength = Math.min(max, 1048576)
         }).catch(() => { /* The server still enforces its current configured limit. */ })
       }
       if (this.isAdminOrDomainAdmin()) {
@@ -208,10 +237,12 @@ export default {
     fetchDomainData () {
       const params = {}
       this.domainLoading = true
-      getAPI('listDomains', params).then(json => {
-        const listdomains = json.listdomainsresponse.domain
-        this.domains = this.domains.concat(listdomains)
+      getAPI('listDomains', params, { preserveOnFailure: true }).then(json => {
+        if (!this.disposed) this.domains = this.domains.concat(json.listdomainsresponse.domain || [])
+      }).catch(error => {
+        if (!this.disposed) this.error = this.errorMessage(error)
       }).finally(() => {
+        if (this.disposed) return
         this.domainLoading = false
         if (this.arrayHasItems(this.domains)) {
           this.form.domainid = 0
@@ -222,13 +253,32 @@ export default {
     handleDomainChanged (domain) {
       this.selectedDomain = domain
     },
+    formPosition () {
+      const body = this.$refs.content?.closest('.ant-modal-body')
+      return { focus: document.activeElement, body, top: body?.scrollTop || 0 }
+    },
+    restoreFormPosition (position) {
+      this.$nextTick(() => {
+        if (this.disposed) return
+        if (position.focus?.isConnected) position.focus.focus({ preventScroll: true })
+        if (position.body) position.body.scrollTop = position.top
+      })
+    },
+    errorMessage (error) {
+      const response = Object.values(error?.response?.data || {}).find(value => value?.errortext)
+      return response?.errortext || error?.message || this.$t('message.network.error')
+    },
     handleSubmit (e) {
       if (e && typeof e.preventDefault === 'function') e.preventDefault()
-      if (this.loading) return
-      this.formRef.value.validate().then(() => {
-        if (this.loading) return
+      if (this.loading || this.disposed) return
+      if (!this.allowedApi) { this.error = this.$t('label.forbidden'); return }
+      const position = this.formPosition()
+      let invalidField
+      this.loading = true
+      this.error = ''
+      return this.formRef.value.validate().then(() => {
+        if (this.disposed || !this.allowedApi) return
         const values = toRaw(this.form)
-        this.loading = true
         const params = {
           name: values.name
         }
@@ -257,30 +307,30 @@ export default {
           params.params = userdataparams
         }
 
-        postAPI(apiName, params, { preserveOnFailure: true }).then(json => {
+        return postAPI(apiName, params, { preserveOnFailure: true }).then(json => {
+          if (this.disposed) return
           this.$message.success(this.$t('message.success.register.user.data') + ' ' + values.name)
           this.$emit('refresh-data')
-          this.closeAction()
+          this.$emit('close-action')
         }).catch(error => {
-          this.$notifyError(error)
-        }).finally(() => {
-          this.loading = false
+          if (!this.disposed) this.error = this.errorMessage(error)
         })
       }).catch(error => {
+        if (error?.errorFields?.length) invalidField = error.errorFields[0].name
+        else if (!this.disposed) this.error = this.$t(error.message || 'message.network.error')
+      }).finally(() => {
         this.loading = false
-        if (!error?.errorFields) this.$notifyError(new Error(this.$t(error.message)))
-        this.formRef.value.scrollToField(error?.errorFields?.[0]?.name)
+        if (this.disposed) return
+        if (invalidField) this.$nextTick(() => {
+          this.formRef.value.scrollToField(invalidField)
+          this.$refs[invalidField[0] + 'Input']?.focus()
+        })
+        else this.restoreFormPosition(position)
       })
     },
-    downloadKey () {
-      this.hiddenElement.click()
-    },
-    notifyCopied () {
-      this.$notification.info({
-        message: this.$t('message.success.copy.clipboard')
-      })
-    },
+    beforeUnload (event) { if (this.loading) { event.preventDefault(); event.returnValue = '' } },
     closeAction () {
+      if (this.loading) return
       this.$emit('close-action')
     }
   }
@@ -288,11 +338,5 @@ export default {
 </script>
 
 <style scoped lang="less">
-  .form-layout {
-    width: 80vw;
-
-    @media (min-width: 600px) {
-      width: 450px;
-    }
-  }
+  .userdata-registration-content { min-width: 0; overflow-wrap: anywhere; }
 </style>

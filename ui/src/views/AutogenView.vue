@@ -168,6 +168,7 @@
     <div v-show="showAction">
       <component
         v-if="showAction && currentAction.selfManagedDialog"
+        ref="selfManagedAction"
         :is="currentAction.component"
         :resource="resource"
         :current-action="currentAction"
@@ -1149,10 +1150,12 @@ export default {
     this.scheduleAutoRefresh()
   },
   beforeRouteUpdate (to, from, next) {
+    if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
     this.currentPath = this.$route.fullPath
     next()
   },
   beforeRouteLeave (to, from, next) {
+    if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
     console.log('DEBUG - Due to route change, ignoring results for any on-going API request', this.apiName)
     sourceToken.cancel()
     sourceToken.init()

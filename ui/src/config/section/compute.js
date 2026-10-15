@@ -1469,6 +1469,7 @@ export default {
       actions: [
         {
           api: 'registerUserData',
+          selfManagedDialog: true,
           icon: 'plus-outlined',
           label: 'label.register.user.data',
           docHelp: 'adminguide/virtual_machines.html#user-data-and-meta-data',
@@ -1552,6 +1553,7 @@ export default {
       actions: [
         {
           api: 'registerCniConfiguration',
+          selfManagedDialog: true,
           icon: 'plus-outlined',
           label: 'label.register.cni.config',
           docHelp: 'adminguide/virtual_machines.html#creating-the-ssh-keypair',
