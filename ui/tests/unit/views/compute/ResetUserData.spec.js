@@ -54,6 +54,10 @@ test('ALLOW manual override excludes template and library variables', () => {
   const vm = draft({ template: { userdataid: 'template-data' }, userdataDefaultOverridePolicy: 'ALLOWOVERRIDE', doUserdataOverride: true, userdataTabKey: 'userdatatext' })
   expect(resetUserDataPayload(vm, encode)).toEqual({ id: 'vm', userdata: encode('수동 본문') })
 })
+test.each(['userdataregistered', 'userdatatext'])('ALLOW empty %s returns to template and preserves template variables', mode => {
+  const vm = draft({ template: { userdataid: 'template-data' }, userdataDefaultOverridePolicy: 'ALLOWOVERRIDE', doUserdataOverride: true, userdataTabKey: mode, form: {} })
+  expect(resetUserDataPayload(vm, encode)).toEqual({ id: 'vm', userdata: '', 'userdatadetails[0].T': 'template' })
+})
 test('APPEND library combines only effective variable definitions and deduplicates keys', () => {
   const vm = draft({ template: { userdataid: 'template-data' }, userdataDefaultOverridePolicy: 'APPEND', doUserdataAppend: true, templateUserDataParams: [{ key: 'T' }, { key: 'VAR1' }] })
   expect(resetUserDataPayload(vm, encode)).toEqual({ id: 'vm', userdataid: 'library', 'userdatadetails[0].T': 'template', 'userdatadetails[1].VAR1': '한글, 값=1' })

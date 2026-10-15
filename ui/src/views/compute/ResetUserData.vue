@@ -58,7 +58,7 @@ v-if="currentLoaded && editCurrent"
             <template v-if="isAutoScaleProfile">{{ $t('message.autoscale.userdata.template', { template: template.name, userdata: template.userdataname, policy: template.userdatapolicy }) }}</template>
             <template v-else>{{ $t('message.autoscale.userdata.template', { template: template.name, userdata: template.userdataname, policy: template.userdatapolicy }) }}</template>
         </a-typography-text><br/><br/>
-        <div v-if="templateUserDataParams.length > 0 && (userdataDefaultOverridePolicy === 'APPEND' || !doUserdataOverride)">
+        <div v-if="templateUserDataParams.length > 0 && templateDataActive">
           <a-typography-text v-if="this.template && this.template.userdataid && templateUserDataParams.length > 0">
               <template v-if="isAutoScaleProfile">{{ $t('message.autoscale.userdata.variables') }}</template>
               <template v-else>{{ $t('message.autoscale.userdata.variables') }}</template>
@@ -162,7 +162,7 @@ import { autoScaleTemplateById } from '@/utils/autoScaleUi'
 import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 import MoldDialog from '@/components/view/MoldDialog'
 import { applyUserDataSelection, userDataSelectionConsumer } from '@/utils/userDataSelection'
-import { decodeResetUserData, resetUserDataPayload, resetUserDataValues, userDataKeys } from '@/utils/userDataReset'
+import { decodeResetUserData, resetTemplateActive, resetUserDataPayload, resetUserDataValues, userDataKeys } from '@/utils/userDataReset'
 
 export default {
   name: 'ResetUserData',
@@ -233,6 +233,7 @@ export default {
     }
   },
   computed: {
+    templateDataActive () { return resetTemplateActive(this) },
     blocksNavigation () { return this.loadingData },
     isUserAllowedToListUserDatas () { return Boolean(this.$store.getters.apis.listUserData) },
     isAutoScaleProfile () { return this.resource.resetUserDataApiName === 'updateAutoScaleVmProfile' }

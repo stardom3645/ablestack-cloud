@@ -40,12 +40,18 @@ export function decodeResetUserData (encoded) {
   return text
 }
 
+export function resetTemplateActive (vm) {
+  if (!vm.template.userdataid) return false
+  if (vm.userdataDefaultOverridePolicy !== 'ALLOWOVERRIDE' || !vm.doUserdataOverride) return true
+  return vm.userdataTabKey === 'userdatatext' ? !vm.form.userdata : !vm.form.userdataid || vm.form.userdataid === NO_USER_DATA
+}
+
 // Never serialize hidden mode state, None, or template variables that are no
 // longer effective. Returning null is an intentional no-op, not an empty reset.
 export function resetUserDataPayload (vm, encode) {
   if (!vm.editCurrent) return null
   const params = { id: vm.resource.resetUserDataResourceId || vm.resource.id }
-  const templateActive = Boolean(vm.template.userdataid && (vm.userdataDefaultOverridePolicy === 'APPEND' || !vm.doUserdataOverride))
+  const templateActive = resetTemplateActive(vm)
   const customActive = !vm.template.userdataid || (vm.userdataDefaultOverridePolicy !== 'DENYOVERRIDE' && (vm.doUserdataOverride || vm.doUserdataAppend))
   const variables = {}
   if (templateActive) for (const key of userDataKeys({ params: vm.templateUserDataParams.map(p => p.key).join(',') })) variables[key] = vm.templateUserDataValues[key] ?? ''

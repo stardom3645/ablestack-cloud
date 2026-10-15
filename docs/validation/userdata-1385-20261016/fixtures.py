@@ -13,6 +13,7 @@
 import base64
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -72,17 +73,51 @@ def snapshot(api,label,suffix='base'):
     print(json.dumps(result,ensure_ascii=False),flush=True)
     return result
 
+def prepare_owners(api):
+    s=state()
+    if not s.get('domain_id'):
+        domain=ok(api,'createDomain',name=PREFIX.lower())['domain']
+        s.update(domain_id=domain['id'],accounts=[],networks=[]);save('runtime-state.json',s)
+    domain=dict(id=s['domain_id'])
+    for suffix,kind in [('user',0),('domainadmin',2)]:
+        if any(a['suffix']==suffix for a in s['accounts']):continue
+        name=PREFIX.lower()+'-'+suffix
+        account=ok(api,'createAccount',username=name,password=os.environ['MOLD_TEST_PASSWORD'],firstname='UD1385',lastname='QA',email=suffix+'@example.invalid',account=name,accounttype=kind,domainid=domain['id'])['account']
+        s['accounts'].append(dict(id=account['id'],username=name,suffix=suffix));save('runtime-state.json',s)
+    if not s.get('project_id'):
+        project=api.job('createProject',name=PREFIX+'-project',displaytext=PREFIX,account=s['accounts'][0]['username'],domainid=domain['id'])['project']
+        s['project_id']=project['id'];save('runtime-state.json',s)
+    project=dict(id=s['project_id'])
+    for suffix,scope in [(a['suffix'],dict(account=a['username'],domainid=domain['id'])) for a in s['accounts']]+[('project',dict(projectid=project['id']))]:
+        network=ok(api,'createNetwork',name=PREFIX+'-'+suffix,displaytext=PREFIX,networkofferingid='bc740904-060d-4e13-a850-3609e588116a',zoneid=s['zoneid'],vlan={'user':3991,'domainadmin':3992,'project':3993}[suffix],physicalnetworkid='51cdd7ed-ab33-419d-98fc-8e7eabea1194',**scope)['network']
+        s['networks'].append(dict(id=network['id'],scope=scope));save('runtime-state.json',s)
+        data=ok(api,'registerUserData',name=PREFIX+'-'+suffix,userdata=ud.content('#cloud-config\n# '+PREFIX+'-'+suffix+'\n'),params='VAR1',**scope)['userdata']
+        s['userdata'].append(data);save('runtime-state.json',s)
+        params=dict(zoneid=s['zoneid'],templateid='e3d8677e-70f0-44bd-917e-6068636b97a8',serviceofferingid='cd928fb0-6e2b-4ec8-b02b-023aed55b2b1',networkids=network['id'],name=PREFIX+'-'+suffix,displayname=PREFIX+'-'+suffix,startvm='false',userdataid=data['id'],**scope)
+        params['userdatadetails[0].VAR1']='소유자 한글'
+        vm=api.job('deployVirtualMachine',**params)['virtualmachine']
+        s['vms'].append(dict(id=vm['id'],name=vm['name'],suffix=suffix,scope=scope));save('runtime-state.json',s)
+        print(suffix,vm['id'],flush=True)
+    save('owner-fixtures.json',dict(accounts=s['accounts'],project_id=s['project_id'],domain_id=s['domain_id'],vms=[v for v in s['vms'] if v.get('scope')]))
+
 def cleanup(api):
     s=state()
-    for vm in ok(api,'listVirtualMachines',keyword=PREFIX,listall='true').get('virtualmachine',[]):
-        assert vm['name'].startswith(PREFIX+'-');api.job('destroyVirtualMachine',id=vm['id'],expunge='true')
+    scopes=[{}]+([dict(projectid=s['project_id'])] if s.get('project_id') else [])
+    for scope in scopes:
+        for vm in ok(api,'listVirtualMachines',keyword=PREFIX,listall='true',**scope).get('virtualmachine',[]):
+            assert vm['name'].startswith(PREFIX+'-');api.job('destroyVirtualMachine',id=vm['id'],expunge='true')
     for t in s['templates']:
         rows=ok(api,'listTemplates',templatefilter='all',id=t['id']).get('template',[])
         if rows:
             ok(api,'linkUserDataToTemplate',templateid=t['id'])
             api.job('deleteTemplate',id=t['id'],zoneid=s['zoneid'])
-    for data in ud.inventory(api):
-        if data['name'].startswith(PREFIX+'-'): ok(api,'deleteUserData',id=data['id'])
+    for scope in scopes:
+        for data in ok(api,'listUserData',listall='true',page=1,pagesize=100,**scope).get('userdata',[]):
+            if data['name'].startswith(PREFIX+'-'): ok(api,'deleteUserData',id=data['id'])
+    for n in s.get('networks',[]):api.job('deleteNetwork',id=n['id'])
+    if s.get('project_id'):api.job('deleteProject',id=s['project_id'])
+    for a in s.get('accounts',[]):api.job('deleteAccount',id=a['id'])
+    if s.get('domain_id'):api.job('deleteDomain',id=s['domain_id'])
     remaining=ud.inventory(api)
     assert remaining==json.loads((ROOT/'baseline.private.json').read_text(encoding='utf-8'))['userdata']
     result=dict(userdata_residuals=sum(r['name'].startswith(PREFIX) for r in remaining),vm_residuals=len(ok(api,'listVirtualMachines',keyword=PREFIX,listall='true').get('virtualmachine',[])),template_residuals=sum(t['name'].startswith(PREFIX) for t in ok(api,'listTemplates',templatefilter='all',keyword=PREFIX).get('template',[])),original_userdata_exact_match=True)
@@ -93,5 +128,6 @@ if __name__=='__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     api=ud.Mold()
     if sys.argv[1]=='prepare':prepare(api)
+    elif sys.argv[1]=='prepare-owners':prepare_owners(api)
     elif sys.argv[1]=='snapshot':snapshot(api,sys.argv[2],sys.argv[3] if len(sys.argv)>3 else 'base')
     elif sys.argv[1]=='cleanup':cleanup(api)
