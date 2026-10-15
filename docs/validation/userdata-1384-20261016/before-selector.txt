@@ -1,6 +1,6 @@
 9
 확장 모드
-고급 설정 표시 
+고급 설정 표시
 부팅 유형
 UEFI
 부팅 모드
@@ -16,14 +16,14 @@ Dynamic Scaling 활성화
 
 저장된 User Data
 수동 User Data 입력
-	 사용자 데이터	 계정	 도메인	
- 
-	
- 
-	
- 
-	
- 
+	 사용자 데이터	 계정	 도메인
+
+
+
+
+
+
+
 
 
 	설정 안함	-	-
@@ -50,14 +50,14 @@ Dynamic Scaling 활성화
 추가 설정
 Affinity 그룹
 이 VM이 속할 Affinity 그룹을 선택하십시오.
-	Affinity 그룹	유형	설명	
- 
-	
- 
-	
- 
-	
- 
+	Affinity 그룹	유형	설명
+
+
+
+
+
+
+
 
 
 
