@@ -55,7 +55,7 @@
                   </slot>
                 </div>
                 <slot name="name">
-                  <div v-if="['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(resource.name)">{{ $t(resource.name.toLowerCase()) }}</div>
+                  <div v-if="$route.meta.name !== 'ssh' && ['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(resource.name)">{{ $t(resource.name.toLowerCase()) }}</div>
                   <div v-else>
                     <h4 class="name">
                       {{ name }}
@@ -694,7 +694,7 @@
                     :key="keypair"
                     style="margin-top: 5px;">
                     <key-outlined />
-                    <router-link :to="{ path: '/ssh/' + keypair }" style="margin-right: 5px">{{ keypair }}</router-link>
+                    <router-link :to="sshKeyPairNameLink(keypair, resource)" style="margin-right: 5px">{{ keypair }}</router-link>
                   </div>
                 </div>
               </div>
@@ -1166,6 +1166,7 @@
 
 <script>
 import { creationVmOsName } from '@/utils/creationVmPresentation'
+import { sshKeyPairNameLink, sshKeyPairVmQuery } from '@/utils/sshKeyPairIdentity'
 import { attachedIsos } from '@/utils/vmIsoActions'
 import { getAPI, postAPI } from '@/api'
 import axios from 'axios'
@@ -1400,6 +1401,7 @@ export default {
     }
   },
   methods: {
+    sshKeyPairNameLink,
     createPathBasedOnVmType: createPathBasedOnVmType,
     updateResourceAdditionalData () {
       if (!this.resource) return
@@ -1680,9 +1682,7 @@ export default {
           query[item.param] = this.resource.name
           query.domainid = this.resource.domainid
         } else if (item.param === 'keypair') {
-          query[item.param] = this.resource.name
-          query.account = this.resource.account
-          query.domainid = this.resource.domainid
+          return sshKeyPairVmQuery(this.resource)
         } else {
           query[item.param] = this.resource.id
         }
