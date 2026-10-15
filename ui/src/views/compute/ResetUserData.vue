@@ -24,7 +24,7 @@
     :keyboard="!loadingData"
     @cancel="closeAction">
   <a-alert v-if="templateError" type="error" show-icon role="alert" :message="$t('message.request.failed')">
-    <template #action><a-button size="small" @click="fetchTemplateData">{{ $t('label.refresh') }}</a-button></template>
+    <template #description><a-button size="small" @click="fetchTemplateData">{{ $t('label.refresh') }}</a-button></template>
   </a-alert>
   <a-spin :spinning="loadingData || templateLoading">
     <a-form

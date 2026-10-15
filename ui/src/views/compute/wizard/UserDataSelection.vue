@@ -30,7 +30,7 @@
         @search="handleSearch" />
     </div>
     <a-alert v-if="listError || selectionError" type="error" show-icon role="alert" :message="$t(listError || selectionError)">
-      <template #action><a-button size="small" :loading="loading" @click="load(requestedQuery)">{{ $t('label.refresh') }}</a-button></template>
+      <template #description><a-button size="small" :loading="loading" @click="load(requestedQuery)">{{ $t('label.refresh') }}</a-button></template>
     </a-alert>
     <p v-if="selectedId !== noSelection" role="status">{{ $t('message.userdata.selection.selected', { name: selectedItem?.name || selectedId }) }}</p>
     <a-table

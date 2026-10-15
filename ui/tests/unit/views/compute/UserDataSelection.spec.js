@@ -16,6 +16,7 @@
 // under the License.
 import { shallowMount } from '@vue/test-utils'
 import { nextTick } from 'vue'
+import { Alert, Button } from 'ant-design-vue'
 import Picker from '@/views/compute/wizard/UserDataSelection.vue'
 import Reset from '@/views/compute/ResetUserData.vue'
 import Deploy from '@/views/compute/DeployVM.vue'
@@ -34,7 +35,7 @@ const row = i => ({ id: 'uuid-' + i, name: 'data-' + i, account: 'owner', domain
 function mount (props = {}, apis = { listUserData: {} }) {
   return shallowMount(Picker, {
     props: { scope: { account: 'owner', domainid: 'domain' }, ...props },
-    global: { mocks: { $t: key => key, $store: { getters: { apis } } }, stubs: { 'a-table': table, 'a-input-search': search, 'a-radio': { template: '<label><slot /></label>' }, 'a-alert': { template: '<aside><slot name="action" /></aside>' } } }
+    global: { mocks: { $t: key => key, $store: { getters: { apis } } }, stubs: { 'a-table': table, 'a-input-search': search, 'a-radio': { template: '<label><slot /></label>' }, 'a-alert': Alert, 'a-button': Button } }
   })
 }
 beforeEach(() => { jest.clearAllMocks(); getAPI.mockResolvedValue(reply()) })
@@ -108,6 +109,14 @@ test.each([401, 403])('HTTP %i is distinguished from empty success', async statu
 test('missing list permission never issues an API request', async () => {
   const w = mount({}, {}); await flush()
   expect(getAPI).not.toHaveBeenCalled(); expect(w.vm.listError).toBe('message.userdata.selection.forbidden'); w.unmount()
+})
+
+test('the installed Alert renders a retry button which actually reloads a failed query', async () => {
+  getAPI.mockRejectedValueOnce(new Error('offline')); const w = mount(); await flush()
+  const retry = w.findComponent(Alert).findComponent(Button)
+  expect(retry.exists()).toBe(true); expect(retry.text()).toBe('label.refresh')
+  getAPI.mockResolvedValue(reply([row(1)], 1)); await retry.trigger('click'); await flush()
+  expect(w.vm.items).toEqual([row(1)]); expect(w.vm.ready).toBe(true); w.unmount()
 })
 
 test('missing owner never issues an unscoped request', async () => {
