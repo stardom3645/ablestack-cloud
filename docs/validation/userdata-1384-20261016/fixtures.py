@@ -36,6 +36,18 @@ def ok(api, command, **params):
     assert 'errorcode' not in result, (command, result)
     return result
 
+
+def all_rows(api, command, key):
+    rows = []
+    page = 1
+    while True:
+        result = ok(api, command, listall='true', page=page, pagesize=500)
+        current = result.get(key, [])
+        rows.extend(current)
+        if len(rows) >= result.get('count', len(rows)) or not current:
+            return rows
+        page += 1
+
 def inventory(api):
     original = ud.inventory(api)
     save('baseline.private.json', dict(userdata=original))
@@ -133,6 +145,96 @@ def verify(api):
     save('api-pages.json', dict(scopes=results, pagesize100_same_ids=True, denied_errorcode=432, exact_keyword_count=1))
     print('API owner/page/keyword/permission qualification PASS')
 
+def verify_vm(api, suffix='vm'):
+    state = json.loads((ROOT / 'runtime-state.json').read_text(encoding='utf-8'))
+    if suffix == 'vm':
+        receipt = json.loads((ROOT/'deploy-request.json').read_text(encoding='utf-8'))
+        for attempt in range(30):
+            job = ok(api,'queryAsyncJobResult',jobid=receipt['jobid'])
+            if job.get('jobstatus') == 1:
+                break
+            assert job.get('jobstatus') != 2, job
+            ud.time.sleep(1)
+        assert job.get('jobstatus') == 1
+        save('deploy-job-result.json',dict(jobid=receipt['jobid'],jobstatus=job['jobstatus'],vm_id=receipt['id']))
+    rows = ok(api, 'listVirtualMachines', name=PREFIX+'-'+suffix, listall='true').get('virtualmachine', [])
+    rows = [r for r in rows if r['name'] == PREFIX+'-'+suffix]
+    assert len(rows) == 1, [(r['id'],r['name']) for r in rows]
+    vm = rows[0]
+    if suffix == 'vm': assert vm['id'] == receipt['id']
+    assert any(nic.get('networkid') == 'ae274fff-3d8e-4285-ac73-26a767c1fea7' for nic in vm.get('nic',[]))
+    state[suffix+'_vm_id'] = vm['id']; save('runtime-state.json', state)
+    data = {k:vm.get(k) for k in ['id','name','displayname','state','account','domainid','templateid','userdataid','userdataname','userdataparams','userdatadetails','userdatapolicy']}
+    assert data['state'] == 'Stopped' and data['userdataname'].startswith(PREFIX+'-admin-')
+    expected_name = PREFIX+'-admin-'+('002' if suffix == 'reset' else '001')
+    assert data['userdataname'] == expected_name, data
+    assert data['userdataid'] == next(r['id'] for r in state['userdata'] if r['name'] == expected_name), data
+    assert data['userdatadetails'] in ({'VAR1': 'UD1384 한글 값'}, '{VAR1=UD1384 한글 값}'), data
+    label = data['userdataname'].rsplit('-',1)[1]
+    save(suffix+'-connected-'+label+'.json', data)
+    print(json.dumps(data,ensure_ascii=False))
+
+def prepare_vm(api):
+    state = json.loads((ROOT / 'runtime-state.json').read_text(encoding='utf-8'))
+    inv = json.loads((ROOT / 'inventory.private.json').read_text(encoding='utf-8'))
+    assert not state.get('reset_vm_id')
+    template = next(r for r in inv['templates'] if r['name'] == 'rocky-9-4-minimal.qcow22')
+    offering = next(r for r in inv['offerings'] if r['name'] == '2Core 2GB')
+    network = next(r for r in inv['networks'] if r['name'] == 'E1335-VM-Origin-L2' and r['account'] == 'admin')
+    assert any(s['name'] == 'UserData' and any(p['name'] == 'ConfigDrive' for p in s.get('provider',[])) for s in network['service'])
+    userdata = next(r for r in state['userdata'] if r['name'] == PREFIX+'-admin-001')
+    params = dict(zoneid=inv['zones'][0]['id'],templateid=template['id'],serviceofferingid=offering['id'],networkids=network['id'],name=PREFIX+'-reset',displayname=PREFIX+'-reset',startvm='false',userdataid=userdata['id'])
+    params['userdatadetails[0].VAR1'] = 'UD1384 한글 값'
+    vm = api.job('deployVirtualMachine', **params)['virtualmachine']
+    state['reset_vm_id'] = vm['id']; save('runtime-state.json',state)
+    save('reset-vm-fixture.json',{k:vm.get(k) for k in ['id','name','state','userdataid','userdataname','userdatadetails']})
+    assert vm['state'] == 'Stopped'
+    print('Dedicated stopped ConfigDrive VM prepared:',vm['id'])
+
+def cleanup(api):
+    state = json.loads((ROOT / 'runtime-state.json').read_text(encoding='utf-8'))
+    vms = ok(api, 'listVirtualMachines', listall='true', keyword=PREFIX).get('virtualmachine', [])
+    for vm in vms:
+        assert vm['name'].startswith(PREFIX+'-')
+        api.job('destroyVirtualMachine', id=vm['id'], expunge='true')
+    assert not ok(api, 'listVirtualMachines', listall='true', keyword=PREFIX).get('virtualmachine', [])
+    removed = []
+    projects = [r for r in all_rows(api,'listProjects','project') if r['id'] == state['project_id']]
+    for scope in ([{},dict(projectid=state['project_id'])] if projects else [{}]):
+        for row in ud.inventory(api) if not scope else ok(api,'listUserData',**scope,page=1,pagesize=100).get('userdata',[]):
+            if row['name'].startswith(PREFIX+'-'):
+                ok(api,'deleteUserData',id=row['id']); removed.append(row['id'])
+    if projects: api.job('deleteProject',id=state['project_id'])
+    accounts = all_rows(api,'listAccounts','account')
+    for account in state['accounts']:
+        if any(r['id'] == account['id'] for r in accounts): api.job('deleteAccount',id=account['id'])
+    if state.get('role_id') and any(r['id'] == state['role_id'] for r in ok(api,'listRoles').get('role',[])): ok(api,'deleteRole',id=state['role_id'])
+    if any(r['id'] == state['domain_id'] for r in all_rows(api,'listDomains','domain')): api.job('deleteDomain',id=state['domain_id'])
+    remaining = ud.inventory(api)
+    original = json.loads((ROOT/'baseline.private.json').read_text(encoding='utf-8'))['userdata']
+    assert remaining == original, 'Original library changed'
+    checks = dict(userdata_test_residuals=sum(r['name'].startswith(PREFIX) for r in remaining),
+                  vm_test_residuals=len(ok(api,'listVirtualMachines',listall='true',keyword=PREFIX).get('virtualmachine',[])),
+                  account_test_residuals=sum(r['name'].startswith(PREFIX.lower()) for r in all_rows(api,'listAccounts','account')),
+                  domain_test_residuals=sum(r['name'].startswith(PREFIX.lower()) for r in all_rows(api,'listDomains','domain')),
+                  project_test_residuals=len(ok(api,'listProjects',name=PREFIX+'-project',listall='true').get('project',[])),
+                  role_test_residuals=sum(r['name'].startswith(PREFIX) for r in ok(api,'listRoles').get('role',[])),
+                  original_userdata_exact_match=True, original_userdata_count=len(remaining), deleted_userdata_this_pass=len(removed),
+                  created_userdata=len(state['userdata']), deleted_during_validation=len(state.get('deleted_for_validation',[])))
+    assert all(value == 0 for key,value in checks.items() if key.endswith('_residuals')), checks
+    state['cleaned'] = True; save('runtime-state.json',state); save('cleanup-summary.json',checks)
+    print(json.dumps(checks))
+
+def drop_user_oldest(api, suffix='user-001'):
+    state = json.loads((ROOT / 'runtime-state.json').read_text(encoding='utf-8'))
+    assert suffix in ('user-001','admin-099')
+    row = next(r for r in state['userdata'] if r['name'] == PREFIX+'-'+suffix)
+    found = ok(api,'listUserData',id=row['id'],listall='true').get('userdata',[])
+    assert len(found) == 1 and found[0]['name'] == row['name']
+    ok(api,'deleteUserData',id=row['id'])
+    state.setdefault('deleted_for_validation',[]).append(row['id']); save('runtime-state.json',state)
+    print('Deleted only dedicated '+suffix+' for selection qualification')
+
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
-    {'inventory': inventory, 'prepare': prepare, 'verify': verify}[sys.argv[1]](ud.Mold())
+    {'inventory': inventory, 'prepare': prepare, 'verify': verify, 'prepare-vm': prepare_vm, 'verify-vm': verify_vm, 'verify-reset': lambda api: verify_vm(api,'reset'), 'drop-user-oldest': drop_user_oldest, 'drop-selected-admin': lambda api: drop_user_oldest(api,'admin-099'), 'cleanup': cleanup}[sys.argv[1]](ud.Mold())
