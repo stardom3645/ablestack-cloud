@@ -1371,6 +1371,18 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#creating-the-ssh-keypair',
           listView: true,
           popup: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CreateSSHKeyPair.vue')))
+        },
+        {
+          api: 'registerSSHKeyPair',
+          icon: 'import-outlined',
+          label: 'label.register.ssh.key.pair',
+          toolbarLabel: 'label.register.ssh.key.pair',
+          docHelp: 'adminguide/virtual_machines.html#creating-the-ssh-keypair',
+          listView: true,
+          popup: true,
+          selfManagedDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CreateSSHKeyPair.vue')))
         },
         {

@@ -172,6 +172,7 @@
         :resource="resource"
         :current-action="currentAction"
         dialog-only
+        @refresh-data="fetchData"
         @close-action="closeAction"
       />
       <keep-alive v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">

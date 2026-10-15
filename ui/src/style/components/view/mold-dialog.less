@@ -216,3 +216,44 @@ body .detail-tab-toolbar > .ant-btn { margin: 0; }
   .detail-tab-toolbar-context { width: 100%; margin-left: 0; }
   .kubernetes-access-content .ant-card-body { padding: 16px; }
 }
+
+/* Opt-in MOLD-DIALOG-1.0 presets share the existing MoldDialog shell.
+ * Legacy dialogs retain their width, spacing and body contracts. */
+.mold-dialog-standard {
+  --dialog-chrome: var(--ui-bg-navigation);
+  --ui-text-placeholder: var(--ui-text-muted);
+  --ui-border-strong: var(--ui-text-muted);
+  --ui-focus: var(--ui-link);
+  max-width: calc(100vw - 48px);
+  .ant-modal-content {
+    max-height: ~"min(832px, calc(100vh - 64px))";
+    max-height: ~"min(832px, calc(100dvh - 64px))";
+    border: 1px solid var(--ui-border);
+    border-radius: 14px;
+    background: var(--ui-bg-surface);
+    color: var(--ui-text-primary);
+  }
+  .ant-modal-header, .ant-modal-footer { background: var(--dialog-chrome); }
+  .ant-modal-header { padding: 20px 28px; border-bottom: 1px solid var(--ui-border); }
+  .ant-modal-title { padding-right: 24px; font-size: 22px; line-height: 1.45; font-weight: 600; color: var(--ui-text-primary); overflow-wrap: anywhere; }
+  .ant-modal-close { width: 48px; min-height: 48px; color: var(--ui-text-secondary); }
+  .ant-modal-body { padding: 24px 28px; color: var(--ui-text-primary); background: var(--ui-bg-surface); }
+  .ant-modal-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 16px 28px; border-top: 1px solid var(--ui-border); }
+  .ant-modal-footer > .ant-btn { margin: 0; height: 42px; padding: 0 18px; }
+  .ant-btn-primary:not(:disabled) { color: var(--ui-action-primary-text); background: var(--ui-action-primary-bg); border-color: var(--ui-action-primary-bg); }
+  .ant-btn-primary:not(:disabled):hover, .ant-btn-primary:not(:disabled):focus { background: var(--ui-action-primary-hover); border-color: var(--ui-action-primary-hover); }
+  .ant-btn-primary.ant-btn-dangerous:not(:disabled) { background: var(--ui-action-danger-bg); border-color: var(--ui-action-danger-bg); }
+
+  .ant-input::placeholder, .ant-select-selection-placeholder { color: var(--ui-text-muted); }
+  .ant-input:not(:disabled), .ant-select:not(.ant-select-disabled) .ant-select-selector { border-color: var(--ui-border-strong); }
+  .ant-input:focus, .ant-select-focused:not(.ant-select-disabled) .ant-select-selector { border-color: var(--ui-focus); }
+}
+.dark-mode .mold-dialog-standard { --dialog-chrome: var(--ui-bg-elevated); }
+@media (max-width: 600px) {
+  .mold-dialog-standard {
+    max-width: calc(100vw - 24px);
+    .ant-modal-content { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); border-radius: 10px; }
+    .ant-modal-header, .ant-modal-body, .ant-modal-footer { padding: 16px; }
+    .ant-modal-title { font-size: 18px; }
+  }
+}

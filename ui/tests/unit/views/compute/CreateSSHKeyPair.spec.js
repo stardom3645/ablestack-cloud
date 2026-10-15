@@ -23,8 +23,10 @@ beforeEach(() => {
   jest.clearAllMocks()
   anchor = { click: jest.fn() }
   jest.spyOn(document, 'createElement').mockReturnValue(anchor)
-  ctx = { $t: key => key, $store: { getters: { userInfo: { roletype: 'Admin' }, project: { id: 'project-1' } } }, $refs: { name: {}, publickey: {}, domainid: {}, account: {} }, $emit: jest.fn(), $notifyError: jest.fn(), $message: { success: jest.fn() }, $notification: { info: jest.fn() } }
+  ctx = { $t: key => key, $store: { getters: { userInfo: { roletype: 'Admin', account: 'admin', domain: 'ROOT' }, project: { id: 'project-1', name: 'Project 1' }, apis: { createSSHKeyPair: {}, registerSSHKeyPair: {} } } }, currentAction: { api: 'registerSSHKeyPair' }, $nextTick: callback => Promise.resolve().then(callback), $refs: { name: {}, publickey: {}, domainid: {}, account: {} }, $emit: jest.fn(), $notifyError: jest.fn(), $message: { success: jest.fn() }, $notification: { info: jest.fn() } }
   Object.assign(ctx, CreateSSHKeyPair.data.call(ctx))
+  Object.entries(CreateSSHKeyPair.computed).forEach(([key, getter]) => Object.defineProperty(ctx, key, { get: () => getter.call(ctx) }))
+  URL.createObjectURL = jest.fn().mockReturnValue('blob:test-key'); URL.revokeObjectURL = jest.fn()
   for (const mixin of CreateSSHKeyPair.mixins) Object.entries(mixin.methods).forEach(([key, method]) => { ctx[key] = method.bind(ctx) })
   Object.entries(CreateSSHKeyPair.methods).forEach(([key, method]) => { ctx[key] = method.bind(ctx) })
   ctx.form = { name: 'retained-key', publickey: 'invalid-key', domainid: 1, account: 'owner-1' }
@@ -43,7 +45,7 @@ test.each(['invalid public key', 'duplicate name', 'HTTP 503', 'connection lost'
   expect(ctx.$store.getters.project.id).toBe('project-1')
   expect(ctx.loading).toBe(false)
   expect(ctx.isSubmitted).toBe(false)
-  expect(ctx.hiddenElement).toBe(null)
+  expect(ctx.privateKey).toBe('')
   expect(ctx.$notifyError).toHaveBeenCalledWith(failure)
   expect(postAPI.mock.calls[0][2]).toEqual({ preserveOnFailure: true })
   expect(ctx.$message.success).not.toHaveBeenCalled()
@@ -63,7 +65,7 @@ test('registration success refreshes before closing and never creates a private-
   await ctx.handleSubmit({ name: 'form-finish-values' })
   expect(postAPI).toHaveBeenCalledTimes(1)
   expect(ctx.$emit.mock.calls).toEqual([['refresh-data'], ['close-action']])
-  expect(ctx.hiddenElement).toBe(null)
+  expect(ctx.privateKey).toBe('')
   expect(ctx.isSubmitted).toBe(false)
 })
 test('two submissions during asynchronous validation produce one request', async () => {
@@ -114,6 +116,7 @@ test('default domain does not add an owner domain to registration', async () => 
 })
 test('new key generation retains the private-key result and existing download/copy/close behavior', async () => {
   ctx.form.publickey = ''
+  ctx.currentAction.api = 'createSSHKeyPair'
   const key = 'unit-test-private-key\n'
   postAPI.mockResolvedValueOnce({ createsshkeypairresponse: { keypair: { privatekey: key } } })
   await ctx.handleSubmit()
@@ -121,22 +124,76 @@ test('new key generation retains the private-key result and existing download/co
   expect(ctx.isSubmitted).toBe(true)
   expect(ctx.loading).toBe(false)
   expect(ctx.$emit.mock.calls).toEqual([['refresh-data']])
-  expect(anchor.innerHTML).toBe(key)
-  expect(anchor.href).toBe('data:text/plain;charset=utf-8,' + encodeURI(key))
-  expect(anchor.download).toBe('retained-key.key')
+  expect(ctx.privateKey).toBe(key)
+  expect(ctx.result).not.toHaveProperty('privatekey')
   ctx.downloadKey(); expect(anchor.click).toHaveBeenCalledTimes(1)
-  ctx.notifyCopied(); expect(ctx.$notification.info).toHaveBeenCalledWith({ message: 'message.success.copy.clipboard' })
+  expect(anchor.href).toBe('blob:test-key')
+  expect(anchor.download).toBe('retained-key.key')
+  expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test-key')
+  ctx.notifyCopied(); expect(ctx.resultFeedback).toBe('message.success.copy.clipboard')
+  expect(ctx.savedAcknowledged).toBe(false)
   ctx.handleSubmit(); expect(postAPI).toHaveBeenCalledTimes(1)
-  ctx.closeAction(); expect(ctx.$emit).toHaveBeenLastCalledWith('close-action')
+  ctx.closeAction(); expect(ctx.confirmDiscard).toBe(true)
+  expect(ctx.$emit).not.toHaveBeenCalledWith('close-action')
+  ctx.continueSaving(); expect(ctx.privateKey).toBe(key)
+  ctx.savedAcknowledged = true; ctx.closeAction()
+  expect(ctx.$emit).toHaveBeenLastCalledWith('close-action'); expect(ctx.privateKey).toBe('')
 })
 test('new key generation failure retains inputs and can be retried', async () => {
+  ctx.currentAction.api = 'createSSHKeyPair'
   delete ctx.form.publickey; postAPI.mockRejectedValueOnce(new Error('duplicate'))
   await ctx.handleSubmit()
   expect(ctx.form.name).toBe('retained-key')
   expect(ctx.isSubmitted).toBe(false)
-  expect(ctx.hiddenElement).toBe(null)
+  expect(ctx.privateKey).toBe('')
   expect(ctx.loading).toBe(false)
   expect(ctx.$emit).not.toHaveBeenCalled()
   postAPI.mockResolvedValueOnce({ createsshkeypairresponse: { keypair: { privatekey: 'unit-only-key' } } })
   await ctx.handleSubmit(); expect(ctx.isSubmitted).toBe(true)
+})
+
+test('register-only permission cannot fall back to creation when public key is empty', async () => {
+  delete ctx.$store.getters.apis.createSSHKeyPair
+  ctx.form.publickey = ''
+  ctx.formRef.value.validate.mockRejectedValueOnce({ errorFields: [{ name: ['publickey'] }] })
+  await ctx.handleSubmit()
+  expect(postAPI).not.toHaveBeenCalled()
+  expect(ctx.mode).toBe('register')
+})
+test('create-only mode sends only create even when a stale public key is present', async () => {
+  delete ctx.$store.getters.apis.registerSSHKeyPair
+  ctx.currentAction.api = 'createSSHKeyPair'
+  postAPI.mockResolvedValueOnce({ createsshkeypairresponse: { keypair: { name: 'retained-key', privatekey: 'unit-only-key', fingerprint: 'fingerprint', account: 'owner-1', domain: 'domain-1' } } })
+  await ctx.handleSubmit()
+  expect(postAPI.mock.calls[0][0]).toBe('createSSHKeyPair')
+  expect(postAPI.mock.calls[0][1]).not.toHaveProperty('publickey')
+  expect(ctx.resultSummary).toContainEqual({ label: 'label.project', value: 'Project 1' })
+})
+test('missing permission blocks submit and revocation during validation blocks the request', async () => {
+  delete ctx.$store.getters.apis.registerSSHKeyPair
+  await ctx.handleSubmit(); expect(ctx.error).toBe('message.ssh.keypair.permission'); expect(postAPI).not.toHaveBeenCalled()
+  ctx.$store.getters.apis.registerSSHKeyPair = {}
+  let finish; ctx.formRef.value.validate.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const pending = ctx.handleSubmit(); delete ctx.$store.getters.apis.registerSSHKeyPair; finish(); await pending
+  expect(postAPI).not.toHaveBeenCalled(); expect(ctx.loading).toBe(false)
+})
+test('copy failure is visible and never implies private-key storage', () => {
+  ctx.copyFailed(); expect(ctx.error).toBe('message.ssh.privatekey.copy.failed'); expect(ctx.resultFeedback).toBe(''); expect(ctx.savedAcknowledged).toBe(false)
+})
+test('download failure is visible and object URLs are released', () => {
+  ctx.privateKey = 'unit-only-key'; anchor.click.mockImplementationOnce(() => { throw new Error('download unavailable') })
+  ctx.downloadKey(); expect(ctx.error).toBe('message.ssh.privatekey.download.failed'); expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test-key'); expect(ctx.savedAcknowledged).toBe(false)
+})
+test('unsaved result prevents refresh until acknowledgement and discard clears its memory', () => {
+  ctx.isSubmitted = true; ctx.privateKey = 'unit-only-key'
+  const event = { preventDefault: jest.fn() }; ctx.beforeUnload(event); expect(event.preventDefault).toHaveBeenCalledTimes(1)
+  ctx.savedAcknowledged = true; ctx.beforeUnload(event); expect(event.preventDefault).toHaveBeenCalledTimes(1)
+  ctx.finishClose(); expect(ctx.privateKey).toBe(''); expect(ctx.$emit).toHaveBeenCalledWith('close-action')
+})
+test('late create response after unmount cannot retain or display a private key', async () => {
+  ctx.currentAction.api = 'createSSHKeyPair'
+  let finish; postAPI.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const pending = ctx.handleSubmit(); await flush(); CreateSSHKeyPair.beforeUnmount.call(ctx)
+  finish({ createsshkeypairresponse: { keypair: { privatekey: 'unit-only-key' } } }); await pending
+  expect(ctx.privateKey).toBe(''); expect(ctx.isSubmitted).toBe(false); expect(ctx.$emit).not.toHaveBeenCalled()
 })
