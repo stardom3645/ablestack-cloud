@@ -65,7 +65,7 @@ function context () {
   ctx.formRef = { value: { validate: jest.fn().mockResolvedValue(), scrollToField: jest.fn() } }
   return ctx
 }
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => jest.resetAllMocks())
 test('server validation failures retain the complete form and allow retry', async () => {
   const ctx = context(); const before = { ...ctx.form }; const error = new Error('duplicate')
   postAPI.mockRejectedValueOnce(error)
