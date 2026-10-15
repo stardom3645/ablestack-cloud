@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { shallowMount } from '@vue/test-utils'
+import { mount as mountComponent } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { Alert, Button } from 'ant-design-vue'
 import Picker from '@/views/compute/wizard/UserDataSelection.vue'
@@ -33,7 +33,7 @@ const search = { name: 'AInputSearch', props: ['value', 'disabled'], template: '
 const reply = (rows = [], count = rows.length) => ({ listuserdataresponse: { count, userdata: rows } })
 const row = i => ({ id: 'uuid-' + i, name: 'data-' + i, account: 'owner', domainid: 'domain', params: 'A,B' })
 function mount (props = {}, apis = { listUserData: {} }) {
-  return shallowMount(Picker, {
+  return mountComponent(Picker, {
     props: { scope: { account: 'owner', domainid: 'domain' }, ...props },
     global: { mocks: { $t: key => key, $store: { getters: { apis } } }, stubs: { 'a-table': table, 'a-input-search': search, 'a-radio': { template: '<label><slot /></label>' }, 'a-alert': Alert, 'a-button': Button } }
   })
