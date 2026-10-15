@@ -28,7 +28,7 @@
     </a-alert>
     <p v-if="rows.length" class="usage-summary">{{ $t('message.ssh.keypair.usage.page.states') }} <span v-for="[state, total] in pageStates" :key="state"><Status :text="state" /> {{ $t('label.' + state.toLowerCase()) }} {{ total }}</span></p>
     <div class="usage-table">
-      <ListView resource-path="/vm" :columns="columns" :items="rows" :loading="pending && !rows.length" :actions="[]" :emptyText="$t('message.ssh.keypair.usage.' + (status === 'ready' ? 'empty' : status))" @table-change="sort" />
+      <ListView resource-path="/vm" :columns="columns" :items="rows" :loading="tableLoading" :actions="[]" :emptyText="$t('message.ssh.keypair.usage.' + (status === 'ready' ? 'empty' : status))" @table-change="sort" />
     </div>
     <div v-if="status === 'ready' || rows.length" class="usage-pagination">
       <a-pagination :current="page" :pageSize="pagesize" :total="count" :showTotal="total => $t('message.ssh.keypair.usage.total', [total])" show-size-changer :pageSizeOptions="['10', '20', '50', '100']" @change="changePage" />
@@ -54,6 +54,7 @@ export default {
   data () { return { disposed: false, version: 0, rows: [], count: 0, status: 'loading', pending: false, loadedScope: '', keyword: '', draftKeyword: '', page: 1, pagesize: 20, sortkey: '', sortorder: '' } },
   computed: {
     active () { return this.tab === tabName },
+    tableLoading () { return this.pending && this.loadedScope !== this.queryScope },
     canRead () { return 'listVirtualMachines' in this.$store.getters.apis },
     scope () { return JSON.stringify([this.resource.id, this.resource.name, this.resource.fingerprint, this.resource.account, this.resource.domainid, this.resource.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.canRead]) },
     queryKey () { return JSON.stringify(['usagekeyword', 'usagepage', 'usagepagesize', 'usagesort', 'usageorder'].map(key => this.$route.query[key])) },

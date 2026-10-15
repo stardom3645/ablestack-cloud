@@ -69,3 +69,18 @@ test('out-of-range page moves to last real page', async () => { c.page = 4; c.pa
 test('SSH tab switch uses Vue router, leaving other resource history behavior intact', () => {
   const x = { $route: { path: '/ssh/' + key.id, query: { account: key.account }, meta: { name: 'ssh' } }, $router: { push: jest.fn() }, $emit: jest.fn() }; ResourceView.methods.onTabChange.call(x, 'ssh.keypair.usage'); expect(x.$router.push).toHaveBeenCalledWith({ path: x.$route.path, query: { account: key.account, tab: 'ssh.keypair.usage' } }); expect(x.$route.query.tab).toBeUndefined()
 })
+
+test('successful empty results remain visible without table loading during refresh or retry', async () => {
+  getAPI.mockImplementation(api => Promise.resolve(api === 'listSSHKeyPairs' ? identity(key) : response([])))
+  await c.fetchData(); expect(c.status).toBe('ready'); expect(c.count).toBe(0)
+  let release; getAPI.mockImplementation(api => api === 'listSSHKeyPairs' ? Promise.resolve(identity(key)) : new Promise(resolve => { release = resolve }))
+  const pending = c.fetchData(); await flushPromises(); expect(c.pending).toBe(true); expect(c.tableLoading).toBe(false); expect(c.status).toBe('ready'); expect(c.rows).toEqual([])
+  release(response([])); await pending; expect(c.tableLoading).toBe(false)
+  getAPI.mockRejectedValue({ response: { status: 503 } }); await c.fetchData(); expect(c.status).toBe('error'); expect(c.tableLoading).toBe(false)
+  getAPI.mockImplementation(() => new Promise(resolve => { release = resolve })); const retry = c.fetchData(); expect(c.pending).toBe(true); expect(c.tableLoading).toBe(false); release(identity({ ...key, fingerprint: 'changed' })); await retry
+})
+test('first load and changed search still show initial loading until a valid result arrives', async () => {
+  let release; getAPI.mockImplementation(() => new Promise(resolve => { release = resolve })); const first = c.fetchData(); expect(c.tableLoading).toBe(true); release(identity({ ...key, fingerprint: 'changed' })); await first
+  getAPI.mockImplementation(api => Promise.resolve(api === 'listSSHKeyPairs' ? identity(key) : response([]))); await c.fetchData(); expect(c.tableLoading).toBe(false)
+  c.keyword = 'new search'; c.reset(); getAPI.mockImplementation(() => new Promise(resolve => { release = resolve })); const next = c.fetchData(); expect(c.tableLoading).toBe(true); release(identity({ ...key, fingerprint: 'changed' })); await next
+})
