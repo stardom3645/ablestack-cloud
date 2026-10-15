@@ -43,7 +43,8 @@
         <a-switch v-model:checked="editCurrent" :disabled="loadingData" :aria-label="$t('label.userdata.reset.change')" />
       </a-form-item>
     </template>
-    <a-form v-if="currentLoaded && editCurrent"
+    <a-form
+v-if="currentLoaded && editCurrent"
             :ref="formRef"
             :model="form"
             :rules="rules"
@@ -240,7 +241,6 @@ export default {
     this.initForm()
     this.loadUserdataTabList()
     this.fetchTemplateData()
-
   },
   beforeUnmount () { this.readActive = false; this.readGeneration++ },
   watch: {

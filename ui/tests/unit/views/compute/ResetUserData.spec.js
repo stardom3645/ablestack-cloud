@@ -41,8 +41,7 @@ test('current keep is a no-op, not an empty reset', () => {
 })
 test.each(['userdataregistered', 'userdatatext'])('only active %s input is serialized despite a hidden draft', mode => {
   const p = resetUserDataPayload(draft({ userdataTabKey: mode }), encode)
-  if (mode === 'userdataregistered') { expect(p.userdataid).toBe('library'); expect(p.userdata).toBeUndefined(); expect(p['userdatadetails[0].VAR1']).toBe('한글, 값=1') }
-  else { expect(p.userdata).toBe(encode('수동 본문')); expect(p.userdataid).toBeUndefined(); expect(Object.keys(p).some(k => k.startsWith('userdatadetails'))).toBe(false) }
+  if (mode === 'userdataregistered') { expect(p.userdataid).toBe('library'); expect(p.userdata).toBeUndefined(); expect(p['userdatadetails[0].VAR1']).toBe('한글, 값=1') } else { expect(p.userdata).toBe(encode('수동 본문')); expect(p.userdataid).toBeUndefined(); expect(Object.keys(p).some(k => k.startsWith('userdatadetails'))).toBe(false) }
 })
 test.each([undefined, '', '0'])('None %s clears without sending a fake UUID or stale custom variables', id => {
   expect(resetUserDataPayload(draft({ form: { userdataid: id, userdata: 'hidden' } }), encode)).toEqual({ id: 'vm', userdata: '' })
@@ -60,7 +59,7 @@ test('APPEND library combines only effective variable definitions and deduplicat
   expect(resetUserDataPayload(vm, encode)).toEqual({ id: 'vm', userdataid: 'library', 'userdatadetails[0].T': 'template', 'userdatadetails[1].VAR1': '한글, 값=1' })
 })
 test('legacy details preserve punctuation and Korean, object details are filtered', () => {
-  expect(resetUserDataValues('{VAR1=한글, x=1 {value}, B=two=2}', ['VAR1','B'])).toEqual({ VAR1: '한글, x=1 {value}', B: 'two=2' })
+  expect(resetUserDataValues('{VAR1=한글, x=1 {value}, B=two=2}', ['VAR1', 'B'])).toEqual({ VAR1: '한글, x=1 {value}', B: 'two=2' })
   expect(resetUserDataValues({ VAR1: '한글', OLD: 'stale' }, ['VAR1'])).toEqual({ VAR1: '한글' })
   expect(() => resetUserDataValues('{VAR1=a, VAR1=b}', ['VAR1'])).toThrow('Ambiguous')
 })
@@ -77,41 +76,41 @@ test('fresh current library, off-page variables and policy load before editing, 
 test('mode round trips preserve drafts and verified selection remount preserves restored variables', async () => {
   const w = mount({ userdataid: 'library', userdatadetails: '{VAR1=한글, B=two}' }); await flush()
   w.vm.updateUserData('library', library); w.vm.userDataValues.VAR1 = '수정'
-  w.vm.onUserdataTabChange('userdatatext','userdataTabKey'); w.vm.form.userdata = 'draft'
-  w.vm.onUserdataTabChange('userdataregistered','userdataTabKey'); w.vm.updateUserData('library',library)
+  w.vm.onUserdataTabChange('userdatatext', 'userdataTabKey'); w.vm.form.userdata = 'draft'
+  w.vm.onUserdataTabChange('userdataregistered', 'userdataTabKey'); w.vm.updateUserData('library', library)
   expect(w.vm.userDataValues.VAR1).toBe('수정'); expect(w.vm.form.userdata).toBe('draft')
-  w.vm.updateUserData('new',{ id:'new',params:'NEW' }); expect(w.vm.userDataValues).toEqual({}); w.unmount()
+  w.vm.updateUserData('new', { id: 'new', params: 'NEW' }); expect(w.vm.userDataValues).toEqual({}); w.unmount()
 })
 test('manual current content restores as text without a library ID', async () => {
   const w = mount({ userdata: encode('#cloud-config\n한글') }); await flush()
   expect(w.vm.userdataTabKey).toBe('userdatatext'); expect(w.vm.form.userdata).toBe('#cloud-config\n한글'); w.unmount()
 })
 test('APPEND current combined body is visible, never used as a new append input', async () => {
-  const w = mount({ userdata: encode('combined') }, { ...template, userdataid:'template-data',userdatapolicy:'APPEND' }); await flush()
+  const w = mount({ userdata: encode('combined') }, { ...template, userdataid: 'template-data', userdatapolicy: 'APPEND' }); await flush()
   expect(w.vm.currentText).toBe('combined'); expect(w.vm.appendManualCurrent).toBe(true); expect(w.vm.form.userdata).toBe(''); expect(w.vm.editCurrent).toBe(false); w.unmount()
 })
 test('template-only variables load even without a VM library ID', async () => {
-  const w = mount({ userdata:encode('#cloud-config\nT'), userdatadetails:'{T=템플릿 한글}' }, { ...template,userdataid:'template-data',userdatapolicy:'DENYOVERRIDE' }); await flush()
-  expect(w.vm.templateUserDataValues).toEqual({ T:'템플릿 한글' }); expect(w.vm.currentValues.T).toBe('템플릿 한글'); w.unmount()
+  const w = mount({ userdata: encode('#cloud-config\nT'), userdatadetails: '{T=템플릿 한글}' }, { ...template, userdataid: 'template-data', userdatapolicy: 'DENYOVERRIDE' }); await flush()
+  expect(w.vm.templateUserDataValues).toEqual({ T: '템플릿 한글' }); expect(w.vm.currentValues.T).toBe('템플릿 한글'); w.unmount()
 })
 test('current/policy failures block submit and retry recovers', async () => {
   const w = mount(); getAPI.mockRejectedValue(new Error('503')); await flush()
   expect(w.vm.templateError).toBe(true); w.vm.handleSubmit(); expect(postAPI).not.toHaveBeenCalled()
-  getAPI.mockImplementation(command => Promise.resolve(command === 'listVirtualMachines' ? { listvirtualmachinesresponse: { virtualmachine:[resource] } } : { listtemplatesresponse: { template:[template] } }))
+  getAPI.mockImplementation(command => Promise.resolve(command === 'listVirtualMachines' ? { listvirtualmachinesresponse: { virtualmachine: [resource] } } : { listtemplatesresponse: { template: [template] } }))
   await w.vm.fetchTemplateData(); expect(w.vm.currentLoaded).toBe(true); expect(w.vm.templateError).toBe(false); w.unmount()
 })
 test('failed mutation keeps the dialog, active mode and drafts; retry submits one input', async () => {
-  const w = mount({ userdata:encode('current') }); await flush(); w.vm.editCurrent = true; w.vm.form.userdata = '수정'
-  postAPI.mockRejectedValueOnce({ response:{ data:{ errorresponse:{ errortext:'503 test' } } } })
+  const w = mount({ userdata: encode('current') }); await flush(); w.vm.editCurrent = true; w.vm.form.userdata = '수정'
+  postAPI.mockRejectedValueOnce({ response: { data: { errorresponse: { errortext: '503 test' } } } })
   await w.vm.handleSubmit(); expect(w.vm.submitError).toBe('503 test'); expect(w.vm.form.userdata).toBe('수정'); expect(w.emitted('close-action')).toBeUndefined()
-  await w.vm.handleSubmit(); expect(postAPI).toHaveBeenLastCalledWith('resetUserDataForVirtualMachine',{id:'vm',userdata:encode('수정')},{preserveOnFailure:true}); w.unmount()
+  await w.vm.handleSubmit(); expect(postAPI).toHaveBeenLastCalledWith('resetUserDataForVirtualMachine', { id: 'vm', userdata: encode('수정') }, { preserveOnFailure: true }); w.unmount()
 })
 test('late current read after unmount cannot initialize a closed dialog', async () => {
-  let finish; const w = mount(); getAPI.mockImplementationOnce(() => new Promise(resolve => { finish=resolve }))
-  const promise=w.vm.fetchTemplateData(); const vm=w.vm; w.unmount(); finish({listvirtualmachinesresponse:{virtualmachine:[resource]}}); await promise
+  let finish; const w = mount(); getAPI.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const promise = w.vm.fetchTemplateData(); const vm = w.vm; w.unmount(); finish({ listvirtualmachinesresponse: { virtualmachine: [resource] } }); await promise
   expect(vm.currentLoaded).toBe(false)
 })
 test('AutoScale reads the actual profile rather than the parent group current values', async () => {
-  const w = mount({userdataid:'library',userdatadetails:'{VAR1=profile}'},template,{resource:{...resource,resetUserDataApiName:'updateAutoScaleVmProfile',resetUserDataResourceId:'profile'}}); await flush()
-  expect(getAPI).toHaveBeenCalledWith('listAutoScaleVmProfiles',expect.objectContaining({id:'profile'}),expect.any(Object)); expect(w.vm.userDataValues.VAR1).toBe('profile'); w.unmount()
+  const w = mount({ userdataid: 'library', userdatadetails: '{VAR1=profile}' }, template, { resource: { ...resource, resetUserDataApiName: 'updateAutoScaleVmProfile', resetUserDataResourceId: 'profile' } }); await flush()
+  expect(getAPI).toHaveBeenCalledWith('listAutoScaleVmProfiles', expect.objectContaining({ id: 'profile' }), expect.any(Object)); expect(w.vm.userDataValues.VAR1).toBe('profile'); w.unmount()
 })
