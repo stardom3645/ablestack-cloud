@@ -1,4 +1,11 @@
 {
+  "message.userdata.validation.name": "Enter a name of 1 to 255 characters after trimming whitespace.",
+  "message.userdata.validation.empty": "User data must not be empty or contain only whitespace.",
+  "message.userdata.validation.base64": "Enter valid Base64. Optional padding, URL encoding and line breaks are supported.",
+  "message.userdata.validation.text": "Enter valid Unicode text for UTF-8 encoding.",
+  "message.userdata.validation.params": "Use unique variable names starting with a letter or underscore, followed by letters, digits, underscores, dots or hyphens.",
+  "message.userdata.validation.size": "The canonical Base64 encoded content exceeds the server limit.",
+  "message.userdata.validation.help": "Variables declare input keys; they do not confirm guest execution. Keys are case-sensitive, whitespace is trimmed, and virtual router metadata names are reserved.",
   "label.autoscalevmgroupid": "AutoScale VM group ID",
   "message.creation.source.upload.registered": "Volume registered",
   "message.creation.source.upload.registration.complete": "The volume is registered and the upload is being prepared. Check its upload status in the volume list before using it.",

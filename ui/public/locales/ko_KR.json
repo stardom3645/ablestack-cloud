@@ -1,4 +1,11 @@
 {
+  "message.userdata.validation.name": "앞뒤 공백을 제외한 1~255자의 이름을 입력하세요.",
+  "message.userdata.validation.empty": "사용자 데이터는 비어 있거나 공백으로만 구성될 수 없습니다.",
+  "message.userdata.validation.base64": "올바른 Base64를 입력하세요. 패딩 생략, URL 인코딩, 줄바꿈을 지원합니다.",
+  "message.userdata.validation.text": "UTF-8로 인코딩할 수 있는 올바른 유니코드 본문을 입력하세요.",
+  "message.userdata.validation.params": "변수는 영문자 또는 밑줄로 시작하고 영문자·숫자·밑줄·점·하이픈만 사용하세요. 같은 키를 중복할 수 없습니다.",
+  "message.userdata.validation.size": "정규화한 Base64 본문의 바이트 수가 서버 제한을 초과합니다.",
+  "message.userdata.validation.help": "변수는 입력 키의 정의이며 게스트 실행 성공을 의미하지 않습니다. 대소문자를 구분하고 앞뒤 공백은 제거합니다. 가상 라우터 메타데이터 이름은 예약어입니다.",
   "label.autoscalevmgroupid": "오토스케일 VM 그룹 ID",
   "message.creation.source.upload.registered": "볼륨 등록 완료",
   "message.creation.source.upload.registration.complete": "볼륨이 등록되어 업로드를 준비합니다. 사용하기 전에 볼륨 목록에서 업로드 완료 상태를 확인하세요.",

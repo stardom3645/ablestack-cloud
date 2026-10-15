@@ -62,7 +62,7 @@
           <template #label>
             <tooltip-label
               :title="$route.name === 'userdata' ? $t('label.userdataparams') : $t('label.cniconfigparams')"
-              :tooltip="apiParams.params.description"/>
+              :tooltip="$route.name === 'userdata' ? $t('message.userdata.validation.help') : apiParams.params.description"/>
           </template>
           <a-select
             mode="tags"
@@ -131,6 +131,7 @@
 import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
+import { canonicalUserData, userDataName, userDataParams } from '@/utils/userDataRegistration'
 
 export default {
   name: 'registerUserData',
@@ -145,7 +146,8 @@ export default {
       selectedDomain: {},
       loading: false,
       isSubmitted: false,
-      hiddenElement: null
+      hiddenElement: null,
+      maxEncodedLength: 1048576
     }
   },
   beforeCreate () {
@@ -171,8 +173,22 @@ export default {
         name: [{ required: true, message: this.$t('message.error.name') }],
         userdata: [{ required: true, message: this.$t('message.error.user.data') }]
       })
+      if (this.$route.name === 'userdata') {
+        const validate = fn => async () => {
+          try { fn() } catch (error) { throw new Error(this.$t(error.message)) }
+        }
+        this.rules.name.push({ validator: validate(() => userDataName(this.form.name)) })
+        this.rules.userdata.push({ validator: validate(() => canonicalUserData(this.form.userdata, this.form.isbase64, this.maxEncodedLength)) })
+        this.rules.params = [{ validator: validate(() => userDataParams(this.form.params)) }]
+      }
     },
     fetchData () {
+      if (this.$route.name === 'userdata') {
+        getAPI('listCapabilities', {}, { preserveOnFailure: true }).then(json => {
+          const max = json.listcapabilitiesresponse?.capability?.userdatamaxlength
+          if (Number.isInteger(max) && max > 0) this.maxEncodedLength = Math.min(max, 1048576)
+        }).catch(() => { /* The server still enforces its current configured limit. */ })
+      }
       if (this.isAdminOrDomainAdmin()) {
         this.fetchDomainData()
       }
@@ -207,9 +223,10 @@ export default {
       this.selectedDomain = domain
     },
     handleSubmit (e) {
-      e.preventDefault()
+      e?.preventDefault?.()
       if (this.loading) return
       this.formRef.value.validate().then(() => {
+        if (this.loading) return
         const values = toRaw(this.form)
         this.loading = true
         const params = {
@@ -230,27 +247,28 @@ export default {
         }
 
         if (apiName === 'registerUserData') {
-          params.userdata = values.isbase64 ? values.userdata : this.$toBase64AndURIEncoded(values.userdata)
+          params.name = userDataName(values.name)
+          params.userdata = canonicalUserData(values.userdata, values.isbase64, this.maxEncodedLength)
         } else {
           params.cniconfig = values.isbase64 ? values.cniconfig : this.$toBase64AndURIEncoded(values.cniconfig)
         }
-        console.log(params)
         if (values.params != null && values.params.length > 0) {
-          var userdataparams = values.params.join(',')
+          const userdataparams = apiName === 'registerUserData' ? userDataParams(values.params) : values.params.join(',')
           params.params = userdataparams
         }
 
-        postAPI(apiName, params).then(json => {
+        postAPI(apiName, params, { preserveOnFailure: true }).then(json => {
           this.$message.success(this.$t('message.success.register.user.data') + ' ' + values.name)
+          this.$emit('refresh-data')
+          this.closeAction()
         }).catch(error => {
           this.$notifyError(error)
         }).finally(() => {
-          this.$emit('refresh-data')
           this.loading = false
-          this.closeAction()
         })
       }).catch(error => {
-        console.log(error)
+        this.loading = false
+        if (!error?.errorFields) this.$notifyError(new Error(this.$t(error.message)))
         this.formRef.value.scrollToField(error?.errorFields?.[0]?.name)
       })
     },
