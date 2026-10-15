@@ -46,6 +46,7 @@ def verify(api):
     state = json.loads((ROOT / 'runtime-state.json').read_text())
     rows = [row for row in ud.inventory(api) if row['name'].startswith(ud.PREFIX)]
     rows += api.call('listUserData', projectid=state['project_id']).get('userdata', [])
+    rows += [row for row in api.call('listCniConfiguration', listall='true').get('cniconfig', []) if row['name'].startswith(ud.PREFIX)]
     result = []
     for row in rows:
         payload = base64.b64decode(row['userdata']).decode()
@@ -54,7 +55,17 @@ def verify(api):
     ud.save('ui-api-results.json', result)
     print(json.dumps(result, ensure_ascii=False))
 
+def cleanup(api):
+    for row in api.call('listCniConfiguration', listall='true').get('cniconfig', []):
+        if row['name'].startswith(ud.PREFIX):
+            assert 'errorcode' not in api.call('deleteCniConfiguration', id=row['id'])
+    ud.cleanup_ui(api)
+    summary = json.loads((ROOT / 'cleanup-summary.json').read_text())
+    summary['cni_test_residuals'] = sum(row['name'].startswith(ud.PREFIX) for row in api.call('listCniConfiguration', listall='true').get('cniconfig', []))
+    assert summary['cni_test_residuals'] == 0
+    ud.save('cleanup-summary.json', summary)
+
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     api = ud.Mold()
-    {'baseline': ud.baseline, 'prepare': ud.prepare_ui, 'readonly': readonly, 'verify': verify, 'cleanup': ud.cleanup_ui}[sys.argv[1]](api)
+    {'baseline': ud.baseline, 'prepare': ud.prepare_ui, 'readonly': readonly, 'verify': verify, 'cleanup': cleanup}[sys.argv[1]](api)

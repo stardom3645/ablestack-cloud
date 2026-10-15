@@ -140,7 +140,15 @@
     </div>
     <template #footer>
       <a-button :disabled="loading" @click="closeAction">{{ $t('label.cancel') }}</a-button>
-      <a-button ref="submit" form="userdata-registration-form" html-type="submit" :loading="loading" :disabled="!allowedApi" type="primary" @click="handleSubmit" @keydown.ctrl.enter.prevent="handleSubmit">{{ $t('label.register.userdata.action') }}</a-button>
+      <a-button
+        ref="submit"
+        form="userdata-registration-form"
+        html-type="submit"
+        :loading="loading"
+        :disabled="!allowedApi"
+        type="primary"
+        @click="handleSubmit"
+        @keydown.ctrl.enter.prevent="handleSubmit">{{ $t('label.register.userdata.action') }}</a-button>
     </template>
   </MoldDialog>
 </template>
