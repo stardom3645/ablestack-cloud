@@ -65,8 +65,8 @@ def prepare(api):
     save('prepared.json',dict(prefix=PREFIX,userdata_count=len(s['userdata']),templates=s['templates'],vms=s['vms']))
 
 def snapshot(api,label,suffix='base'):
-    s=state(); id=next(v['id'] for v in s['vms'] if v['suffix']==suffix)
-    vm=ok(api,'listVirtualMachines',id=id,listall='true',userdata='true')['virtualmachine'][0]
+    s=state(); target=next(v for v in s['vms'] if v['suffix']==suffix)
+    vm=ok(api,'listVirtualMachines',id=target['id'],listall='true',userdata='true',**target.get('scope',{}))['virtualmachine'][0]
     keys=['id','name','state','userdata','userdataid','userdataname','userdatadetails','userdatapolicy','templateid']
     result={k:vm.get(k) for k in keys}
     save(label+'.json',result)

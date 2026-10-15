@@ -23,7 +23,7 @@ export function resetUserDataValues (details, keys) {
   if (!text.startsWith('{') || !text.endsWith('}')) throw new Error('Invalid user data details')
   const body = text.slice(1, -1)
   const matches = [...body.matchAll(/(?:^|, )([A-Za-z_][A-Za-z0-9_]*)=/g)].filter(m => keys.includes(m[1]))
-  const result = {}
+  const result = Object.create(null)
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i]
     if (Object.hasOwnProperty.call(result, match[1])) throw new Error('Ambiguous user data details')
@@ -53,7 +53,7 @@ export function resetUserDataPayload (vm, encode) {
   const params = { id: vm.resource.resetUserDataResourceId || vm.resource.id }
   const templateActive = resetTemplateActive(vm)
   const customActive = !vm.template.userdataid || (vm.userdataDefaultOverridePolicy !== 'DENYOVERRIDE' && (vm.doUserdataOverride || vm.doUserdataAppend))
-  const variables = {}
+  const variables = Object.create(null)
   if (templateActive) for (const key of userDataKeys({ params: vm.templateUserDataParams.map(p => p.key).join(',') })) variables[key] = vm.templateUserDataValues[key] ?? ''
   if (customActive && vm.userdataTabKey === 'userdatatext') {
     params.userdata = vm.form.userdata ? encode(vm.form.userdata) : ''

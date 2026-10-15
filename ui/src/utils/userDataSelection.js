@@ -28,7 +28,7 @@ export function applyUserDataSelection (vm, id, item) {
   vm.form.userdataid = id && id !== NO_USER_DATA && item?.id === id ? id : undefined
   const keys = vm.form.userdataid && typeof item.params === 'string' ? item.params.split(',').map(key => key.trim()).filter(Boolean) : []
   vm.userDataParams = keys.map((key, index) => ({ id: index, key }))
-  vm.userDataValues = {}
+  vm.userDataValues = Object.create(null)
 }
 
 // Consumers share ownership and the same fail-closed submit contract.

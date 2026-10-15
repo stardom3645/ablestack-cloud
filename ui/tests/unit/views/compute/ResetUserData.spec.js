@@ -71,6 +71,12 @@ test('UTF-8 and literal percent round trip, binary is not silently corrupted', (
   expect(decodeResetUserData(encode('한글 % +\n'))).toBe('한글 % +\n')
   expect(() => decodeResetUserData('/w==')).toThrow('UTF-8')
 })
+test('valid variable names that match object properties remain ordinary string values', () => {
+  const values = resetUserDataValues('{__proto__=한글, constructor=value}', ['__proto__', 'constructor'])
+  const vm = draft({ userDataParams: [{ key: '__proto__' }, { key: 'constructor' }], userDataValues: values })
+  expect(resetUserDataPayload(vm, encode)['userdatadetails[0].__proto__']).toBe('한글')
+  expect(resetUserDataPayload(vm, encode)['userdatadetails[1].constructor']).toBe('value')
+})
 test('fresh current library, off-page variables and policy load before editing, keep sends no mutation', async () => {
   const w = mount({ userdataid: 'library', userdataname: library.name, userdata: encode('#cloud-config\nVAR1'), userdatadetails: '{VAR1=한글, 값=1, B=two}' }); await flush()
   expect(getAPI).toHaveBeenCalledWith('listVirtualMachines', expect.objectContaining({ id: 'vm', userdata: true, ignoreproject: true }), expect.any(Object))
