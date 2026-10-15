@@ -30,6 +30,7 @@ test.each(['eA', 'eA==', 'eA%3D%3D', 'eA\n'])('normalizes permitted Base64 %s', 
 })
 test('binary Base64 and literal plus with percent padding remain supported', () => {
   expect(canonicalUserData('_wAB', true)).toBe('/wAB')
+  expect(canonicalUserData('oA==', true)).toBe('oA==') // Non-UTF-8 byte 0xa0 is not Unicode whitespace.
   expect(canonicalUserData('Zm+8/w8%3D', true)).toBe('Zm+8/w8=')
 })
 test.each(['%', '%GG', 'A', 'eA=', 'eA===', 'eA==Yg==', '!!!!'])('rejects malformed Base64 %s', value => {

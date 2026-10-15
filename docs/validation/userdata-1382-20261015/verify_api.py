@@ -129,6 +129,8 @@ def matrix(api):
         register('exact-among-case-insensitive-candidates', encoded='EA', success=False)
         row = register('binary', encoded='_wAB')
         record('binary-roundtrip', row['userdata'] == '/wAB')
+        row = register('non-utf8-whitespace-byte', encoded='oA==')
+        record('non-utf8-byte-preserved', row['userdata'] == 'oA==')
         plus = register('plus-percent', encoded='Zm+8/w8%3D')
         record('literal-plus-preserved', plus['userdata'] == 'Zm+8/w8=')
         utf8 = '#cloud-config\n# 한글 입력\n  preserved: true\n'
@@ -170,7 +172,7 @@ def matrix(api):
             username = PREFIX.lower() + '-' + suffix
             account = api.call('createAccount', username=username, password=password, firstname='UD1382', lastname='Validation', email='ud1382@example.invalid', accounttype=accounttype, account=username, domainid=domain['id'])['account']
             accounts.append(account['id'])
-            client = Mold(username, password, domain['path'])
+            client = Mold(username, password, '/' + domain['name'] + '/')
             clients.append(client)
             record(suffix + '-capability-limit', client.call('listCapabilities')['capability'].get('userdatamaxlength') == limit)
             row = register(suffix + '-same-owner-data', encoded='eA', name=canonical['name'], client=client)

@@ -43,9 +43,9 @@ export function canonicalUserData (value, isBase64, maxLength = 1048576) {
     // Plain text is always UTF-8 encoded, even when it happens to look like Base64.
     try { binary = unescape(encodeURIComponent(value || '')) } catch (error) { fail('text') }
   }
-  let text = binary
+  let text
   try { text = decodeURIComponent(escape(binary)) } catch (error) { /* Binary Base64 remains supported. */ }
-  if (!text.trim()) fail('empty')
+  if (!binary.length || (text !== undefined && !text.trim())) fail('empty')
   const encoded = btoa(binary)
   if (encoded.length > maxLength) fail('size')
   return encoded
