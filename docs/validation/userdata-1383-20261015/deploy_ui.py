@@ -27,7 +27,7 @@ import zipfile
 
 stage = Path(sys.argv[1]).resolve()
 manifest = json.loads((stage / 'manifest.json').read_text())
-assert manifest['issue'] == 1383 and manifest['cluster'] == 31
+assert manifest['issue'] in (1383, 1384) and manifest['cluster'] == 31
 webapp = Path('/usr/share/cloudstack-management/webapp')
 jar = Path('/usr/share/cloudstack-management/lib/cloudstack-4.23.0.0-ABLESTACK.Mold.jar')
 sha = lambda data: hashlib.sha256(data).hexdigest()
@@ -40,7 +40,7 @@ before = dict(config_sha256=sha((webapp / 'config.json').read_bytes()),
               web_inf_inode=(webapp / 'WEB-INF').stat().st_ino,
               meta_inf_present=(webapp / 'META-INF').exists(),
               management_pid=subprocess.check_output(['systemctl', 'show', 'mold', '-p', 'MainPID', '--value'], text=True).strip())
-backup = Path('/root/ud1383-ui-' + datetime.now().strftime('%Y%m%d-%H%M%S'))
+backup = Path('/root/ud' + str(manifest['issue']) + '-ui-' + datetime.now().strftime('%Y%m%d-%H%M%S'))
 backup.mkdir()
 for top in (stage / 'ui').iterdir():
     assert top.name not in ('WEB-INF', 'META-INF', 'config.json')
@@ -61,7 +61,7 @@ assert subprocess.check_output(['systemctl', 'show', 'mold', '-p', 'MainPID', '-
 assert subprocess.check_output(['systemctl', 'is-active', 'mold'], text=True).strip() == 'active'
 assert urllib.request.urlopen('http://127.0.0.1:8080/client/', timeout=10).status == 200
 assert all(sha((webapp / name).read_bytes()) == digest for name, digest in manifest['ui'].items())
-result = dict(issue=1383, cluster=31, source=manifest['source'], backup=str(backup), before=before,
+result = dict(issue=manifest['issue'], cluster=31, source=manifest['source'], backup=str(backup), before=before,
               static_files_verified=len(manifest['ui']), class_hashes_verified=True, jar_sha256=sha(jar.read_bytes()),
               config_preserved=True, web_inf_preserved=True, management_pid_preserved=True, mold='active', client_http=200)
 (backup / 'deployment.json').write_text(json.dumps(result, indent=2) + '\n')

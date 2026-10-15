@@ -223,9 +223,8 @@ export default {
       this.templateError = false
       try {
         const params = { ...autoScaleOwnerParams(this.resource), id: this.resource.templateid, isready: true, ignoreproject: true }
-        const json = this.isAutoScaleProfile
-          ? await autoScaleTemplateById(getAPI, { ...params, zoneid: this.resource.zoneid })
-          : await getAPI('listTemplates', { ...params, templatefilter: 'all', isrecursive: true }, { preserveOnFailure: true, timeout: 15000 })
+        const request = (command, args) => getAPI(command, args, { preserveOnFailure: true, timeout: 15000 })
+        const json = await autoScaleTemplateById(request, { ...params, zoneid: this.resource.zoneid })
         const template = json.listtemplatesresponse?.template?.find(item => item.id === this.resource.templateid)
         if (!template) throw new Error('Template unavailable')
         this.template = template

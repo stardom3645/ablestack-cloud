@@ -26,7 +26,9 @@ import tarfile
 repo = Path(sys.argv[1]).resolve()
 stage = Path(sys.argv[2]).resolve()
 assert str(repo).startswith('/home/ablecloud/work/dhslove/')
-assert str(stage).startswith('/home/ablecloud/work/ud1383-') and not stage.exists()
+issue = int(sys.argv[3]) if len(sys.argv) > 3 else 1383
+assert issue in (1383, 1384)
+assert str(stage).startswith('/home/ablecloud/work/ud' + str(issue) + '-') and not stage.exists()
 source = subprocess.check_output(['git', '-C', str(repo), 'rev-parse', 'HEAD'], text=True).strip()
 prior = json.loads((repo / 'docs/validation/userdata-1382-20261015/runtime-final.json').read_text())
 shutil.copytree(repo / 'ui/dist', stage / 'ui', ignore=shutil.ignore_patterns('config.json', 'WEB-INF', 'META-INF'))
@@ -34,7 +36,10 @@ files = {str(p.relative_to(stage / 'ui')): hashlib.sha256(p.read_bytes()).hexdig
 javascript = ''.join(p.read_text(errors='replace') for p in (stage / 'ui/js').rglob('*.js'))
 for marker in ['userdata-registration-form', 'blockingLoadingState', 'fetchSyncProgress', 'extractJobId']:
     assert marker in javascript, marker
-manifest = dict(issue=1383, cluster=31, source=source, classes=prior['class_hashes_verified'], jar_sha256=prior['jar_sha256'], ui=files)
+if issue == 1384:
+    for marker in ['userdata-selection-toolbar', 'userdata-reset-dialog', 'message.userdata.selection.missing']:
+        assert marker in javascript, marker
+manifest = dict(issue=issue, cluster=31, source=source, classes=prior['class_hashes_verified'], jar_sha256=prior['jar_sha256'], ui=files)
 (stage / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 shutil.copy2(Path(__file__).with_name('deploy_ui.py'), stage / 'deploy_ui.py')
 with tarfile.open(str(stage) + '.tgz', 'w:gz') as archive:

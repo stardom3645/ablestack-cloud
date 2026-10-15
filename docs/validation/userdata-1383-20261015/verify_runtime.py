@@ -26,7 +26,7 @@ import zipfile
 stage = Path(sys.argv[1])
 manifest = json.loads((stage / 'manifest.json').read_text())
 deployment = json.loads((stage / 'deployment.json').read_text())
-assert manifest['issue'] == 1383 and manifest['cluster'] == 31
+assert manifest['issue'] in (1383, 1384) and manifest['cluster'] == 31
 sha = lambda data: hashlib.sha256(data).hexdigest()
 webapp = Path('/usr/share/cloudstack-management/webapp')
 jar = Path('/usr/share/cloudstack-management/lib/cloudstack-4.23.0.0-ABLESTACK.Mold.jar')
@@ -42,7 +42,7 @@ pid = subprocess.check_output(['systemctl', 'show', 'mold', '-p', 'MainPID', '--
 assert pid == before['management_pid']
 assert subprocess.check_output(['systemctl', 'is-active', 'mold'], text=True).strip() == 'active'
 assert urllib.request.urlopen('http://127.0.0.1:8080/client/', timeout=10).status == 200
-print(json.dumps(dict(issue=1383, cluster=31, ui_source=manifest['source'], jar_sha256=manifest['jar_sha256'],
+print(json.dumps(dict(issue=manifest['issue'], cluster=31, ui_source=manifest['source'], jar_sha256=manifest['jar_sha256'],
                       class_hashes_verified=manifest['classes'], static_files_verified=len(manifest['ui']),
                       web_inf_preserved=True, config_preserved=True, management_pid=pid,
                       management_pid_preserved=True, mold='active', client_http=200), indent=2))
