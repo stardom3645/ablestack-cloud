@@ -21,11 +21,13 @@ repo=Path(sys.argv[1]).resolve();stage=Path(sys.argv[2]).resolve()
 assert str(repo).startswith('/home/ablecloud/work/dhslove/')
 assert str(stage).startswith('/home/ablecloud/work/ud1388-') and not stage.exists()
 prior=json.loads((repo/'docs/validation/userdata-1387-20261016/runtime-final.json').read_text())
-shutil.copytree(repo/'ui/dist',stage/'ui',ignore=shutil.ignore_patterns('config.json','WEB-INF','META-INF'))
+backend_only = '--backend-only' in sys.argv
+if backend_only: (stage/'ui').mkdir(parents=True)
+else: shutil.copytree(repo/'ui/dist',stage/'ui',ignore=shutil.ignore_patterns('config.json','WEB-INF','META-INF'))
 sha=lambda data:hashlib.sha256(data).hexdigest()
 ui={str(p.relative_to(stage/'ui')):sha(p.read_bytes()) for p in (stage/'ui').rglob('*') if p.is_file()}
 js=''.join(p.read_text(errors='replace') for p in (stage/'ui/js').rglob('*.js'))
-for marker in ['userdata.usage.vms','userdata.usage.templates','userdata.usage.isos','blockingLoadingState','fetchSyncProgress','extractJobId']:assert marker in js,marker
+for marker in ([] if backend_only else ['userdata.usage.vms','userdata.usage.templates','userdata.usage.isos','blockingLoadingState','fetchSyncProgress','extractJobId']):assert marker in js,marker
 classes={}
 for name in ['org/apache/cloudstack/api/command/user/template/ListTemplatesCmd.class','org/apache/cloudstack/api/command/user/iso/ListIsosCmd.class','com/cloud/api/query/QueryManagerImpl.class']:
     dest=stage/'classes'/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(repo/('api/target/classes' if name.startswith('org/apache/cloudstack/api/') else 'server/target/classes')/name,dest);classes[name]=sha(dest.read_bytes())
