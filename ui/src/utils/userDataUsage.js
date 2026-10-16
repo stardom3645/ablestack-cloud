@@ -22,6 +22,7 @@ export const userDataUsageKinds = {
   isos: { api: 'listIsos', body: 'listisosresponse', items: 'iso', path: '/iso' }
 }
 export function userDataUsageParams (source, kind, project, role, options = {}) {
+  if (!/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(source?.id || '')) throw new Error('A library UUID is required')
   const projectid = source.projectid || project?.id
   const filter = role === 'User' ? 'executable' : 'all'
   return {
