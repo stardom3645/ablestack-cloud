@@ -213,6 +213,10 @@ export default {
       const available = ['ssh', 'userdata'].includes(this.$route.meta?.name) ? this.tabs.filter(tab => this.showTab(tab)) : this.tabs
       const selected = available.find(tab => tab.name === requestedTab) || available[0]
       this.activeTab = selected ? selected.name : ''
+      // Invalid library deep links use the visible fallback tab in the URL too.
+      if (this.$route.meta?.name === 'userdata' && this.$route.query.tab && selected && requestedTab !== selected.name) {
+        this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, tab: selected.name } })
+      }
     }
   }
 }
