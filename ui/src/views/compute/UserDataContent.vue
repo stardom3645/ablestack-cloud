@@ -113,6 +113,7 @@ export default {
       document.addEventListener('copy', listener)
       try {
         document.body.appendChild(textarea)
+        textarea.focus({ preventScroll: true })
         textarea.select()
         if (!document.execCommand('copy')) throw new Error('Copy unavailable')
         notify()
