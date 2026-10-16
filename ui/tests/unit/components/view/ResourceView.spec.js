@@ -185,7 +185,6 @@ describe('ResourceView standard tab layout', () => {
   })
 })
 
-
 test('userdata invalid or hidden deep links replace the URL with the visible fallback without dropping filters', () => {
   for (const tab of ['invalid', 'hidden']) {
     const vm = { $route: { meta: { name: 'userdata' }, path: '/userdata/id', query: { tab, vmskeyword: 'kept' } }, $router: { replace: jest.fn() }, tabs: [{ name: 'details' }, { name: 'hidden', hidden: true }], showTab: tab => !tab.hidden }
