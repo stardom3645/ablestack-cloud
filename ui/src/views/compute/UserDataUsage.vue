@@ -43,8 +43,7 @@ import ListView from '@/components/view/ListView'
 import Status from '@/components/widgets/Status'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 import { userDataUsageParams, userDataUsageRows, userDataUsageKinds, userDataUsageSupported } from '@/utils/userDataUsage'
-import { userDataDeleteLookup, userDataDeleteIdentity } from '@/utils/userDataDeletion'
-import { sshKeyPairDetailFailure } from '@/utils/sshKeyPairIdentity'
+import { userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } from '@/utils/userDataDeletion'
 
 const tabPrefix = 'userdata.usage.'
 export default {
@@ -119,7 +118,8 @@ export default {
         this.rows = result.rows; this.count = result.count; this.status = 'ready'; this.loadedScope = scope
       } catch (error) {
         if (!current()) return
-        const state = error.usageState || sshKeyPairDetailFailure(error)
+        const code = userDataDeleteError(error).code
+        const state = error.usageState || ([401, 403, 432, 531].includes(code) ? 'forbidden' : code === 431 ? 'missing' : 'error')
         this.status = ['forbidden', 'mismatch', 'missing'].includes(state) ? state : 'error'
         if (this.status !== 'error') { this.rows = []; this.count = 0; this.loadedScope = '' }
       } finally { if (current()) this.pending = false }

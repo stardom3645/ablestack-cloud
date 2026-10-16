@@ -488,10 +488,10 @@ export default {
 
       getAPI('listUserData', params).then(json => {
         const userdataIdAndName = []
-        const userdataOpts = json.listuserdataresponse.userdata
+        const userdataOpts = json.listuserdataresponse.userdata || []
         userdataIdAndName.push({
           id: '',
-          name: ''
+          name: this.$t('label.noselect')
         })
 
         Object.values(userdataOpts).forEach(userdata => {
