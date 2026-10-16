@@ -19,10 +19,19 @@ for the specific language governing permissions and limitations. -->
           <template v-if="column.key === 'name'"><strong>{{ record.target.name }}</strong><div>{{ record.target.id }}</div></template>
           <template v-else-if="column.key === 'owner'">{{ record.target.account }}<div>{{ record.target.domain || record.target.domainid }}</div><div v-if="record.target.projectid">{{ $t('label.project') }}: {{ record.target.project || record.target.projectid }}</div></template>
           <template v-else-if="column.key === 'status'"><a-badge :status="badgeStatus(record.status)" :text="$t('label.userdata.delete.state.' + record.status)" :data-delete-state="record.status" /></template>
-          <template v-else-if="column.key === 'reason'">{{ record.reason }}</template>
+          <template v-else-if="column.key === 'reason'">
+            <div>{{ record.reason }}</div>
+            <div v-if="record.references === null">{{ $t('message.userdata.usage.checking') }}</div>
+            <div v-else-if="record.references === false">{{ $t('message.userdata.usage.incomplete') }}</div>
+            <div v-for="(count, kind) in record.references || {}" :key="kind">
+              <router-link :to="referenceLink(record.target, kind)" :aria-disabled="busy" :tabindex="busy ? -1 : 0" @click="followReference($event)">{{ $t('label.userdata.usage.' + kind) }}: {{ count }}</router-link>
+            </div>
+          </template>
         </template>
       </a-table>
       <p>{{ $t('message.userdata.delete.remaining') }}</p>
+      <p>{{ $t('message.userdata.usage.delete.guidance') }}</p>
+      <a-button :loading="referencePending" :disabled="busy || referencePending" @click="loadReferences">{{ $t('label.userdata.usage.refresh') }}</a-button>
     </div>
     <template #footer>
       <a-button ref="cancel" :disabled="busy" @click="close">{{ $t(started ? 'label.close' : 'label.cancel') }}</a-button>
@@ -32,6 +41,7 @@ for the specific language governing permissions and limitations. -->
   </MoldDialog>
 </template>
 <script>
+import { userDataUsageKinds, userDataUsageParams, userDataUsageRows, userDataUsageSupported } from '@/utils/userDataUsage'
 import MoldDialog from '@/components/view/MoldDialog'
 import { getAPI, postAPI } from '@/api'
 import { userDataDeleteParams, userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } from '@/utils/userDataDeletion'
@@ -41,7 +51,7 @@ export default {
   components: { MoldDialog },
   props: { currentAction: { type: Object, required: true } },
   emits: ['close-action', 'refresh-data'],
-  data () { return { rows: (this.currentAction.userDataTargets || []).map(target => ({ target, status: userDataDeleteParams(target) ? 'ready' : 'blocked', reason: '' })), busy: false, started: false, disposed: false, session: '' } },
+  data () { return { rows: (this.currentAction.userDataTargets || []).map(target => ({ target, status: userDataDeleteParams(target) ? 'ready' : 'blocked', reason: '', references: null })), referencePending: false, busy: false, started: false, disposed: false, session: '' } },
   computed: {
     allowed () { return ['listUserData', 'deleteUserData'].every(api => api in this.$store.getters.apis) },
     eligibleRows () { return this.rows.filter(row => ['ready', 'failed'].includes(row.status)) },
@@ -49,12 +59,34 @@ export default {
     totals () { return { success: this.rows.filter(row => ['success', 'absent'].includes(row.status)).length, failed: this.rows.filter(row => ['failed', 'blocked'].includes(row.status)).length, unknown: this.rows.filter(row => row.status === 'unknown').length, pending: this.rows.filter(row => ['ready', 'checking', 'deleting'].includes(row.status)).length } },
     columns () { return [['name', 'label.name', 220], ['owner', 'label.account', 180], ['status', 'label.operation.status', 130], ['reason', 'label.userdata.delete.reason', 230]].map(([key, title, width]) => ({ key, title: this.$t(title), width })) }
   },
-  mounted () { this.session = this.sessionKey(); this.$nextTick(() => this.$refs.cancel?.$el?.focus()); window.addEventListener('beforeunload', this.beforeUnload) },
+  mounted () { this.session = this.sessionKey(); this.loadReferences(); this.$nextTick(() => this.$refs.cancel?.$el?.focus()); window.addEventListener('beforeunload', this.beforeUnload) },
   beforeUnmount () { this.disposed = true; window.removeEventListener('beforeunload', this.beforeUnload) },
   methods: {
     sessionKey () { return JSON.stringify([this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$route.fullPath]) },
     active () { return !this.disposed && this.session === this.sessionKey() },
     badgeStatus (state) { return { success: 'success', absent: 'success', failed: 'error', blocked: 'error', unknown: 'warning', checking: 'processing', deleting: 'processing' }[state] || 'default' },
+    referenceLink (target, kind) {
+      const { id, ...scope } = userDataDeleteParams(target) || {}
+      return { path: '/userdata/' + target.id, query: { ...scope, tab: 'userdata.usage.' + kind } }
+    },
+    followReference (event) { if (this.busy) event.preventDefault(); else this.close() },
+    async loadReferences () {
+      if (this.busy || this.referencePending || !this.active()) return
+      this.referencePending = true
+      try {
+        await Promise.all(this.rows.filter(row => !['success', 'absent'].includes(row.status)).map(async row => {
+          try {
+            const references = {}
+            for (const kind of Object.keys(userDataUsageKinds)) {
+              if (!this.active() || !userDataUsageSupported(this.$store.getters.apis, kind)) throw new Error('Reference lookup unavailable')
+              const json = await getAPI(userDataUsageKinds[kind].api, userDataUsageParams(row.target, kind, this.$store.getters.project, this.$store.getters.userInfo.roletype, { pagesize: 1 }), { preserveOnFailure: true, timeout: 15000 })
+              references[kind] = userDataUsageRows(json, row.target, kind).count
+            }
+            if (this.active()) row.references = references
+          } catch (_) { if (this.active()) row.references = false }
+        }))
+      } finally { this.referencePending = false }
+    },
     async identity (row) {
       if (!this.active() || !this.allowed) return 'forbidden'
       const params = userDataDeleteLookup(row.target)

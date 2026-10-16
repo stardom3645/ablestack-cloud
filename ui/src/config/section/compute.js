@@ -1463,6 +1463,21 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
         },
         {
+          name: 'userdata.usage.vms',
+          resourceType: 'vms',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataUsage.vue')))
+        },
+        {
+          name: 'userdata.usage.templates',
+          resourceType: 'templates',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataUsage.vue')))
+        },
+        {
+          name: 'userdata.usage.isos',
+          resourceType: 'isos',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataUsage.vue')))
+        },
+        {
           name: 'comments',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
         }
