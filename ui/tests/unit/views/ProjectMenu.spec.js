@@ -34,3 +34,10 @@ test.each(['ERR_CANCELED', '503'])('handles transition failure %s and restores s
   expect(vm.selectedProjectId).toBe('previous'); expect(vm.$store.dispatch).toHaveBeenCalledTimes(1); expect(vm.$router.push).not.toHaveBeenCalled(); expect(vm.$message.success).not.toHaveBeenCalled()
   expect(vm.$notifyError).toHaveBeenCalledTimes(code === '503' ? 1 : 0); expect(vm.loading).toBe(false)
 })
+
+test.each([0, '0'])('default view %s is an empty project context, never projectid=0', async id => {
+  const vm = create(); await Menu.methods.changeProject.call(vm, { id, name: 'Default view' })
+  expect(vm.$store.dispatch).toHaveBeenNthCalledWith(1, 'ProjectView', undefined)
+  expect(vm.$store.dispatch).toHaveBeenNthCalledWith(2, 'SetProject', {})
+  expect(vm.$store.dispatch).toHaveBeenNthCalledWith(3, 'ToggleTheme', 'light')
+})

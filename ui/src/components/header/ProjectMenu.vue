@@ -73,7 +73,7 @@ export default {
     this.unwatchProject = this.$store.watch(
       (state, getters) => getters.project?.id,
       (newId) => {
-        this.selectedProjectId = newId
+        this.selectedProjectId = newId || this.defaultOption.id
       }
     )
     eventBus.on('projects-updated', this.onProjectsUpdated)
@@ -89,14 +89,15 @@ export default {
     async changeProject (project) {
       if (this.loading || !project) return
       const previous = this.$store.getters.project || this.defaultOption
+      const target = project.id && project.id !== '0' ? project : {}
       this.loading = true
       try {
         // Finish capability lookup before AutogenView's route guard cancels
         // outstanding reads. Keep project selection, API metadata and routing
         // in one awaited sequence instead of an unhandled fire-and-forget job.
-        await this.$store.dispatch('ProjectView', project.id)
-        await this.$store.dispatch('SetProject', project)
-        await this.$store.dispatch('ToggleTheme', project.id ? 'dark' : 'light')
+        await this.$store.dispatch('ProjectView', target.id)
+        await this.$store.dispatch('SetProject', target)
+        await this.$store.dispatch('ToggleTheme', target.id ? 'dark' : 'light')
         if (this.$route.name !== 'dashboard') await this.$router.push({ name: 'dashboard' })
         this.$message.success(`${this.$t('message.switch.to')} "${project.displaytext || project.name}"`)
       } catch (error) {
