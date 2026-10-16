@@ -214,7 +214,12 @@ export default {
       const selected = available.find(tab => tab.name === requestedTab) || available[0]
       this.activeTab = selected ? selected.name : ''
       // Invalid library deep links use the visible fallback tab in the URL too.
-      if (this.$route.meta?.name === 'userdata' && this.$route.query.tab && selected && requestedTab !== selected.name) {
+      // A departing KeepAlive view can observe the destination route before its
+      // own tabs are replaced. Only the destination's tab configuration may
+      // canonicalize its URL.
+      const routeTabs = this.$route.meta?.tabs
+      const ownsRouteTabs = !routeTabs || (routeTabs.length === this.tabs.length && routeTabs.every((tab, index) => tab.name === this.tabs[index].name))
+      if (ownsRouteTabs && this.$route.meta?.name === 'userdata' && this.$route.query.tab && selected && requestedTab !== selected.name) {
         this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, tab: selected.name } })
       }
     }
