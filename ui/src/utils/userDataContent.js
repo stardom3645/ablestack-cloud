@@ -30,7 +30,7 @@ export function userDataContent (encoded) {
 
 export function userDataLibraryParams (params) {
   const result = { ...params }
-  const keyword = result.keyword?.trim()
+  const keyword = typeof result.keyword === 'string' ? result.keyword.trim() : ''
   if (keyword && /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(keyword)) {
     result.id = keyword
     delete result.keyword

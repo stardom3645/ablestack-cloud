@@ -92,6 +92,7 @@ function generateRouterMap (section) {
           advisories: !vueProps.$config.advisoriesDisabled ? child.advisories : undefined,
           details: child.details,
           searchFilters: child.searchFilters,
+          listDescription: child.listDescription,
           related: child.related,
           actions: child.actions,
           tabs: child.tabs,
