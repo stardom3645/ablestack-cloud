@@ -24,7 +24,7 @@ export function userDataDeleteTargets (action, selection = []) {
 export function userDataDeleteParams (target) {
   if (!uuid.test(target?.id || '') || !target.name || !uuid.test(target.domainid || '') ||
       (target.projectid ? !uuid.test(target.projectid) : !target.account)) return null
-  return { id: target.id, ...(target.projectid ? { projectid: target.projectid } : { account: target.account, domainid: target.domainid }) }
+  return { id: target.id, ...(target.projectid ? { projectid: target.projectid } : { account: target.account, domainid: target.domainid, ignoreproject: true }) }
 }
 export function userDataDeleteLookup (target, byName = false) {
   const params = userDataDeleteParams(target)

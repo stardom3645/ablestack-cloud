@@ -38,7 +38,7 @@ test('immutable UUID/owner snapshot does not follow list refresh or same-name ro
   expect(userDataDeleteTargets({ resource: one }, [two])).toEqual([one])
 })
 test('owner and project API scopes are exclusive; invalid targets fail closed', () => {
-  expect(userDataDeleteParams(one)).toEqual({ id: one.id, account: 'A', domainid: one.domainid })
+  expect(userDataDeleteParams(one)).toEqual({ id: one.id, account: 'A', domainid: one.domainid, ignoreproject: true })
   const project = { ...one, projectid: two.id }; expect(userDataDeleteParams(project)).toEqual({ id: one.id, projectid: two.id })
   expect(userDataDeleteLookup(project).account).toBeUndefined()
   for (const invalid of [{}, { ...one, id: 'bad' }, { ...one, domainid: '' }, { ...one, account: '' }, { ...one, projectid: 'bad' }]) expect(userDataDeleteParams(invalid)).toBeNull()
