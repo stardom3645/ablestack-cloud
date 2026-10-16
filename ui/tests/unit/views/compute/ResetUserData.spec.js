@@ -55,6 +55,11 @@ test('unsupported VM remains readable and keep is a no-op even if change is forc
   w.vm.editCurrent = true; w.vm.handleSubmit(); expect(postAPI).not.toHaveBeenCalled()
   w.vm.editCurrent = false; w.vm.handleSubmit(); expect(w.emitted('close-action')).toBeTruthy(); w.unmount()
 })
+test('real command-shaped 530 response preserves the provider recovery reason', async () => {
+  const w = mount({ userdata: encode('current') }); await flush(); w.vm.editCurrent = true
+  postAPI.mockRejectedValueOnce({ message: 'Request failed with status code 530', response: { data: { resetuserdataforvirtualmachineresponse: { errorcode: 530, errortext: 'Cloud data unchanged; provider restoration unconfirmed' } } } })
+  await w.vm.handleSubmit(); expect(w.vm.submitError).toBe('Cloud data unchanged; provider restoration unconfirmed'); expect(w.vm.form.userdata).toBe('current'); w.unmount()
+})
 
 test('current keep is a no-op, not an empty reset', () => {
   expect(resetUserDataPayload(draft({ editCurrent: false }), encode)).toBeNull()

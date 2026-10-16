@@ -378,9 +378,10 @@ export default {
         this.loadingData = false
         this.closeAction()
       }).catch(error => {
+        const commandError = error?.response?.data?.[resetUserDataApiName.toLowerCase() + 'response']?.errortext
         this.submitError = resetUserDataApiName === 'updateAutoScaleVmProfile'
           ? autoScaleMutationDescription(error, this.$t)
-          : (error?.response?.data?.errorresponse?.errortext || error?.message || this.$t('message.request.failed'))
+          : (commandError || error?.response?.data?.errorresponse?.errortext || error?.message || this.$t('message.request.failed'))
       }).finally(() => {
         this.loadingData = false
       })
