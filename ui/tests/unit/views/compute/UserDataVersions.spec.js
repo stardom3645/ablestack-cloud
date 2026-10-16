@@ -171,11 +171,15 @@ test('unnamed library detail route retains the userdata API and clone contract',
 
 function mountedOptions (component, route) {
   const c = ctx(component)
-  return { props: { resource: source, currentAction: { cloneUserData: true }, tab: 'userdata.versions' }, global: {
-    plugins: [componentsUse, iconsUse], directives: { focus: () => {} },
-    mocks: { $route: route, $store: c.$store, $t: key => key, $getApiParams: () => Object.fromEntries(['name', 'userdata', 'params', 'domainid', 'account', 'cniconfig'].map(key => [key, { description: key }])) },
-    stubs: { MoldDialog: { template: '<section><header><slot name="title" /></header><main><slot /></main><footer><slot name="footer" /></footer></section>' }, TooltipLabel: { props: ['title'], template: '<label>{{ title }}</label>' }, UserDataContent: true, 'router-link': { template: '<a><slot /></a>' } }
-  } }
+  return {
+    props: { resource: source, currentAction: { cloneUserData: true }, tab: 'userdata.versions' },
+    global: {
+      plugins: [componentsUse, iconsUse],
+      directives: { focus: () => {} },
+      mocks: { $route: route, $store: c.$store, $t: key => key, $getApiParams: () => Object.fromEntries(['name', 'userdata', 'params', 'domainid', 'account', 'cniconfig'].map(key => [key, { description: key }])) },
+      stubs: { MoldDialog: { template: '<section><header><slot name="title" /></header><main><slot /></main><footer><slot name="footer" /></footer></section>' }, TooltipLabel: { props: ['title'], template: '<label>{{ title }}</label>' }, UserDataContent: true, 'router-link': { template: '<a><slot /></a>' } }
+    }
+  }
 }
 test('actual production component registry renders clone form on an unnamed detail route', async () => {
   getAPI.mockImplementation(async cmd => cmd === 'listCapabilities' ? { listcapabilitiesresponse: { capability: {} } } : listed([source]))
