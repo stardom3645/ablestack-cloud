@@ -41,16 +41,18 @@ body .userdata-reset-dialog, body .vm-userdata-dialog, body .image-userdata-dial
   .ant-btn-primary:not(:disabled):hover, .ant-btn-primary:not(:disabled):focus { color: var(--ui-action-primary-text); background: var(--ui-action-primary-hover); border-color: var(--ui-action-primary-hover); }
   .ant-btn-primary.ant-btn-dangerous:not(:disabled) { background: var(--ui-action-danger-bg); border-color: var(--ui-action-danger-bg); }
   .ant-btn:focus-visible, summary:focus-visible, a:focus-visible, .ant-radio-button-wrapper:has(input:focus-visible) { outline: 2px solid var(--ui-link); outline-offset: 2px; }
-  .ant-checkbox-inner { background: var(--ui-bg-input); border-color: var(--ui-border-strong); }
-  .ant-checkbox-checked .ant-checkbox-inner { background: var(--ui-action-primary-bg); border-color: var(--ui-link); }
-  .ant-checkbox-checked .ant-checkbox-inner::after { border-color: var(--ui-action-primary-text); }
+  // The legacy dark-mode :not(:hover, :focus) selector otherwise wins over
+  // these opt-in semantic boundaries even while the control is idle.
+  .ant-checkbox-inner { background: var(--ui-bg-input) !important; border-color: var(--ui-border-strong) !important; }
+  .ant-checkbox-checked .ant-checkbox-inner { background: var(--ui-action-primary-bg) !important; border-color: var(--ui-link) !important; }
+  .ant-checkbox-checked .ant-checkbox-inner::after { border-color: var(--ui-action-primary-text) !important; }
   .ant-checkbox-indeterminate .ant-checkbox-inner::after { background: var(--ui-action-primary-bg); }
   .ant-checkbox-input:focus-visible + .ant-checkbox-inner { outline: 2px solid var(--ui-link); outline-offset: 2px; }
-  .ant-switch:not(.ant-switch-checked) { background: var(--userdata-switch-bg); border-color: var(--ui-text-muted); }
-  .ant-switch-checked { background: var(--ui-action-primary-bg); border-color: var(--ui-link); }
-  .ant-switch-inner { color: var(--ui-action-primary-text); }
+  .ant-switch:not(.ant-switch-checked) { background: var(--userdata-switch-bg) !important; border-color: var(--ui-text-muted) !important; }
+  .ant-switch-checked { background: var(--ui-action-primary-bg) !important; border-color: var(--ui-link) !important; }
+  .ant-switch-inner { color: var(--ui-action-primary-text) !important; }
   .ant-switch-disabled { opacity: 1; }
-  .ant-radio-inner { border-color: var(--ui-border-strong); }
+  .ant-radio-inner { background: var(--ui-bg-input) !important; border-color: var(--ui-border-strong) !important; }
   .ant-radio-checked .ant-radio-inner { border-color: var(--ui-link) !important; }
   .ant-radio-inner::after { background-color: var(--ui-link) !important; }
 }
