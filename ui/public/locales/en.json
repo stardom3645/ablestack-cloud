@@ -8889,5 +8889,9 @@
   "message.userdata.reset.none.clear": "None detaches the selected library and clears custom user data and its variables. Cancel keeps the current setting.",
   "message.userdata.reset.none.template": "None removes custom data and restores the template user data with its variables. Template policy remains in effect.",
   "message.userdata.reset.append.current": "APPEND stores the combined template and custom content. The current combined content is shown above. Enter only new custom content here; leaving it empty restores the template alone.",
-  "label.userdata.template.default": "Template default"
+  "label.userdata.template.default": "Template default",
+  "message.userdata.reset.unsupported.state": "User data can only be changed for a stopped, supported instance. The current setting is preserved.",
+  "message.userdata.reset.unsupported.network": "No NIC supports UserData. ConfigDrive requires the default NIC. The current setting is preserved.",
+  "message.userdata.reset.delivery.configdrive": "Cloud saves the configuration now. ConfigDrive is rebuilt at the next start; this does not mean the guest has consumed or executed it.",
+  "message.userdata.reset.delivery.provider": "All supported NIC providers must accept the update before Cloud saves it. Unsupported NICs are skipped. Guest consumption is separate; a reset does not rerun cloud-init automatically."
 }

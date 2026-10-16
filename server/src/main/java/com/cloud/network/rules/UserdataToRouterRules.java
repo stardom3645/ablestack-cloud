@@ -28,6 +28,7 @@ import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.cloud.uservm.UserVm;
 
 public class UserdataToRouterRules extends RuleApplier {
 
@@ -51,6 +52,16 @@ public class UserdataToRouterRules extends RuleApplier {
         UserVmDao userVmDao = visitor.getVirtualNetworkApplianceFactory().getUserVmDao();
         _userVM = userVmDao.findById(_profile.getVirtualMachine().getId());
         userVmDao.loadDetails(_userVM);
+
+        // A reset is applied before publishing its candidate in Cloud DB.
+        // Keep loaded VM details, but deliver the profile's intended body and
+        // metadata rather than re-reading the previously accepted userdata.
+        if (_profile.getVirtualMachine() instanceof UserVm) {
+            UserVm candidate = (UserVm) _profile.getVirtualMachine();
+            _userVM.setUserData(candidate.getUserData());
+            _userVM.setUserDataId(candidate.getUserDataId());
+            _userVM.setUserDataDetails(candidate.getUserDataDetails());
+        }
 
         // for basic zone, send vm data/password information only to the router in the same pod
         NicDao nicDao = visitor.getVirtualNetworkApplianceFactory().getNicDao();

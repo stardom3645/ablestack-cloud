@@ -14,6 +14,17 @@ import { NO_USER_DATA } from '@/utils/userDataSelection'
 
 export const userDataKeys = item => typeof item?.params === 'string' ? item.params.split(',').map(key => key.trim()).filter(Boolean) : []
 
+export function userDataResetSupport (vm, networks) {
+  if (vm.state !== 'Stopped' || vm.hypervisor === 'External' || vm.vmtype === 'sharedfsvm') return 'message.userdata.reset.unsupported.state'
+  const providers = (vm.nic || []).flatMap(nic => {
+    const network = networks.find(n => n.id === nic.networkid)
+    return (network?.service || []).filter(s => s.name === 'UserData').flatMap(s => s.provider || [])
+      .filter(p => p.name !== 'ConfigDrive' || nic.isdefault).map(p => p.name)
+  })
+  if (!providers.length) return 'message.userdata.reset.unsupported.network'
+  return providers.every(p => p === 'ConfigDrive') ? 'message.userdata.reset.delivery.configdrive' : 'message.userdata.reset.delivery.provider'
+}
+
 // The existing API exposes a Java Map string, not JSON. Split at known key
 // boundaries only: commas, equals signs and braces inside a value are data.
 export function resetUserDataValues (details, keys) {

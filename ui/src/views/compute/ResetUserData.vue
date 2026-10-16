@@ -30,6 +30,7 @@
   <a-spin :spinning="loadingData || templateLoading">
     <template v-if="currentLoaded">
       <a-alert type="info" show-icon :message="$t('message.userdata.reset.keep')" />
+      <a-alert v-if="supportMessage" :type="resetUnsupported ? 'warning' : 'info'" show-icon role="status" :message="$t(supportMessage)" />
       <p class="userdata-current-summary">{{ $t('label.userdata.current') }}: {{ current.userdataname || $t(currentKind) }}</p>
       <a-descriptions v-if="Object.keys(currentValues).length" size="small" :column="1">
         <a-descriptions-item v-for="(value, key) in currentValues" :key="key" :label="key">{{ value }}</a-descriptions-item>
@@ -40,7 +41,7 @@
         </a-collapse-panel>
       </a-collapse>
       <a-form-item :label="$t('label.userdata.reset.change')">
-        <a-switch v-model:checked="editCurrent" :disabled="loadingData" :aria-label="$t('label.userdata.reset.change')" />
+        <a-switch v-model:checked="editCurrent" :disabled="loadingData || resetUnsupported" :aria-label="$t('label.userdata.reset.change')" />
       </a-form-item>
     </template>
     <a-form
@@ -149,7 +150,7 @@ v-if="currentLoaded && editCurrent"
   </a-spin>
     <template #footer>
       <a-button :disabled="loadingData" @click="closeAction">{{ $t('label.cancel') }}</a-button>
-      <a-button :loading="loadingData" :disabled="templateLoading || templateError || !currentLoaded || (editCurrent && userDataSelectionBlocked)" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+      <a-button :loading="loadingData" :disabled="templateLoading || templateError || !currentLoaded || (editCurrent && (resetUnsupported || userDataSelectionBlocked))" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -162,7 +163,7 @@ import { autoScaleTemplateById } from '@/utils/autoScaleUi'
 import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 import MoldDialog from '@/components/view/MoldDialog'
 import { applyUserDataSelection, userDataSelectionConsumer } from '@/utils/userDataSelection'
-import { decodeResetUserData, resetTemplateActive, resetUserDataPayload, resetUserDataValues, userDataKeys } from '@/utils/userDataReset'
+import { decodeResetUserData, resetTemplateActive, resetUserDataPayload, resetUserDataValues, userDataKeys, userDataResetSupport } from '@/utils/userDataReset'
 
 export default {
   name: 'ResetUserData',
@@ -195,6 +196,8 @@ export default {
       appendManualCurrent: false,
       restoringSelectionId: null,
       submitError: '',
+      supportMessage: '',
+      resetUnsupported: false,
       readGeneration: 0,
       readActive: true,
       doUserdataOverride: false,
@@ -262,6 +265,8 @@ export default {
       this.templateError = false
       this.currentLoaded = false
       this.editCurrent = false
+      this.supportMessage = ''
+      this.resetUnsupported = false
       try {
         const request = (command, args) => getAPI(command, args, { preserveOnFailure: true, timeout: 15000 })
         const owner = { ...autoScaleOwnerParams(this.resource), ignoreproject: true }
@@ -271,6 +276,17 @@ export default {
         if (!current()) return
         const row = this.isAutoScaleProfile ? result.listautoscalevmprofilesresponse?.autoscalevmprofile?.find(r => r.id === id) : result.listvirtualmachinesresponse?.virtualmachine?.find(r => r.id === id)
         if (!row) throw new Error('Current user data unavailable')
+        if (!this.isAutoScaleProfile) {
+          const networks = await Promise.all([...new Set((row.nic || []).map(n => n.networkid))].map(async id => {
+            const response = await request('listNetworks', { ...owner, id, listall: true })
+            const network = response.listnetworksresponse?.network?.find(n => n.id === id)
+            if (!network) throw new Error('Network unavailable')
+            return network
+          }))
+          if (!current()) return
+          this.supportMessage = userDataResetSupport(row, networks)
+          this.resetUnsupported = this.supportMessage.startsWith('message.userdata.reset.unsupported.')
+        }
         const templateId = row.templateid || this.resource.templateid
         const json = await autoScaleTemplateById(request, { ...owner, id: templateId, zoneid: row.zoneid || this.resource.zoneid, isready: true })
         if (!current()) return
@@ -342,7 +358,7 @@ export default {
       this.restoringSelectionId = null
     },
     handleSubmit () {
-      if (this.loadingData || this.templateLoading || this.templateError || !this.currentLoaded || (this.editCurrent && this.userDataSelectionBlocked)) return
+      if (this.loadingData || this.templateLoading || this.templateError || !this.currentLoaded || (this.editCurrent && (this.resetUnsupported || this.userDataSelectionBlocked))) return
       const params = resetUserDataPayload(this, this.$toBase64AndURIEncoded)
       if (!params) { this.closeAction(); return }
       this.loadingData = true

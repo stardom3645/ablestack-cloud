@@ -14,12 +14,12 @@ import { nextTick } from 'vue'
 import { Buffer } from 'buffer'
 import Reset from '@/views/compute/ResetUserData.vue'
 import { getAPI, postAPI } from '@/api'
-import { decodeResetUserData, resetUserDataPayload, resetUserDataValues } from '@/utils/userDataReset'
+import { decodeResetUserData, resetUserDataPayload, resetUserDataValues, userDataResetSupport } from '@/utils/userDataReset'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: { apis: {}, userInfo: {}, project: {} } }))
 const encode = text => Buffer.from(text, 'utf8').toString('base64')
 const flush = async () => { for (let i = 0; i < 16; i++) { await Promise.resolve(); await nextTick() } }
-const resource = { id: 'vm', account: 'owner', domainid: 'domain', templateid: 'image', zoneid: 'zone' }
+const resource = { id: 'vm', account: 'owner', domainid: 'domain', templateid: 'image', zoneid: 'zone', state: 'Stopped', nic: [{ networkid: 'network', isdefault: true }] }
 const template = { id: 'image', account: 'owner', domainid: 'domain' }
 const library = { id: 'library', name: 'off-page library', params: 'VAR1,B' }
 function draft (overrides = {}) {
@@ -30,11 +30,31 @@ function mount (row = {}, image = template, props = {}) {
     if (command === 'listVirtualMachines') return Promise.resolve({ listvirtualmachinesresponse: { virtualmachine: [{ ...resource, ...row }] } })
     if (command === 'listAutoScaleVmProfiles') return Promise.resolve({ listautoscalevmprofilesresponse: { autoscalevmprofile: [{ ...resource, id: 'profile', ...row }] } })
     if (command === 'listTemplates') return Promise.resolve({ listtemplatesresponse: { template: [image] } })
+    if (command === 'listNetworks') return Promise.resolve({ listnetworksresponse: { network: [{ id: params.id, service: [{ name: 'UserData', provider: [{ name: 'ConfigDrive' }] }] }] } })
     return Promise.resolve({ listuserdataresponse: { userdata: [params.id === 'template-data' ? { id: 'template-data', params: 'T', userdata: encode('#cloud-config\nT') } : library] } })
   })
   return shallowMount(Reset, { props: { resource, ...props }, global: { mocks: { $t: k => k, $store: { getters: { apis: { listUserData: {} } } }, $toBase64AndURIEncoded: encode, $message: { success: jest.fn() }, $notifyError: jest.fn() }, stubs: { MoldDialog: { template: '<div><slot/><slot name="footer"/></div>' }, 'a-spin': { template: '<div><slot/></div>' }, 'a-form': { template: '<form><slot/></form>' }, 'a-alert': { template: '<p><slot name="description"/></p>' } } } })
 }
 beforeEach(() => { jest.clearAllMocks(); postAPI.mockResolvedValue({ resetuserdataforvirtualmachineresponse: {} }) })
+
+test.each(['Running', 'Starting', 'Stopping', 'Destroyed'])('fresh %s state blocks reset', state => {
+  expect(userDataResetSupport({ ...resource, state }, [])).toBe('message.userdata.reset.unsupported.state')
+})
+test('unsupported L2 and secondary-only ConfigDrive cannot reset; VR secondary can', () => {
+  const vm = { ...resource, nic: [{ networkid: 'network', isdefault: false }] }
+  const net = { id: 'network', service: [{ name: 'UserData', provider: [{ name: 'ConfigDrive' }] }] }
+  expect(userDataResetSupport(vm, [net])).toBe('message.userdata.reset.unsupported.network')
+  expect(userDataResetSupport(resource, [net])).toBe('message.userdata.reset.delivery.configdrive')
+  net.service[0].provider[0].name = 'VirtualRouter'
+  expect(userDataResetSupport(vm, [net])).toBe('message.userdata.reset.delivery.provider')
+  expect(userDataResetSupport(resource, [])).toBe('message.userdata.reset.unsupported.network')
+})
+test('unsupported VM remains readable and keep is a no-op even if change is forced', async () => {
+  const w = mount({ nic: [] }); await flush()
+  expect(w.vm.currentLoaded).toBe(true); expect(w.vm.resetUnsupported).toBe(true)
+  w.vm.editCurrent = true; w.vm.handleSubmit(); expect(postAPI).not.toHaveBeenCalled()
+  w.vm.editCurrent = false; w.vm.handleSubmit(); expect(w.emitted('close-action')).toBeTruthy(); w.unmount()
+})
 
 test('current keep is a no-op, not an empty reset', () => {
   expect(resetUserDataPayload(draft({ editCurrent: false }), encode)).toBeNull()
