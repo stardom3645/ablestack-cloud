@@ -71,4 +71,4 @@ Parent Epic: https://github.com/ablecloud-team/ablestack-cloud/issues/1381
 
 31번 최종 UI `8629c06d37a4f51c0acb7b9cb084e7bc744c37e1` 배포 후 77개 UI 회귀, API 14항목, 8개 테마/화면 조합과 실제 복사·다운로드 바이트를 검증했다. 기존 자원 보존과 전용 자원 정리를 완료했다. 공통 CancelToken 예외 2건은 #1392에 유지하며 전체 UI 최종 적합성으로 확대하지 않는다.
 
-[최종 보고서](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/report.ko.md) · [177항목 정량 검증](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/qualification.json) · [Epic PR #1393](https://github.com/ablecloud-team/ablestack-cloud/pull/1393)
+[최종 보고서](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/report.ko.md) · [181항목 정량 검증](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/qualification.json) · [Epic PR #1393](https://github.com/ablecloud-team/ablestack-cloud/pull/1393)

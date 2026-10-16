@@ -101,7 +101,7 @@
 
 - [x] UD-07 #1388: 사용 VM/템플릿/ISO 전용 참조 탭·서버 UUID 필터/ACL/count/page·삭제 전 안내와 실제 경합 검증 완료. [보고서](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1388-20261016/report.ko.md) · [정량 근거](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1388-20261016/qualification.json).
 
-- [x] UD-08 #1389: 메타데이터/본문 분리·실제 복사/다운로드·UUID/소유 범위 검색·VM 공통 UI 및 8개 테마/화면 조합 검증 완료. [보고서](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/report.ko.md) · [177항목 정량 근거](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/qualification.json).
+- [x] UD-08 #1389: 메타데이터/본문 분리·실제 복사/다운로드·UUID/소유 범위 검색·VM 공통 UI 및 8개 테마/화면 조합 검증 완료. [보고서](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/report.ko.md) · [181항목 정량 근거](https://github.com/dhslove/ablestack-cloud/blob/dhslove/epic-1381-userdata-library/docs/validation/userdata-1389-20261016/qualification.json).
 - 현재 구현 진행은 **8/11**이다. UD-09~UD-11 3개와 이 Epic은 계속 OPEN이다. 전체 UI 최종 표준 검토는 UD-11 #1392에서 수행한다.
 - 전체 Cloud 빌드·수동 Actions·PR 병합은 수행하지 않았다. PR은 후속 개선을 누적하는 Draft다.
 

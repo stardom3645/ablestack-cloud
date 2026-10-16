@@ -11,7 +11,7 @@
 # under the License.
 """Disposable cluster-31 UI deletion fixtures; private state is never published."""
 from pathlib import Path
-import json,hashlib,re
+import json,hashlib,re,subprocess
 ROOT=Path(__file__).resolve().parent
 load=lambda name:json.loads((ROOT/(name+'.json')).read_text(encoding='utf-8'))
 checks=[]
@@ -24,6 +24,9 @@ check('focused-tests-lint-build','77 passed, 77 total' in (ROOT/'unit-final.txt'
 check('API-contract',load('api-matrix')['passed']==14)
 export=load('content-exports')
 for name,item in export['checks'].items():check('export-'+name,item['equal'] and item['actual_sha256']==item['expected_sha256'],bytes=item['bytes'])
+for name in export['checks']:
+ path=ROOT/(name+'.bin');relative=path.relative_to(ROOT.parents[2]).as_posix()
+ check('git-bytes-'+name,subprocess.check_output(['git','show',':'+relative],cwd=ROOT.parents[2])==path.read_bytes())
 raw=(ROOT/'raw-download.bin').read_bytes()
 for theme in ['light','dark']:
  for width,height in [(1440,1000),(1280,720),(390,844),(390,480)]:
@@ -70,5 +73,5 @@ check('actual-deleted-target',not load('final-actual-deleted-target')['code'] an
 check('base64-decoding',export['decodedBase64MatchesOriginal'])
 check('browser-restored',load('browser-restoration')['viewportOverrideReset'] and load('browser-restoration')['originalLibraryRows']==1)
 
-(ROOT/'qualification.json').write_text(json.dumps(dict(issue=1389,source=runtime['source'],passed=len(checks),checks=checks,complete_network_intervals=len(list(ROOT.glob('network-final-*.json'))),runtime_exceptions=exceptions),ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+with (ROOT/'qualification.json').open('w',encoding='utf-8',newline='\n') as output:output.write(json.dumps(dict(issue=1389,source=runtime['source'],passed=len(checks),checks=checks,complete_network_intervals=len(list(ROOT.glob('network-final-*.json'))),runtime_exceptions=exceptions),ensure_ascii=False,indent=2)+'\n')
 print('Qualified assertions:',len(checks),'complete intervals:',len(list(ROOT.glob('network-final-*.json'))),'exceptions:',len(exceptions))

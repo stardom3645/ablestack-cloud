@@ -1,7 +1,7 @@
 {
   "issue": 1389,
   "source": "8629c06d37a4f51c0acb7b9cb084e7bc744c37e1",
-  "passed": 177,
+  "passed": 181,
   "checks": [
     {
       "name": "runtime-static-backend-preserved",
@@ -34,6 +34,22 @@
       "name": "export-base64-download",
       "passed": true,
       "bytes": 16016
+    },
+    {
+      "name": "git-bytes-raw-copy",
+      "passed": true
+    },
+    {
+      "name": "git-bytes-raw-download",
+      "passed": true
+    },
+    {
+      "name": "git-bytes-base64-copy",
+      "passed": true
+    },
+    {
+      "name": "git-bytes-base64-download",
+      "passed": true
     },
     {
       "name": "body-bounds-light-1440x1000",
