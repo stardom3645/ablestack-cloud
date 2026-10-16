@@ -64,3 +64,10 @@ body.dark-mode .userdata-library, body.dark-mode .userdata-reset-dialog, body.da
 // The workbench content has 12px side padding. The legacy 24px full-bleed
 // breadcrumb margin otherwise adds a page-level horizontal scrollbar.
 body .userdata-library .breadcrumb-card { margin-left: -12px; margin-right: -12px; }
+
+// Comment metadata and visibility actions are information, not decoration.
+body .userdata-library {
+  .ant-comment-content-author-name, .ant-comment-content-author-time,
+  .ant-comment-actions > li, .ant-comment-actions > li > span { color: var(--ui-text-secondary) !important; }
+  .ant-comment-actions .anticon { color: var(--ui-link) !important; }
+}
