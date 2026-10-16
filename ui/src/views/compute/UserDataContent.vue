@@ -22,7 +22,7 @@
         <a-descriptions-item :label="$t('label.vm.displayname')">{{ vm.displayname || vm.name }} ({{ vm.id }})</a-descriptions-item>
         <a-descriptions-item :label="$t('label.userdata.library')">{{ vm.userdataname || vm.userdataid || '-' }}</a-descriptions-item>
         <a-descriptions-item :label="$t('label.userdatapolicy')">{{ vm.userdatapolicy || '-' }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.userdata.parameters')">{{ vm.userdatadetails || '-' }}</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.userdata.vm.variables')">{{ vm.userdatadetails || '-' }}</a-descriptions-item>
       </a-descriptions>
       <a-alert class="vm-userdata-comparison" :type="comparison === 'different' ? 'warning' : 'info'" show-icon role="status" :message="$t('message.userdata.vm.compare.' + comparison)" />
     </template>

@@ -8931,5 +8931,6 @@
   "message.userdata.vm.compare.same": "현재 연결된 라이브러리 원본과 VM 저장 본문이 바이트 단위로 같습니다.",
   "message.userdata.vm.compare.different": "현재 연결된 라이브러리 원본과 VM 저장 본문이 다릅니다. 템플릿 병합·변수 치환 또는 원본 변경 여부를 확인하세요.",
   "message.userdata.vm.compare.unlinked": "VM에 직접 연결된 라이브러리 참조가 없습니다. 템플릿 또는 직접 입력한 본문일 수 있으며 원본과의 동일 여부는 확인하지 않았습니다.",
-  "message.userdata.vm.compare.unavailable": "라이브러리 원본을 비교할 수 없습니다. 원본 조회 권한·연결 정보·삭제 여부를 확인하세요. VM 저장 본문 조회와는 별개입니다."
+  "message.userdata.vm.compare.unavailable": "라이브러리 원본을 비교할 수 없습니다. 원본 조회 권한·연결 정보·삭제 여부를 확인하세요. VM 저장 본문 조회와는 별개입니다.",
+  "label.userdata.vm.variables": "변수 값 (VM 메타데이터)"
 }

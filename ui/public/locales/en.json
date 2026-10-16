@@ -8966,5 +8966,6 @@
   "message.userdata.vm.compare.same": "The VM stored body and current linked library source are byte-for-byte identical.",
   "message.userdata.vm.compare.different": "The VM stored body differs from the current linked library source. Review template merging, variable substitution or source changes.",
   "message.userdata.vm.compare.unlinked": "There is no direct library reference on this VM. The body may come from a template or inline input; source equality is not established.",
-  "message.userdata.vm.compare.unavailable": "Library source comparison is unavailable. Check source access, linkage or deletion. VM stored body access is independent."
+  "message.userdata.vm.compare.unavailable": "Library source comparison is unavailable. Check source access, linkage or deletion. VM stored body access is independent.",
+  "label.userdata.vm.variables": "Variable values (VM metadata)"
 }
