@@ -98,6 +98,7 @@
             </breadcrumb>
           </a-col>
           <a-col
+            class="autogen-toolbar-actions"
             :span="device === 'mobile' ? 24 : 12"
             :style="device === 'mobile' ? { float: 'right', 'margin-top': '12px', 'margin-bottom': '-6px', display: 'table' } : { float: 'right', display: 'table', 'margin-top': '6px' }" >
             <slot name="action" v-if="dataView && $route.path.startsWith('/publicip') && $slots.action"></slot>

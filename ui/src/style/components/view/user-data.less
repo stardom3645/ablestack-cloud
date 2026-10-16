@@ -40,6 +40,8 @@ body .userdata-reset-dialog, body .vm-userdata-dialog, body .image-userdata-dial
   .ant-btn-primary:not(:disabled) { color: var(--ui-action-primary-text); background: var(--ui-action-primary-bg); border-color: var(--ui-action-primary-bg); }
   .ant-btn-primary:not(:disabled):hover, .ant-btn-primary:not(:disabled):focus { color: var(--ui-action-primary-text); background: var(--ui-action-primary-hover); border-color: var(--ui-action-primary-hover); }
   .ant-btn-primary.ant-btn-dangerous:not(:disabled) { background: var(--ui-action-danger-bg); border-color: var(--ui-action-danger-bg); }
+  .ant-btn:disabled { background: var(--ui-bg-disabled) !important; color: var(--ui-text-secondary) !important; border-color: var(--ui-border-strong) !important; }
+  .ant-btn:disabled > span, .ant-btn:disabled .anticon { color: var(--ui-text-secondary) !important; }
   .ant-btn:focus-visible, summary:focus-visible, a:focus-visible, .ant-switch:focus-visible,
   .ant-radio-input:focus-visible + .ant-radio-inner,
   .ant-radio-button-wrapper:has(input:focus-visible) { outline: 2px solid var(--ui-link); outline-offset: 2px; }
@@ -64,6 +66,18 @@ body.dark-mode .userdata-library, body.dark-mode .userdata-reset-dialog, body.da
 // The workbench content has 12px side padding. The legacy 24px full-bleed
 // breadcrumb margin otherwise adds a page-level horizontal scrollbar.
 body .userdata-library .breadcrumb-card { margin-left: -12px; margin-right: -12px; }
+
+@media (max-width: 767px) {
+  body .userdata-library .autogen-toolbar-actions {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+    > .row-action-button { display: flex !important; flex-wrap: wrap; gap: 8px; width: 100%; min-width: 0; margin-right: 0 !important; }
+    > span:not(.row-action-button) { display: block !important; flex: 1 1 100%; min-width: 0; }
+    .input-search { margin-left: 0; }
+  }
+}
 
 // Comment metadata and visibility actions are information, not decoration.
 body .userdata-library {
