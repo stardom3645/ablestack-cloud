@@ -30,6 +30,7 @@
       <template v-if="cloneMode">
         <a-alert type="info" show-icon :message="$t('message.userdata.clone.intro')" />
         <p v-if="source">{{ $t('label.userdata.clone.source') }}: {{ source.name }} ({{ source.id }})<br>{{ source.project || source.account }} / {{ source.domain }}</p>
+        <p v-if="source" class="clone-usage-links"><router-link v-for="kind in ['vms', 'templates', 'isos']" :key="kind" :to="'/userdata/' + source.id + '?tab=userdata.usage.' + kind">{{ $t('label.userdata.usage.' + kind) }}</router-link></p>
         <a-button v-if="!source && !sourceLoading" @click="loadCloneSource">{{ $t('label.retry') }}</a-button>
         <UserDataChangePolicy />
       </template>
@@ -483,4 +484,5 @@ export default {
   .userdata-registration-content details { margin: 12px 0; }
   .userdata-registration-content summary { cursor: pointer; }
   .userdata-registration-content :deep(.content-code) { max-height: 240px; }
+  .clone-usage-links { display: flex; flex-wrap: wrap; gap: 12px; }
 </style>

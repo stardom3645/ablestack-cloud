@@ -61,7 +61,7 @@ export function cloneDifference (source, encoded, params) {
   const before = userDataContent(source.userdata); const after = userDataContent(encoded)
   let first = 0
   while (first < before.bytes.length && first < after.bytes.length && before.bytes[first] === after.bytes[first]) first++
-  return { changed: before.encoded !== after.encoded, before: before.bytes.length, after: after.bytes.length, first: first + 1, paramsChanged: (source.params || '') !== (params || '') }
+  return { changed: before.encoded !== after.encoded, before: before.bytes.length, after: after.bytes.length, first: before.encoded === after.encoded ? '-' : first + 1, paramsChanged: (source.params || '') !== (params || '') }
 }
 
 export function cloneRecord (source, target) {
@@ -80,10 +80,10 @@ export function parseCloneRecord (text, targetid) {
   } catch (error) { return null }
 }
 
-export async function readCloneNotes (get, id) {
+export async function readCloneNotes (get, id, projectid) {
   const result = []; let total
   for (let page = 1; page <= 100; page++) {
-    const json = await get('listAnnotations', { entityid: id, entitytype: 'USER_DATA', annotationfilter: 'all', page, pagesize: 500 }, options)
+    const json = await get('listAnnotations', { entityid: id, entitytype: 'USER_DATA', annotationfilter: 'all', page, pagesize: 500, ...(projectid ? { projectid } : { ignoreproject: true }) }, options)
     const body = json?.listannotationsresponse; const rows = body?.annotation || []
     const count = Number(body?.count || 0)
     if (!body || body.errorcode || !Array.isArray(rows) || !Number.isInteger(count) || count < 0 || (total !== undefined && count !== total)) throw new Error('message.userdata.clone.history.error')
@@ -95,11 +95,11 @@ export async function readCloneNotes (get, id) {
 }
 
 export async function saveCloneNote (get, post, target, annotation, current = () => true) {
-  const exists = async () => (await readCloneNotes(get, target.id)).some(row => row.annotation === annotation)
+  const exists = async () => (await readCloneNotes(get, target.id, target.projectid)).some(row => row.annotation === annotation)
   if (await exists()) return
   if (!current()) return
   try {
-    const json = await post('addAnnotation', { entityid: target.id, entitytype: 'USER_DATA', annotation, adminsonly: false }, options)
+    const json = await post('addAnnotation', { entityid: target.id, entitytype: 'USER_DATA', annotation, adminsonly: false, ...(target.projectid ? { projectid: target.projectid } : { ignoreproject: true }) }, options)
     if (!json?.addannotationresponse?.annotation?.id) throw new Error('message.userdata.clone.history.error')
   } catch (error) {
     if (await exists()) return

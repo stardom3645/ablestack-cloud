@@ -56,7 +56,7 @@ export default {
       try {
         const target = await readCloneSource(getAPI, Object.freeze({ ...this.resource }))
         if (!current()) return
-        const notes = await readCloneNotes(getAPI, target.id)
+        const notes = await readCloneNotes(getAPI, target.id, target.projectid)
         if (!current()) return
         const unique = new Map()
         for (const note of notes) { const record = parseCloneRecord(note.annotation, target.id); if (record) unique.set(JSON.stringify(record), record) }
