@@ -26,6 +26,7 @@ const result = (userdata = encoded, extra = {}) => ({ listuserdataresponse: { co
 let c
 beforeEach(() => {
   jest.clearAllMocks()
+  delete navigator.clipboard
   c = { resource: { ...source }, tab: 'userdata.content', $route: { path: '/userdata/' + source.id }, $store: { getters: { apis: { listUserData: {} }, userInfo: { id: 'user' }, project: {} }, state: { user: { token: 'token' } } } }
   Object.assign(c, Content.data.call(c)); Object.entries(Content.methods).forEach(([key, fn]) => { c[key] = fn.bind(c) }); Object.entries(Content.computed).forEach(([key, fn]) => { Object.defineProperty(c, key, { get: () => fn.call(c) }) })
   getAPI.mockResolvedValue(result())
@@ -62,4 +63,25 @@ test('download uses original bytes or selected Base64 and a UUID based safe file
   const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () { names.push(this.download) })
   URL.createObjectURL = jest.fn(() => 'blob:test'); URL.revokeObjectURL = jest.fn(); jest.useFakeTimers()
   try { c.download(); expect(Buffer.from(blobs[0][0]).equals(Buffer.from(text))).toBe(true); c.mode = 'base64'; c.download(); expect(blobs[1][0]).toBe(encoded); expect(names).toEqual(['userdata-' + source.id + '.txt', 'userdata-' + source.id + '.base64.txt']); jest.runAllTimers(); expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2) } finally { global.Blob = oldBlob; click.mockRestore(); jest.useRealTimers() }
+})
+
+afterEach(() => { delete navigator.clipboard })
+test('modern clipboard waits for the actual write before reporting success', async () => {
+  await c.fetchData(); let release
+  const writeText = jest.fn(() => new Promise(resolve => { release = resolve }))
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+  const pending = c.copy(); expect(writeText).toHaveBeenCalledWith(text); expect(c.feedback).toBe('')
+  release(); await pending; expect(c.feedback).toBe('message.success.copy.clipboard')
+})
+test('rejected modern clipboard falls back to selected text and restores focus without changing exact bytes', async () => {
+  await c.fetchData(); let copied
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: jest.fn().mockRejectedValue(new Error('denied')) } })
+  const focus = document.createElement('button'); document.body.appendChild(focus); focus.focus()
+  document.execCommand = jest.fn(() => { expect(document.activeElement.tagName).toBe('TEXTAREA'); const e = new Event('copy', { cancelable: true }); e.clipboardData = { setData: (_, value) => { copied = value } }; document.dispatchEvent(e); return true })
+  await c.copy(); expect(copied).toBe(text); expect(document.activeElement).toBe(focus); expect(document.querySelector('textarea')).toBeNull(); focus.remove()
+})
+test('late clipboard completion never posts success into a different scope', async () => {
+  await c.fetchData(); let release
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => new Promise(resolve => { release = resolve }) } })
+  const pending = c.copy(); c.resource.id = source.domainid; release(); await pending; expect(c.feedback).toBe('')
 })

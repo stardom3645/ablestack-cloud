@@ -88,17 +88,39 @@ export default {
         if (this.status !== 'error') this.content = null
       } finally { if (current()) this.pending = false }
     },
-    copy () {
+    async copy () {
       if (!this.exportable) return
+      const text = this.display
+      const scope = this.scope
+      const version = this.version
+      const notify = (error = false) => {
+        if (this.disposed || !this.active || scope !== this.scope || version !== this.version) return
+        this.feedbackError = error
+        this.feedback = error ? 'message.userdata.content.copy.failed' : 'message.success.copy.clipboard'
+      }
+      if (navigator.clipboard?.writeText) {
+        try { await navigator.clipboard.writeText(text); notify(); return } catch (error) { /* HTTP/older browsers use the selected-text fallback below. */ }
+      }
+      if (this.disposed || !this.active || scope !== this.scope || version !== this.version) return
       // Use the browser's copy event for exact text (including CRLF/BOM).
       // A textarea's value/selection would normalize line endings on HTTP sites.
-      const text = this.display
+      const focus = document.activeElement
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.readOnly = true
+      textarea.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'
       const listener = event => { event.clipboardData.setData('text/plain', text); event.preventDefault() }
       document.addEventListener('copy', listener)
       try {
+        document.body.appendChild(textarea)
+        textarea.select()
         if (!document.execCommand('copy')) throw new Error('Copy unavailable')
-        this.feedbackError = false; this.feedback = 'message.success.copy.clipboard'
-      } catch (error) { this.feedbackError = true; this.feedback = 'message.userdata.content.copy.failed' } finally { document.removeEventListener('copy', listener) }
+        notify()
+      } catch (error) { notify(true) } finally {
+        document.removeEventListener('copy', listener)
+        textarea.remove()
+        if (focus?.isConnected) focus.focus({ preventScroll: true })
+      }
     },
     download () {
       if (!this.exportable) return
