@@ -44,7 +44,7 @@ test('source difference is byte-level, never an execution result', async () => {
 test.each(['denied', 'deleted', 'wrong-owner', 'invalid'])('unavailable original %s does not hide the permitted VM body or claim equality', async reason => {
   const base = get; const call = (api, ...rest) => {
     if (api !== 'listUserData') return base(api, ...rest)
-    if (reason === 'denied') return Promise.reject({ response: { status: 403 } })
+    if (reason === 'denied') return Promise.reject(Object.assign(new Error('denied'), { response: { status: 403 } }))
     return Promise.resolve({ listuserdataresponse: { count: reason === 'deleted' ? 0 : 1, userdata: reason === 'deleted' ? [] : [{ id: vm.userdataid, name: vm.userdataname, account: reason === 'wrong-owner' ? 'other' : vm.account, domainid: vm.domainid, userdata: '@@' }] } })
   }
   const result = await readVmUserData(call, vm, apis, () => true); expect(result.comparison).toBe('unavailable'); expect(result.content.encoded).toBe(vm.userdata)
@@ -92,4 +92,9 @@ test('VM controller retains stale body only for recoverable errors and disables 
   getAPI.mockImplementation(get); await c.fetchData(); expect(c.status).toBe('ready'); expect(c.comparison).toBe('same')
   getAPI.mockRejectedValue({ response: { status: 503 } }); await c.fetchData(); expect(c.content).not.toBeNull(); expect(c.exportable).toBe(false); expect(c.comparison).toBe('unavailable')
   getAPI.mockRejectedValue({ response: { status: 403 } }); await c.fetchData(); expect(c.content).toBeNull(); expect(c.status).toBe('forbidden'); expect(c.vm).toBeNull()
+})
+
+test('metadata permission denial does not block independently permitted stored body access', async () => {
+  const base = get; const call = (api, ...rest) => api === 'listVirtualMachines' ? Promise.reject(Object.assign(new Error('metadata denied'), { response: { status: 403 } })) : base(api, ...rest)
+  const value = await readVmUserData(call, vm, apis, () => true); expect(value.content.encoded).toBe(vm.userdata); expect(value.comparison).toBe('unavailable')
 })

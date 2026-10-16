@@ -18,6 +18,7 @@
 <template>
   <MoldDialog class="vm-userdata-dialog" size="lg" :title="$t('label.userdata.vm.stored')" @cancel="$emit('close-action')">
     <UserDataContent :resource="target" tab="userdata.content" source-type="vm" />
+    <template #footer><a-button ref="close" @click="$emit('close-action')">{{ $t('label.close') }}</a-button></template>
   </MoldDialog>
 </template>
 <script>
@@ -29,6 +30,7 @@ export default {
   props: { resource: { type: Object, required: true } },
   emits: ['close-action'],
   data () { return { target: Object.freeze({ ...this.resource }) } },
+  mounted () { this.$nextTick(() => this.$refs.close?.$el?.focus()) },
   watch: { resource (value) { this.target = Object.freeze({ ...value }) } }
 }
 </script>

@@ -16,7 +16,7 @@
 // under the License.
 
 import { userDataContent } from '@/utils/userDataContent'
-import { userDataDeleteLookup, userDataDeleteIdentity } from '@/utils/userDataDeletion'
+import { userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } from '@/utils/userDataDeletion'
 
 const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
 export const vmUserDataSupported = apis => Array.isArray(apis?.getVirtualMachineUserData?.params) && apis.getVirtualMachineUserData.params.some(p => p.name === 'virtualmachineid')
@@ -29,8 +29,9 @@ export async function readVmUserData (get, source, apis, current) {
   if (!uuid.test(source.id || '')) fail('mismatch')
   const options = { preserveOnFailure: true, timeout: 20000 }
   const listApi = ['listVirtualMachines', 'listVirtualMachinesMetrics'].find(api => apis?.[api])
+  let metadataEnabled = !!listApi
   const metadata = async () => {
-    if (!listApi) return null
+    if (!metadataEnabled) return null
     const json = await get(listApi, { id: source.id, listall: true, details: 'all', userdata: true, ...(source.projectid ? { projectid: source.projectid } : {}) }, options)
     const body = json?.[listApi.toLowerCase() + 'response']
     if (!body || body.errorcode || (body.virtualmachine !== undefined && !Array.isArray(body.virtualmachine))) fail('invalid')
@@ -39,7 +40,11 @@ export async function readVmUserData (get, source, apis, current) {
     if (rows.length !== 1 || rows[0].id !== source.id || ['account', 'domainid', 'projectid'].some(key => (source[key] || '') !== (rows[0][key] || ''))) fail('mismatch')
     return rows[0]
   }
-  const before = await metadata()
+  let before
+  try { before = await metadata() } catch (error) {
+    if (![401, 403, 432, 531].includes(userDataDeleteError(error).code)) throw error
+    metadataEnabled = false; before = null
+  }
   if (!current()) return
   const json = await get('getVirtualMachineUserData', { virtualmachineid: source.id }, options)
   if (!current()) return
