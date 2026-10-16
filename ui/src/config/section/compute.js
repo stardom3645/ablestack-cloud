@@ -1502,6 +1502,7 @@ export default {
         },
         {
           name: 'comments',
+          show: () => Boolean(store.getters.apis?.listAnnotations),
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
         }
       ],
