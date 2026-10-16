@@ -126,7 +126,7 @@ test('template-only variables load even without a VM library ID', async () => {
 test('current/policy failures block submit and retry recovers', async () => {
   const w = mount(); getAPI.mockRejectedValue(new Error('503')); await flush()
   expect(w.vm.templateError).toBe(true); w.vm.handleSubmit(); expect(postAPI).not.toHaveBeenCalled()
-  getAPI.mockImplementation(command => Promise.resolve(command === 'listVirtualMachines' ? { listvirtualmachinesresponse: { virtualmachine: [resource] } } : { listtemplatesresponse: { template: [template] } }))
+  getAPI.mockImplementation(command => Promise.resolve(command === 'listVirtualMachines' ? { listvirtualmachinesresponse: { virtualmachine: [resource] } } : command === 'listNetworks' ? { listnetworksresponse: { network: [{ id: 'network', service: [] }] } } : { listtemplatesresponse: { template: [template] } }))
   await w.vm.fetchTemplateData(); expect(w.vm.currentLoaded).toBe(true); expect(w.vm.templateError).toBe(false); w.unmount()
 })
 test('failed mutation keeps the dialog, active mode and drafts; retry submits one input', async () => {
