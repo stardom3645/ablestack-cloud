@@ -24,9 +24,15 @@ export const userDataUsageKinds = {
 export function userDataUsageParams (source, kind, project, role, options = {}) {
   const projectid = source.projectid || project?.id
   const filter = role === 'User' ? 'executable' : 'all'
-  return { userdataid: source.id, listall: true, ...(projectid ? { projectid } : { ignoreproject: true }),
+  return {
+    userdataid: source.id,
+    listall: true,
+    ...(projectid ? { projectid } : { ignoreproject: true }),
     ...(kind === 'vms' ? {} : { [kind === 'templates' ? 'templatefilter' : 'isofilter']: filter, showunique: true }),
-    page: 1, pagesize: 20, ...options }
+    page: 1,
+    pagesize: 20,
+    ...options
+  }
 }
 export function userDataUsageRows (json, source, kind) {
   const config = userDataUsageKinds[kind]; const body = json?.[config.body]

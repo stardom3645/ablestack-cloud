@@ -18,7 +18,7 @@
 import Usage from '@/views/compute/UserDataUsage.vue'
 import { getAPI } from '@/api'
 import { userDataUsageParams, userDataUsageRows } from '@/utils/userDataUsage'
-import flushPromises from 'flush-promises'
+const flushPromises = () => new Promise(resolve => setImmediate(resolve))
 jest.mock('@/api', () => ({ getAPI: jest.fn() }))
 const source = { id: '11111111-1111-4111-8111-111111111111', name: 'test', account: 'admin', domainid: '22222222-2222-4222-8222-222222222222' }
 const row = { id: '33333333-3333-4333-8333-333333333333', userdataid: source.id, displayname: 'VM', account: 'other', state: 'Stopped' }
