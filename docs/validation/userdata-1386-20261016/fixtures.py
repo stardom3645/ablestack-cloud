@@ -12,6 +12,7 @@
 """Issue-1386 disposable cluster-31 fixtures and API/cleanup evidence."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import time
@@ -67,11 +68,36 @@ def boot(a,kind):
 def reset(a,kind,key,label):
     s=state();p=dict(id=s['vms'][kind]['id'],userdataid=s['userdata'][key]['id']);p['userdatadetails[0].TAG']=key+'-value'
     r=a.call('resetUserDataForVirtualMachine',**p);save(label,dict(request=p,response=r));save(label+'-after',snapshot(a,label+'-after',kind));print(json.dumps(r,ensure_ascii=False))
+def prepare_owners(a):
+    s=state();assert not s.get('domain_id')
+    domain=ok(a,'createDomain',name=PREFIX.lower())['domain'];s.update(domain_id=domain['id'],accounts=[],roles=[]);save('runtime-state',s)
+    zone=ok(a,'listZones')['zone'][0]['id']
+    for suffix,kind,role_type in [('user',0,'User'),('domainadmin',2,'DomainAdmin')]:
+        name=PREFIX.lower()+'-'+suffix
+        acc=ok(a,'createAccount',username=name,password=os.environ['MOLD_TEST_PASSWORD'],firstname='UD1386',lastname='QA',email=suffix+'@example.invalid',account=name,accounttype=kind,domainid=domain['id'])['account']
+        s['accounts'].append(dict(id=acc['id'],username=name,suffix=suffix));save('runtime-state',s)
+        role=ok(a,'createRole',name=PREFIX+'-'+suffix+'-reset',type=role_type,ispublic='false')['role'];s['roles'].append(role['id']);save('runtime-state',s)
+        for rule in ['list*','get*','query*','resetUserDataForVirtualMachine','logout']:ok(a,'createRolePermission',roleid=role['id'],rule=rule,permission='allow')
+        ok(a,'createRolePermission',roleid=role['id'],rule='*',permission='deny')
+        ok(a,'updateAccount',id=acc['id'],roleid=role['id'])
+    project=job(a,'createProject',name=PREFIX+'-project',displaytext=PREFIX,account=s['accounts'][0]['username'],domainid=domain['id'])['project']
+    s['project_id']=project['id'];save('runtime-state',s)
+    for n,(suffix,scope) in enumerate([(x['suffix'],dict(account=x['username'],domainid=domain['id'])) for x in s['accounts']]+[('project',dict(projectid=project['id']))]):
+        body=ud.content('#cloud-config\n# '+PREFIX+'-'+suffix+'\n')
+        s['userdata'][suffix]=ok(a,'registerUserData',name=PREFIX+'-'+suffix,userdata=body,params='TAG',**scope)['userdata'];save('runtime-state',s)
+        s['networks'][suffix]=ok(a,'createNetwork',name=PREFIX+'-'+suffix,displaytext=PREFIX,networkofferingid='bc740904-060d-4e13-a850-3609e588116a',zoneid=zone,vlan=3986+n,**scope)['network'];save('runtime-state',s)
+        v=job(a,'deployVirtualMachine',zoneid=zone,templateid='8d692729-7565-4e92-965b-ebaadc1efcb0',serviceofferingid='cd928fb0-6e2b-4ec8-b02b-023aed55b2b1',networkids=s['networks'][suffix]['id'],name=PREFIX+'-'+suffix,displayname=PREFIX+'-'+suffix,startvm='false',userdataid=s['userdata'][suffix]['id'],**{'userdatadetails[0].TAG':suffix+'-initial'},**scope)['virtualmachine']
+        s['vms'][suffix]={k:v[k] for k in ['id','name']};save('runtime-state',s);print(suffix,v['id'],flush=True)
+    save('owner-fixtures',dict(domain_id=s['domain_id'],accounts=s['accounts'],project_id=s['project_id'],roles=s['roles'],vms={k:v for k,v in s['vms'].items() if k in ['user','domainadmin','project']}))
 def cleanup(a):
     s=state()
     for v in s['vms'].values():job(a,'destroyVirtualMachine',id=v['id'],expunge='true')
     for v in s['userdata'].values():ok(a,'deleteUserData',id=v['id'])
     for n in s['networks'].values():job(a,'deleteNetwork',id=n['id'])
+    if s.get('project_id'):job(a,'deleteProject',id=s['project_id'])
+    for account in s.get('accounts',[]):job(a,'deleteAccount',id=account['id'])
+    for role in s.get('roles',[]):ok(a,'deleteRole',id=role)
+    if s.get('domain_id'):job(a,'deleteDomain',id=s['domain_id'])
     remaining=ud.inventory(a);assert remaining==json.loads((ROOT/'baseline.private.json').read_text(encoding='utf-8'))['userdata']
     save('cleanup',dict(original_library_exact_match=True,original_library_count=len(remaining),vm_residuals=len(ok(a,'listVirtualMachines',keyword=PREFIX,listall='true').get('virtualmachine',[])),network_residuals=len(ok(a,'listNetworks',keyword=PREFIX,listall='true').get('network',[]))))
     s['cleaned']=True;save('runtime-state',s)
@@ -79,6 +105,7 @@ if __name__=='__main__':
     sys.stdout.reconfigure(encoding='utf-8');a=ud.Mold();mode=sys.argv[1]
     if mode=='prepare':prepare(a)
     elif mode=='prepare-vms':prepare_vms(a)
+    elif mode=='prepare-owners':prepare_owners(a)
     elif mode=='boot':boot(a,sys.argv[2])
     elif mode=='stop':print(job(a,'stopVirtualMachine',id=state()['vms'][sys.argv[2]]['id']))
     elif mode=='snapshot':print(json.dumps(snapshot(a,sys.argv[2],sys.argv[3]),ensure_ascii=False))

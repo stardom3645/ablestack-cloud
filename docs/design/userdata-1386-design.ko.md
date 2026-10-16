@@ -26,6 +26,9 @@ and limitations under the License. -->
 3. 후보 본문/ID/변수는 메모리의 VM profile로 공급자에 전달한다. VR rule은 로드한
    VM의 SSH 등 기존 세부 정보는 유지하면서 profile의 후보 userdata 필드를 사용한다.
    이전 DB 본문을 다시 읽어 전달하는 오류를 방지한다.
+   이 동작은 내부 profile의 명시적 RESET_CANDIDATE 표식이 있을 때만 적용한다.
+   기존 updateVirtualMachine은 DB를 먼저 저장하고 오래된 profile을 전달할 수 있으므로
+   표식 없는 기존 경로는 새 DB 본문을 읽는 동작을 유지한다.
 4. 지원하는 모든 NIC의 수락이 필요하다. 한 NIC 성공으로 다른 실패를 가리지 않는다.
    전부 수락 후 VM이 여전히 Stopped인지 재확인하고 userdata 세 필드만 저장한다.
    실패/지연 중 API·사용 관계 조회는 이전에 수락한 Cloud 값을 반환한다.
@@ -37,6 +40,9 @@ and limitations under the License. -->
 6. UI는 실제 현재 VM/NIC와 각 네트워크를 조회해 지원 조건을 안내한다.
    미지원/비정지 VM은 읽기와 유지가 가능하되 변경을 차단한다. 네트워크 조회 실패도
    적용을 차단하고 재시도한다. 서버는 같은 조건을 다시 검사한다.
+7. 실제 command-response 형태의 오류에서도 공급자 복원 상태를 Body에 표시한다.
+   네트워크 단절/시간 초과로 응답을 받지 못하면 서버 실패로 확정하지 않고 결과 미확인으로
+   안내한다. 입력은 보존하며 작업 종료 후 저장값을 다시 확인하도록 한다.
 
 기존 `updateVirtualMachine`의 다른 설정 변경을 묶는 원자성이나 VM 수명 주기 전체의
 직렬화 프로토콜을 새로 정의하지 않는다. 이번 변경은 명시적인 사용자 데이터 reset API다.
