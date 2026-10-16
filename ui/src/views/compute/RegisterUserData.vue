@@ -409,7 +409,7 @@ export default {
         this.form.name = source.name.slice(0, 247) + '-v2'
         this.form.userdata = source.userdata; this.form.isbase64 = true
         this.form.params = source.params ? source.params.split(',') : []
-        this.$nextTick(() => { this.$refs.nameInput?.focus() })
+        this.$nextTick(() => { if (this.$refs.nameInput) this.$refs.nameInput.focus() })
       } catch (error) { if (current()) this.error = this.cloneError(error) } finally { if (current()) this.sourceLoading = false }
     },
     cloneError (error) { return error?.message?.startsWith('message.userdata.') ? this.$t(error.message) : this.errorMessage(error) },
