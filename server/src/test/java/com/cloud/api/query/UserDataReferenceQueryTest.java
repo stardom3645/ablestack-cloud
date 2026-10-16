@@ -71,7 +71,7 @@ public class UserDataReferenceQueryTest {
     public void cleanup() { CallContext.unregister(); }
 
     private void templates(Long userDataId) {
-        ListTemplatesCmd cmd = mock(ListTemplatesCmd.class);
+        ListTemplatesCmd cmd = mock(ListTemplatesCmd.class, invocation -> invocation.getMethod().getReturnType() == Long.class ? null : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation));
         when(cmd.getTemplateFilter()).thenReturn("all");
         when(cmd.getUserDataId()).thenReturn(userDataId);
         when(cmd.getShowUnique()).thenReturn(true);
@@ -98,7 +98,7 @@ public class UserDataReferenceQueryTest {
 
     @Test
     public void isosFilterBeforeCount() {
-        ListIsosCmd cmd = mock(ListIsosCmd.class);
+        ListIsosCmd cmd = mock(ListIsosCmd.class, invocation -> invocation.getMethod().getReturnType() == Long.class ? null : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation));
         when(cmd.getIsoFilter()).thenReturn("all");
         when(cmd.getUserDataId()).thenReturn(43L);
         when(cmd.getShowUnique()).thenReturn(true);
