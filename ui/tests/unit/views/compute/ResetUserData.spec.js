@@ -60,6 +60,11 @@ test('real command-shaped 530 response preserves the provider recovery reason', 
   postAPI.mockRejectedValueOnce({ message: 'Request failed with status code 530', response: { data: { resetuserdataforvirtualmachineresponse: { errorcode: 530, errortext: 'Cloud data unchanged; provider restoration unconfirmed' } } } })
   await w.vm.handleSubmit(); expect(w.vm.submitError).toBe('Cloud data unchanged; provider restoration unconfirmed'); expect(w.vm.form.userdata).toBe('current'); w.unmount()
 })
+test('lost transport response is an unknown outcome, not a confirmed server failure', async () => {
+  const w = mount({ userdata: encode('current') }); await flush(); w.vm.editCurrent = true
+  postAPI.mockRejectedValueOnce(new Error('Network Error'))
+  await w.vm.handleSubmit(); expect(w.vm.submitError).toBe('message.userdata.reset.outcome.unknown'); expect(w.vm.form.userdata).toBe('current'); expect(w.emitted('close-action')).toBeFalsy(); w.unmount()
+})
 
 test('current keep is a no-op, not an empty reset', () => {
   expect(resetUserDataPayload(draft({ editCurrent: false }), encode)).toBeNull()

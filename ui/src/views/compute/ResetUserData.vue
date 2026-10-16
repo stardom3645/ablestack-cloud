@@ -382,6 +382,9 @@ export default {
         this.submitError = resetUserDataApiName === 'updateAutoScaleVmProfile'
           ? autoScaleMutationDescription(error, this.$t)
           : (commandError || error?.response?.data?.errorresponse?.errortext || error?.message || this.$t('message.request.failed'))
+        if (resetUserDataApiName === 'resetUserDataForVirtualMachine' && !error?.response && /Network Error|timeout|ECONNABORTED|ERR_NETWORK/.test(`${error?.message} ${error?.code}`)) {
+          this.submitError = this.$t('message.userdata.reset.outcome.unknown')
+        }
       }).finally(() => {
         this.loadingData = false
       })
