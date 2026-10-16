@@ -29,7 +29,6 @@
   <a-alert v-if="submitError" type="error" show-icon role="alert" :message="submitError" />
   <a-spin :spinning="loadingData || templateLoading">
     <template v-if="currentLoaded">
-      <a-alert type="info" show-icon :message="$t('message.userdata.reset.keep')" />
       <a-alert v-if="supportMessage" :type="resetUnsupported ? 'warning' : 'info'" show-icon role="status" :message="$t(supportMessage)" />
       <p class="userdata-current-summary">{{ $t('label.userdata.current') }}: {{ current.userdataname || $t(currentKind) }}</p>
       <a-descriptions v-if="Object.keys(currentValues).length" size="small" :column="1">

@@ -1465,7 +1465,6 @@ export default {
       resourceType: 'UserData',
       searchFilters: ['id', 'name', 'domainid', 'account'],
       customParamHandler: userDataLibraryParams,
-      listDescription: 'message.userdata.library.search',
       details: ['id', 'name', 'account', 'domain', 'project', { field: 'params', customTitle: 'userdata.parameters' }],
       related: [{
         name: 'vm',

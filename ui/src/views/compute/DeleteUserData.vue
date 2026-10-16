@@ -29,8 +29,6 @@ for the specific language governing permissions and limitations. -->
           </template>
         </template>
       </a-table>
-      <p>{{ $t('message.userdata.delete.remaining') }}</p>
-      <p>{{ $t('message.userdata.usage.delete.guidance') }}</p>
       <a-button :loading="referencePending" :disabled="busy || referencePending" @click="loadReferences">{{ $t('label.userdata.usage.refresh') }}</a-button>
     </div>
     <template #footer>

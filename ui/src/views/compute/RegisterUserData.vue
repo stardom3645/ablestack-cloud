@@ -32,7 +32,6 @@
         <p v-if="source">{{ $t('label.userdata.clone.source') }}: {{ source.name }} ({{ source.id }})<br>{{ source.project || source.account }} / {{ source.domain }}</p>
         <p v-if="source" class="clone-usage-links"><a v-for="kind in ['vms', 'templates', 'isos']" :key="kind" :href="$router.resolve('/userdata/' + source.id + '?tab=userdata.usage.' + kind).href" :aria-disabled="busy" :tabindex="busy ? -1 : undefined" @click="openCloneRoute($event, '/userdata/' + source.id + '?tab=userdata.usage.' + kind)">{{ $t('label.userdata.usage.' + kind) }}</a></p>
         <a-button v-if="!source && !sourceLoading" @click="loadCloneSource">{{ $t('label.retry') }}</a-button>
-        <UserDataChangePolicy />
       </template>
       <template v-if="createdVersion">
         <a-alert type="success" show-icon role="status" :message="$t('message.userdata.clone.created')" />
@@ -187,14 +186,13 @@ import { canonicalUserData, userDataName, userDataParams, isUserDataRoute } from
 import { userDataContent } from '@/utils/userDataContent'
 import { cloneApis, cloneOwner, readCloneSource, findCloneAttempt, cloneDifference, cloneRecord, saveCloneNote } from '@/utils/userDataVersions'
 import UserDataContent from './UserDataContent'
-import UserDataChangePolicy from './UserDataChangePolicy'
 
 export default {
   name: 'registerUserData',
   props: { currentAction: { type: Object, default: () => ({}) }, resource: { type: Object, default: () => ({}) } },
   emits: ['refresh-data', 'close-action'],
   components: {
-    TooltipLabel, MoldDialog, UserDataContent, UserDataChangePolicy
+    TooltipLabel, MoldDialog, UserDataContent
   },
   data () {
     return {

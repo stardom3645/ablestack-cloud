@@ -8910,7 +8910,6 @@
   "label.userdata.raw": "원문 (UTF-8)",
   "label.userdata.parameters": "동적 파라미터 키",
   "label.userdata.representation": "본문 표시 형식",
-  "message.userdata.library.search": "검색창: 이름 포함 검색 또는 정확한 UUID. 필터: UUID·정확한 이름·도메인·소유 계정. 프로젝트는 상단 공통 보기를 선택하세요. 열 정렬은 현재 페이지에만 적용됩니다.",
   "message.userdata.content.contract": "등록된 라이브러리의 본문입니다. 실행 결과를 의미하지 않습니다. 선택한 표시 형식으로 복사·다운로드합니다. 원문 다운로드는 BOM·줄바꿈을 포함한 저장 바이트를 보존합니다.",
   "message.userdata.content.representation": "표시: {mode} · 원문 크기: {size} 바이트",
   "message.userdata.content.empty": "저장된 본문이 없습니다.",
@@ -8966,6 +8965,6 @@
   "message.userdata.clone.name.conflict": "해당 이름의 항목이 이미 존재하거나 조회 결과가 입력과 다릅니다. 새 이름을 사용하고 결과를 확인하세요.",
   "message.userdata.clone.source.changed": "원본 본문 또는 변수 선언이 달라졌습니다. 창을 닫고 원본을 다시 조회하세요.",
   "message.userdata.clone.history.error": "출처 기록을 확인할 수 없습니다. 권한·연결 상태를 확인한 뒤 다시 시도하세요.",
-  "message.userdata.clone.history.empty": "확인 가능한 출처 메모가 없습니다. 독립 등록·삭제된 메모·숨겨진 메모의 버전 관계는 추정하지 않습니다.",
+  "message.userdata.clone.history.empty": "변경 기록이 없습니다.",
   "message.userdata.content.preview": "원본 또는 편집값의 스냅샷 미리보기입니다. 현재 저장된 라이브러리 본문과 구분됩니다. 선택한 형식으로 복사·다운로드합니다."
 }

@@ -10,7 +10,6 @@ for the specific language governing permissions and limitations. -->
 <template>
   <section class="userdata-versions" :aria-busy="pending">
     <div class="detail-tab-toolbar"><a-button :loading="pending" :disabled="!allowed" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button></div>
-    <p>{{ $t('message.userdata.clone.history.contract') }}</p>
     <a-alert v-if="error" type="error" show-icon role="status" :message="$t(error)" />
     <a-spin :spinning="pending && !records.length">
       <a-alert v-if="!pending && !error && !records.length" type="info" show-icon role="status" :message="$t('message.userdata.clone.history.empty')" />
@@ -21,17 +20,14 @@ for the specific language governing permissions and limitations. -->
         <a-descriptions-item :label="$t('label.userdataparams')">{{ resource.params || '-' }}</a-descriptions-item>
       </a-descriptions>
     </a-spin>
-    <UserDataChangePolicy />
   </section>
 </template>
 <script>
 import { getAPI } from '@/api'
 import { readCloneSource, readCloneNotes, parseCloneRecord } from '@/utils/userDataVersions'
 import { userDataDeleteError } from '@/utils/userDataDeletion'
-import UserDataChangePolicy from './UserDataChangePolicy'
 export default {
   name: 'UserDataVersions',
-  components: { UserDataChangePolicy },
   props: { resource: { type: Object, required: true }, tab: { type: String, default: '' }, loading: Boolean },
   data () { return { pending: false, records: [], error: '', version: 0, disposed: false } },
   computed: {
@@ -72,9 +68,7 @@ export default {
 </script>
 <style scoped>
 .userdata-versions { min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; gap: 16px; color: var(--ui-text-primary); }
-.userdata-versions > p { margin: 0; color: var(--ui-text-secondary); }
 .userdata-versions > .detail-tab-toolbar { margin-bottom: 4px; }
 .userdata-versions :deep(.ant-descriptions + .ant-descriptions) { margin-top: 16px; }
 .userdata-versions :deep(.ant-descriptions:first-child) { margin-top: 0; }
-.userdata-versions > .userdata-change-policy { margin: 0; }
 </style>

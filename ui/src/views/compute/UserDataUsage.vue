@@ -21,14 +21,9 @@
       <a-button :loading="pending" :disabled="!canRead || !resourceActionReady()" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-input-search class="usage-search" v-model:value="draftKeyword" :disabled="!canRead" :placeholder="$t('label.search')" :aria-label="$t('label.search')" allow-clear @search="search" />
     </div>
-    <p class="usage-note">{{ $t('message.userdata.usage.contract') }}</p>
-    <p class="usage-note">{{ $t('message.userdata.usage.search') }}</p>
-    <p class="usage-note">{{ $t('message.userdata.usage.scope', { project: resource.project || $store.getters.project?.name || '-' }) }}</p>
-    <p v-if="kind !== 'vms'" class="usage-note">{{ $t('message.userdata.usage.unlink.image') }}</p>
     <a-alert v-if="['error', 'forbidden', 'mismatch', 'missing', 'unsupported'].includes(status)" class="usage-feedback" type="error" show-icon role="status" :message="$t('message.userdata.usage.' + status)">
       <template #description><span v-if="rows.length">{{ $t('message.userdata.usage.stale') }}</span><a-button v-if="canRead" type="link" :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
-    <p v-if="kind === 'vms' && rows.length" class="usage-summary">{{ $t('message.userdata.usage.page.states') }} <span v-for="[state, total] in pageStates" :key="state"><Status :text="state" /> {{ $t('label.' + state.toLowerCase()) }} {{ total }}</span></p>
     <div class="usage-table">
       <ListView :resource-path="config.path" :columns="columns" :items="rows" :loading="tableLoading" :actions="[]" :emptyText="$t('message.userdata.usage.' + (status === 'ready' ? 'empty' : status))" @table-change="sort" />
     </div>
@@ -40,7 +35,6 @@
 <script>
 import { getAPI } from '@/api'
 import ListView from '@/components/view/ListView'
-import Status from '@/components/widgets/Status'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 import { userDataUsageParams, userDataUsageRows, userDataUsageKinds, userDataUsageSupported } from '@/utils/userDataUsage'
 import { userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } from '@/utils/userDataDeletion'
@@ -48,7 +42,7 @@ import { userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } fro
 const tabPrefix = 'userdata.usage.'
 export default {
   name: 'UserDataUsage',
-  components: { ListView, Status },
+  components: { ListView },
   mixins: [listRefreshMixin(['fetchData'], { active: vm => vm.active })],
   props: { resource: { type: Object, required: true }, tab: { type: String, default: '' }, resourceType: { type: String, required: true }, loading: Boolean },
   inject: { resourceActionReady: { default: () => () => true } },
@@ -63,7 +57,6 @@ export default {
     scope () { return JSON.stringify([this.kind, this.resource.id, this.resource.name, this.resource.account, this.resource.domainid, this.resource.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.canRead]) },
     queryKey () { return JSON.stringify(['keyword', 'page', 'pagesize', 'sort', 'order'].map(key => this.$route.query[this.kind + key])) },
     queryScope () { return JSON.stringify([this.scope, this.keyword, this.page, this.pagesize]) },
-    pageStates () { const states = {}; this.rows.forEach(row => { states[row.state] = (states[row.state] || 0) + 1 }); return Object.entries(states).sort() },
     columns () {
       return ['name', 'id', ...(this.kind === 'vms' ? ['state'] : ['userdatapolicy']), 'account', 'project', 'domain'].map(key => ({ key, dataIndex: key, title: this.$t(key === 'name' && this.kind === 'vms' ? 'label.vm.displayname' : 'label.' + key), sorter: (a, b) => String(a[key] || '').localeCompare(String(b[key] || '')), sortOrder: this.sortkey === key ? (this.sortorder === 'asc' ? 'ascend' : 'descend') : null }))
     }
@@ -150,9 +143,7 @@ export default {
   .ant-btn, :deep(.ant-input), :deep(.ant-input-search-button) { height: 32px; }
 }
 .usage-search { width: 240px; max-width: 100%; margin-left: auto; }
-.usage-note { margin-bottom: 8px; }
-.usage-feedback, .usage-summary { margin: 20px 0; }
-.usage-summary span { display: inline-block; margin-left: 8px; }
+.usage-feedback { margin: 20px 0; }
 .usage-table { margin-top: 20px; overflow-x: auto; :deep(.list-view-table-wrapper) { min-width: 640px; } }
 .usage-pagination { display: flex; justify-content: flex-end; flex-wrap: wrap; margin-top: 20px; :deep(.ant-pagination) { display: flex; flex-wrap: wrap; gap: 8px 0; } }
 @media (max-width: 767px) { .usage-search { flex-basis: 100%; width: 100%; } }

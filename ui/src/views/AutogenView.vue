@@ -846,7 +846,6 @@
           <template #action><a-button size="small" @click="fetchData">{{ $t('label.refresh') }}</a-button></template>
         </a-alert>
         <p v-else-if="listRefreshError && $route.meta?.name !== 'vmgroup'" role="status">{{ $t('message.list.refresh.stale') }}</p>
-        <p v-if="$route.meta.listDescription" class="list-description">{{ $t($route.meta.listDescription) }}</p>
         <list-view
           :loading="loading"
           :emptyText="$route.meta?.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
