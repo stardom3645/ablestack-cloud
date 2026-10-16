@@ -35,6 +35,7 @@ manifest=dict(issue=1388,cluster=31,source=subprocess.check_output(['git','-C',s
 (stage/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 script=(repo/'docs/validation/userdata-1382-20261015/deploy.py').read_text()
 script=script.replace("manifest['issue'] == 1382", "manifest['issue'] == 1388").replace('ud1382','ud1388').replace('issue=1382','issue=1388')
+script=script.replace('backup.mkdir()', "backup.mkdir()\n(backup / 'static').mkdir()")
 script=script.replace("shutil.copy2(jar, backup / jar.name)","assert before['jar_sha256'] == manifest['prior_jar_sha256']\nshutil.copy2(jar, backup / jar.name)")
 script=script.replace("assert set(source.namelist()).issubset(target.namelist())", "assert set(source.namelist()).issubset(target.namelist())\n    assert all(hashbytes(target.read(name)) == digest for name,digest in manifest['preserved_classes'].items())")
 script=script.replace("for top in (stage / 'ui').iterdir():", "for top in sorted((stage / 'ui').iterdir(), key=lambda path: path.name == 'index.html'):")
