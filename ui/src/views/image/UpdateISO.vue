@@ -18,9 +18,10 @@
 <template>
   <MoldDialog class="image-userdata-dialog" size="md" :title="$t('label.action.edit.iso')" :closable="!loading" :keyboard="!loading" @cancel="closeAction">
     <a-alert v-if="submitError" type="error" show-icon role="alert" :message="submitError" />
-    <div class="image-userdata-content" v-ctrl-enter="handleSubmit">
+    <div ref="content" class="image-userdata-content" v-ctrl-enter="handleSubmit">
     <a-spin :spinning="loading">
       <a-form
+        id="image-userdata-form"
         :ref="formRef"
         :model="form"
         :rules="rules"
@@ -33,7 +34,7 @@
           <a-input
             v-model:value="form.name"
             :placeholder="apiParams.name.description"
-            autoFocus />
+ />
         </a-form-item>
         <a-form-item name="displaytext" ref="displaytext">
           <template #label>
@@ -42,7 +43,7 @@
           <a-input
             v-model:value="form.displaytext"
             :placeholder="apiParams.displaytext.description"
-            autoFocus />
+ />
         </a-form-item>
         <a-form-item name="passwordenabled" ref="passwordenabled">
           <template #label>
@@ -138,6 +139,7 @@
           </a-select>
         </a-form-item>
 
+        <button type="submit" hidden aria-hidden="true" tabindex="-1"></button>
       </a-form>
     </a-spin>
     </div>
@@ -180,6 +182,7 @@ export default {
       originalOstypeid: null
     }
   },
+  mounted () { this.$nextTick(() => { const input = this.$refs.content?.querySelector('input:not([disabled])'); if (input) input.focus() }) },
   computed: {
     canLinkUserData () { return ['listUserData', 'linkUserDataToTemplate'].every(api => api in this.$store.getters.apis) },
     blocksNavigation () { return this.loading }
@@ -275,7 +278,10 @@ export default {
       if (this.loading || (this.canLinkUserData && !this.userDataSelectionReady)) return
       this.submitError = ''; this.loading = true
       try { await this.formRef.value.validate() } catch (error) {
-        if (error.errorFields?.length) this.formRef.value.scrollToField(error.errorFields[0].name)
+        if (error.errorFields?.length) {
+          this.formRef.value.scrollToField(error.errorFields[0].name)
+          this.$nextTick(() => { const input = this.$refs.content?.querySelector('.ant-form-item-has-error input'); if (input) input.focus() })
+        }
         this.loading = false
         return
       }
