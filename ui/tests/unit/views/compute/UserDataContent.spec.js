@@ -85,3 +85,9 @@ test('late clipboard completion never posts success into a different scope', asy
   Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => new Promise(resolve => { release = resolve }) } })
   const pending = c.copy(); c.resource.id = source.domainid; release(); await pending; expect(c.feedback).toBe('')
 })
+
+test('loading watchers coalesce an already pending content lookup', async () => {
+  let release; getAPI.mockImplementation(() => new Promise(resolve => { release = resolve }))
+  const pending = c.fetchData(); Content.watch.loading.call(c, false); await c.fetchData(); expect(getAPI).toHaveBeenCalledTimes(1)
+  release(result()); await pending; expect(c.content.text).toBe(text)
+})

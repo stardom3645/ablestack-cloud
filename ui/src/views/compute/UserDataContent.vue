@@ -34,7 +34,7 @@
     <a-alert v-if="content?.text === null" type="warning" show-icon :message="$t('message.userdata.content.binary')" />
     <a-alert v-if="feedback" :type="feedbackError ? 'error' : 'success'" show-icon :message="$t(feedback)" role="status" />
     <a-spin :spinning="pending && !content">
-      <a-empty v-if="content?.empty" :description="$t('message.userdata.content.empty')" />
+      <a-alert v-if="content?.empty" type="info" show-icon :message="$t('message.userdata.content.empty')" role="status" />
       <pre v-else-if="content" class="content-code" tabindex="0" :aria-label="mode === 'raw' ? $t('label.userdata.raw') : 'Base64'"><code>{{ display }}</code></pre>
     </a-spin>
   </section>
@@ -65,7 +65,7 @@ export default {
   methods: {
     reset () { this.version++; this.pending = false; this.content = null; this.status = 'loading'; this.mode = 'raw'; this.feedback = '' },
     async fetchData () {
-      if (!this.active || this.disposed) return
+      if (!this.active || this.disposed || this.pending) return
       if (!this.canRead) { this.reset(); this.status = 'unsupported'; return }
       const source = Object.freeze({ ...this.resource }); const lookup = userDataDeleteLookup(source)
       if (!lookup) { this.reset(); this.status = 'mismatch'; return }
