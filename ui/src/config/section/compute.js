@@ -25,6 +25,7 @@ import { getAPI, postAPI, getBaseUrl } from '@/api'
 import { getLatestKubernetesIsoParams } from '@/utils/acsrepo'
 import { isFastClonePowerOperationBlocked, getFastClonePowerBlockedLabel, getFastClonePhase } from '@/utils/fastClone'
 import { isCloneBlockedByExtraConfigDisk } from '@/utils/vmClone'
+import { userDataLibraryParams } from '@/utils/userDataContent'
 import kubernetesIcon from '@/assets/icons/kubernetes.svg?inline'
 
 const activeFastCloneStatuses = ['pending', 'running']
@@ -1451,7 +1452,10 @@ export default {
         return fields
       },
       resourceType: 'UserData',
-      details: ['id', 'name', 'userdata', 'account', 'domain', 'params'],
+      searchFilters: ['id', 'name', 'domainid', 'account'],
+      customParamHandler: userDataLibraryParams,
+      listDescription: 'message.userdata.library.search',
+      details: ['id', 'name', 'account', 'domain', 'project', { field: 'params', customTitle: 'userdata.parameters' }],
       related: [{
         name: 'vm',
         title: 'label.instances',
@@ -1461,6 +1465,10 @@ export default {
         {
           name: 'details',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+        },
+        {
+          name: 'userdata.content',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataContent.vue')))
         },
         {
           name: 'userdata.usage.vms',
