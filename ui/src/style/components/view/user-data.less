@@ -60,3 +60,7 @@ body .userdata-reset-dialog, body .vm-userdata-dialog, body .image-userdata-dial
 }
 
 body.dark-mode .userdata-library, body.dark-mode .userdata-reset-dialog, body.dark-mode .image-userdata-dialog { --userdata-switch-bg: var(--ui-bg-disabled); }
+
+// The workbench content has 12px side padding. The legacy 24px full-bleed
+// breadcrumb margin otherwise adds a page-level horizontal scrollbar.
+body .userdata-library .breadcrumb-card { margin-left: -12px; margin-right: -12px; }
