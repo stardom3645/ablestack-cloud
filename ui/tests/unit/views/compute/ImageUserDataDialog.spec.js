@@ -21,7 +21,7 @@ import { postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 const deferred = () => { let release; const promise = new Promise(resolve => { release = resolve }); return { promise, resolve: release } }
 const context = C => {
-  const c = { resource: { id: 'image-uuid', name: 'image', account: 'admin', domainid: 'domain', userdataid: 'old', userdatapolicy: 'ALLOWOVERRIDE' }, form: { name: 'retained' }, formRef: { value: { validate: jest.fn(() => Promise.resolve()), scrollToField: jest.fn() } }, detailsFields: [], emptyAllowedFields: [], canLinkUserData: true, userDataSelectionReady: true, loading: false, userdataid: 'new', userdatapolicy: 'APPEND', $emit: jest.fn(), $t: key => key, $message: { success: jest.fn() }, isValidValueForKey: () => true }
+  const c = { resource: { id: 'image-uuid', name: 'image', account: 'admin', domainid: 'domain', userdataid: 'old', userdatapolicy: 'ALLOWOVERRIDE' }, form: { name: 'retained' }, formRef: { value: { validate: jest.fn(() => Promise.resolve()), scrollToField: jest.fn() } }, detailsFields: [], emptyAllowedFields: [], canLinkUserData: true, userDataSelectionReady: true, loading: false, userdataid: 'new', userdatapolicy: 'APPEND', $refs: {}, $nextTick: fn => fn(), $emit: jest.fn(), $t: key => key, $message: { success: jest.fn() }, isValidValueForKey: () => true }
   Object.entries(C.methods).forEach(([key, fn]) => { c[key] = fn.bind(c) }); return c
 }
 beforeEach(() => { jest.clearAllMocks(); postAPI.mockReset() })
@@ -37,8 +37,8 @@ describe.each([[Template, 'updateTemplate'], [ISO, 'updateIso']])('%s user-data 
     expect(c.$emit).toHaveBeenCalledWith('close-action'); expect(c.$emit).toHaveBeenCalledWith('refresh-data'); expect(c.loading).toBe(false)
   })
   test('partial link failure keeps draft and explains saved metadata, no false success', async () => {
-    const c = context(C); postAPI.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error('link 503'))
-    await c.handleSubmit(); expect(c.submitError).toContain('message.userdata.image.partial'); expect(c.form.name).toBe('retained'); expect(c.$emit).not.toHaveBeenCalledWith('close-action'); expect(c.$message.success).not.toHaveBeenCalled(); expect(c.loading).toBe(false)
+    const c = context(C); c.$refs.error = { $el: { scrollIntoView: jest.fn(), focus: jest.fn() } }; postAPI.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error('link 503'))
+    await c.handleSubmit(); expect(c.submitError).toContain('message.userdata.image.partial'); expect(c.form.name).toBe('retained'); expect(c.$emit).not.toHaveBeenCalledWith('close-action'); expect(c.$message.success).not.toHaveBeenCalled(); expect(c.loading).toBe(false); expect(c.$refs.error.$el.scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' }); expect(c.$refs.error.$el.focus).toHaveBeenCalled()
   })
   test('validation and click/Enter share one lock; invalid selection never submits', async () => {
     const c = context(C); const wait = deferred(); c.formRef.value.validate.mockReturnValue(wait.promise); postAPI.mockResolvedValue({})

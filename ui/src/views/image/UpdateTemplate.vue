@@ -17,7 +17,7 @@
 
 <template>
   <MoldDialog class="image-userdata-dialog" size="md" :title="$t('label.action.edit.template')" :closable="!loading" :keyboard="!loading" @cancel="closeAction">
-    <a-alert v-if="submitError" type="error" show-icon role="alert" :message="submitError" />
+    <a-alert v-if="submitError" ref="error" tabindex="-1" type="error" show-icon role="alert" :message="submitError" />
     <div ref="content" class="image-userdata-content" v-ctrl-enter="handleSubmit">
     <a-spin :spinning="loading">
       <a-form
@@ -534,6 +534,10 @@ export default {
       } catch (error) {
         this.submitError = (updated ? this.$t('message.userdata.image.partial') + ' ' : '') + (error.response?.headers?.['x-description'] || error.message || this.$t('message.request.failed'))
         if (updated) this.$emit('refresh-data')
+        this.$nextTick(() => {
+          const alert = this.$refs.error?.$el
+          if (alert) { alert.scrollIntoView({ block: 'nearest' }); alert.focus({ preventScroll: true }) }
+        })
       } finally { this.loading = false }
     },
     closeAction () { if (!this.loading) this.$emit('close-action') },
