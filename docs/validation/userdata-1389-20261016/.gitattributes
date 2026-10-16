@@ -9,6 +9,5 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-"""Disposable cluster-31 UI deletion fixtures; private state is never published."""
 # Preserve the exact clipboard/download bytes, including BOM and CRLF.
 *.bin -text -diff
