@@ -40,7 +40,9 @@ body .userdata-reset-dialog, body .vm-userdata-dialog, body .image-userdata-dial
   .ant-btn-primary:not(:disabled) { color: var(--ui-action-primary-text); background: var(--ui-action-primary-bg); border-color: var(--ui-action-primary-bg); }
   .ant-btn-primary:not(:disabled):hover, .ant-btn-primary:not(:disabled):focus { color: var(--ui-action-primary-text); background: var(--ui-action-primary-hover); border-color: var(--ui-action-primary-hover); }
   .ant-btn-primary.ant-btn-dangerous:not(:disabled) { background: var(--ui-action-danger-bg); border-color: var(--ui-action-danger-bg); }
-  .ant-btn:focus-visible, summary:focus-visible, a:focus-visible, .ant-radio-button-wrapper:has(input:focus-visible) { outline: 2px solid var(--ui-link); outline-offset: 2px; }
+  .ant-btn:focus-visible, summary:focus-visible, a:focus-visible, .ant-switch:focus-visible,
+  .ant-radio-input:focus-visible + .ant-radio-inner,
+  .ant-radio-button-wrapper:has(input:focus-visible) { outline: 2px solid var(--ui-link); outline-offset: 2px; }
   // The legacy dark-mode :not(:hover, :focus) selector otherwise wins over
   // these opt-in semantic boundaries even while the control is idle.
   .ant-checkbox-inner { background: var(--ui-bg-input) !important; border-color: var(--ui-border-strong) !important; }
