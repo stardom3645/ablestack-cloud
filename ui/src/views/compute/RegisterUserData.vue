@@ -163,7 +163,7 @@
       <a-alert v-if="error" class="mold-dialog-section" role="alert" type="error" show-icon :message="error" />
     </div>
     <template #footer>
-      <a-button :disabled="busy" @click="closeAction">{{ $t(createdVersion ? 'label.close' : 'label.cancel') }}</a-button>
+      <a-button ref="closeButton" :disabled="busy" @click="closeAction">{{ $t(createdVersion ? 'label.close' : 'label.cancel') }}</a-button>
       <a-button
         ref="submit"
         form="userdata-registration-form"
@@ -321,6 +321,10 @@ export default {
       this.$nextTick(() => {
         if (this.disposed) return
         if (position.focus?.isConnected) position.focus.focus({ preventScroll: true })
+        else if (this.createdVersion) {
+          const close = this.$refs.closeButton?.$el || this.$refs.closeButton
+          if (close?.focus) close.focus({ preventScroll: true })
+        }
         if (position.body) position.body.scrollTop = position.top
       })
     },
@@ -403,7 +407,7 @@ export default {
         const source = await readCloneSource(getAPI, Object.freeze({ ...this.resource }))
         if (!current()) return
         this.source = source
-        this.form.name = source.name.slice(0, 247) + '-v2'
+        this.form.name = source.name.slice(0, 247).replace(/[\uD800-\uDBFF]$/, '') + '-v2'
         this.form.userdata = source.userdata; this.form.isbase64 = true
         this.form.params = source.params ? source.params.split(',') : []
         this.$nextTick(() => { if (this.$refs.nameInput) this.$refs.nameInput.focus() })

@@ -8986,7 +8986,7 @@
   "message.userdata.clone.apply.vm": "Review the source usage tabs first. Explicitly select the new UUID and variable values in each VM user data reset action and check state and reboot requirements. To roll back, select the old UUID and its original variable values. Compare the VM stored body; a reference ID alone does not prove equal content. Previously executed guest script effects need separate recovery.",
   "message.userdata.clone.apply.template": "Explicitly link the new UUID with the original policy on each template or ISO. Only subsequently created VMs are affected. To roll back, relink the old UUID and policy. Preserve previous versions until their references are removed.",
   "message.userdata.clone.bom": "Registration and cloning preserve BOM, CRLF and binary bytes. Current APPEND merging may not recognize cloud-config starting with a BOM. Use a supported BOM-free format for merging and verify actual VM creation. Choosing plain text editing normalizes line endings to LF.",
-  "message.userdata.clone.history.contract": "Source metadata is saved as a comment on the new item and displayed here. Comments can be removed or have their visibility changed by authorized users; this is advisory metadata, not an immutable audit log or application history. No parent or ordering is inferred for external API registrations or missing notes.",
+  "message.userdata.clone.history.contract": "Source metadata is saved as a comment on the new item and displayed here. Comments can be removed or have their visibility changed by authorized users; this is advisory metadata, not an immutable audit log or application history. No parent or ordering is inferred for external API registrations or missing notes. Source notes store only UUIDs and byte counts to fit the annotation API’s 255-character limit. Review names and variables in each version’s details and clone previews.",
   "message.userdata.clone.encoding": "The initial Base64 input preserves source bytes. UTF-8 content can be switched to plain text editing. Review the previews below.",
   "message.userdata.clone.duplicate": "The body is unchanged. Changing only the name or variable declarations cannot create a version under the same-owner duplicate-body policy.",
   "message.userdata.clone.changed": "The body has changed. Registration preserves existing references and VM stored bodies.",
@@ -9000,5 +9000,6 @@
   "message.userdata.clone.name.conflict": "An item with this name already exists or differs from the submitted data. Choose a new name and review the result.",
   "message.userdata.clone.source.changed": "The source body or variable declarations changed. Close this dialog and reload the source.",
   "message.userdata.clone.history.error": "Cannot confirm the source record. Check access and connectivity, then retry.",
-  "message.userdata.clone.history.empty": "No visible source note is available. No version relationship is inferred for independent registrations, removed notes or hidden notes."
+  "message.userdata.clone.history.empty": "No visible source note is available. No version relationship is inferred for independent registrations, removed notes or hidden notes.",
+  "message.userdata.content.preview": "This is a snapshot preview of source or edited input, separate from the currently stored library body. Copy and download use the selected representation."
 }

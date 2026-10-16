@@ -8951,7 +8951,7 @@
   "message.userdata.clone.apply.vm": "적용 전 원본의 적용 VM·템플릿·ISO 탭을 확인하세요. VM별 사용자 데이터 재설정에서 새 UUID와 변수 값을 명시적으로 선택하고 상태·재부팅 조건을 확인합니다. 되돌릴 때는 이전 UUID와 당시 변수 값을 다시 선택합니다. 참조 ID만으로 저장 본문이 같다고 판단하지 말고 VM 저장 본문 조회로 대조하세요. 게스트에서 이미 실행된 스크립트의 효과는 별도 복구가 필요합니다.",
   "message.userdata.clone.apply.template": "템플릿·ISO의 사용자 데이터 연결에서 새 UUID와 기존 연결 정책을 명시적으로 선택합니다. 이후 생성되는 VM에 적용되며 기존 VM은 유지됩니다. 되돌릴 때는 이전 UUID와 정책을 다시 연결합니다. 사용 중인 이전 버전은 참조 해제 전까지 보존하세요.",
   "message.userdata.clone.bom": "등록·복제는 BOM·CRLF·바이너리 바이트를 보존합니다. 현재 APPEND 병합은 BOM으로 시작하는 cloud-config를 인식하지 못할 수 있습니다. 병합용 새 버전은 BOM 없는 지원 형식으로 작성하고 실제 생성으로 검증하세요. 원문 편집을 선택하면 줄바꿈은 LF로 바뀝니다.",
-  "message.userdata.clone.history.contract": "출처는 새 데이터의 댓글에 기록하며 이 탭에서 표시합니다. 댓글은 권한에 따라 삭제·공개 범위를 변경할 수 있으므로 변경 불가능한 감사 기록이나 자동 적용 이력이 아닙니다. 외부 API 등록 또는 출처 메모가 없는 항목의 부모·버전 순서는 추정하지 않습니다.",
+  "message.userdata.clone.history.contract": "출처는 새 데이터의 댓글에 기록하며 이 탭에서 표시합니다. 댓글은 권한에 따라 삭제·공개 범위를 변경할 수 있으므로 변경 불가능한 감사 기록이나 자동 적용 이력이 아닙니다. 외부 API 등록 또는 출처 메모가 없는 항목의 부모·버전 순서는 추정하지 않습니다. 출처 메모는 댓글 API의 255자 제한에 맞춰 UUID·바이트 수만 기록합니다. 이름·변수는 각 버전의 상세와 복제 미리보기에서 확인하세요.",
   "message.userdata.clone.encoding": "처음에는 원본 바이트를 보존하는 Base64로 채웁니다. UTF-8 본문은 원문 편집을 선택할 수 있습니다. 아래 미리보기에서 변경 내용을 확인하세요.",
   "message.userdata.clone.duplicate": "본문이 원본과 같습니다. 이름·변수만 바꾸는 버전은 같은 소유자의 동일 본문 중복 금지 정책에 따라 등록할 수 없습니다.",
   "message.userdata.clone.changed": "본문이 변경되었습니다. 새 버전 등록은 기존 참조와 VM 저장 본문을 바꾸지 않습니다.",
@@ -8965,5 +8965,6 @@
   "message.userdata.clone.name.conflict": "해당 이름의 항목이 이미 존재하거나 조회 결과가 입력과 다릅니다. 새 이름을 사용하고 결과를 확인하세요.",
   "message.userdata.clone.source.changed": "원본 본문 또는 변수 선언이 달라졌습니다. 창을 닫고 원본을 다시 조회하세요.",
   "message.userdata.clone.history.error": "출처 기록을 확인할 수 없습니다. 권한·연결 상태를 확인한 뒤 다시 시도하세요.",
-  "message.userdata.clone.history.empty": "확인 가능한 출처 메모가 없습니다. 독립 등록·삭제된 메모·숨겨진 메모의 버전 관계는 추정하지 않습니다."
+  "message.userdata.clone.history.empty": "확인 가능한 출처 메모가 없습니다. 독립 등록·삭제된 메모·숨겨진 메모의 버전 관계는 추정하지 않습니다.",
+  "message.userdata.content.preview": "원본 또는 편집값의 스냅샷 미리보기입니다. 현재 저장된 라이브러리 본문과 구분됩니다. 선택한 형식으로 복사·다운로드합니다."
 }

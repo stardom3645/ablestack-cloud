@@ -66,7 +66,9 @@ export function cloneDifference (source, encoded, params) {
 
 export function cloneRecord (source, target) {
   const difference = cloneDifference(source, target.userdata, target.params)
-  return versionPrefix + JSON.stringify({ sourceid: source.id, sourcename: source.name, targetid: target.id, targetname: target.name, sourceparams: source.params || '', targetparams: target.params || '', before: difference.before, after: difference.after })
+  // addAnnotation has a 255-character API limit. Immutable UUIDs and byte
+  // counts fit for every valid name/variable length; never truncate provenance.
+  return versionPrefix + JSON.stringify({ sourceid: source.id, targetid: target.id, before: difference.before, after: difference.after })
 }
 
 export function parseCloneRecord (text, targetid) {
@@ -74,7 +76,6 @@ export function parseCloneRecord (text, targetid) {
   try {
     const value = JSON.parse(text.slice(versionPrefix.length))
     if (value.targetid !== targetid || !uuid.test(value.sourceid || '') || value.sourceid === targetid ||
-      !['sourcename', 'targetname', 'sourceparams', 'targetparams'].every(key => typeof value[key] === 'string' && value[key].length <= 4096) ||
       !['before', 'after'].every(key => Number.isInteger(value[key]) && value[key] > 0 && value[key] <= 786432)) return null
     return value
   } catch (error) { return null }

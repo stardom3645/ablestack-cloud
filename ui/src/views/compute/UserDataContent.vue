@@ -35,7 +35,7 @@
       </a-radio-group>
       <a-tooltip v-if="previewEncoded == null" :title="$t('label.refresh')"><a-button class="content-refresh" :aria-label="$t('label.refresh')" :loading="pending" :disabled="!canRead" @click="fetchData"><template #icon><reload-outlined /></template></a-button></a-tooltip>
     </div>
-    <p class="content-note">{{ $t(sourceType === 'vm' ? 'message.userdata.vm.contract' : 'message.userdata.content.contract') }}</p>
+    <p class="content-note">{{ $t(previewEncoded != null ? 'message.userdata.content.preview' : sourceType === 'vm' ? 'message.userdata.vm.contract' : 'message.userdata.content.contract') }}</p>
     <p v-if="content" class="content-note">{{ $t('message.userdata.content.representation', { mode: mode === 'raw' ? $t('label.userdata.raw') : 'Base64', size: content.bytes.length }) }}</p>
     <a-alert v-if="['error', 'forbidden', 'missing', 'mismatch', 'invalid', 'unsupported'].includes(status)" type="error" show-icon :message="$t('message.userdata.content.' + status)" role="status">
       <template #description><span v-if="content">{{ $t('message.userdata.content.stale') }}</span><a-button v-if="canRead" type="link" :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template>

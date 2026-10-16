@@ -15,10 +15,10 @@ for the specific language governing permissions and limitations. -->
     <a-spin :spinning="pending && !records.length">
       <a-alert v-if="!pending && !error && !records.length" type="info" show-icon role="status" :message="$t('message.userdata.clone.history.empty')" />
       <a-descriptions v-for="(item, index) in records" :key="index" class="mold-dialog-section" :column="1" size="small" bordered>
-        <a-descriptions-item :label="$t('label.userdata.clone.source')"><router-link :to="'/userdata/' + item.sourceid">{{ item.sourcename }} ({{ item.sourceid }})</router-link></a-descriptions-item>
-        <a-descriptions-item :label="$t('label.userdata.clone.version')">{{ item.targetname }} ({{ item.targetid }})</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.userdata.clone.source')"><router-link :to="'/userdata/' + item.sourceid">{{ item.sourceid }}</router-link></a-descriptions-item>
+        <a-descriptions-item :label="$t('label.userdata.clone.version')">{{ resource.name }} ({{ item.targetid }})</a-descriptions-item>
         <a-descriptions-item :label="$t('label.userdata.clone.difference')">{{ $t('message.userdata.clone.bytes', item) }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.userdataparams')">{{ item.sourceparams || '-' }} → {{ item.targetparams || '-' }}</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.userdataparams')">{{ resource.params || '-' }}</a-descriptions-item>
       </a-descriptions>
     </a-spin>
     <UserDataChangePolicy />

@@ -68,7 +68,8 @@ test('reconciliation ignores substring names, verifies exact UUID/owner/bytes an
 })
 test('source metadata excludes bodies and tolerates malformed or foreign notes without trusting them', () => {
   const note = cloneRecord(source, target); const value = parseCloneRecord(note, target.id)
-  expect(value).toMatchObject({ sourceid: source.id, targetid: target.id, sourceparams: 'OLD', targetparams: 'NEW' })
+  expect(value).toMatchObject({ sourceid: source.id, targetid: target.id })
+  expect(cloneRecord({ ...source, name: 'x'.repeat(255), params: 'x'.repeat(4096) }, { ...target, name: 'y'.repeat(255), params: 'y'.repeat(4096) }).length).toBeLessThanOrEqual(255)
   expect(note).not.toContain(source.userdata); expect(note).not.toContain(target.userdata)
   for (const invalid of ['normal comment', 'MOLD_USERDATA_VERSION/1\n{}', note.replace(source.id, 'javascript:alert(1)'), note.replace('"before":', '"before":-')]) expect(parseCloneRecord(invalid, target.id)).toBeNull()
   expect(parseCloneRecord(note, source.id)).toBeNull()
@@ -199,4 +200,15 @@ test('actual production registry renders visible empty provenance feedback', asy
   expect(wrapper.find('.ant-alert').text()).toContain('message.userdata.clone.history.empty')
   expect(wrapper.find('a-empty').exists()).toBe(false)
   wrapper.unmount()
+})
+test('long source name truncation never splits a Unicode surrogate pair', async () => {
+  const c = ctx(); c.source = null; c.resource.name = 'x'.repeat(246) + '😀ab'
+  getAPI.mockResolvedValue(listed([{ ...source, name: c.resource.name }]))
+  await c.loadCloneSource(); expect(c.form.name).toBe('x'.repeat(246) + '-v2')
+})
+test('completed receipt restores focus to close when the submit button was removed', async () => {
+  const c = ctx(); c.createdVersion = target
+  const button = document.createElement('button'); document.body.appendChild(button); c.$refs.closeButton = { $el: button }
+  c.restoreFormPosition({ focus: { isConnected: false } }); await flush()
+  expect(document.activeElement).toBe(button); button.remove()
 })
