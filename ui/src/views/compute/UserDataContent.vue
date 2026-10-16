@@ -143,6 +143,7 @@ export default {
 .userdata-content { min-width: 0; color: var(--ui-text-primary); }
 .content-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px;
   .ant-btn { height: 32px; padding: 4px 15px; }
+  .ant-btn-icon-only { width: 32px; padding: 0; }
 }
 .content-refresh { margin-left: auto; }
 .content-note { color: var(--ui-text-secondary); margin-bottom: 8px; overflow-wrap: anywhere; }
