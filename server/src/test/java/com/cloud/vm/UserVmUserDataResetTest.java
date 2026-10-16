@@ -27,7 +27,7 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.user.Account;
 import com.cloud.user.User;
 import com.cloud.user.AccountManager;
-import com.cloud.user.UserData;
+import com.cloud.user.UserDataVO;
 import com.cloud.user.dao.UserDataDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -75,7 +75,7 @@ public class UserVmUserDataResetTest {
         lenient().when(command.getUserData()).thenReturn("candidate");
         lenient().when(command.getUserdataId()).thenReturn(22L);
         lenient().when(command.getUserdataDetails()).thenReturn(Map.of("TAG", "new"));
-        lenient().when(userDataDao.findById(22L)).thenReturn(mock(UserData.class));
+        lenient().when(userDataDao.findById(22L)).thenReturn(mock(UserDataVO.class));
         lenient().when(vmDao.findById(7L)).thenReturn(vm);
         lenient().when(vmDao.acquireInLockTable(7L, 1)).thenReturn(vm);
         lenient().when(templateDao.findByIdIncludingRemoved(3L)).thenReturn(mock(VMTemplateVO.class));
