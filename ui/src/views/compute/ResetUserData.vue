@@ -41,7 +41,7 @@
         </a-collapse-panel>
       </a-collapse>
       <a-form-item :label="$t('label.userdata.reset.change')">
-        <a-switch v-model:checked="editCurrent" :disabled="loadingData || resetUnsupported" :aria-label="$t('label.userdata.reset.change')" />
+        <a-switch ref="changeSwitch" v-model:checked="editCurrent" :disabled="loadingData || resetUnsupported" :aria-label="$t('label.userdata.reset.change')" />
       </a-form-item>
     </template>
     <a-form
@@ -149,7 +149,7 @@ v-if="currentLoaded && editCurrent"
     </a-form>
   </a-spin>
     <template #footer>
-      <a-button :disabled="loadingData" @click="closeAction">{{ $t('label.cancel') }}</a-button>
+      <a-button ref="cancel" :disabled="loadingData" @click="closeAction">{{ $t('label.cancel') }}</a-button>
       <a-button :loading="loadingData" :disabled="templateLoading || templateError || !currentLoaded || (editCurrent && (resetUnsupported || userDataSelectionBlocked))" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
     </template>
   </MoldDialog>
@@ -249,6 +249,14 @@ export default {
   },
   beforeUnmount () { this.readActive = false; this.readGeneration++ },
   watch: {
+    templateLoading (loading) {
+      if (loading) return
+      this.$nextTick(() => {
+        const change = this.$refs.changeSwitch?.$el
+        const target = change && !change.disabled ? change : this.$refs.cancel?.$el
+        if (target?.focus) target.focus()
+      })
+    },
     'resource.id' () { this.fetchTemplateData() },
     'resource.resetUserDataResourceId' () { this.fetchTemplateData() }
   },

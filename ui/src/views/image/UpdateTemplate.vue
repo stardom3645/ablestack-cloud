@@ -33,8 +33,7 @@
           </template>
           <a-input
             v-model:value="form.name"
-            :placeholder="apiParams.name.description"
- />
+            :placeholder="apiParams.name.description" />
         </a-form-item>
         <a-form-item name="displaytext" ref="displaytext">
           <template #label>
@@ -42,8 +41,7 @@
           </template>
           <a-input
             v-model:value="form.displaytext"
-            :placeholder="apiParams.displaytext.description"
- />
+            :placeholder="apiParams.displaytext.description" />
         </a-form-item>
         <a-form-item name="passwordenabled" ref="passwordenabled">
           <template #label>
