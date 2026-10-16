@@ -1,0 +1,39 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements. See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership. The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License. You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations
+// under the License.
+/* Opt in only the library and the existing user-data consumers. Values are
+ * shared semantic tokens; no second palette or generic AntD override. */
+body .userdata-library, body .userdata-selection, body .userdata-usage,
+body .userdata-content, body .userdata-versions,
+body .userdata-registration-dialog, body .userdata-delete-dialog,
+body .userdata-reset-dialog, body .vm-userdata-dialog, body .image-userdata-dialog {
+  --ui-text-placeholder: var(--ui-text-muted);
+  --ui-text-disabled: var(--ui-text-secondary);
+  --ui-border-strong: var(--ui-text-muted);
+  --ui-focus: var(--ui-link);
+  .ant-input:not(:disabled), .ant-select:not(.ant-select-disabled) .ant-select-selector,
+  .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled) { border-color: var(--ui-border-strong); }
+  .ant-input::placeholder, .ant-select-selection-placeholder { color: var(--ui-text-muted); opacity: 1; }
+  .ant-input:focus, .ant-input:hover, .ant-input-affix-wrapper-focused,
+  .ant-select-focused:not(.ant-select-disabled) .ant-select-selector { border-color: var(--ui-focus); }
+  .ant-btn-primary:not(:disabled) { color: var(--ui-action-primary-text); background: var(--ui-action-primary-bg); border-color: var(--ui-action-primary-bg); }
+  .ant-btn-primary:not(:disabled):hover, .ant-btn-primary:not(:disabled):focus { color: var(--ui-action-primary-text); background: var(--ui-action-primary-hover); border-color: var(--ui-action-primary-hover); }
+  .ant-btn-primary.ant-btn-dangerous:not(:disabled) { background: var(--ui-action-danger-bg); border-color: var(--ui-action-danger-bg); }
+  .ant-btn:focus-visible, summary:focus-visible, a:focus-visible, .ant-radio-button-wrapper:has(input:focus-visible) { outline: 2px solid var(--ui-link); outline-offset: 2px; }
+  .ant-radio-inner { border-color: var(--ui-border-strong); }
+  .ant-radio-checked .ant-radio-inner { border-color: var(--ui-link); }
+  .ant-radio-inner::after { background-color: var(--ui-link); }
+}

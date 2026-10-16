@@ -8946,6 +8946,7 @@
   "label.userdata.clone.reconcile": "등록 결과 확인",
   "label.userdata.clone.note.retry": "출처 기록 재시도",
   "label.userdata.clone.note": "수동 복구용 출처 메모",
+  "message.userdata.image.partial": "이미지 메타데이터는 저장됐지만 사용자 데이터 연결을 완료하지 못했습니다. 입력을 확인한 뒤 다시 시도하세요.",
   "message.userdata.clone.intro": "원본의 이름·본문·변수를 재사용해 같은 소유 범위에 새 데이터를 만듭니다. 기존 VM·템플릿·ISO에는 자동 적용되지 않습니다.",
   "message.userdata.clone.policy": "각 UUID는 변경하지 않는 독립 버전입니다. 본문을 바꾼 뒤 새 이름으로 등록하세요. 동일 소유자의 같은 본문은 이름이나 변수 선언만 바꿔도 중복으로 거절됩니다. 별도 수정 API와 자동 버전 번호는 제공하지 않습니다.",
   "message.userdata.clone.apply.vm": "적용 전 원본의 적용 VM·템플릿·ISO 탭을 확인하세요. VM별 사용자 데이터 재설정에서 새 UUID와 변수 값을 명시적으로 선택하고 상태·재부팅 조건을 확인합니다. 되돌릴 때는 이전 UUID와 당시 변수 값을 다시 선택합니다. 참조 ID만으로 저장 본문이 같다고 판단하지 말고 VM 저장 본문 조회로 대조하세요. 게스트에서 이미 실행된 스크립트의 효과는 별도 복구가 필요합니다.",

@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. See the License
 for the specific language governing permissions and limitations. -->
 <template>
   <MoldDialog class="userdata-delete-dialog" size="lg" :title="$t('label.remove.user.data')" :closable="!busy" :keyboard="!busy" @cancel="close" @keydown.ctrl.enter.stop.prevent>
-    <div :aria-busy="busy">
+    <div class="userdata-delete-content" :aria-busy="busy">
       <a-alert type="warning" show-icon :message="$t('message.userdata.delete.scope')" />
       <p><strong>{{ $t('message.userdata.delete.count', { count: rows.length }) }}</strong></p>
       <p v-if="started" role="status" aria-live="polite">{{ $t('message.userdata.delete.results', totals) }}</p>
@@ -162,4 +162,10 @@ export default {
 </script>
 <style scoped lang="less">
 .userdata-delete-dialog :deep(td) { overflow-wrap: anywhere; word-break: break-word; }
+</style>
+
+<style scoped>
+.userdata-delete-content { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.userdata-delete-content > p { margin: 0; }
+.userdata-delete-content > .ant-btn { align-self: flex-start; }
 </style>

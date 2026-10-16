@@ -71,5 +71,10 @@ export default {
 }
 </script>
 <style scoped>
-.userdata-versions { min-width: 0; overflow-wrap: anywhere; }
+.userdata-versions { min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; gap: 16px; color: var(--ui-text-primary); }
+.userdata-versions > p { margin: 0; color: var(--ui-text-secondary); }
+.userdata-versions > .detail-tab-toolbar { margin-bottom: 4px; }
+.userdata-versions :deep(.ant-descriptions + .ant-descriptions) { margin-top: 16px; }
+.userdata-versions :deep(.ant-descriptions:first-child) { margin-top: 0; }
+.userdata-versions > .userdata-change-policy { margin: 0; }
 </style>

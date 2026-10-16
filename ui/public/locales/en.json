@@ -8981,6 +8981,7 @@
   "label.userdata.clone.reconcile": "Check registration result",
   "label.userdata.clone.note.retry": "Retry source record",
   "label.userdata.clone.note": "Source note for manual recovery",
+  "message.userdata.image.partial": "Image metadata was saved, but the user data link did not complete. Review the retained input and retry.",
   "message.userdata.clone.intro": "Reuse the source name, body and variables to register new data under the same owner. Existing VMs, templates and ISOs are not changed automatically.",
   "message.userdata.clone.policy": "Each UUID is an independent immutable version. Change the body and register a new name. Identical bodies under the same owner are rejected even when names or variable declarations differ. There is no update API or automatic version numbering.",
   "message.userdata.clone.apply.vm": "Review the source usage tabs first. Explicitly select the new UUID and variable values in each VM user data reset action and check state and reboot requirements. To roll back, select the old UUID and its original variable values. Compare the VM stored body; a reference ID alone does not prove equal content. Previously executed guest script effects need separate recovery.",

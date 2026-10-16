@@ -26,14 +26,14 @@
       </a-descriptions>
       <a-alert class="vm-userdata-comparison" :type="comparison === 'different' ? 'warning' : 'info'" show-icon role="status" :message="$t('message.userdata.vm.compare.' + comparison)" />
     </template>
-    <div class="content-toolbar">
+    <div class="content-toolbar detail-tab-toolbar">
       <a-button :disabled="!exportable" @click="copy"><template #icon><copy-outlined /></template>{{ $t('label.copy.clipboard') }}</a-button>
       <a-button :disabled="!exportable" @click="download"><template #icon><download-outlined /></template>{{ $t('label.download') }}</a-button>
       <a-radio-group v-model:value="mode" :aria-label="$t('label.userdata.representation')" @change="feedback = ''">
         <a-radio-button value="raw" :disabled="content?.text === null">{{ $t('label.userdata.raw') }}</a-radio-button>
         <a-radio-button value="base64">Base64</a-radio-button>
       </a-radio-group>
-      <a-tooltip v-if="previewEncoded == null" :title="$t('label.refresh')"><a-button class="content-refresh" :aria-label="$t('label.refresh')" :loading="pending" :disabled="!canRead" @click="fetchData"><template #icon><reload-outlined /></template></a-button></a-tooltip>
+      <a-tooltip v-if="previewEncoded == null" :title="$t('label.refresh')"><a-button class="content-refresh" :aria-label="$t('label.refresh')" :loading="pending" :disabled="!canRead" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button></a-tooltip>
     </div>
     <p class="content-note">{{ $t(previewEncoded != null ? 'message.userdata.content.preview' : sourceType === 'vm' ? 'message.userdata.vm.contract' : 'message.userdata.content.contract') }}</p>
     <p v-if="content" class="content-note">{{ $t('message.userdata.content.representation', { mode: mode === 'raw' ? $t('label.userdata.raw') : 'Base64', size: content.bytes.length }) }}</p>

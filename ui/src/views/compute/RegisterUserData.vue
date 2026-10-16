@@ -494,6 +494,8 @@ export default {
 
 <style scoped lang="less">
   .userdata-registration-content { min-width: 0; overflow-wrap: anywhere; overflow-anchor: none; }
+  .userdata-registration-content :deep(.ant-form .ant-form-item) { margin-bottom: 20px; }
+  .userdata-registration-content > .ant-alert + p, .userdata-registration-content > .ant-spin-nested-loading { margin-top: 16px; }
   .userdata-registration-content details { margin: 12px 0; }
   .userdata-registration-content summary { cursor: pointer; }
   .userdata-registration-content :deep(.content-code) { max-height: 240px; }

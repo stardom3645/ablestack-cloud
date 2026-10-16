@@ -17,7 +17,7 @@
 
 <template>
   <section class="userdata-usage" :aria-label="$t('label.userdata.usage')">
-    <div class="usage-toolbar">
+    <div class="usage-toolbar detail-tab-toolbar">
       <a-button :loading="pending" :disabled="!canRead || !resourceActionReady()" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-input-search class="usage-search" v-model:value="draftKeyword" :disabled="!canRead" :placeholder="$t('label.search')" :aria-label="$t('label.search')" allow-clear @search="search" />
     </div>
@@ -32,7 +32,7 @@
     <div class="usage-table">
       <ListView :resource-path="config.path" :columns="columns" :items="rows" :loading="tableLoading" :actions="[]" :emptyText="$t('message.userdata.usage.' + (status === 'ready' ? 'empty' : status))" @table-change="sort" />
     </div>
-    <div v-if="status === 'ready' || rows.length" class="usage-pagination">
+    <div v-if="status === 'ready' || rows.length" class="usage-pagination detail-tab-pagination">
       <a-pagination :current="page" :pageSize="pagesize" :total="count" :showTotal="total => $t('message.userdata.usage.total', [total])" show-size-changer :pageSizeOptions="['10', '20', '50', '100']" @change="changePage" />
     </div>
   </section>
