@@ -37,6 +37,7 @@ public class UserdataToRouterRulesTest {
         when(factory.getUserVmDao()).thenReturn(dao);
         when(factory.getNicDao()).thenReturn(mock(NicDao.class));
         when(profile.getVirtualMachine()).thenReturn(candidate);
+        when(profile.getParameter(UserdataToRouterRules.RESET_CANDIDATE)).thenReturn(Boolean.TRUE);
         when(candidate.getId()).thenReturn(7L);
         when(candidate.getUserData()).thenReturn("candidate-body");
         when(candidate.getUserDataId()).thenReturn(22L);
@@ -49,5 +50,27 @@ public class UserdataToRouterRulesTest {
         verify(stored).setUserData("candidate-body");
         verify(stored).setUserDataId(22L);
         verify(stored).setUserDataDetails("{TAG=new}");
+    }
+
+    @Test public void legacyUpdateUsesFreshDatabaseBodyRatherThanAnOldProfile() throws Exception {
+        NetworkTopologyVisitor visitor = mock(NetworkTopologyVisitor.class);
+        VirtualNetworkApplianceFactory factory = mock(VirtualNetworkApplianceFactory.class);
+        UserVmDao dao = mock(UserVmDao.class);
+        UserVm candidate = mock(UserVm.class);
+        UserVmVO stored = mock(UserVmVO.class);
+        VirtualMachineProfile profile = mock(VirtualMachineProfile.class);
+        when(visitor.getVirtualNetworkApplianceFactory()).thenReturn(factory);
+        when(factory.getUserVmDao()).thenReturn(dao);
+        when(factory.getNicDao()).thenReturn(mock(NicDao.class));
+        when(profile.getVirtualMachine()).thenReturn(candidate);
+        when(candidate.getId()).thenReturn(7L);
+        when(dao.findById(7L)).thenReturn(stored);
+        UserdataToRouterRules rules = new UserdataToRouterRules(mock(Network.class), mock(NicProfile.class), profile);
+        when(visitor.visit(rules)).thenReturn(true);
+        assertTrue(rules.accept(visitor, mock(VirtualRouter.class)));
+        verify(dao).loadDetails(stored);
+        verify(stored, never()).setUserData(org.mockito.ArgumentMatchers.any());
+        verify(stored, never()).setUserDataId(org.mockito.ArgumentMatchers.any());
+        verify(stored, never()).setUserDataDetails(org.mockito.ArgumentMatchers.any());
     }
 }

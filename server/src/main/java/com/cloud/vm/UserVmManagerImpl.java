@@ -1257,7 +1257,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             userVm.setUserData(userData);
             userVm.setUserDataDetails(userDataDetails);
             for (Nic nic : targets) {
-                if (!applyUserData(userVm.getHypervisorType(), userVm, nic)) {
+                if (!applyUserData(userVm.getHypervisorType(), userVm, nic, true)) {
                     throw new CloudRuntimeException("User data provider rejected the update for NIC " + nic.getUuid());
                 }
             }
@@ -1281,7 +1281,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             // write. Do not short-circuit restoration of the remaining NICs.
             for (Nic nic : targets) {
                 try {
-                    restored &= applyUserData(userVm.getHypervisorType(), userVm, nic);
+                    restored &= applyUserData(userVm.getHypervisorType(), userVm, nic, true);
                 } catch (Exception restoreFailure) {
                     restored = false;
                     logger.warn("Could not restore userdata provider for VM {} NIC {}", vmId, nic.getId(), restoreFailure);
@@ -4008,10 +4008,17 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     protected boolean applyUserData(HypervisorType hyperVisorType, UserVm vm, Nic nic) throws ResourceUnavailableException, InsufficientCapacityException {
+        return applyUserData(hyperVisorType, vm, nic, false);
+    }
+
+    protected boolean applyUserData(HypervisorType hyperVisorType, UserVm vm, Nic nic, boolean resetCandidate) throws ResourceUnavailableException, InsufficientCapacityException {
         Network network = _networkDao.findById(nic.getNetworkId());
         NicProfile nicProfile = new NicProfile(nic, network, null, null, null, _networkModel.isSecurityGroupSupportedInNetwork(network), _networkModel.getNetworkTag(
                 hyperVisorType, network));
         VirtualMachineProfile vmProfile = new VirtualMachineProfileImpl(vm);
+        if (resetCandidate) {
+            vmProfile.setParameter(com.cloud.network.rules.UserdataToRouterRules.RESET_CANDIDATE, Boolean.TRUE);
+        }
 
         if (_networkModel.areServicesSupportedByNetworkOffering(network.getNetworkOfferingId(), Service.UserData)) {
             UserDataServiceProvider element = _networkModel.getUserDataUpdateProvider(network);

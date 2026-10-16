@@ -32,6 +32,8 @@ import com.cloud.uservm.UserVm;
 
 public class UserdataToRouterRules extends RuleApplier {
 
+    public static final VirtualMachineProfile.Param RESET_CANDIDATE = new VirtualMachineProfile.Param("UserDataResetCandidate");
+
     private final NicProfile _nic;
     private final VirtualMachineProfile _profile;
 
@@ -56,7 +58,7 @@ public class UserdataToRouterRules extends RuleApplier {
         // A reset is applied before publishing its candidate in Cloud DB.
         // Keep loaded VM details, but deliver the profile's intended body and
         // metadata rather than re-reading the previously accepted userdata.
-        if (_profile.getVirtualMachine() instanceof UserVm) {
+        if (Boolean.TRUE.equals(_profile.getParameter(RESET_CANDIDATE)) && _profile.getVirtualMachine() instanceof UserVm) {
             UserVm candidate = (UserVm) _profile.getVirtualMachine();
             _userVM.setUserData(candidate.getUserData());
             _userVM.setUserDataId(candidate.getUserDataId());

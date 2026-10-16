@@ -97,7 +97,7 @@ public class UserVmUserDataResetTest {
         targets();
         doAnswer(call -> { verify(vmDao, never()).update(anyLong(), any(UserVmVO.class));
             assertEquals("new-body", ((UserVm) call.getArgument(1)).getUserData()); return true;
-        }).when(manager).applyUserData(eq(HypervisorType.KVM), eq(vm), any());
+        }).when(manager).applyUserData(eq(HypervisorType.KVM), eq(vm), any(), eq(true));
         manager.resetVMUserData(command);
         verify(vmDao).update(eq(7L), argThat(change -> "new-body".equals(change.getUserData()) &&
                 Long.valueOf(22L).equals(change.getUserDataId()) && "{TAG=new}".equals(change.getUserDataDetails())));
@@ -105,28 +105,28 @@ public class UserVmUserDataResetTest {
     }
     @Test public void oneNicSuccessCannotHideAnotherFailureAndAllNicsAreRestored() throws Exception {
         targets();
-        doReturn(true).when(manager).applyUserData(HypervisorType.KVM, vm, first);
-        doReturn(false, true).when(manager).applyUserData(HypervisorType.KVM, vm, second);
+        doReturn(true).when(manager).applyUserData(HypervisorType.KVM, vm, first, true);
+        doReturn(false, true).when(manager).applyUserData(HypervisorType.KVM, vm, second, true);
         CloudRuntimeException error = assertThrows(CloudRuntimeException.class, () -> manager.resetVMUserData(command));
         assertTrue(error.getMessage().contains("Previous provider data was restored")); unchanged();
-        verify(manager, times(2)).applyUserData(HypervisorType.KVM, vm, first);
-        verify(manager, times(2)).applyUserData(HypervisorType.KVM, vm, second);
+        verify(manager, times(2)).applyUserData(HypervisorType.KVM, vm, first, true);
+        verify(manager, times(2)).applyUserData(HypervisorType.KVM, vm, second, true);
         verify(vmDao).releaseFromLockTable(7L);
     }
     @Test public void uncertainTimeoutRestoresEvenTheFailingNic() throws Exception {
         targets();
         doThrow(new ResourceUnavailableException("timeout", Network.class, 1L)).doReturn(true)
-                .when(manager).applyUserData(HypervisorType.KVM, vm, first);
-        doReturn(true).when(manager).applyUserData(HypervisorType.KVM, vm, second);
+                .when(manager).applyUserData(HypervisorType.KVM, vm, first, true);
+        doReturn(true).when(manager).applyUserData(HypervisorType.KVM, vm, second, true);
         assertThrows(CloudRuntimeException.class, () -> manager.resetVMUserData(command)); unchanged();
-        verify(manager).applyUserData(HypervisorType.KVM, vm, second);
+        verify(manager).applyUserData(HypervisorType.KVM, vm, second, true);
     }
     @Test public void restorationFailureIsReportedAndDoesNotPublishCandidate() throws Exception {
         targets();
-        doReturn(false).when(manager).applyUserData(eq(HypervisorType.KVM), eq(vm), any());
+        doReturn(false).when(manager).applyUserData(eq(HypervisorType.KVM), eq(vm), any(), eq(true));
         CloudRuntimeException error = assertThrows(CloudRuntimeException.class, () -> manager.resetVMUserData(command));
         assertTrue(error.getMessage().contains("restoration could not be confirmed")); unchanged();
-        verify(manager).applyUserData(HypervisorType.KVM, vm, second);
+        verify(manager).applyUserData(HypervisorType.KVM, vm, second, true);
     }
     @Test public void concurrentResetFailsWithoutMutatingOrReleasingAnotherLock() {
         when(vmDao.acquireInLockTable(7L, 1)).thenReturn(null);
@@ -141,16 +141,16 @@ public class UserVmUserDataResetTest {
     @Test public void stateChangeAfterProviderAcceptanceRestoresPreviousValues() throws Exception {
         targets();
         doAnswer(call -> { vm.setState(VirtualMachine.State.Starting); return true; }).when(manager)
-                .applyUserData(eq(HypervisorType.KVM), eq(vm), any());
+                .applyUserData(eq(HypervisorType.KVM), eq(vm), any(), eq(true));
         assertThrows(CloudRuntimeException.class, () -> manager.resetVMUserData(command)); unchanged();
     }
     @Test public void persistenceFailureRestoresProvidersAndReleasesLock() throws Exception {
         targets();
-        doReturn(true).when(manager).applyUserData(eq(HypervisorType.KVM), eq(vm), any());
+        doReturn(true).when(manager).applyUserData(eq(HypervisorType.KVM), eq(vm), any(), eq(true));
         when(vmDao.update(eq(7L), any(UserVmVO.class))).thenReturn(false);
         assertThrows(CloudRuntimeException.class, () -> manager.resetVMUserData(command));
         assertEquals("old-body", vm.getUserData()); verify(vmDao).releaseFromLockTable(7L);
-        verify(manager, times(2)).applyUserData(HypervisorType.KVM, vm, first);
+        verify(manager, times(2)).applyUserData(HypervisorType.KVM, vm, first, true);
     }
     @Test public void unsupportedNetworkRejectsBeforeCandidatePublication() {
         when(nicDao.listByVmId(7L)).thenReturn(Collections.emptyList());
@@ -176,4 +176,20 @@ public class UserVmUserDataResetTest {
         when(networkModel.areServicesSupportedByNetworkOffering(10L, Network.Service.UserData)).thenReturn(true);
         assertThrows(InvalidParameterValueException.class, () -> manager.resetVMUserData(command)); unchanged();
     }
+    @Test public void resetProvidersReceiveTheExplicitCandidateFlag() throws Exception {
+        targets();
+        NetworkVO network = mock(NetworkVO.class);
+        UserDataServiceProvider provider = mock(UserDataServiceProvider.class);
+        when(networkDao.findById(0L)).thenReturn(network);
+        when(networkModel.areServicesSupportedByNetworkOffering(0L, Network.Service.UserData)).thenReturn(true);
+        when(networkModel.getUserDataUpdateProvider(network)).thenReturn(provider);
+        when(provider.saveUserData(any(), any(), any())).thenAnswer(call -> {
+            VirtualMachineProfile profile = call.getArgument(2);
+            assertEquals(Boolean.TRUE, profile.getParameter(com.cloud.network.rules.UserdataToRouterRules.RESET_CANDIDATE));
+            return true;
+        });
+        manager.resetVMUserData(command);
+        verify(provider, times(2)).saveUserData(any(), any(), any());
+    }
+
 }
