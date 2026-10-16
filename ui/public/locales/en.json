@@ -8967,7 +8967,7 @@
   "message.userdata.vm.compare.unlinked": "There is no direct library reference on this VM. The body may come from a template or inline input; source equality is not established.",
   "message.userdata.vm.compare.unavailable": "Library source comparison is unavailable. Check source access, linkage or deletion. VM stored body access is independent.",
   "label.userdata.vm.variables": "Variable values (VM metadata)",
-  "label.userdata.versions": "Versions and change policy",
+  "label.userdata.versions": "Version history",
   "label.userdata.clone": "Clone as new version",
   "label.userdata.clone.source": "Clone source",
   "label.userdata.clone.version": "New version",

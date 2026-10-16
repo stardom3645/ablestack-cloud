@@ -8932,7 +8932,7 @@
   "message.userdata.vm.compare.unlinked": "VM에 직접 연결된 라이브러리 참조가 없습니다. 템플릿 또는 직접 입력한 본문일 수 있으며 원본과의 동일 여부는 확인하지 않았습니다.",
   "message.userdata.vm.compare.unavailable": "라이브러리 원본을 비교할 수 없습니다. 원본 조회 권한·연결 정보·삭제 여부를 확인하세요. VM 저장 본문 조회와는 별개입니다.",
   "label.userdata.vm.variables": "변수 값 (VM 메타데이터)",
-  "label.userdata.versions": "버전·변경 정책",
+  "label.userdata.versions": "버전 기록",
   "label.userdata.clone": "복제하여 새 버전 등록",
   "label.userdata.clone.source": "복제 원본",
   "label.userdata.clone.version": "새 버전",
