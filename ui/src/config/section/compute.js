@@ -25,6 +25,7 @@ import { getAPI, postAPI, getBaseUrl } from '@/api'
 import { getLatestKubernetesIsoParams } from '@/utils/acsrepo'
 import { isFastClonePowerOperationBlocked, getFastClonePowerBlockedLabel, getFastClonePhase } from '@/utils/fastClone'
 import { isCloneBlockedByExtraConfigDisk } from '@/utils/vmClone'
+import { vmUserDataSupported } from '@/utils/vmUserData'
 import { userDataLibraryParams } from '@/utils/userDataContent'
 import kubernetesIcon from '@/assets/icons/kubernetes.svg?inline'
 
@@ -567,6 +568,16 @@ export default {
           show: (record) => { return record.hypervisor !== 'External' && ['Stopped'].includes(record.state) && record.vmtype !== 'sharedfsvm' },
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ResetSshKeyPair')))
+        },
+        {
+          api: 'getVirtualMachineUserData',
+          show: (_, store) => vmUserDataSupported(store.apis),
+          selfManagedDialog: true,
+          icon: 'file-search-outlined',
+          label: 'label.userdata.vm.stored',
+          dataView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ViewVmUserData')))
         },
         {
           api: 'resetUserDataForVirtualMachine',

@@ -17,6 +17,15 @@
 
 <template>
   <section class="userdata-content" :aria-label="$t('label.userdata.content')" :aria-busy="pending">
+    <template v-if="sourceType === 'vm' && vm">
+      <a-descriptions class="vm-userdata-summary" size="small" :column="1" bordered>
+        <a-descriptions-item :label="$t('label.vm.displayname')">{{ vm.displayname || vm.name }} ({{ vm.id }})</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.userdata.library')">{{ vm.userdataname || vm.userdataid || '-' }}</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.userdatapolicy')">{{ vm.userdatapolicy || '-' }}</a-descriptions-item>
+        <a-descriptions-item :label="$t('label.userdata.parameters')">{{ vm.userdatadetails || '-' }}</a-descriptions-item>
+      </a-descriptions>
+      <a-alert class="vm-userdata-comparison" :type="comparison === 'different' ? 'warning' : 'info'" show-icon role="status" :message="$t('message.userdata.vm.compare.' + comparison)" />
+    </template>
     <div class="content-toolbar">
       <a-button :disabled="!exportable" @click="copy"><template #icon><copy-outlined /></template>{{ $t('label.copy.clipboard') }}</a-button>
       <a-button :disabled="!exportable" @click="download"><template #icon><download-outlined /></template>{{ $t('label.download') }}</a-button>
@@ -26,7 +35,7 @@
       </a-radio-group>
       <a-tooltip :title="$t('label.refresh')"><a-button class="content-refresh" :aria-label="$t('label.refresh')" :loading="pending" :disabled="!canRead" @click="fetchData"><template #icon><reload-outlined /></template></a-button></a-tooltip>
     </div>
-    <p class="content-note">{{ $t('message.userdata.content.contract') }}</p>
+    <p class="content-note">{{ $t(sourceType === 'vm' ? 'message.userdata.vm.contract' : 'message.userdata.content.contract') }}</p>
     <p v-if="content" class="content-note">{{ $t('message.userdata.content.representation', { mode: mode === 'raw' ? $t('label.userdata.raw') : 'Base64', size: content.bytes.length }) }}</p>
     <a-alert v-if="['error', 'forbidden', 'missing', 'mismatch', 'invalid', 'unsupported'].includes(status)" type="error" show-icon :message="$t('message.userdata.content.' + status)" role="status">
       <template #description><span v-if="content">{{ $t('message.userdata.content.stale') }}</span><a-button v-if="canRead" type="link" :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
@@ -41,17 +50,18 @@
 </template>
 <script>
 import { getAPI } from '@/api'
+import { readVmUserData, vmUserDataSupported } from '@/utils/vmUserData'
 import { userDataContent } from '@/utils/userDataContent'
 import { userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } from '@/utils/userDataDeletion'
 
 export default {
   name: 'UserDataContent',
-  props: { resource: { type: Object, required: true }, tab: { type: String, default: '' }, loading: Boolean },
-  data () { return { version: 0, disposed: false, pending: false, status: 'loading', content: null, mode: 'raw', feedback: '', feedbackError: false } },
+  props: { resource: { type: Object, required: true }, tab: { type: String, default: '' }, loading: Boolean, sourceType: { type: String, default: 'library' } },
+  data () { return { version: 0, disposed: false, pending: false, status: 'loading', content: null, vm: null, comparison: 'unavailable', mode: 'raw', feedback: '', feedbackError: false } },
   computed: {
     active () { return this.tab === 'userdata.content' },
-    canRead () { return !!this.$store.getters.apis?.listUserData },
-    scope () { return JSON.stringify([this.resource.id, this.resource.name, this.resource.account, this.resource.domainid, this.resource.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.canRead]) },
+    canRead () { return this.sourceType === 'vm' ? vmUserDataSupported(this.$store.getters.apis) : !!this.$store.getters.apis?.listUserData },
+    scope () { return JSON.stringify([this.sourceType, !!this.$store.getters.apis?.listUserData, !!this.$store.getters.apis?.listVirtualMachines, this.resource.userdataid, this.resource.userdatadetails, this.resource.userdatapolicy, this.resource.state, this.resource.id, this.resource.name, this.resource.account, this.resource.domainid, this.resource.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.canRead]) },
     display () { return this.mode === 'base64' ? this.content?.encoded : this.content?.text },
     exportable () { return this.status === 'ready' && !this.pending && this.content && !this.content.empty }
   },
@@ -63,16 +73,23 @@ export default {
   created () { this.fetchData() },
   beforeUnmount () { this.disposed = true; this.reset() },
   methods: {
-    reset () { this.version++; this.pending = false; this.content = null; this.status = 'loading'; this.mode = 'raw'; this.feedback = '' },
+    reset () { this.version++; this.pending = false; this.content = null; this.vm = null; this.comparison = 'unavailable'; this.status = 'loading'; this.mode = 'raw'; this.feedback = '' },
     async fetchData () {
       if (!this.active || this.disposed || this.pending) return
       if (!this.canRead) { this.reset(); this.status = 'unsupported'; return }
       const source = Object.freeze({ ...this.resource }); const lookup = userDataDeleteLookup(source)
-      if (!lookup) { this.reset(); this.status = 'mismatch'; return }
+      if (this.sourceType !== 'vm' && !lookup) { this.reset(); this.status = 'mismatch'; return }
       const version = ++this.version; const scope = this.scope
       const current = () => !this.disposed && this.active && version === this.version && scope === this.scope
       this.pending = true; this.feedback = ''
       try {
+        if (this.sourceType === 'vm') {
+          const result = await readVmUserData(getAPI, source, this.$store.getters.apis, current)
+          if (!current() || !result) return
+          this.content = result.content; this.vm = result.vm; this.comparison = result.comparison; this.status = 'ready'
+          if (this.content.text === null) this.mode = 'base64'
+          return
+        }
         const json = await getAPI('listUserData', lookup, { preserveOnFailure: true, timeout: 20000 })
         if (!current()) return
         const identity = userDataDeleteIdentity(json, source)
@@ -85,7 +102,7 @@ export default {
         if (!current()) return
         const code = userDataDeleteError(error).code
         this.status = error.contentState || ([401, 403, 432, 531].includes(code) ? 'forbidden' : code === 431 ? 'missing' : 'error')
-        if (this.status !== 'error') this.content = null
+        if (this.status !== 'error') { this.content = null; this.vm = null }; this.comparison = 'unavailable'
       } finally { if (current()) this.pending = false }
     },
     async copy () {
@@ -131,7 +148,7 @@ export default {
         url = URL.createObjectURL(new Blob([raw ? this.content.bytes : this.content.encoded], { type: raw ? 'application/octet-stream' : 'text/plain;charset=us-ascii' }))
         const anchor = document.createElement('a')
         anchor.href = url
-        anchor.download = 'userdata-' + this.resource.id + (raw ? '.txt' : '.base64.txt')
+        anchor.download = (this.sourceType === 'vm' ? 'vm-userdata-' : 'userdata-') + this.resource.id + (raw ? '.txt' : '.base64.txt')
         anchor.click()
         this.feedbackError = false; this.feedback = 'message.userdata.content.download.started'
       } catch (error) { this.feedbackError = true; this.feedback = 'message.userdata.content.download.failed' } finally { if (url) setTimeout(() => URL.revokeObjectURL(url), 1000) }
@@ -141,6 +158,7 @@ export default {
 </script>
 <style lang="less" scoped>
 .userdata-content { min-width: 0; color: var(--ui-text-primary); }
+.vm-userdata-summary { margin-bottom: 12px; :deep(.ant-descriptions-item-content) { overflow-wrap: anywhere; white-space: pre-wrap; } }
 .content-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px;
   .ant-btn { height: 32px; padding: 4px 15px; }
   .ant-btn-icon-only { width: 32px; padding: 0; }

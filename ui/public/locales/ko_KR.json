@@ -8924,5 +8924,12 @@
   "message.userdata.content.binary": "UTF-8 텍스트로 해석할 수 없는 본문입니다. Base64로 확인하고 내려받으세요.",
   "message.userdata.content.copy.failed": "복사하지 못했습니다. 브라우저의 클립보드 기능을 확인하거나 다운로드하세요.",
   "message.userdata.content.download.started": "다운로드를 시작했습니다.",
-  "message.userdata.content.download.failed": "다운로드를 시작하지 못했습니다. 다시 시도하세요."
+  "message.userdata.content.download.failed": "다운로드를 시작하지 못했습니다. 다시 시도하세요.",
+  "label.userdata.vm.stored": "VM 저장 사용자 데이터 조회",
+  "label.userdata.library": "사용자 데이터 라이브러리",
+  "message.userdata.vm.contract": "Mold에 저장된 VM 본문입니다. 라이브러리 원본 및 템플릿 정책·변수 정보와 구분됩니다. 공급자 전달 상태와 게스트 실행 결과는 이 조회로 확인할 수 없습니다.",
+  "message.userdata.vm.compare.same": "현재 연결된 라이브러리 원본과 VM 저장 본문이 바이트 단위로 같습니다.",
+  "message.userdata.vm.compare.different": "현재 연결된 라이브러리 원본과 VM 저장 본문이 다릅니다. 템플릿 병합·변수 치환 또는 원본 변경 여부를 확인하세요.",
+  "message.userdata.vm.compare.unlinked": "VM에 직접 연결된 라이브러리 참조가 없습니다. 템플릿 또는 직접 입력한 본문일 수 있으며 원본과의 동일 여부는 확인하지 않았습니다.",
+  "message.userdata.vm.compare.unavailable": "라이브러리 원본을 비교할 수 없습니다. 원본 조회 권한·연결 정보·삭제 여부를 확인하세요. VM 저장 본문 조회와는 별개입니다."
 }

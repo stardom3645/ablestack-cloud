@@ -8959,5 +8959,12 @@
   "message.userdata.content.binary": "Content is not valid UTF-8 text. View and download it as Base64.",
   "message.userdata.content.copy.failed": "Copy failed. Check browser clipboard support or download the content.",
   "message.userdata.content.download.started": "Download started.",
-  "message.userdata.content.download.failed": "Download could not be started. Retry."
+  "message.userdata.content.download.failed": "Download could not be started. Retry.",
+  "label.userdata.vm.stored": "View VM stored user data",
+  "label.userdata.library": "User data library",
+  "message.userdata.vm.contract": "This is the VM body stored in Mold. Library source, template policy and variables are separate information. This read does not verify provider delivery or guest execution.",
+  "message.userdata.vm.compare.same": "The VM stored body and current linked library source are byte-for-byte identical.",
+  "message.userdata.vm.compare.different": "The VM stored body differs from the current linked library source. Review template merging, variable substitution or source changes.",
+  "message.userdata.vm.compare.unlinked": "There is no direct library reference on this VM. The body may come from a template or inline input; source equality is not established.",
+  "message.userdata.vm.compare.unavailable": "Library source comparison is unavailable. Check source access, linkage or deletion. VM stored body access is independent."
 }
