@@ -16,9 +16,9 @@
 // under the License.
 
 <template>
-  <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup' }">
+  <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup', 'userdata-library': $route.meta?.name === 'userdata' }">
     <a-affix
-      :key="'affix-' + showSearchFilters"
+      :key="'affix-' + showSearchFilters + ($route.meta?.name === 'userdata' ? '-' + device + '-' + selectedRowKeys.length : '')"
       :offsetTop="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 103 : 78"
     >
       <a-card class="breadcrumb-card" style="z-index: 10">
@@ -98,6 +98,7 @@
             </breadcrumb>
           </a-col>
           <a-col
+            class="autogen-toolbar-actions"
             :span="device === 'mobile' ? 24 : 12"
             :style="device === 'mobile' ? { float: 'right', 'margin-top': '12px', 'margin-bottom': '-6px', display: 'table' } : { float: 'right', display: 'table', 'margin-top': '6px' }" >
             <slot name="action" v-if="dataView && $route.path.startsWith('/publicip') && $slots.action"></slot>
@@ -168,6 +169,7 @@
     <div v-show="showAction">
       <component
         v-if="showAction && currentAction.selfManagedDialog"
+        ref="selfManagedAction"
         :is="currentAction.component"
         :resource="resource"
         :current-action="currentAction"
@@ -920,6 +922,7 @@ import OsLogo from '@/components/widgets/OsLogo'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import BulkActionProgress from '@/components/view/BulkActionProgress'
 import { bulkColumns, updateBulkItem } from '@/utils/bulkAction'
+import { userDataDeleteTargets } from '@/utils/userDataDeletion'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import DetailsInput from '@/components/widgets/DetailsInput'
 import AdvisoriesView from '@/components/view/AdvisoriesView'
@@ -1149,10 +1152,12 @@ export default {
     this.scheduleAutoRefresh()
   },
   beforeRouteUpdate (to, from, next) {
+    if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
     this.currentPath = this.$route.fullPath
     next()
   },
   beforeRouteLeave (to, from, next) {
+    if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
     console.log('DEBUG - Due to route change, ignoring results for any on-going API request', this.apiName)
     sourceToken.cancel()
     sourceToken.init()
@@ -2087,6 +2092,14 @@ export default {
     closeAction (result) {
       const deletedSshDetail = this.currentAction?.api === 'deleteSSHKeyPair' && isSshKeyPairDetailRoute(this.$route) && result?.removed?.includes(this.resource?.id)
       if (this.currentAction?.api === 'deleteSSHKeyPair' && result?.clearSelection) { this.selectedRowKeys = []; this.selectedItems = [] }
+      const deletedUserDataDetail = this.currentAction?.api === 'deleteUserData' && this.dataView && result?.removed?.includes(this.resource?.id)
+      if (this.currentAction?.api === 'deleteUserData' && result?.started && this.currentAction.userDataListScope === this.listScope()) {
+        const removed = new Set(result.removed || [])
+        const retained = new Set(result.retained || [])
+        this.items = this.items.filter(item => !removed.has(item.id))
+        this.selectedItems = this.items.filter(item => retained.has(item.id))
+        this.selectedRowKeys = this.selectedItems.map(item => item.id)
+      }
       const trigger = this.actionTrigger
       this.actionTrigger = null
       this.actionLoading = false
@@ -2094,6 +2107,7 @@ export default {
       this.currentAction = {}
       this.actionConfirmText = ''
       if (deletedSshDetail) this.$router.push('/ssh')
+      if (deletedUserDataDetail) this.$router.push('/userdata')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.
       this.$nextTick(() => {
         if (!this.showAction && trigger?.isConnected && trigger !== document.body) {
@@ -2145,6 +2159,14 @@ export default {
     execAction (action, isGroupAction) {
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
+      if (action.api === 'deleteUserData') {
+        if (!('deleteUserData' in this.$store.getters.apis) || !('listUserData' in this.$store.getters.apis)) return
+        const request = { ...action, invokedAsGroupAction: !!isGroupAction }
+        this.currentAction = { ...request, userDataTargets: userDataDeleteTargets(request, this.selectedItems), userDataListScope: this.listScope() }
+        this.resource = action.resource || {}
+        this.showAction = true
+        return
+      }
       if (action.api === 'deleteSSHKeyPair') {
         if (this.actionTrigger?.closest('.resource-context-menu')) this.actionTrigger = this.$refs?.detailActionsTrigger?.$el || this.$el?.querySelector('.ant-table-selection-column input') || this.actionTrigger
         const request = { ...action, invokedAsGroupAction: !!isGroupAction }

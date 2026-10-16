@@ -25,6 +25,8 @@ import { getAPI, postAPI, getBaseUrl } from '@/api'
 import { getLatestKubernetesIsoParams } from '@/utils/acsrepo'
 import { isFastClonePowerOperationBlocked, getFastClonePowerBlockedLabel, getFastClonePhase } from '@/utils/fastClone'
 import { isCloneBlockedByExtraConfigDisk } from '@/utils/vmClone'
+import { vmUserDataSupported } from '@/utils/vmUserData'
+import { userDataLibraryParams } from '@/utils/userDataContent'
 import kubernetesIcon from '@/assets/icons/kubernetes.svg?inline'
 
 const activeFastCloneStatuses = ['pending', 'running']
@@ -568,7 +570,18 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ResetSshKeyPair')))
         },
         {
+          api: 'getVirtualMachineUserData',
+          show: (_, store) => vmUserDataSupported(store.apis),
+          selfManagedDialog: true,
+          icon: 'file-search-outlined',
+          label: 'label.userdata.vm.stored',
+          dataView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ViewVmUserData')))
+        },
+        {
           api: 'resetUserDataForVirtualMachine',
+          selfManagedDialog: true,
           icon: 'solution-outlined',
           label: 'label.reset.user.data.on.vm',
           message: 'message.desc.reset.userdata',
@@ -1450,7 +1463,9 @@ export default {
         return fields
       },
       resourceType: 'UserData',
-      details: ['id', 'name', 'userdata', 'account', 'domain', 'params'],
+      searchFilters: ['id', 'name', 'domainid', 'account'],
+      customParamHandler: userDataLibraryParams,
+      details: ['id', 'name', 'account', 'domain', 'project', { field: 'params', customTitle: 'userdata.parameters' }],
       related: [{
         name: 'vm',
         title: 'label.instances',
@@ -1462,13 +1477,38 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
         },
         {
+          name: 'userdata.content',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataContent.vue')))
+        },
+        {
+          name: 'userdata.versions',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataVersions.vue')))
+        },
+        {
+          name: 'userdata.usage.vms',
+          resourceType: 'vms',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataUsage.vue')))
+        },
+        {
+          name: 'userdata.usage.templates',
+          resourceType: 'templates',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataUsage.vue')))
+        },
+        {
+          name: 'userdata.usage.isos',
+          resourceType: 'isos',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataUsage.vue')))
+        },
+        {
           name: 'comments',
+          show: () => Boolean(store.getters.apis?.listAnnotations),
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
         }
       ],
       actions: [
         {
           api: 'registerUserData',
+          selfManagedDialog: true,
           icon: 'plus-outlined',
           label: 'label.register.user.data',
           docHelp: 'adminguide/virtual_machines.html#user-data-and-meta-data',
@@ -1477,39 +1517,26 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/RegisterUserData.vue')))
         },
         {
+          api: 'registerUserData',
+          selfManagedDialog: true,
+          cloneUserData: true,
+          show: (_, store) => ['listUserData', 'registerUserData', 'listAnnotations', 'addAnnotation'].every(api => api in store.apis),
+          icon: 'copy-outlined',
+          label: 'label.userdata.clone',
+          dataView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/RegisterUserData.vue')))
+        },
+        {
           api: 'deleteUserData',
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DeleteUserData.vue'))),
           icon: 'delete-outlined',
           label: 'label.remove.user.data',
-          message: 'message.please.confirm.remove.user.data',
+          toolbarLabel: 'label.remove.user.data',
           dataView: true,
-          args: ['id', 'account', 'domainid', 'projectid'],
-          mapping: {
-            id: {
-              value: (record, params) => { return record.id }
-            },
-            projectid: {
-              value: (record, params) => { return record.projectid }
-            },
-            account: {
-              value: (record, params) => { return record.account }
-            },
-            domainid: {
-              value: (record, params) => { return record.domainid }
-            }
-          },
           groupAction: true,
-          popup: true,
-          groupMap: (selection, values, record) => {
-            return selection.map(x => {
-              const data = record.filter(y => { return y.id === x })
-              return {
-                id: x,
-                account: data[0].account,
-                domainid: data[0].domainid,
-                projectid: data[0].projectid
-              }
-            })
-          }
+          popup: true
         }
       ]
     },
@@ -1552,6 +1579,7 @@ export default {
       actions: [
         {
           api: 'registerCniConfiguration',
+          selfManagedDialog: true,
           icon: 'plus-outlined',
           label: 'label.register.cni.config',
           docHelp: 'adminguide/virtual_machines.html#creating-the-ssh-keypair',

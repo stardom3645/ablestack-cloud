@@ -7766,6 +7766,7 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
     @Override
     public Map<String, Object> listCapabilities(final ListCapabilitiesCmd cmd) {
         final Map<String, Object> capabilities = new HashMap<>();
+        capabilities.put("userdatamaxlength", UserDataManager.VM_USERDATA_MAX_LENGTH.value());
 
         final Account caller = getCaller();
         Long domainId = cmd.getDomainId();
@@ -8310,25 +8311,38 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
     @ActionEvent(eventType = EventTypes.EVENT_REGISTER_USER_DATA, eventDescription = "registering userdata", async = true)
     public UserData registerUserData(final RegisterUserDataCmd cmd) {
         final Account owner = getOwner(cmd);
-        checkForUserDataByName(cmd, owner);
-        final String name = cmd.getName();
+        final String name = UserDataRegistrationValidation.name(cmd.getName());
+        final String userdata = userDataManager.validateUserData(cmd.getUserData(), cmd.getHttpMethod());
+        UserDataRegistrationValidation.requireContent(userdata);
+        final String params = UserDataRegistrationValidation.params(cmd.getParams());
 
-        String userdata = cmd.getUserData();
-        checkForUserData(cmd, owner);
-        final String params = cmd.getParams();
-
-        userdata = userDataManager.validateUserData(userdata, cmd.getHttpMethod());
-
-        return createAndSaveUserData(name, userdata, params, owner, false);
+        // A DB-backed lock covers both duplicate checks and persistence across management nodes.
+        final GlobalLock lock = GlobalLock.getInternLock("userdata-register-" + owner.getDomainId() + "-" + owner.getAccountId());
+        try {
+            if (!lock.lock(10)) {
+                throw new CloudRuntimeException("Another user data registration is in progress for this account. Please retry.");
+            }
+            try {
+                if (userDataDao.findByName(owner.getAccountId(), owner.getDomainId(), name) != null) {
+                    throw new InvalidParameterValueException("A userdata with the same name already exists for this account.");
+                }
+                checkForUserData(userdata, owner);
+                return createAndSaveUserData(name, userdata, params, owner, false);
+            } finally {
+                lock.unlock();
+            }
+        } finally {
+            lock.releaseRef();
+        }
     }
 
     /**
-     * @param cmd
+     * @param canonicalUserData
      * @param owner
      * @throws InvalidParameterValueException
      */
-    private void checkForUserData(final RegisterUserDataCmd cmd, final Account owner) throws InvalidParameterValueException {
-        final UserDataVO userData = userDataDao.findByUserData(owner.getAccountId(), owner.getDomainId(), cmd.getUserData());
+    private void checkForUserData(final String canonicalUserData, final Account owner) throws InvalidParameterValueException {
+        final UserDataVO userData = userDataDao.findByUserData(owner.getAccountId(), owner.getDomainId(), canonicalUserData);
         if (userData != null) {
             throw new InvalidParameterValueException(String.format("Userdata %s with same content already exists for this account.", userData.getName()));
         }
