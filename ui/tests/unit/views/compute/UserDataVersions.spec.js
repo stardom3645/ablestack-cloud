@@ -31,7 +31,7 @@ const listed = (rows = []) => ({ listuserdataresponse: { count: rows.length, use
 const notes = (rows = []) => ({ listannotationsresponse: { count: rows.length, annotation: rows } })
 const flush = async () => { for (let n = 0; n < 24; n++) await Promise.resolve() }
 function ctx (component = Register) {
-  const c = { currentAction: { cloneUserData: true }, resource: { ...source }, tab: 'userdata.versions', $route: { name: 'userdata', path: '/userdata/' + source.id }, $refs: {}, $store: { getters: { apis: Object.fromEntries(cloneApis.map(api => [api, {}])), userInfo: { id: 'user', roletype: 'User' }, project: {} }, state: { user: { token: 'token' } } }, $t: key => key, $emit: jest.fn(), $nextTick: fn => Promise.resolve().then(fn) }
+  const c = { currentAction: { cloneUserData: true }, resource: { ...source }, tab: 'userdata.versions', $route: { name: 'userdata', path: '/userdata/' + source.id }, $router: { resolve: path => ({ href: '#' + path }), push: jest.fn() }, $refs: {}, $store: { getters: { apis: Object.fromEntries(cloneApis.map(api => [api, {}])), userInfo: { id: 'user', roletype: 'User' }, project: {} }, state: { user: { token: 'token' } } }, $t: key => key, $emit: jest.fn(), $nextTick: fn => Promise.resolve().then(fn) }
   Object.assign(c, component.data.call(c))
   Object.entries(component.methods).forEach(([key, fn]) => { c[key] = fn.bind(c) })
   Object.entries(component.computed).forEach(([key, fn]) => Object.defineProperty(c, key, { get: () => fn.call(c) }))
@@ -177,7 +177,7 @@ function mountedOptions (component, route) {
     global: {
       plugins: [componentsUse, iconsUse],
       directives: { focus: () => {} },
-      mocks: { $route: route, $store: c.$store, $t: key => key, $getApiParams: () => Object.fromEntries(['name', 'userdata', 'params', 'domainid', 'account', 'cniconfig'].map(key => [key, { description: key }])) },
+      mocks: { $route: route, $router: c.$router, $store: c.$store, $t: key => key, $getApiParams: () => Object.fromEntries(['name', 'userdata', 'params', 'domainid', 'account', 'cniconfig'].map(key => [key, { description: key }])) },
       stubs: { MoldDialog: { template: '<section><header><slot name="title" /></header><main><slot /></main><footer><slot name="footer" /></footer></section>' }, TooltipLabel: { props: ['title'], template: '<label>{{ title }}</label>' }, UserDataContent: true, 'router-link': { template: '<a><slot /></a>' } }
     }
   }
@@ -191,6 +191,8 @@ test('actual production component registry renders clone form on an unnamed deta
   expect(wrapper.find('input[type=checkbox]').element.checked).toBe(true)
   expect(wrapper.text()).not.toContain('label.cniconfiguration')
   expect(wrapper.find('footer').text()).toBe('label.cancellabel.userdata.clone.create')
+  await wrapper.find('textarea').setValue('!invalid')
+  expect(wrapper.find('main').text()).not.toContain('message.userdata.clone.duplicate')
   wrapper.unmount()
 })
 test('actual production registry renders visible empty provenance feedback', async () => {
@@ -211,4 +213,10 @@ test('completed receipt restores focus to close when the submit button was remov
   const button = document.createElement('button'); document.body.appendChild(button); c.$refs.closeButton = { $el: button }
   c.restoreFormPosition({ focus: { isConnected: false } }); await flush()
   expect(document.activeElement).toBe(button); button.remove()
+})
+test('clone links close the action before navigation and are inert while pending', () => {
+  const c = ctx(); const event = { preventDefault: jest.fn(), button: 0 }; const path = '/userdata/' + target.id
+  c.loading = true; c.openCloneRoute(event, path); expect(c.$router.push).not.toHaveBeenCalled(); expect(c.$emit).not.toHaveBeenCalled()
+  c.loading = false; c.openCloneRoute(event, path); expect(c.$emit).toHaveBeenCalledWith('close-action'); expect(c.$router.push).toHaveBeenCalledWith(path)
+  expect(c.$emit.mock.invocationCallOrder[0]).toBeLessThan(c.$router.push.mock.invocationCallOrder[0])
 })

@@ -30,13 +30,13 @@
       <template v-if="cloneMode">
         <a-alert type="info" show-icon :message="$t('message.userdata.clone.intro')" />
         <p v-if="source">{{ $t('label.userdata.clone.source') }}: {{ source.name }} ({{ source.id }})<br>{{ source.project || source.account }} / {{ source.domain }}</p>
-        <p v-if="source" class="clone-usage-links"><router-link v-for="kind in ['vms', 'templates', 'isos']" :key="kind" :to="'/userdata/' + source.id + '?tab=userdata.usage.' + kind">{{ $t('label.userdata.usage.' + kind) }}</router-link></p>
+        <p v-if="source" class="clone-usage-links"><a v-for="kind in ['vms', 'templates', 'isos']" :key="kind" :href="$router.resolve('/userdata/' + source.id + '?tab=userdata.usage.' + kind).href" :aria-disabled="busy" :tabindex="busy ? -1 : undefined" @click="openCloneRoute($event, '/userdata/' + source.id + '?tab=userdata.usage.' + kind)">{{ $t('label.userdata.usage.' + kind) }}</a></p>
         <a-button v-if="!source && !sourceLoading" @click="loadCloneSource">{{ $t('label.retry') }}</a-button>
         <UserDataChangePolicy />
       </template>
       <template v-if="createdVersion">
         <a-alert type="success" show-icon role="status" :message="$t('message.userdata.clone.created')" />
-        <p><router-link :to="'/userdata/' + createdVersion.id + '?tab=userdata.versions'">{{ createdVersion.name }} ({{ createdVersion.id }})</router-link></p>
+        <p><a :href="$router.resolve('/userdata/' + createdVersion.id + '?tab=userdata.versions').href" :aria-disabled="busy" :tabindex="busy ? -1 : undefined" @click="openCloneRoute($event, '/userdata/' + createdVersion.id + '?tab=userdata.versions')">{{ createdVersion.name }} ({{ createdVersion.id }})</a></p>
         <a-alert :type="noteSaved ? 'success' : 'warning'" show-icon role="status" :message="$t(noteSaved ? 'message.userdata.clone.note.saved' : 'message.userdata.clone.note.pending')" />
         <details v-if="!noteSaved"><summary>{{ $t('label.userdata.clone.note') }}</summary><UserDataContent :resource="createdVersion" tab="userdata.content" :preview-encoded="notePreview" /></details>
       </template>
@@ -151,7 +151,7 @@
 
           <!-- Native Enter submits; textarea and select keep their own Enter behavior. -->
           <template v-if="cloneMode && source">
-            <a-alert :type="difference?.changed ? 'info' : 'warning'" show-icon role="status" :message="$t(difference?.changed ? 'message.userdata.clone.changed' : 'message.userdata.clone.duplicate')" />
+            <a-alert v-if="difference" :type="difference.changed ? 'info' : 'warning'" show-icon role="status" :message="$t(difference.changed ? 'message.userdata.clone.changed' : 'message.userdata.clone.duplicate')" />
             <p v-if="difference">{{ $t('message.userdata.clone.diff', difference) }}<br>{{ $t('label.userdataparams') }}: {{ source.params || '-' }} → {{ draftParams || '-' }}</p>
             <details><summary>{{ $t('label.userdata.clone.source.body') }}</summary><UserDataContent :resource="source" tab="userdata.content" :preview-encoded="source.userdata" /></details>
             <details v-if="draft"><summary>{{ $t('label.userdata.clone.draft.body') }}</summary><UserDataContent :resource="source" tab="userdata.content" :preview-encoded="draft.encoded" /></details>
@@ -414,6 +414,15 @@ export default {
       } catch (error) { if (current()) this.error = this.cloneError(error) } finally { if (current()) this.sourceLoading = false }
     },
     cloneError (error) { return error?.message?.startsWith('message.userdata.') ? this.$t(error.message) : this.errorMessage(error) },
+    openCloneRoute (event, path) {
+      if (this.busy) { event.preventDefault(); return }
+      if (event.button > 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
+      event.preventDefault()
+      // Resource detail routes reuse AutogenView. Close the current action
+      // before changing its resource so a receipt cannot become another clone.
+      this.$emit('close-action')
+      this.$router.push(path)
+    },
     editCloneText () {
       if (this.busy || this.cloneAttempt || !this.draft?.text) return
       this.form.userdata = this.draft.text.replace(/\r\n?/g, '\n'); this.form.isbase64 = false
