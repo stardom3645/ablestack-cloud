@@ -129,6 +129,12 @@ test('note failure retries only the note, never the already created version', as
   postAPI.mockResolvedValue({ addannotationresponse: { annotation: { id: 'note' } } }); await c.handleSubmit(); expect(c.noteSaved).toBe(true)
   expect(postAPI.mock.calls.every(call => call[0] === 'addAnnotation')).toBe(true)
 })
+test('a confirmed concurrent name conflict unlocks the retained draft without posting again', async () => {
+  const c = ctx(); c.cloneAttempt = params; const before = { ...c.form }
+  getAPI.mockImplementation(async (cmd, p) => p.id ? listed([source]) : listed([{ ...target, userdata: 'eA==' }]))
+  await c.handleSubmit(); expect(c.cloneAttempt).toBeNull(); expect(c.form).toEqual(before)
+  expect(c.error).toBe('message.userdata.clone.name.conflict'); expect(postAPI).not.toHaveBeenCalled()
+})
 test('pending clone blocks close, unload and duplicate submissions; revoked capability prevents mutation', async () => {
   const c = ctx(); let done; getAPI.mockReturnValue(new Promise(resolve => { done = resolve }))
   const p = c.handleSubmit(); await flush(); c.handleSubmit(); c.closeAction(); expect(c.blocksNavigation).toBe(true); expect(c.$emit).not.toHaveBeenCalled()
@@ -151,4 +157,11 @@ test('reused content preview preserves exact bytes and performs no source lookup
   await c.fetchData(); expect(c.content.text).toBe('\ufeff#cloud-config\r\n# 한글 😀\r\n'); expect(c.status).toBe('ready'); expect(getAPI).not.toHaveBeenCalled()
   c.previewEncoded = '/wAB'; await c.fetchData(); expect(c.mode).toBe('base64'); expect(c.content.text).toBeNull()
   c.previewEncoded = '!'; await c.fetchData(); expect(c.status).toBe('invalid'); expect(c.content).toBeNull()
+})
+
+test('unnamed library detail route retains the userdata API and clone contract', async () => {
+  const c = ctx(); c.$route.name = undefined; c.$route.meta = { name: 'userdata' }
+  expect(c.isUserData).toBe(true); expect(c.cloneMode).toBe(true); expect(c.apiName).toBe('registerUserData')
+  getAPI.mockResolvedValue(listed([source])); c.source = null; await c.loadCloneSource()
+  expect(c.form.userdata).toBe(source.userdata); expect(c.form.params).toEqual(['OLD'])
 })

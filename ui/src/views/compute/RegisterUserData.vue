@@ -41,7 +41,7 @@
         <details v-if="!noteSaved"><summary>{{ $t('label.userdata.clone.note') }}</summary><UserDataContent :resource="createdVersion" tab="userdata.content" :preview-encoded="notePreview" /></details>
       </template>
       <a-spin v-else :spinning="busy">
-        <p v-if="!cloneMode" v-html="$route.name === 'userdata' ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
+        <p v-if="!cloneMode" v-html="isUserData ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
         <a-form
           v-if="!cloneMode || source"
           id="userdata-registration-form"
@@ -64,7 +64,7 @@
               :placeholder="apiParams.name.description"
               v-focus="true" />
           </a-form-item>
-          <div v-if="$route.name === 'userdata'">
+          <div v-if="isUserData">
             <a-form-item name="userdata" ref="userdata">
               <template #label>
                 <tooltip-label :title="$t('label.user.data')" :tooltip="$t('label.register.user.data.details')"/>
@@ -98,8 +98,8 @@
           <a-form-item name="params" ref="params">
             <template #label>
               <tooltip-label
-                :title="$route.name === 'userdata' ? $t('label.userdataparams') : $t('label.cniconfigparams')"
-                :tooltip="$route.name === 'userdata' ? $t('message.userdata.validation.help') : apiParams.params.description"/>
+                :title="isUserData ? $t('label.userdataparams') : $t('label.cniconfigparams')"
+                :tooltip="isUserData ? $t('message.userdata.validation.help') : apiParams.params.description"/>
             </template>
             <a-select
               ref="paramsInput"
@@ -183,7 +183,7 @@ import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import MoldDialog from '@/components/view/MoldDialog'
-import { canonicalUserData, userDataName, userDataParams } from '@/utils/userDataRegistration'
+import { canonicalUserData, userDataName, userDataParams, isUserDataRoute } from '@/utils/userDataRegistration'
 import { userDataContent } from '@/utils/userDataContent'
 import { cloneApis, cloneOwner, readCloneSource, findCloneAttempt, cloneDifference, cloneRecord, saveCloneNote } from '@/utils/userDataVersions'
 import UserDataContent from './UserDataContent'
@@ -215,7 +215,7 @@ export default {
     }
   },
   computed: {
-    isUserData () { return this.$route.name === 'userdata' },
+    isUserData () { return isUserDataRoute(this.$route) },
     apiName () { return this.isUserData ? 'registerUserData' : 'registerCniConfiguration' },
     cloneMode () { return this.isUserData && !!this.currentAction?.cloneUserData },
     allowedApi () { return this.cloneMode ? cloneApis.every(api => api in this.$store.getters.apis) : this.apiName in this.$store.getters.apis },
@@ -236,7 +236,7 @@ export default {
     }
   },
   beforeCreate () {
-    this.apiParams = this.$route.name === 'userdata' ? this.$getApiParams('registerUserData') : this.$getApiParams('registerCniConfiguration')
+    this.apiParams = isUserDataRoute(this.$route) ? this.$getApiParams('registerUserData') : this.$getApiParams('registerCniConfiguration')
   },
   created () {
     this.initForm()
@@ -261,7 +261,7 @@ export default {
         userdata: [{ required: true, message: this.$t('message.error.user.data') }],
         cniconfig: [{ required: true, message: this.$t('message.error.user.data') }]
       })
-      if (this.$route.name === 'userdata') {
+      if (this.isUserData) {
         const validate = fn => async () => {
           try { fn() } catch (error) { throw new Error(this.$t(error.message)) }
         }
@@ -271,7 +271,7 @@ export default {
       }
     },
     fetchData () {
-      if (this.$route.name === 'userdata') {
+      if (this.isUserData) {
         getAPI('listCapabilities', {}, { preserveOnFailure: true }).then(json => {
           const max = json.listcapabilitiesresponse?.capability?.userdatamaxlength
           if (!this.disposed && Number.isInteger(max) && max > 0) this.maxEncodedLength = Math.min(max, 1048576)
@@ -361,10 +361,7 @@ export default {
           params.account = values.account
         }
 
-        let apiName = 'registerUserData'
-        if (this.$route.name === 'cniconfiguration') {
-          apiName = 'registerCniConfiguration'
-        }
+        const apiName = this.apiName
 
         if (apiName === 'registerUserData') {
           params.name = userDataName(values.name)
@@ -466,6 +463,9 @@ export default {
         this.noteSaved = true
       } catch (error) {
         if (!current()) return
+        // A confirmed different item owns the name. Retain the draft and let
+        // the user choose a new name; never POST automatically after a conflict.
+        if (error.message === 'message.userdata.clone.name.conflict') this.cloneAttempt = null
         if (error?.errorFields?.length) this.focusValidationError(error)
         else this.error = this.cloneError(error)
       } finally { this.loading = false; if (current()) this.restoreFormPosition(position) }

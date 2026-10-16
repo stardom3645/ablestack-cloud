@@ -50,3 +50,6 @@ export function canonicalUserData (value, isBase64, maxLength = 1048576) {
   if (encoded.length > maxLength) fail('size')
   return encoded
 }
+
+// Detail routes are unnamed; their menu identity is inherited through meta.
+export function isUserDataRoute (route) { return (route?.meta?.name || route?.name) === 'userdata' }
