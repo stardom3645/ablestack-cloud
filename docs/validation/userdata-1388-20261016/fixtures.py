@@ -62,6 +62,7 @@ def cleanup(a):
  for id in s['networks']:job(a,'deleteNetwork',id=id)
  job(a,'deleteProject',id=s['project_id'])
  for acc in s['accounts']:job(a,'deleteAccount',id=acc['id'])
+ for role in s.get('roles',[]):ok(a,'deleteRole',id=role)
  job(a,'deleteDomain',id=s['domain_id'])
  assert ud.inventory(a)==json.loads((ROOT/'baseline.private.json').read_text(encoding='utf-8'))['userdata']
  save('cleanup',dict(original_userdata_exact_match=True,active_vms=ok(a,'listVirtualMachines',keyword=PREFIX,listall='true').get('count',0),active_networks=ok(a,'listNetworks',keyword=PREFIX,listall='true').get('count',0)));s['cleaned']=True;save('runtime-state',s)

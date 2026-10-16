@@ -55,4 +55,6 @@ f.ok(a,'resetUserDataForVirtualMachine',id=user_vm['id'],userdataid=s['userdata'
 for api in ['listVirtualMachines','listTemplates','listIsos']:
  meta=f.ok(a,'listApis',name=api)['api'][0];assert any(p['name']=='userdataid' for p in meta['params'])
 record('api-metadata-advertises-uuid-filter')
-record('template-inheritance-has-no-uuid-and-is-excluded',evidence=json.loads((f.ROOT/'template-inheritance.json').read_text(encoding='utf-8')))
+inherited=json.loads((f.ROOT/'template-inheritance.json').read_text(encoding='utf-8'))
+assert not inherited.get('userdataid') and inherited['userdata']==s['userdata']['A']['userdata']
+record('template-inheritance-has-no-uuid-and-is-excluded',evidence=inherited)

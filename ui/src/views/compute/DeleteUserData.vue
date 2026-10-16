@@ -24,7 +24,7 @@ for the specific language governing permissions and limitations. -->
             <div v-if="record.references === null">{{ $t('message.userdata.usage.checking') }}</div>
             <div v-else-if="record.references === false">{{ $t('message.userdata.usage.incomplete') }}</div>
             <div v-for="(count, kind) in record.references || {}" :key="kind">
-              <router-link :to="referenceLink(record.target, kind)" :aria-disabled="busy" :tabindex="busy ? -1 : 0" @click="followReference($event)">{{ $t('label.userdata.usage.' + kind) }}: {{ count }}</router-link>
+              <router-link :to="referenceLink(record.target, kind)" :aria-disabled="busy" :tabindex="busy ? -1 : 0" @click.capture="followReference($event)">{{ $t('label.userdata.usage.' + kind) }}: {{ count }}</router-link>
             </div>
           </template>
         </template>
@@ -36,7 +36,7 @@ for the specific language governing permissions and limitations. -->
     <template #footer>
       <a-button ref="cancel" :disabled="busy" @click="close">{{ $t(started ? 'label.close' : 'label.cancel') }}</a-button>
       <a-button v-if="checkableRows.length" :disabled="busy || !allowed || !active()" @click="checkUnknown">{{ $t('label.userdata.delete.check') }}</a-button>
-      <a-button v-if="eligibleRows.length || busy" type="primary" danger :loading="busy" :disabled="busy || !allowed || !active()" @click="execute">{{ $t(started ? 'label.userdata.delete.retry' : 'label.delete') }}</a-button>
+      <a-button v-if="eligibleRows.length || busy" type="primary" danger :loading="busy" :disabled="busy || referencePending || !allowed || !active()" @click="execute">{{ $t(started ? 'label.userdata.delete.retry' : 'label.delete') }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -109,7 +109,7 @@ export default {
       if (status === 'missing') { row.status = 'success'; row.reason = this.$t('message.userdata.delete.confirmed.absent') } else if (status === 'ready') { row.status = 'failed'; row.reason = [row.reason, this.$t('message.userdata.delete.confirmed.present')].filter(Boolean).join(' ') } else if (status === 'mismatch') { row.status = 'blocked'; row.reason = this.$t('message.userdata.delete.changed') } else { row.status = 'unknown'; row.reason = [row.reason, this.$t('message.userdata.delete.unknown')].filter(Boolean).join(' ') }
     },
     async execute () {
-      if (this.busy || !this.active() || !this.allowed || !this.eligibleRows.length) return
+      if (this.busy || this.referencePending || !this.active() || !this.allowed || !this.eligibleRows.length) return
       this.busy = true; this.started = true
       const pending = [...this.eligibleRows]
       try {
