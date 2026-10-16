@@ -19,17 +19,30 @@
   <MoldDialog
     class="userdata-registration-dialog"
     size="md"
-    :closable="!loading"
-    :keyboard="!loading"
+    :closable="!busy"
+    :keyboard="!busy"
     @cancel="closeAction">
     <template #title>
-      {{ $t(isUserData ? 'label.register.user.data' : 'label.register.cni.config') }}
+      {{ $t(cloneMode ? 'label.userdata.clone' : isUserData ? 'label.register.user.data' : 'label.register.cni.config') }}
       <a v-if="currentAction.docHelp && $config?.docBase" :href="$config.docBase + '/' + currentAction.docHelp" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
     </template>
-    <div ref="content" class="userdata-registration-content" :aria-busy="loading">
-      <a-spin :spinning="loading">
-        <p v-html="$route.name === 'userdata' ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
+    <div ref="content" class="userdata-registration-content" :aria-busy="busy">
+      <template v-if="cloneMode">
+        <a-alert type="info" show-icon :message="$t('message.userdata.clone.intro')" />
+        <p v-if="source">{{ $t('label.userdata.clone.source') }}: {{ source.name }} ({{ source.id }})<br>{{ source.project || source.account }} / {{ source.domain }}</p>
+        <a-button v-if="!source && !sourceLoading" @click="loadCloneSource">{{ $t('label.retry') }}</a-button>
+        <UserDataChangePolicy />
+      </template>
+      <template v-if="createdVersion">
+        <a-alert type="success" show-icon role="status" :message="$t('message.userdata.clone.created')" />
+        <p><router-link :to="'/userdata/' + createdVersion.id + '?tab=userdata.versions'">{{ createdVersion.name }} ({{ createdVersion.id }})</router-link></p>
+        <a-alert :type="noteSaved ? 'success' : 'warning'" show-icon role="status" :message="$t(noteSaved ? 'message.userdata.clone.note.saved' : 'message.userdata.clone.note.pending')" />
+        <details v-if="!noteSaved"><summary>{{ $t('label.userdata.clone.note') }}</summary><UserDataContent :resource="createdVersion" tab="userdata.content" :preview-encoded="notePreview" /></details>
+      </template>
+      <a-spin v-else :spinning="busy">
+        <p v-if="!cloneMode" v-html="$route.name === 'userdata' ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
         <a-form
+          v-if="!cloneMode || source"
           id="userdata-registration-form"
           @keydown.ctrl.enter.prevent="handleSubmit"
           :ref="formRef"
@@ -46,7 +59,7 @@
               ref="nameInput"
               @keydown.enter.prevent="handleSubmit"
               v-model:value="form.name"
-              :disabled="loading"
+              :disabled="busy || !!cloneAttempt"
               :placeholder="apiParams.name.description"
               v-focus="true" />
           </a-form-item>
@@ -58,7 +71,7 @@
               <a-textarea
                 ref="userdataInput"
                 v-model:value="form.userdata"
-                :disabled="loading"
+                :disabled="busy || !!cloneAttempt"
                 :placeholder="$t('label.register.user.data.details')"/>
             </a-form-item>
           </div>
@@ -75,7 +88,11 @@
             </a-form-item>
           </div>
           <a-form-item name="isbase64" ref="isbase64" :label="$t('label.is.base64.encoded')">
-            <a-checkbox v-model:checked="form.isbase64" :disabled="loading"></a-checkbox>
+            <a-checkbox v-model:checked="form.isbase64" :disabled="busy || !!cloneAttempt"></a-checkbox>
+            <template v-if="cloneMode">
+              <p>{{ $t('message.userdata.clone.encoding') }}</p>
+              <a-button :disabled="busy || !!cloneAttempt || !draft?.text || !form.isbase64" @click="editCloneText">{{ $t('label.userdata.clone.edit.text') }}</a-button>
+            </template>
           </a-form-item>
           <a-form-item name="params" ref="params">
             <template #label>
@@ -87,7 +104,7 @@
               ref="paramsInput"
               mode="tags"
               v-model:value="form.params"
-              :disabled="loading"
+              :disabled="busy || !!cloneAttempt"
               showSearch
               optionFilterProp="value"
               :filterOption="(input, option) => {
@@ -96,7 +113,7 @@
               :placeholder="apiParams.params.description">
             </a-select>
           </a-form-item>
-          <a-form-item name="domainid" ref="domainid" v-if="isAdminOrDomainAdmin()">
+          <a-form-item name="domainid" ref="domainid" v-if="!cloneMode && isAdminOrDomainAdmin()">
             <template #label>
               <tooltip-label :title="$t('label.domainid')" :tooltip="apiParams.domainid.description"/>
             </template>
@@ -120,7 +137,7 @@
               </a-select-option>
             </a-select>
           </a-form-item>
-          <a-form-item name="account" ref="account" v-if="isAdminOrDomainAdmin() && !isObjectEmpty(selectedDomain) && selectedDomain.id !== null">
+          <a-form-item name="account" ref="account" v-if="!cloneMode && isAdminOrDomainAdmin() && !isObjectEmpty(selectedDomain) && selectedDomain.id !== null">
             <template #label>
               <tooltip-label :title="$t('label.account')" :tooltip="apiParams.account.description"/>
             </template>
@@ -132,6 +149,12 @@
           </a-form-item>
 
           <!-- Native Enter submits; textarea and select keep their own Enter behavior. -->
+          <template v-if="cloneMode && source">
+            <a-alert :type="difference?.changed ? 'info' : 'warning'" show-icon role="status" :message="$t(difference?.changed ? 'message.userdata.clone.changed' : 'message.userdata.clone.duplicate')" />
+            <p v-if="difference">{{ $t('message.userdata.clone.diff', difference) }}<br>{{ $t('label.userdataparams') }}: {{ source.params || '-' }} → {{ draftParams || '-' }}</p>
+            <details><summary>{{ $t('label.userdata.clone.source.body') }}</summary><UserDataContent :resource="source" tab="userdata.content" :preview-encoded="source.userdata" /></details>
+            <details v-if="draft"><summary>{{ $t('label.userdata.clone.draft.body') }}</summary><UserDataContent :resource="source" tab="userdata.content" :preview-encoded="draft.encoded" /></details>
+          </template>
           <button type="submit" hidden aria-hidden="true" tabindex="-1"></button>
         </a-form>
       </a-spin>
@@ -139,16 +162,17 @@
       <a-alert v-if="error" class="mold-dialog-section" role="alert" type="error" show-icon :message="error" />
     </div>
     <template #footer>
-      <a-button :disabled="loading" @click="closeAction">{{ $t('label.cancel') }}</a-button>
+      <a-button :disabled="busy" @click="closeAction">{{ $t(createdVersion ? 'label.close' : 'label.cancel') }}</a-button>
       <a-button
         ref="submit"
         form="userdata-registration-form"
         html-type="submit"
-        :loading="loading"
-        :disabled="!allowedApi"
+        v-if="!createdVersion || !noteSaved"
+        :loading="busy"
+        :disabled="!allowedApi || (cloneMode && !source)"
         type="primary"
         @click="handleSubmit"
-        @keydown.ctrl.enter.prevent="handleSubmit">{{ $t('label.register.userdata.action') }}</a-button>
+        @keydown.ctrl.enter.prevent="handleSubmit">{{ $t(createdVersion ? 'label.userdata.clone.note.retry' : cloneAttempt ? 'label.userdata.clone.reconcile' : cloneMode ? 'label.userdata.clone.create' : 'label.register.userdata.action') }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -159,13 +183,17 @@ import { getAPI, postAPI } from '@/api'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import MoldDialog from '@/components/view/MoldDialog'
 import { canonicalUserData, userDataName, userDataParams } from '@/utils/userDataRegistration'
+import { userDataContent } from '@/utils/userDataContent'
+import { cloneApis, cloneOwner, readCloneSource, findCloneAttempt, cloneDifference, cloneRecord, saveCloneNote } from '@/utils/userDataVersions'
+import UserDataContent from './UserDataContent'
+import UserDataChangePolicy from './UserDataChangePolicy'
 
 export default {
   name: 'registerUserData',
-  props: { currentAction: { type: Object, default: () => ({}) } },
+  props: { currentAction: { type: Object, default: () => ({}) }, resource: { type: Object, default: () => ({}) } },
   emits: ['refresh-data', 'close-action'],
   components: {
-    TooltipLabel, MoldDialog
+    TooltipLabel, MoldDialog, UserDataContent, UserDataChangePolicy
   },
   data () {
     return {
@@ -175,14 +203,36 @@ export default {
       loading: false,
       error: '',
       disposed: false,
+      source: null,
+      sourceLoading: false,
+      sourceVersion: 0,
+      cloneAttempt: null,
+      createdVersion: null,
+      noteSaved: false,
+      note: '',
       maxEncodedLength: 1048576
     }
   },
   computed: {
     isUserData () { return this.$route.name === 'userdata' },
     apiName () { return this.isUserData ? 'registerUserData' : 'registerCniConfiguration' },
-    allowedApi () { return this.apiName in this.$store.getters.apis },
-    blocksNavigation () { return this.loading }
+    cloneMode () { return this.isUserData && !!this.currentAction?.cloneUserData },
+    allowedApi () { return this.cloneMode ? cloneApis.every(api => api in this.$store.getters.apis) : this.apiName in this.$store.getters.apis },
+    busy () { return this.loading || this.sourceLoading },
+    blocksNavigation () { return this.busy },
+    cloneScope () { return JSON.stringify([this.resource?.id, this.resource?.name, this.resource?.account, this.resource?.domainid, this.resource?.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.allowedApi]) },
+    draft () { try { return userDataContent(canonicalUserData(this.form.userdata, this.form.isbase64, this.maxEncodedLength)) } catch (error) { return null } },
+    draftParams () { try { return userDataParams(this.form.params) } catch (error) { return null } },
+    difference () { return this.source && this.draft ? cloneDifference(this.source, this.draft.encoded, this.draftParams) : null },
+    notePreview () { return btoa(unescape(encodeURIComponent(this.note))) }
+  },
+  watch: {
+    cloneScope () {
+      if (!this.cloneMode) return
+      this.sourceVersion++; this.source = null; this.sourceLoading = false; this.cloneAttempt = null; this.createdVersion = null; this.noteSaved = false; this.note = ''; this.error = ''
+      this.form.name = ''; this.form.userdata = ''; this.form.params = []
+      this.loadCloneSource()
+    }
   },
   beforeCreate () {
     this.apiParams = this.$route.name === 'userdata' ? this.$getApiParams('registerUserData') : this.$getApiParams('registerCniConfiguration')
@@ -226,7 +276,8 @@ export default {
           if (!this.disposed && Number.isInteger(max) && max > 0) this.maxEncodedLength = Math.min(max, 1048576)
         }).catch(() => { /* The server still enforces its current configured limit. */ })
       }
-      if (this.isAdminOrDomainAdmin()) {
+      if (this.cloneMode) this.loadCloneSource()
+      else if (this.isAdminOrDomainAdmin()) {
         this.fetchDomainData()
       }
     },
@@ -287,8 +338,9 @@ export default {
     },
     handleSubmit (e) {
       if (e && typeof e.preventDefault === 'function') e.preventDefault()
-      if (this.loading || this.disposed) return
+      if (this.busy || this.disposed) return
       if (!this.allowedApi) { this.error = this.$t('label.forbidden'); return }
+      if (this.cloneMode) return this.submitClone()
       const position = this.formPosition()
       let invalidField
       this.loading = true
@@ -343,9 +395,83 @@ export default {
         } else this.restoreFormPosition(position)
       })
     },
-    beforeUnload (event) { if (this.loading) { event.preventDefault(); event.returnValue = '' } },
+    async loadCloneSource () {
+      if (!this.cloneMode || this.sourceLoading || this.disposed) return
+      if (!this.allowedApi) { this.error = this.$t('label.forbidden'); return }
+      const version = ++this.sourceVersion; const scope = this.cloneScope
+      const current = () => !this.disposed && this.sourceVersion === version && this.cloneScope === scope
+      this.sourceLoading = true; this.error = ''
+      try {
+        const source = await readCloneSource(getAPI, Object.freeze({ ...this.resource }))
+        if (!current()) return
+        this.source = source
+        this.form.name = source.name.slice(0, 247) + '-v2'
+        this.form.userdata = source.userdata; this.form.isbase64 = true
+        this.form.params = source.params ? source.params.split(',') : []
+        this.$nextTick(() => { this.$refs.nameInput?.focus() })
+      } catch (error) { if (current()) this.error = this.cloneError(error) } finally { if (current()) this.sourceLoading = false }
+    },
+    cloneError (error) { return error?.message?.startsWith('message.userdata.') ? this.$t(error.message) : this.errorMessage(error) },
+    editCloneText () {
+      if (this.busy || this.cloneAttempt || !this.draft?.text) return
+      this.form.userdata = this.draft.text.replace(/\r\n?/g, '\n'); this.form.isbase64 = false
+      this.$nextTick(() => this.$refs.userdataInput?.focus())
+    },
+    async submitClone () {
+      const position = this.formPosition(); const scope = this.cloneScope
+      const current = () => !this.disposed && this.cloneScope === scope && this.allowedApi
+      this.loading = true; this.error = ''
+      try {
+        if (!this.createdVersion) {
+          if (!this.source) return
+          await this.formRef.value.validate()
+          if (!current()) return
+          // Re-read the source within the frozen owner scope before every mutation.
+          const source = await readCloneSource(getAPI, this.source)
+          if (!current()) return
+          if (source.userdata !== this.source.userdata || (source.params || '') !== (this.source.params || '')) throw new Error('message.userdata.clone.source.changed')
+          let target
+          if (this.cloneAttempt) {
+            target = await findCloneAttempt(getAPI, source, this.cloneAttempt)
+            if (!current()) return
+            if (!target) { this.cloneAttempt = null; throw new Error('message.userdata.clone.notfound') }
+          } else {
+            const params = { ...cloneOwner(source), name: userDataName(this.form.name), userdata: canonicalUserData(this.form.userdata, this.form.isbase64, this.maxEncodedLength), params: userDataParams(this.form.params) }
+            if (params.userdata === source.userdata) throw new Error('message.userdata.clone.duplicate')
+            if (await findCloneAttempt(getAPI, source, params)) throw new Error('message.userdata.clone.name.conflict')
+            if (!current()) return
+            this.cloneAttempt = Object.freeze({ ...params })
+            try {
+              const json = await postAPI('registerUserData', params, { preserveOnFailure: true, timeout: 60000 })
+              if (!current()) return
+              const row = json?.registeruserdataresponse?.userdata
+              // Never trust a malformed success or a result with a different owner/body.
+              if (!row?.id) throw new Error('message.userdata.clone.uncertain')
+              target = await findCloneAttempt(getAPI, source, params)
+              if (!target || target.id !== row.id) throw new Error('message.userdata.clone.uncertain')
+            } catch (error) {
+              if (!current()) return
+              // Preserve the submitted snapshot. The next click reconciles; it never blindly POSTs again.
+              throw new Error(this.cloneError(error) + ' ' + this.$t('message.userdata.clone.uncertain'))
+            }
+          }
+          if (!current()) return
+          this.createdVersion = target; this.note = cloneRecord(source, target)
+          this.$emit('refresh-data')
+        }
+        if (!current() || this.noteSaved) return
+        await saveCloneNote(getAPI, postAPI, this.createdVersion, this.note, current)
+        if (!current()) return
+        this.noteSaved = true
+      } catch (error) {
+        if (!current()) return
+        if (error?.errorFields?.length) this.focusValidationError(error)
+        else this.error = this.cloneError(error)
+      } finally { this.loading = false; if (current()) this.restoreFormPosition(position) }
+    },
+    beforeUnload (event) { if (this.busy) { event.preventDefault(); event.returnValue = '' } },
     closeAction () {
-      if (this.loading) return
+      if (this.busy) return
       this.$emit('close-action')
     }
   }
@@ -354,4 +480,7 @@ export default {
 
 <style scoped lang="less">
   .userdata-registration-content { min-width: 0; overflow-wrap: anywhere; overflow-anchor: none; }
+  .userdata-registration-content details { margin: 12px 0; }
+  .userdata-registration-content summary { cursor: pointer; }
+  .userdata-registration-content :deep(.content-code) { max-height: 240px; }
 </style>

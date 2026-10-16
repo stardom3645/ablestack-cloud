@@ -33,7 +33,7 @@
         <a-radio-button value="raw" :disabled="content?.text === null">{{ $t('label.userdata.raw') }}</a-radio-button>
         <a-radio-button value="base64">Base64</a-radio-button>
       </a-radio-group>
-      <a-tooltip :title="$t('label.refresh')"><a-button class="content-refresh" :aria-label="$t('label.refresh')" :loading="pending" :disabled="!canRead" @click="fetchData"><template #icon><reload-outlined /></template></a-button></a-tooltip>
+      <a-tooltip v-if="previewEncoded == null" :title="$t('label.refresh')"><a-button class="content-refresh" :aria-label="$t('label.refresh')" :loading="pending" :disabled="!canRead" @click="fetchData"><template #icon><reload-outlined /></template></a-button></a-tooltip>
     </div>
     <p class="content-note">{{ $t(sourceType === 'vm' ? 'message.userdata.vm.contract' : 'message.userdata.content.contract') }}</p>
     <p v-if="content" class="content-note">{{ $t('message.userdata.content.representation', { mode: mode === 'raw' ? $t('label.userdata.raw') : 'Base64', size: content.bytes.length }) }}</p>
@@ -56,16 +56,17 @@ import { userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } fro
 
 export default {
   name: 'UserDataContent',
-  props: { resource: { type: Object, required: true }, tab: { type: String, default: '' }, loading: Boolean, sourceType: { type: String, default: 'library' } },
+  props: { resource: { type: Object, required: true }, tab: { type: String, default: '' }, loading: Boolean, sourceType: { type: String, default: 'library' }, previewEncoded: { type: String, default: null } },
   data () { return { version: 0, disposed: false, pending: false, status: 'loading', content: null, vm: null, comparison: 'unavailable', mode: 'raw', feedback: '', feedbackError: false } },
   computed: {
     active () { return this.tab === 'userdata.content' },
-    canRead () { return this.sourceType === 'vm' ? vmUserDataSupported(this.$store.getters.apis) : !!this.$store.getters.apis?.listUserData },
+    canRead () { return this.previewEncoded != null || (this.sourceType === 'vm' ? vmUserDataSupported(this.$store.getters.apis) : !!this.$store.getters.apis?.listUserData) },
     scope () { return JSON.stringify([this.sourceType, !!this.$store.getters.apis?.listUserData, !!this.$store.getters.apis?.listVirtualMachines, this.resource.userdataid, this.resource.userdatadetails, this.resource.userdatapolicy, this.resource.state, this.resource.id, this.resource.name, this.resource.account, this.resource.domainid, this.resource.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.canRead]) },
     display () { return this.mode === 'base64' ? this.content?.encoded : this.content?.text },
     exportable () { return this.status === 'ready' && !this.pending && this.content && !this.content.empty }
   },
   watch: {
+    previewEncoded () { this.reset(); this.fetchData() },
     scope () { this.reset(); this.fetchData() },
     active (value) { this.version++; this.pending = false; this.feedback = ''; if (value) this.fetchData() },
     loading (value) { if (!value) this.fetchData() }
@@ -76,6 +77,10 @@ export default {
     reset () { this.version++; this.pending = false; this.content = null; this.vm = null; this.comparison = 'unavailable'; this.status = 'loading'; this.mode = 'raw'; this.feedback = '' },
     async fetchData () {
       if (!this.active || this.disposed || this.pending) return
+      if (this.previewEncoded != null) {
+        try { this.content = userDataContent(this.previewEncoded); this.status = 'ready'; if (this.content.text === null) this.mode = 'base64' } catch (error) { this.content = null; this.status = 'invalid' }
+        return
+      }
       if (!this.canRead) { this.reset(); this.status = 'unsupported'; return }
       const source = Object.freeze({ ...this.resource }); const lookup = userDataDeleteLookup(source)
       if (this.sourceType !== 'vm' && !lookup) { this.reset(); this.status = 'mismatch'; return }

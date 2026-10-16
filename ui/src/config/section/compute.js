@@ -1482,6 +1482,10 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataContent.vue')))
         },
         {
+          name: 'userdata.versions',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataVersions.vue')))
+        },
+        {
           name: 'userdata.usage.vms',
           resourceType: 'vms',
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/UserDataUsage.vue')))
@@ -1509,6 +1513,17 @@ export default {
           label: 'label.register.user.data',
           docHelp: 'adminguide/virtual_machines.html#user-data-and-meta-data',
           listView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/RegisterUserData.vue')))
+        },
+        {
+          api: 'registerUserData',
+          selfManagedDialog: true,
+          cloneUserData: true,
+          show: (_, store) => ['listUserData', 'registerUserData', 'listAnnotations', 'addAnnotation'].every(api => api in store.apis),
+          icon: 'copy-outlined',
+          label: 'label.userdata.clone',
+          dataView: true,
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/RegisterUserData.vue')))
         },
