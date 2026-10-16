@@ -15,6 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { mount, flushPromises } from '@vue/test-utils'
+import componentsUse from '@/core/lazy_lib/components_use'
+import iconsUse from '@/core/lazy_lib/icons_use'
 import Register from '@/views/compute/RegisterUserData'
 import Versions from '@/views/compute/UserDataVersions'
 import Content from '@/views/compute/UserDataContent'
@@ -164,4 +167,32 @@ test('unnamed library detail route retains the userdata API and clone contract',
   expect(c.isUserData).toBe(true); expect(c.cloneMode).toBe(true); expect(c.apiName).toBe('registerUserData')
   getAPI.mockResolvedValue(listed([source])); c.source = null; await c.loadCloneSource()
   expect(c.form.userdata).toBe(source.userdata); expect(c.form.params).toEqual(['OLD'])
+})
+
+function mountedOptions (component, route) {
+  const c = ctx(component)
+  return { props: { resource: source, currentAction: { cloneUserData: true }, tab: 'userdata.versions' }, global: {
+    plugins: [componentsUse, iconsUse], directives: { focus: () => {} },
+    mocks: { $route: route, $store: c.$store, $t: key => key, $getApiParams: () => Object.fromEntries(['name', 'userdata', 'params', 'domainid', 'account', 'cniconfig'].map(key => [key, { description: key }])) },
+    stubs: { MoldDialog: { template: '<section><header><slot name="title" /></header><main><slot /></main><footer><slot name="footer" /></footer></section>' }, TooltipLabel: { props: ['title'], template: '<label>{{ title }}</label>' }, UserDataContent: true, 'router-link': { template: '<a><slot /></a>' } }
+  } }
+}
+test('actual production component registry renders clone form on an unnamed detail route', async () => {
+  getAPI.mockImplementation(async cmd => cmd === 'listCapabilities' ? { listcapabilitiesresponse: { capability: {} } } : listed([source]))
+  const wrapper = mount(Register, mountedOptions(Register, { path: '/userdata/' + source.id, meta: { name: 'userdata' } }))
+  await flushPromises()
+  expect(wrapper.find('header').text()).toContain('label.userdata.clone')
+  expect(wrapper.find('textarea').element.value).toBe(source.userdata)
+  expect(wrapper.find('input[type=checkbox]').element.checked).toBe(true)
+  expect(wrapper.text()).not.toContain('label.cniconfiguration')
+  expect(wrapper.find('footer').text()).toBe('label.cancellabel.userdata.clone.create')
+  wrapper.unmount()
+})
+test('actual production registry renders visible empty provenance feedback', async () => {
+  getAPI.mockImplementation(async cmd => cmd === 'listUserData' ? listed([source]) : notes())
+  const wrapper = mount(Versions, mountedOptions(Versions, { path: '/userdata/' + source.id, meta: { name: 'userdata' } }))
+  await flushPromises()
+  expect(wrapper.find('.ant-alert').text()).toContain('message.userdata.clone.history.empty')
+  expect(wrapper.find('a-empty').exists()).toBe(false)
+  wrapper.unmount()
 })
