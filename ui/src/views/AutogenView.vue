@@ -196,7 +196,7 @@
             <a
               v-if="currentAction.docHelp || $route.meta.docHelp"
               style="margin-left: 5px"
-              :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
+              :href="documentationUrl($config.docBase, currentAction.docHelp || $route.meta.docHelp, $i18n.locale)"
               target="_blank"
             >
               <question-circle-outlined />
@@ -240,7 +240,7 @@
           <a
             v-if="currentAction.docHelp || $route.meta.docHelp"
             style="margin-left: 5px"
-            :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
+            :href="documentationUrl($config.docBase, currentAction.docHelp || $route.meta.docHelp, $i18n.locale)"
             target="_blank">
             <question-circle-outlined />
           </a>
@@ -472,7 +472,7 @@
           <a
             v-if="currentAction.docHelp || $route.meta.docHelp"
             style="margin-left: 5px"
-            :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
+            :href="documentationUrl($config.docBase, currentAction.docHelp || $route.meta.docHelp, $i18n.locale)"
             target="_blank"
           >
             <question-circle-outlined />
@@ -913,6 +913,7 @@ import store from '@/store'
 import eventBus from '@/config/eventBus'
 
 import Breadcrumb from '@/components/widgets/Breadcrumb'
+import { documentationUrl } from '@/utils/cniFileImport'
 import ListView from '@/components/view/ListView'
 import ResourceView from '@/components/view/ResourceView'
 import ActionButton from '@/components/view/ActionButton'
@@ -1362,6 +1363,7 @@ export default {
     }
   },
   methods: {
+    documentationUrl,
     rejectSshKeyPairDetail (status) {
       this.sshKeyPairDetailStatus = status
       this.items = []; this.resource = {}; this.itemCount = 0

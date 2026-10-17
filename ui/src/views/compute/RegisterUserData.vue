@@ -24,7 +24,7 @@
     @cancel="closeAction">
     <template #title>
       {{ $t(cloneMode ? 'label.userdata.clone' : isUserData ? 'label.register.user.data' : 'label.register.cni.config') }}
-      <a v-if="currentAction.docHelp && $config?.docBase" :href="$config.docBase + '/' + currentAction.docHelp" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
+      <a v-if="currentAction.docHelp && (!isUserData || $config?.docBase)" :href="documentationUrl($config?.docBase, currentAction.docHelp, $i18n.locale)" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
     </template>
     <div ref="content" class="userdata-registration-content" :class="{ 'userdata-registration-content--cni': !isUserData }" :aria-busy="busy">
       <template v-if="cloneMode">
@@ -76,6 +76,7 @@
             </a-form-item>
           </div>
           <div v-else>
+            <CniFileImport :disabled="loading || sourceLoading || !allowedApi" :max-length="maxEncodedLength" :context="cniScope" @reading="fileReading = $event" @apply="applyCniFile" />
             <a-form-item name="cniconfig" ref="cniconfig" validate-first>
               <template #label>
                 <tooltip-label :title="$t('label.cniconfiguration')" :tooltip="$t('message.cni.validation.content.help') + (limitLoaded ? ' ' + $t('message.cni.validation.limit', { max: maxEncodedLength.toLocaleString() }) : '')"/>
@@ -188,16 +189,19 @@ import { canonicalCni, cniName, cniParams } from '@/utils/cniRegistration'
 import { userDataContent } from '@/utils/userDataContent'
 import { cloneApis, cloneOwner, readCloneSource, findCloneAttempt, cloneDifference, cloneRecord, saveCloneNote } from '@/utils/userDataVersions'
 import UserDataContent from './UserDataContent'
+import CniFileImport from './CniFileImport'
+import { documentationUrl } from '@/utils/cniFileImport'
 
 export default {
   name: 'registerUserData',
   props: { currentAction: { type: Object, default: () => ({}) }, resource: { type: Object, default: () => ({}) } },
   emits: ['refresh-data', 'close-action'],
   components: {
-    TooltipLabel, MoldDialog, UserDataContent
+    TooltipLabel, MoldDialog, UserDataContent, CniFileImport
   },
   data () {
     return {
+      fileReading: false,
       domains: [],
       domainLoading: false,
       selectedDomain: {},
@@ -225,7 +229,7 @@ export default {
     cniScope () { return JSON.stringify([this.apiName, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.form?.domainid, this.form?.account, this.allowedApi]) },
     cloneMode () { return this.isUserData && !!this.currentAction?.cloneUserData },
     allowedApi () { return this.cloneMode ? cloneApis.every(api => api in this.$store.getters.apis) : this.apiName in this.$store.getters.apis },
-    busy () { return this.loading || this.sourceLoading },
+    busy () { return this.loading || this.sourceLoading || this.fileReading },
     blocksNavigation () { return this.busy },
     cloneScope () { return JSON.stringify([this.resource?.id, this.resource?.name, this.resource?.account, this.resource?.domainid, this.resource?.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.allowedApi]) },
     draft () { try { return userDataContent(canonicalUserData(this.form.userdata, this.form.isbase64, this.maxEncodedLength)) } catch (error) { return null } },
@@ -257,6 +261,14 @@ export default {
   mounted () { window.addEventListener('beforeunload', this.beforeUnload) },
   beforeUnmount () { this.disposed = true; window.removeEventListener('beforeunload', this.beforeUnload) },
   methods: {
+    documentationUrl,
+    applyCniFile (encoded) {
+      if (this.isUserData || this.busy || !this.allowedApi) return
+      this.form.cniconfig = canonicalCni(encoded, true, this.maxEncodedLength)
+      this.form.isbase64 = true
+      if (this.formRef.value?.clearValidate) this.formRef.value.clearValidate('cniconfig')
+      this.$nextTick(() => this.$refs.cniconfigInput?.focus())
+    },
     initForm () {
       this.formRef = ref()
       this.form = reactive({

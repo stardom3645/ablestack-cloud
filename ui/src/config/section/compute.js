@@ -1546,7 +1546,7 @@ export default {
       customParamHandler: cniLibraryParams,
       title: 'label.cniconfiguration',
       icon: 'solution-outlined',
-      docHelp: 'adminguide/virtual_machines.html#user-data-and-meta-data',
+      docHelp: 'local:cni-configuration',
       permission: ['listCniConfiguration'],
       columns: () => {
         var fields = ['name', 'id']
@@ -1588,7 +1588,7 @@ export default {
           selfManagedDialog: true,
           icon: 'plus-outlined',
           label: 'label.register.cni.config',
-          docHelp: 'adminguide/virtual_machines.html#creating-the-ssh-keypair',
+          docHelp: 'local:cni-configuration',
           listView: true,
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/RegisterUserData.vue')))
