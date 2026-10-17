@@ -1,4 +1,13 @@
 {
+  "label.cni.variables.extract": "Extract variables",
+  "label.cni.variables.preview": "Preview substitutions",
+  "label.cni.variables.apply": "Apply selected variables",
+  "message.cni.variables.binary": "Variables can only be inspected in UTF-8 text.",
+  "message.cni.variables.failed": "Unable to load the CNI variable preview.",
+  "message.cni.variables.missing": "Variables needing values: {names}",
+  "message.cni.variables.extra": "Values outside the declarations: {names}",
+  "message.cni.variables.unresolved": "Variables preserved as source text: {names}",
+  "message.cni.variables.unsupported": "Expressions not evaluated by the server: {names}",
   "label.cni.file.text": "Import text file",
   "label.cni.file.base64": "Import Base64 file",
   "label.cni.file.select": "Select CNI file",

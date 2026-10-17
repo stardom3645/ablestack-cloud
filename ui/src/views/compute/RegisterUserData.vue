@@ -76,7 +76,9 @@
             </a-form-item>
           </div>
           <div v-else>
-            <CniFileImport :disabled="loading || sourceLoading || !allowedApi" :max-length="maxEncodedLength" :context="cniScope" @reading="fileReading = $event" @apply="applyCniFile" />
+            <CniFileImport :disabled="loading || sourceLoading || variablesReading || !allowedApi" :max-length="maxEncodedLength" :context="cniScope" @reading="fileReading = $event" @apply="applyCniFile">
+              <CniVariableTools mode="extract" :encoded="cniDraftEncoded" :params="form.params" :scope="cniScope" :disabled="loading || sourceLoading || fileReading || !allowedApi" @reading="variablesReading = $event" @apply="keys => { form.params = keys }" />
+            </CniFileImport>
             <a-form-item name="cniconfig" ref="cniconfig" validate-first>
               <template #label>
                 <tooltip-label :title="$t('label.cniconfiguration')" :tooltip="$t('message.cni.validation.content.help') + (limitLoaded ? ' ' + $t('message.cni.validation.limit', { max: maxEncodedLength.toLocaleString() }) : '')"/>
@@ -190,6 +192,7 @@ import { userDataContent } from '@/utils/userDataContent'
 import { cloneApis, cloneOwner, readCloneSource, findCloneAttempt, cloneDifference, cloneRecord, saveCloneNote } from '@/utils/userDataVersions'
 import UserDataContent from './UserDataContent'
 import CniFileImport from './CniFileImport'
+import CniVariableTools from './CniVariableTools'
 import { documentationUrl } from '@/utils/cniFileImport'
 
 export default {
@@ -197,11 +200,12 @@ export default {
   props: { currentAction: { type: Object, default: () => ({}) }, resource: { type: Object, default: () => ({}) } },
   emits: ['refresh-data', 'close-action'],
   components: {
-    TooltipLabel, MoldDialog, UserDataContent, CniFileImport
+    TooltipLabel, MoldDialog, UserDataContent, CniFileImport, CniVariableTools
   },
   data () {
     return {
       fileReading: false,
+      variablesReading: false,
       domains: [],
       domainLoading: false,
       selectedDomain: {},
@@ -229,7 +233,8 @@ export default {
     cniScope () { return JSON.stringify([this.apiName, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.form?.domainid, this.form?.account, this.allowedApi]) },
     cloneMode () { return this.isUserData && !!this.currentAction?.cloneUserData },
     allowedApi () { return this.cloneMode ? cloneApis.every(api => api in this.$store.getters.apis) : this.apiName in this.$store.getters.apis },
-    busy () { return this.loading || this.sourceLoading || this.fileReading },
+    busy () { return this.loading || this.sourceLoading || this.fileReading || this.variablesReading },
+    cniDraftEncoded () { try { return canonicalCni(this.form.cniconfig, this.form.isbase64, this.maxEncodedLength) } catch (_) { return '' } },
     blocksNavigation () { return this.busy },
     cloneScope () { return JSON.stringify([this.resource?.id, this.resource?.name, this.resource?.account, this.resource?.domainid, this.resource?.projectid, this.$route.path, this.$store.getters.project?.id, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.allowedApi]) },
     draft () { try { return userDataContent(canonicalUserData(this.form.userdata, this.form.isbase64, this.maxEncodedLength)) } catch (error) { return null } },

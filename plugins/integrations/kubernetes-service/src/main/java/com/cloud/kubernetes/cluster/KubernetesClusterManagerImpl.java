@@ -90,6 +90,8 @@ import org.apache.cloudstack.api.command.user.job.QueryAsyncJobResultCmd;
 import org.apache.cloudstack.api.command.user.kubernetes.cluster.AddNodesToKubernetesClusterCmd;
 import org.apache.cloudstack.api.command.user.kubernetes.cluster.AddVirtualMachinesToKubernetesClusterCmd;
 import org.apache.cloudstack.api.command.user.kubernetes.cluster.CreateKubernetesClusterCmd;
+import org.apache.cloudstack.api.command.user.kubernetes.cluster.PreviewCniConfigurationCmd;
+import org.apache.cloudstack.userdata.UserDataManager;
 import org.apache.cloudstack.api.command.user.kubernetes.cluster.DeleteKubernetesClusterCmd;
 import org.apache.cloudstack.api.command.user.kubernetes.cluster.GetKubernetesClusterConfigCmd;
 import org.apache.cloudstack.api.command.user.kubernetes.cluster.ListKubernetesClustersCmd;
@@ -1165,6 +1167,8 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         }
     }
 
+    @Inject private UserDataManager cniUserDataManager;
+
     protected UserDataVO validateCniForCaller(Long id) {
         if (id == null) { return null; }
         UserDataVO cni = userDataDao.findById(id);
@@ -1188,6 +1192,12 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         final Long kubernetesVersionId = cmd.getKubernetesVersionId();
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         validateCniForCluster(cmd.getCniConfigId(), owner);
+        UserDataVO cni = validateCniForCaller(cmd.getCniConfigId());
+        if (cni != null) {
+            cniUserDataManager.validateUserData(CniConfigurationRenderer.requireValues(cni.getUserData(), cni.getParams(), cmd.getCniConfigDetails(), cmd.getAsNumber()).userdata, BaseCmd.HTTPMethod.POST);
+        } else if (MapUtils.isNotEmpty(cmd.getCniConfigDetails())) {
+            throw new InvalidParameterValueException("CNI values require a CNI configuration");
+        }
         final Long networkId = cmd.getNetworkId();
         final String sshKeyPair = cmd.getSSHKeyPairName();
         final Long controlNodeCount = cmd.getControlNodes();
@@ -1998,7 +2008,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
                 newCluster.setCniConfigId(cmd.getCniConfigId());
                 String cniConfigDetails = null;
                 if (MapUtils.isNotEmpty(cmd.getCniConfigDetails())) {
-                    cniConfigDetails = cmd.getCniConfigDetails().toString();
+                    cniConfigDetails = CniConfigurationRenderer.serialize(cmd.getCniConfigDetails());
                 }
                 newCluster.setCniConfigDetails(cniConfigDetails);
                 if (serviceOfferingNodeTypeMap.containsKey(WORKER.name())) {
@@ -3255,6 +3265,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             return cmdList;
         }
         cmdList.add(CreateKubernetesClusterCmd.class);
+        cmdList.add(PreviewCniConfigurationCmd.class);
         cmdList.add(StartKubernetesClusterCmd.class);
         cmdList.add(StopKubernetesClusterCmd.class);
         cmdList.add(DeleteKubernetesClusterCmd.class);

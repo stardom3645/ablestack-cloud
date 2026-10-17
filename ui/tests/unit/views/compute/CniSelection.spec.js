@@ -40,7 +40,7 @@ function mount (role = 'Admin', project = {}) {
     global: {
       renderStubDefaultSlot: true,
       mocks: { $store: { getters }, $t: key => key, $getApiParams: () => new Proxy({}, { get: () => ({ description: 'parameter' }) }), $notifyError: jest.fn(), $pollJob: jest.fn() },
-      stubs: { UserDataSelection: false, 'a-table': table, 'a-form': form }
+      stubs: { UserDataSelection: false, CniVariableTools: { props: ['resource', 'values', 'scope', 'networkId', 'asNumber', 'disabled'], template: '<div />' }, 'a-table': table, 'a-form': form }
     }
   })
   w.vm.form.advancedmode = true
@@ -115,6 +115,7 @@ test('CNI-only permission is required; revocation invalidates a selected configu
 })
 
 function submission (w) {
+  for (const { key } of w.vm.cniConfigParams) if (key !== 'AS_NUMBER' && w.vm.cniConfigValues[key] === undefined) w.vm.cniConfigValues[key] = 'test-' + key
   // Keep the consumer selection/ownership state; submit independently of the
   // Ant Design form/render lifecycle, which is stubbed in these unit tests.
   return {
@@ -124,6 +125,7 @@ function submission (w) {
     get form () { return { ...w.vm.form, name: 'test', zoneid: 0, kubernetesversionid: 0, serviceofferingid: 0, hypervisor: null } },
     get owner () { return w.vm.owner },
     get cniConfigParams () { return w.vm.cniConfigParams },
+    get cniMissingValues () { return w.vm.cniMissingValues },
     get cniConfigValues () { return w.vm.cniConfigValues },
     wizardStep: 4,
     zones: [{ id: 'zone' }],

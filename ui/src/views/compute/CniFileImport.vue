@@ -20,6 +20,7 @@
     <div class="detail-tab-toolbar">
       <a-button :disabled="disabled || pending" @click="choose('text')">{{ $t('label.cni.file.text') }}</a-button>
       <a-button :disabled="disabled || pending" @click="choose('base64')">{{ $t('label.cni.file.base64') }}</a-button>
+      <slot />
       <span v-if="pending" role="status"><loading-outlined /> {{ $t('label.loading') }}</span>
     </div>
     <input ref="file" class="cni-file-input" type="file" accept="text/*,.yaml,.yml,.json,.sh,.txt,.b64,.base64" :aria-label="$t('label.cni.file.select')" @change="selected" />
