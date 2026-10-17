@@ -102,8 +102,8 @@ test('tab changes use Vue router history and invisible deep links use a visible 
 })
 test('CNI route removes the unsafe VM shortcut, adds a gated usage tab, and preserves ordinary UserData', () => {
   const routes = compute.children || compute; const cni = routes.find(r => r.name === 'cniconfiguration'); const user = routes.find(r => r.name === 'userdata')
-  expect(cni.related).toBeUndefined(); expect(cni.tabs.map(t => t.name)).toEqual(['details', 'cni.usage', 'comments']); expect(cni.tabs[1].show()).toBe(true)
-  delete store.getters.apis.listKubernetesClusters; expect(cni.tabs[1].show()).toBe(false); store.getters.apis.listKubernetesClusters = {}
+  expect(cni.related).toBeUndefined(); expect(cni.tabs.map(t => t.name)).toEqual(['details', 'cni.content', 'cni.usage', 'comments']); expect(cni.tabs.find(t => t.name === 'cni.usage').show()).toBe(true)
+  delete store.getters.apis.listKubernetesClusters; expect(cni.tabs.find(t => t.name === 'cni.usage').show()).toBe(false); store.getters.apis.listKubernetesClusters = {}
   expect(user.related[0].param).toBe('userdataid'); expect(user.tabs.some(t => t.name === 'userdata.usage.vms')).toBe(true)
 })
 test('owner parameters cannot be replaced by options or a global project', () => { const p = cniUsageParams(source, { cniconfigurationid: nodeid, projectid, page: 2 }); expect(p.cniconfigurationid).toBe(id); expect(p.projectid).toBeUndefined(); expect(p.id).toBeUndefined(); expect(p.page).toBe(2); expect(cniIdentityParams(source)).toMatchObject({ id, account: 'owner', domainid, ignoreproject: true }) })

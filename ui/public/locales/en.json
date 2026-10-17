@@ -9044,5 +9044,11 @@
   "message.cni.delete.unavailable": "The login, permissions, project, screen, or selected target changed. Close this dialog and select the CNI configuration again.",
   "message.cni.delete.checking": "Checking current Kubernetes usage…",
   "message.cni.delete.incomplete": "Current usage could not be confirmed. This is not a zero-usage result. Refresh usage before deleting.",
-  "message.cni.delete.inuse": "A Kubernetes cluster still references this CNI configuration. Remove the cluster reference before deleting."
+  "message.cni.delete.inuse": "A Kubernetes cluster still references this CNI configuration. Remove the cluster reference before deleting.",
+  "label.cni.content": "CNI content",
+  "message.cni.content.contract": "Stored CNI content. Copy and download use the selected representation. Original downloads preserve stored bytes, including BOM and line endings.",
+  "message.cni.content.missing": "The CNI configuration was deleted or is inaccessible.",
+  "message.cni.content.mismatch": "CNI identity changed. Select it again from the list.",
+  "message.cni.content.unsupported": "CNI configuration read permission is unavailable.",
+  "message.cni.content.unverified": "Detail verification has not completed. Use the top Update button to verify the detail before copying or downloading."
 }

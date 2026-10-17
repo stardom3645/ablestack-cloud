@@ -1560,11 +1560,15 @@ export default {
         return fields
       },
       resourceType: 'UserData',
-      details: ['id', 'name', 'userdata', 'account', 'domain', 'params'],
+      details: ['id', 'name', 'account', 'domain', 'project', 'params'],
       tabs: [
         {
           name: 'details',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+        },
+        {
+          name: 'cni.content',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CniContent.vue')))
         },
         {
           name: 'cni.usage',

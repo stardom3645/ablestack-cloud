@@ -828,7 +828,7 @@
         <resource-view
           v-else-if="(!isSshKeyPairDetail || sshKeyPairDetailVisible) && ($route.meta?.name !== 'vmgroup' || resource.id || loading)"
           :key="isSshKeyPairDetail ? listScope() : $route.path"
-          :readyForActions="isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady)"
+          :readyForActions="isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name === 'cniconfiguration' ? cniDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady))"
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
@@ -1228,6 +1228,7 @@ export default {
         sshKeyPairMatchesTarget(this.resource, sshKeyPairDetailTarget(this.$route, this.$store.getters.project, this.$store.getters.listAllProjects))
     },
     sshKeyPairDetailActionReady () { return this.sshKeyPairDetailVisible && this.sshKeyPairDetailStatus === 'ready' && !this.listRequestPending },
+    cniDetailActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() && !!this.resource.id && String(this.resource.id).toLowerCase() === String(this.$route.params.id || '').toLowerCase() },
     vmGroupQueryReady () { return ['ready', 'empty'].includes(this.vmGroupQueryStatus) && this.listLoadedScope === this.listScope() && !this.listRequestPending },
     vmGroupEmptyText () {
       if (['error', 'forbidden', 'loading'].includes(this.vmGroupQueryStatus)) return this.$t('message.vm.group.query.' + this.vmGroupQueryStatus)

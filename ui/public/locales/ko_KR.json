@@ -9009,5 +9009,11 @@
   "message.cni.delete.unavailable": "로그인·권한·프로젝트·화면 또는 선택 대상이 변경됐습니다. 창을 닫고 CNI 구성을 다시 선택하세요.",
   "message.cni.delete.checking": "현재 Kubernetes 사용 여부를 확인하는 중입니다.",
   "message.cni.delete.incomplete": "현재 사용 여부를 확인하지 못했습니다. 미사용을 의미하지 않습니다. 사용처를 새로고침한 뒤 삭제하세요.",
-  "message.cni.delete.inuse": "Kubernetes 클러스터가 이 CNI 구성을 참조하고 있습니다. 클러스터 참조를 제거한 뒤 삭제하세요."
+  "message.cni.delete.inuse": "Kubernetes 클러스터가 이 CNI 구성을 참조하고 있습니다. 클러스터 참조를 제거한 뒤 삭제하세요.",
+  "label.cni.content": "CNI 본문",
+  "message.cni.content.contract": "저장된 CNI 본문입니다. 선택한 형식으로 복사·다운로드합니다. 원문 다운로드는 BOM·줄바꿈을 포함한 저장 바이트를 보존합니다.",
+  "message.cni.content.missing": "CNI 구성이 삭제되었거나 접근할 수 없습니다.",
+  "message.cni.content.mismatch": "CNI 구성 식별 정보가 변경되었습니다. 목록에서 다시 선택하세요.",
+  "message.cni.content.unsupported": "CNI 구성 조회 권한이 없습니다.",
+  "message.cni.content.unverified": "상세 정보 조회가 완료되지 않았습니다. 복사·다운로드는 상단 업데이트로 상세 정보를 확인한 후 사용할 수 있습니다."
 }
