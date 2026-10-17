@@ -153,7 +153,6 @@
             />
           </a-col>
         </a-row>
-        <p v-if="!dataView && $route.meta?.name === 'cniconfiguration'" role="note" class="cni-search-help">{{ $t('message.cni.search.help') }}</p>
         <a-row
           v-if="showSearchFilters"
           style="min-height: 36px; padding-top: 12px; padding-left: 12px;"

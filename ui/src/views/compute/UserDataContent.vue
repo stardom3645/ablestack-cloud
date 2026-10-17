@@ -39,8 +39,6 @@
       <template #description><span v-if="content">{{ $t('message.userdata.content.stale') }}</span><a-button v-if="canRead" type="link" :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
     <a-alert v-if="isCni && content && !parentReadReady" type="warning" show-icon role="status" :message="$t('message.cni.content.unverified')" />
-    <p v-if="isCni" class="content-contract">{{ $t('message.cni.content.contract') }}</p>
-    <p v-if="isCni && content" class="content-size">{{ $t('message.userdata.content.representation', { mode: mode === 'raw' ? $t('label.userdata.raw') : 'Base64', size: content.bytes.length }) }}</p>
     <a-alert v-if="content?.text === null" type="warning" show-icon :message="$t('message.userdata.content.binary')" />
     <a-alert v-if="feedback" :type="feedbackError ? 'error' : 'success'" show-icon :message="$t(feedback)" role="status" />
     <a-spin :spinning="pending && !content">

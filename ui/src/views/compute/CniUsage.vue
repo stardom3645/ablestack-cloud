@@ -21,14 +21,14 @@
       <a-button :loading="pending" :disabled="capability !== 'ready' || !resourceActionReady()" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-input-search v-model:value="draftKeyword" class="usage-search" :disabled="capability !== 'ready'" :placeholder="$t('label.search')" :aria-label="$t('label.search')" allow-clear @search="search" />
     </div>
-    <p class="usage-note">{{ $t('message.cni.usage.contract') }}</p>
     <a-alert v-if="['error', 'forbidden', 'unsupported', 'mismatch', 'missing'].includes(status)" class="usage-feedback" type="error" show-icon role="status" :message="$t('message.cni.usage.' + status)">
       <template #description><span v-if="rows.length">{{ $t('message.cni.usage.stale') }}</span><a-button v-if="capability === 'ready'" type="link" :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
     <a-alert v-if="!canReadNodes && rows.length" class="usage-feedback" type="info" show-icon :message="$t('message.cni.usage.nodes.forbidden')" />
     <div class="usage-table">
       <a-table
-        size="middle"
+        size="small"
+        :scroll="{ x: 1100 }"
         :columns="columns"
         :dataSource="rows"
         rowKey="id"
@@ -39,7 +39,7 @@
         :rowExpandable="() => canReadNodes"
         @expand="expand">
         <template #bodyCell="{ column, record, text }">
-          <router-link v-if="column.key === 'name'" :to="resourceLink('/kubernetes', record.id)">{{ text }}</router-link>
+          <router-link v-if="column.key === 'name'" :title="text" :to="resourceLink('/kubernetes', record.id)">{{ text }}</router-link>
           <Status v-else-if="column.key === 'state'" :text="text" displayText />
           <span v-else-if="column.key === 'owner'">{{ record.project || record.account || '—' }}</span>
           <span v-else-if="column.key === 'nodes'">{{ canReadNodes ? record.virtualmachines.length : $t('label.cni.usage.nodes.restricted') }}</span>
@@ -47,10 +47,9 @@
         </template>
         <template #expandedRowRender="{ record }">
           <section v-if="canReadNodes" class="usage-nodes" :aria-label="$t('message.cni.usage.nodes.title', [record.name])">
-            <h4>{{ $t('message.cni.usage.nodes.title', [record.name]) }}</h4>
-            <a-table size="middle" :columns="nodeColumns" :dataSource="record.virtualmachines" rowKey="id" :pagination="false" :locale="{ emptyText: $t('message.cni.usage.nodes.empty') }">
+            <a-table size="small" :scroll="{ x: 800 }" :columns="nodeColumns" :dataSource="record.virtualmachines" rowKey="id" :pagination="false" :locale="{ emptyText: $t('message.cni.usage.nodes.empty') }">
               <template #bodyCell="{ column, record: node, text }">
-                <router-link v-if="column.key === 'name'" :to="resourceLink('/vm', node.id)">{{ text }}</router-link>
+                <router-link v-if="column.key === 'name'" :title="text" :to="resourceLink('/vm', node.id)">{{ text }}</router-link>
                 <Status v-else-if="column.key === 'state'" :text="text" displayText />
                 <span v-else-if="column.key === 'role'">{{ $t('label.cni.usage.role.' + (node.iscontrolnode ? 'control' : node.isetcdnode ? 'etcd' : 'worker')) }}</span>
                 <span v-else>{{ text }}</span>
@@ -87,8 +86,8 @@ export default {
     queryKey () { return JSON.stringify(['cnikeyword', 'cnipage', 'cnipagesize'].map(key => this.$route.query[key])) },
     queryScope () { return JSON.stringify([this.scope, this.keyword, this.page, this.pagesize]) },
     tableLoading () { return this.pending && this.loadedScope !== this.queryScope },
-    columns () { return ['name', 'id', 'state', 'owner', 'domain', 'nodes'].map(key => ({ key, dataIndex: key, title: this.$t(key === 'owner' ? (this.resource.projectid ? 'label.project' : 'label.account') : key === 'nodes' ? 'label.cni.usage.nodes' : 'label.' + key) })) },
-    nodeColumns () { return ['name', 'id', 'state', 'role'].map(key => ({ key, dataIndex: key, title: this.$t(key === 'name' ? 'label.vm.displayname' : 'label.' + key) })) }
+    columns () { return ['name', 'id', 'state', 'owner', 'domain', 'nodes'].map(key => ({ key, dataIndex: key, width: { name: 220, id: 320, state: 120, owner: 180, domain: 180, nodes: 80 }[key], title: this.$t(key === 'owner' ? (this.resource.projectid ? 'label.project' : 'label.account') : key === 'nodes' ? 'label.cni.usage.nodes' : 'label.' + key) })) },
+    nodeColumns () { return ['name', 'id', 'state', 'role'].map(key => ({ key, dataIndex: key, width: { name: 220, id: 320, state: 120, role: 140 }[key], title: this.$t(key === 'name' ? 'label.vm.displayname' : 'label.' + key) })) }
   },
   watch: {
     scope () { this.reset(); this.fetchData() },
@@ -169,14 +168,10 @@ export default {
 // under the License.
 
 .cni-usage { min-width: 0; }
-.usage-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px;
-  .ant-btn, :deep(.ant-input), :deep(.ant-input-search-button) { height: 32px; }
-}
-.usage-search { width: 240px; max-width: 100%; margin-left: auto; }
-.usage-note { margin-bottom: 20px; }
-.usage-feedback { margin-bottom: 20px; }
-.usage-table { overflow-x: auto; :deep(.ant-table-wrapper) { min-width: 640px; } }
-.usage-nodes { min-width: 0; padding: 8px; h4 { color: var(--ui-text-primary); } }
+.usage-search { max-width: 100%; margin-left: auto; }
+.usage-feedback { margin-bottom: 12px; }
+.usage-table { min-width: 0; :deep(.ant-table-cell) { overflow-wrap: anywhere; } }
+.usage-nodes { min-width: 0; }
 .usage-pagination { display: flex; justify-content: flex-end; flex-wrap: wrap; margin-top: 20px; :deep(.ant-pagination) { display: flex; flex-wrap: wrap; gap: 8px 0; } }
-@media (max-width: 767px) { .usage-search { flex-basis: 100%; width: 100%; } }
+@media (max-width: 768px) { .usage-search { flex-basis: 100%; width: 100%; } }
 </style>

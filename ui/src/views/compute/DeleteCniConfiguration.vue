@@ -12,10 +12,13 @@ for the specific language governing permissions and limitations. -->
     <div class="cni-delete-content" :aria-busy="busy">
       <a-alert type="warning" show-icon :message="$t('message.cni.delete.scope')" />
       <a-alert v-if="!supported" type="error" show-icon :message="$t('message.cni.delete.unsupported')" />
-      <p><strong>{{ $t('message.userdata.delete.count', { count: rows.length }) }}</strong></p>
+      <div class="detail-tab-toolbar">
+        <strong>{{ $t('message.userdata.delete.count', { count: rows.length }) }}</strong>
+        <span class="detail-tab-toolbar-context"><a-tooltip :title="$t('label.userdata.usage.refresh')"><a-button :aria-label="$t('label.userdata.usage.refresh')" :loading="referencePending" :disabled="busy || referencePending || !allowed || !active()" @click="loadReferences"><template #icon><reload-outlined /></template></a-button></a-tooltip></span>
+      </div>
       <p v-if="started" role="status" aria-live="polite">{{ $t('message.userdata.delete.results', totals) }}</p>
       <a-alert v-if="!allowed || !active() || !rows.length" type="error" show-icon :message="$t('message.cni.delete.unavailable')" />
-      <a-table :columns="columns" :data-source="rows" :row-key="row => row.target.id" :pagination="{ pageSize: 10, showSizeChanger: false }" :scroll="{ x: 760 }" size="middle">
+      <a-table :columns="columns" :data-source="rows" :row-key="row => row.target.id" :pagination="{ pageSize: 10, showSizeChanger: false }" :scroll="{ x: 760 }" size="small">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'"><strong>{{ record.target.name }}</strong><div>{{ record.target.id }}</div></template>
           <template v-else-if="column.key === 'owner'">{{ record.target.account }}<div>{{ record.target.domain || record.target.domainid }}</div><div v-if="record.target.projectid">{{ $t('label.project') }}: {{ record.target.project || record.target.projectid }}</div></template>
@@ -31,7 +34,6 @@ for the specific language governing permissions and limitations. -->
           </template>
         </template>
       </a-table>
-      <a-button :loading="referencePending" :disabled="busy || referencePending || !allowed || !active()" @click="loadReferences">{{ $t('label.userdata.usage.refresh') }}</a-button>
     </div>
     <template #footer>
       <a-button ref="cancel" :disabled="busy" @click="close">{{ $t(started ? 'label.close' : 'label.cancel') }}</a-button>
@@ -194,10 +196,7 @@ export default {
 </script>
 <style scoped lang="less">
 .cni-delete-dialog :deep(td) { overflow-wrap: anywhere; word-break: break-word; }
-</style>
-
-<style scoped>
 .cni-delete-content { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .cni-delete-content > p { margin: 0; }
-.cni-delete-content > .ant-btn { align-self: flex-start; }
+.cni-delete-content > .detail-tab-toolbar { margin-bottom: 0; }
 </style>

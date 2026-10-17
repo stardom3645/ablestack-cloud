@@ -1,4 +1,5 @@
 {
+  "message.cni.selection.selected": "Selected CNI configuration: {name}",
   "error.fetching.data": "Unable to load data. Check the filters and retry.",
   "label.advanced.search": "Advanced search",
   "message.cni.search.help": "UUID search is exact; basic name search matches part of a name. Advanced name search is exact. Sorting applies only to the current page.",
@@ -9042,7 +9043,7 @@
   "message.cni.usage.nodes.title": "Nodes linked to {0}",
   "message.cni.usage.nodes.empty": "No nodes are linked to this cluster.",
   "message.cni.usage.nodes.forbidden": "Only cluster information is shown because you do not have permission to view nodes.",
-  "message.cni.delete.scope": "Delete the selected CNI configurations. Live usage is checked again before each request; the server makes the final decision. Completed rows are removed and failed rows remain.",
+  "message.cni.delete.scope": "Delete the selected CNI configurations?",
   "message.cni.delete.unsupported": "Usage lookup is unavailable or does not support the CNI filter. Deletion is disabled.",
   "message.cni.delete.unavailable": "The login, permissions, project, screen, or selected target changed. Close this dialog and select the CNI configuration again.",
   "message.cni.delete.checking": "Checking current Kubernetes usage…",

@@ -437,7 +437,7 @@ class="mold-form-dialog kubernetes-create-dialog">
                   <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'value'">
                       <div v-if="record.key === 'AS_NUMBER'">
-                        <a-input style="width: 100%;text-wrap: wrap;" :disabled="true" value="Value is obtained from the network or is automatically obtained at the time of cluster creation" />
+                        <a-input style="width: 100%;text-wrap: wrap;" :disabled="true" :value="$t('label.automatic')" />
                       </div>
                       <a-input v-else v-model:value="cniConfigValues[record.key]" />
                     </template>

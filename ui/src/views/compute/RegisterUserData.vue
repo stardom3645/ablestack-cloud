@@ -26,7 +26,7 @@
       {{ $t(cloneMode ? 'label.userdata.clone' : isUserData ? 'label.register.user.data' : 'label.register.cni.config') }}
       <a v-if="currentAction.docHelp && $config?.docBase" :href="$config.docBase + '/' + currentAction.docHelp" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
     </template>
-    <div ref="content" class="userdata-registration-content" :aria-busy="busy">
+    <div ref="content" class="userdata-registration-content" :class="{ 'userdata-registration-content--cni': !isUserData }" :aria-busy="busy">
       <template v-if="cloneMode">
         <a-alert type="info" show-icon :message="$t('message.userdata.clone.intro')" />
         <p v-if="source">{{ $t('label.userdata.clone.source') }}: {{ source.name }} ({{ source.id }})<br>{{ source.project || source.account }} / {{ source.domain }}</p>
@@ -40,7 +40,7 @@
         <details v-if="!noteSaved"><summary>{{ $t('label.userdata.clone.note') }}</summary><UserDataContent :resource="createdVersion" tab="userdata.content" :preview-encoded="notePreview" /></details>
       </template>
       <a-spin v-else :spinning="busy">
-        <p v-if="!cloneMode" v-html="isUserData ? $t('message.desc.register.user.data') : $t('message.desc.register.cni.config')"></p>
+        <p v-if="!cloneMode && isUserData" v-html="$t('message.desc.register.user.data')"></p>
         <a-form
           v-if="!cloneMode || source"
           id="userdata-registration-form"
@@ -51,7 +51,7 @@
           @finish="handleSubmit"
           @finishFailed="focusValidationError"
           layout="vertical">
-          <a-form-item name="name" ref="name">
+          <a-form-item name="name" ref="name" :validate-first="!isUserData">
             <template #label>
               <tooltip-label :title="$t('label.name')" :tooltip="isUserData ? apiParams.name.description : $t('message.cni.validation.name')"/>
             </template>
@@ -60,7 +60,7 @@
               @keydown.enter.prevent="handleSubmit"
               v-model:value="form.name"
               :disabled="busy || !!cloneAttempt"
-              :placeholder="apiParams.name.description"
+              :placeholder="isUserData ? apiParams.name.description : undefined"
               v-focus="true" />
           </a-form-item>
           <div v-if="isUserData">
@@ -76,16 +76,15 @@
             </a-form-item>
           </div>
           <div v-else>
-            <a-form-item name="cniconfig" ref="cniconfig">
+            <a-form-item name="cniconfig" ref="cniconfig" validate-first>
               <template #label>
-                <tooltip-label :title="$t('label.cniconfiguration')" :tooltip="$t('message.cni.validation.content.help')"/>
+                <tooltip-label :title="$t('label.cniconfiguration')" :tooltip="$t('message.cni.validation.content.help') + (limitLoaded ? ' ' + $t('message.cni.validation.limit', { max: maxEncodedLength.toLocaleString() }) : '')"/>
               </template>
               <a-textarea
                 ref="cniconfigInput"
                 v-model:value="form.cniconfig"
                 :disabled="busy"
-                :placeholder="$t('message.cni.validation.content.help')"/>
-              <p v-if="limitLoaded" role="note">{{ $t('message.cni.validation.limit', { max: maxEncodedLength.toLocaleString() }) }}</p>
+                :auto-size="{ minRows: 6, maxRows: 12 }"/>
             </a-form-item>
           </div>
           <a-form-item name="isbase64" ref="isbase64" :label="$t('label.is.base64.encoded')">
@@ -111,7 +110,7 @@
               :filterOption="(input, option) => {
                 return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
               }"
-              :placeholder="apiParams.params.description">
+              :placeholder="isUserData ? apiParams.params.description : undefined">
             </a-select>
           </a-form-item>
           <a-form-item name="domainid" ref="domainid" v-if="!cloneMode && isAdminOrDomainAdmin() && !cniProject">
@@ -149,7 +148,7 @@
               :placeholder="apiParams.account.description"/>
           </a-form-item>
 
-          <p v-if="cniProject" role="note">{{ $t('message.cni.owner.project', { name: cniProject.name || cniProject.id }) }}</p>
+          <a-form-item v-if="cniProject" :label="$t('label.project')"><span>{{ cniProject.name || cniProject.id }}</span></a-form-item>
           <!-- Native Enter submits; textarea and select keep their own Enter behavior. -->
           <template v-if="cloneMode && source">
             <a-alert v-if="difference" :type="difference.changed ? 'info' : 'warning'" show-icon role="status" :message="$t(difference.changed ? 'message.userdata.clone.changed' : 'message.userdata.clone.duplicate')" />
@@ -518,6 +517,7 @@ export default {
   .userdata-registration-content { min-width: 0; overflow-wrap: anywhere; overflow-anchor: none; }
   .userdata-registration-content :deep(.ant-form .ant-form-item) { margin-bottom: 20px; }
   .userdata-registration-content > .ant-alert + p, .userdata-registration-content > .ant-spin-nested-loading { margin-top: 16px; }
+  .userdata-registration-content--cni > :deep(.ant-spin-nested-loading) { margin-top: 0; }
   .userdata-registration-content details { margin: 12px 0; }
   .userdata-registration-content summary { cursor: pointer; }
   .userdata-registration-content :deep(.content-code) { max-height: 240px; }

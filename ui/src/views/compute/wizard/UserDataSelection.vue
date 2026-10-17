@@ -32,7 +32,7 @@
     <a-alert v-if="listError || selectionError" type="error" show-icon role="alert" :message="$t(listError || selectionError)">
       <template #description><a-button size="small" :loading="loading" @click="load(requestedQuery)">{{ $t('label.refresh') }}</a-button></template>
     </a-alert>
-    <p v-if="selectedId !== noSelection" role="status">{{ $t('message.userdata.selection.selected', { name: selectedItem?.name || selectedId }) }}</p>
+    <p v-if="selectedId !== noSelection" :class="{ 'cni-selection-status': resourceKind === 'cni' }" role="status">{{ $t(resourceKind === 'cni' ? 'message.cni.selection.selected' : 'message.userdata.selection.selected', { name: selectedItem?.name || selectedId }) }}</p>
     <a-table
       :loading="loading"
       :columns="columns"
@@ -227,6 +227,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.cni-selection-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .userdata-selection { min-width: 0; max-width: 100%; }
 .userdata-selection-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
 .userdata-selection-toolbar .ant-input-search { width: 320px; max-width: 100%; }
