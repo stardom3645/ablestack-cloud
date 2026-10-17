@@ -735,6 +735,9 @@ import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
+import org.apache.cloudstack.userdata.CniConfigurationReferenceChecker;
+import com.cloud.user.CniConfigurationReferences;
+import com.cloud.utils.component.ComponentContext;
 import org.apache.cloudstack.userdata.UserDataManager;
 import org.apache.cloudstack.utils.CloudStackVersion;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
@@ -8240,6 +8243,20 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
                     + (forCks ? "deleteUserData for ordinary user data." : "deleteCniConfiguration for CNI configurations."));
         }
 
+        if (forCks) {
+            // Integration beans live in delegated plugin contexts, initialized after server.
+            final CniConfigurationReferenceChecker checker;
+            try {
+                checker = ComponentContext.getDelegateComponentOfType(CniConfigurationReferenceChecker.class);
+            } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException e) {
+                throw new CloudRuntimeException("CNI reference validation is unavailable; retry after Kubernetes service initialization.", e);
+            }
+            if (checker.hasActiveCniReferences(userData.getId())) {
+                // Do not disclose cluster names or counts outside the caller's ACL scope.
+                throw new InvalidParameterValueException("CNI configuration cannot be removed while referenced by an active Kubernetes cluster.");
+            }
+        }
+
         List<VMTemplateVO> templatesLinkedToUserData = templateDao.findTemplatesLinkedToUserdata(userData.getId());
         if (CollectionUtils.isNotEmpty(templatesLinkedToUserData)) {
             throw new CloudRuntimeException(String.format("Userdata %s cannot be removed as it is linked to active template/templates", userData.getName()));
@@ -8263,7 +8280,7 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_DELETE_CNI_CONFIG, eventDescription = "CNI Configuration deletion")
     public boolean deleteCniConfiguration(DeleteCniConfigurationCmd cmd) {
-        return deleteUserDataOfType(cmd, true);
+        return CniConfigurationReferences.withLock(cmd.getId(), () -> deleteUserDataOfType(cmd, true));
     }
 
     @Override

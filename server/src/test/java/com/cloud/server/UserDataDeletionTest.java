@@ -36,6 +36,10 @@ import com.cloud.vm.dao.UserVmDao;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.utils.db.TransactionLegacy;
+import com.cloud.utils.db.GlobalLock;
+import com.cloud.utils.component.ComponentContext;
+import org.apache.cloudstack.userdata.CniConfigurationReferenceChecker;
+import org.junit.After;
 import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
@@ -65,11 +69,19 @@ public class UserDataDeletionTest {
     private Account owner;
     private UserDataVO data;
     private DeleteUserDataCmd cmd;
+    private MockedStatic<GlobalLock> locks;
+    private MockedStatic<ComponentContext> components;
 
     public UserDataDeletionTest(boolean forCks) { this.forCks = forCks; }
 
     @Before
     public void setup() {
+        components = mockStatic(ComponentContext.class);
+        components.when(() -> ComponentContext.getDelegateComponentOfType(CniConfigurationReferenceChecker.class)).thenReturn(mock(CniConfigurationReferenceChecker.class));
+        locks = mockStatic(GlobalLock.class);
+        GlobalLock lock = mock(GlobalLock.class);
+        locks.when(() -> GlobalLock.getInternLock("CniConfiguration.Reference.17")).thenReturn(lock);
+        when(lock.lock(10)).thenReturn(true);
         manager = spy(new ManagementServerImpl());
         dao = mock(UserDataDao.class); annotations = mock(AnnotationDao.class);
         templates = mock(VMTemplateDao.class); vms = mock(UserVmDao.class);
@@ -91,6 +103,48 @@ public class UserDataDeletionTest {
         when(data.getId()).thenReturn(17L); when(data.getUuid()).thenReturn("resource-uuid");
         when(data.getName()).thenReturn("fixture"); when(data.isForCks()).thenReturn(forCks);
         when(dao.remove(17L)).thenReturn(true);
+    }
+
+    @After
+    public void closeLocks() { locks.close(); components.close(); }
+
+    @Test
+    public void integrationReferenceBlocksOnlyCniAndPreservesComments() {
+        CniConfigurationReferenceChecker checker = mock(CniConfigurationReferenceChecker.class);
+        components.when(() -> ComponentContext.getDelegateComponentOfType(CniConfigurationReferenceChecker.class)).thenReturn(checker);
+        when(checker.hasActiveCniReferences(17L)).thenReturn(true);
+        if (forCks) {
+            assertThrows(InvalidParameterValueException.class, this::delete);
+            noDeletion(); verifyNoInteractions(templates, vms);
+        } else {
+            try (MockedStatic<TransactionLegacy> transactions = mockStatic(TransactionLegacy.class)) {
+                transaction(transactions); assertTrue(delete()); verifyNoInteractions(checker);
+            }
+        }
+    }
+
+    @Test
+    public void failedReferenceLookupCannotDeleteCni() {
+        CniConfigurationReferenceChecker checker = mock(CniConfigurationReferenceChecker.class);
+        components.when(() -> ComponentContext.getDelegateComponentOfType(CniConfigurationReferenceChecker.class)).thenReturn(checker);
+        when(checker.hasActiveCniReferences(17L)).thenThrow(new CloudRuntimeException("reference store failure"));
+        if (forCks) { assertThrows(CloudRuntimeException.class, this::delete); noDeletion(); }
+        else {
+            try (MockedStatic<TransactionLegacy> transactions = mockStatic(TransactionLegacy.class)) {
+                transaction(transactions); assertTrue(delete()); verifyNoInteractions(checker);
+            }
+        }
+    }
+
+    @Test
+    public void unavailableIntegrationFailsClosedOnlyForCni() {
+        components.when(() -> ComponentContext.getDelegateComponentOfType(CniConfigurationReferenceChecker.class)).thenThrow(new org.springframework.beans.factory.NoSuchBeanDefinitionException("CNI checker"));
+        if (forCks) { assertThrows(CloudRuntimeException.class, this::delete); noDeletion(); }
+        else {
+            try (MockedStatic<TransactionLegacy> transactions = mockStatic(TransactionLegacy.class)) {
+                transaction(transactions); assertTrue(delete());
+            }
+        }
     }
 
     private boolean delete() {
