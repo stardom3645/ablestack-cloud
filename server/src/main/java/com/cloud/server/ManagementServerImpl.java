@@ -956,6 +956,7 @@ import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionCallbackNoReturn;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.db.UUIDManager;
@@ -8197,6 +8198,11 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
 
     @Override
     public boolean deleteUserData(final DeleteUserDataCmd cmd) {
+        return deleteUserDataOfType(cmd, false);
+    }
+
+    private boolean deleteUserDataOfType(final DeleteUserDataCmd cmd, final boolean forCks) {
+        final String resourceType = forCks ? "CNI configuration" : "UserData";
         final Account caller = getCaller();
         final String accountName = cmd.getAccountName();
         final Long domainId = cmd.getDomainId();
@@ -8217,7 +8223,7 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
         final UserDataVO userData = userDataDao.findById(cmd.getId());
         if (userData == null) {
             final InvalidParameterValueException ex = new InvalidParameterValueException(
-                    "A UserData with id '" + cmd.getId() + "' does not exist for account " + owner.getAccountName() + " in specified domain id");
+                    "A " + resourceType + " with id '" + cmd.getId() + "' does not exist for account " + owner.getAccountName() + " in specified domain id");
             final DomainVO domain = ApiDBUtils.findDomainById(owner.getDomainId());
             String domainUuid = String.valueOf(owner.getDomainId());
             if (domain != null) {
@@ -8225,6 +8231,13 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
             }
             ex.addProxyObject(domainUuid, "domainId");
             throw ex;
+        }
+
+        // UUID ACL checks run in the API layer; reject the wrong resource type
+        // before checking references or mutating either the record or its comments.
+        if (userData.isForCks() != forCks) {
+            throw new InvalidParameterValueException("The requested resource is not a " + resourceType + ". Use "
+                    + (forCks ? "deleteUserData for ordinary user data." : "deleteCniConfiguration for CNI configurations."));
         }
 
         List<VMTemplateVO> templatesLinkedToUserData = templateDao.findTemplatesLinkedToUserdata(userData.getId());
@@ -8237,15 +8250,20 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
             throw new CloudRuntimeException(String.format("Userdata %s cannot be removed as it is being used by some instances", userData.getName()));
         }
 
-        annotationDao.removeByEntityType(AnnotationService.EntityType.USER_DATA.name(), userData.getUuid());
-
-        return userDataDao.remove(userData.getId());
+        return Transaction.execute((TransactionCallback<Boolean>) status -> {
+            if (!userDataDao.remove(userData.getId())) {
+                throw new CloudRuntimeException("Failed to delete " + resourceType + ".");
+            }
+            // A false annotation result means there were no comments; that is valid.
+            annotationDao.removeByEntityType(AnnotationService.EntityType.USER_DATA.name(), userData.getUuid());
+            return true;
+        });
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_DELETE_CNI_CONFIG, eventDescription = "CNI Configuration deletion")
     public boolean deleteCniConfiguration(DeleteCniConfigurationCmd cmd) {
-        return deleteUserData(cmd);
+        return deleteUserDataOfType(cmd, true);
     }
 
     @Override
