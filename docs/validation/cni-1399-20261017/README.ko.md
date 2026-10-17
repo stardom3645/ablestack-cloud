@@ -27,7 +27,7 @@ WSL ext4 작업 사본에서 변경 모듈만 빌드했다. Java **192건**, 실
 
 - 실제 API **27 checks**, UI **9 checks** 통과. 개수는 [API matrix](api-matrix.json), [UI checks](ui-checks.json) 항목 수다.
 - 새 전용 프로젝트의 CNI와 클러스터 `770b5fa2-53b1-414e-a954-cf7195d974d5`를 생성했다. Created에서 관리자와 프로젝트 회원의 필터 결과가 동일한 클러스터 UUID·이름·상태·프로젝트를 반환하며 page 2도 총계 1을 보존했다. 타 계정·비회원 프로젝트·일반 UserData·다른 소유 CNI·삭제된 CNI는 거부됐다.
-- 새 클러스터가 수동 DB/게스트 보정 없이 Running으로 완료됐고 실제 노드 2개가 Ready였다. 게스트에서 Calico 사용자 구성과 MTU1450을 확인했다. [게스트 근거](guest-progress.txt). 이번 검증의 변수 치환은 완료 주장에 포함하지 않는다. 테스트 생성 요청의 변수 맵 키 오타 때문에 선택 확인용 audit_token은 리터럴로 남았으며 CNI 설치·참조 보호에는 사용되지 않는다. 변수 전달의 기존 #1396 검증을 대체하지 않는다.
+- 새 클러스터가 수동 DB/게스트 보정 없이 Running으로 완료됐고 실제 노드 2개가 Ready였다. 게스트에서 Calico 사용자 구성과 MTU1450을 확인했다. [게스트 근거](guest-progress.txt). 이번 검증의 변수 치환은 완료 주장에 포함하지 않는다. 당시 테스트 생성 요청의 변수 맵 키에 오타가 있었고 선택 확인용 audit_token도 리터럴로 남았다. 이 관찰만으로 치환 동작의 원인을 판정하지 않으며, 이 토큰은 CNI 설치·참조 보호에 사용되지 않는다. 변수 전달의 기존 #1396 검증을 대체하지 않는다.
 - Created·Running·Stopped에서 직접 `deleteCniConfiguration`이 431로 거부됐다. 거부 후 CNI 본문 바이트와 Annotation이 그대로였다. 실제 UI 삭제 버튼도 같은 오류를 표시하고 대화상자와 코멘트를 유지했다.
 - 정지한 클러스터를 정상 `deleteKubernetesCluster` API로 제거한 뒤 사용처가 0이 됐다. 같은 CNI를 UI로 삭제했고 API/DB에서 본체·코멘트 제거를 확인했다. 자동 완료 경로는 프로젝트 대시보드로 이동했다. 목록 복귀 등 UX는 #1403에서 개선한다.
 - 두 독립 세션이 같은 전용 CNI에 생성·삭제를 동시에 요청했다. 실제 경합은 삭제 승리 / 생성 `Invalid CNI configuration` 거부 / 활성 클러스터 0이었다. [동시 실행 근거](api-race.json). 반대 순서는 공용 잠금 집중 테스트로 검증했다.

@@ -1561,15 +1561,15 @@ export default {
       },
       resourceType: 'UserData',
       details: ['id', 'name', 'userdata', 'account', 'domain', 'params'],
-      related: [{
-        name: 'vm',
-        title: 'label.instances',
-        param: 'userdata'
-      }],
       tabs: [
         {
           name: 'details',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+        },
+        {
+          name: 'cni.usage',
+          show: () => Boolean(store.getters.apis?.listKubernetesClusters),
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CniUsage.vue')))
         },
         {
           name: 'comments',
