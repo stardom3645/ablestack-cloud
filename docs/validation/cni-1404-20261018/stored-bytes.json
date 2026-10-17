@@ -72,5 +72,13 @@
     "sha256": "b4b2f887189495de10e7890174834ce6b2c21b040dcc3709fb3f9be526eaf64d",
     "kind": "cni",
     "scope": {}
+  },
+  {
+    "name": "cni1404-style",
+    "id": "1eea8995-fa4f-46b8-8624-b3f2ece75bf1",
+    "bytes": 45,
+    "sha256": "b4b2f887189495de10e7890174834ce6b2c21b040dcc3709fb3f9be526eaf64d",
+    "kind": "cni",
+    "scope": {}
   }
 ]

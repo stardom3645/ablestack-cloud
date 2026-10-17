@@ -122,5 +122,21 @@
   {
     "name": "nonmember cannot read project import",
     "pass_check": true
+  },
+  {
+    "name": "cni1404-style UUID/name",
+    "pass_check": true
+  },
+  {
+    "name": "cni1404-style stored bytes",
+    "pass_check": true
+  },
+  {
+    "name": "cni1404-style manual params retained",
+    "pass_check": true
+  },
+  {
+    "name": "only final style verification CNI remains before cleanup",
+    "pass_check": true
   }
 ]

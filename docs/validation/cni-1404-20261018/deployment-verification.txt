@@ -14,11 +14,11 @@ cni-file-preview=present-in-current-manifest
 label.cni.file.apply=present-in-current-manifest
 CNI_HELP_HTTP=200-ko-en
 CNI_API_MARKER=present
-BACKUP=/root/cni-1404-ui-20261018-013117
+BACKUP=/root/cni-1404-ui-20261018-015317
 PID_PRESERVED=1510297
 CONFIG_PRESERVED=b7de5f6a1f7a3a17310ee7d34ca801bb316fc6f841039f865fbabf154cd59a13
 JAR_PRESERVED=5ef511623cdfa29df4b5e0d519a46a0acdc0bb1b2c239902bc5c63e608671174
 WEB-INF=present
 active
-3e66fef7856c1408bb05ad9e666919ce686c51b6cd826f217186733bba9b41b9  /usr/share/cloudstack-management/webapp/index.html
+d4fc0973919d39391938ba362889a38a0219a62c4b40f49cb536e4b9f3542766  /usr/share/cloudstack-management/webapp/index.html
 client_http=200

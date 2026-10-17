@@ -71,7 +71,7 @@ export default {
 <style scoped>
 .cni-file-import { min-width: 0; }
 .cni-file-import > .detail-tab-toolbar { margin-bottom: 12px; }
-.cni-file-input { display: none; }
+.cni-file-import .cni-file-input { display: none; }
 .cni-file-import > .ant-alert { margin-bottom: 12px; }
 </style>
 

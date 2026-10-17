@@ -25,3 +25,5 @@ MoldDialog/md·lg, detail-tab-toolbar, UserDataContent의 코드/복사/다운�
 UI 정적 배포만 수행하고 WEB-INF/META-INF/config/JAR/PID를 보존한다. Java 변경/Maven 빌드 및 전체 Cloud 빌드는 없다. 생성한 테스트 CNI/계정/프로젝트/도메인을 정상 API/UI로 정리하고 기존 CNI·Kubernetes 안정 필드/노드 UUID·선택 DB 행을 전후 대조한다. #1405 변수 추출/치환 미리보기 및 #1406/#1407 복제/이력은 별도 범위다.
 
 모달은 포털로 렌더링되므로 코드 영역 제한은 CNI 파일 미리보기 전용 클래스에 45vh로 적용한다. 컴포넌트가 제거될 때 부모 reading 상태를 false로 해제해 조건부 제거 후 입력 잠금이 남지 않도록 한다.
+
+최종 스크린샷에서 공통 `.ant-form input[type="file"]` 규칙이 단일 숨김 클래스보다 우선해 네이티브 입력이 중복 노출되는 것을 발견했다. CNI 컨테이너와 입력 클래스를 함께 지정해 우선순위를 높인다. 최종 화면 검증은 파일 입력의 computed display:none 및 너비/높이 0도 확인하고, 숨겨진 입력의 버튼 기반 선택 → 적용 → 저장 경로를 다시 실행한다.

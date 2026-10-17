@@ -50,5 +50,9 @@
   {
     "command": "deleteDomain",
     "id": "2ec021e3-4184-44f3-a34f-1c8b990163b0"
+  },
+  {
+    "command": "deleteCniConfiguration",
+    "id": "1eea8995-fa4f-46b8-8624-b3f2ece75bf1"
   }
 ]
