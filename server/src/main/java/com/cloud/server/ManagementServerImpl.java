@@ -8296,15 +8296,36 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
     @ActionEvent(eventType = EventTypes.EVENT_REGISTER_CNI_CONFIG, eventDescription = "registering CNI configuration", async = true)
     public UserData registerCniConfiguration(RegisterCniConfigurationCmd cmd) {
         final Account owner = getOwner(cmd);
-        checkForUserDataByName(cmd, owner);
-        final String name = cmd.getName();
+        final String name = UserDataRegistrationValidation.name(cmd.getName(), "CNI configuration");
+        final String userdata;
+        final String params;
+        try {
+            userdata = userDataManager.validateUserData(cmd.getCniConfig(), cmd.getHttpMethod());
+            params = UserDataRegistrationValidation.params(cmd.getParams(), "CNI configuration");
+        } catch (InvalidParameterValueException error) {
+            throw new InvalidParameterValueException("Invalid CNI configuration: " + error.getMessage()
+                    .replace("User data", "CNI content").replace("user data", "CNI content"));
+        }
+        UserDataRegistrationValidation.requireContent(userdata, "CNI configuration");
 
-        String userdata = cmd.getCniConfig();
-        final String params = cmd.getParams();
-
-        userdata = userDataManager.validateUserData(userdata, cmd.getHttpMethod());
-
-        return createAndSaveUserData(name, userdata, params, owner, true);
+        // Share the owner/name namespace and DB lock with normal UserData registration.
+        // CNI deliberately permits identical content under a different name.
+        final GlobalLock lock = GlobalLock.getInternLock("userdata-register-" + owner.getDomainId() + "-" + owner.getAccountId());
+        try {
+            if (!lock.lock(10)) {
+                throw new CloudRuntimeException("Another CNI or user data registration is in progress for this account. Please retry.");
+            }
+            try {
+                if (userDataDao.findByName(owner.getAccountId(), owner.getDomainId(), name) != null) {
+                    throw new InvalidParameterValueException("A CNI configuration or user data with the same name already exists for this account.");
+                }
+                return createAndSaveUserData(name, userdata, params, owner, true);
+            } finally {
+                lock.unlock();
+            }
+        } finally {
+            lock.releaseRef();
+        }
     }
 
     @Override
@@ -8348,17 +8369,6 @@ public class ManagementServerImpl extends MutualExclusiveIdsManagerBase implemen
         }
     }
 
-    /**
-     * @param cmd
-     * @param owner
-     * @throws InvalidParameterValueException
-     */
-    private void checkForUserDataByName(final BaseRegisterUserDataCmd cmd, final Account owner) throws InvalidParameterValueException {
-        final UserDataVO userData = userDataDao.findByName(owner.getAccountId(), owner.getDomainId(), cmd.getName());
-        if (userData != null) {
-            throw new InvalidParameterValueException(String.format("A userdata with name %s already exists for this account.", cmd.getName()));
-        }
-    }
 
     /**
      * @param cmd
