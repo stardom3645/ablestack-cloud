@@ -26,7 +26,7 @@ import { getLatestKubernetesIsoParams } from '@/utils/acsrepo'
 import { isFastClonePowerOperationBlocked, getFastClonePowerBlockedLabel, getFastClonePhase } from '@/utils/fastClone'
 import { isCloneBlockedByExtraConfigDisk } from '@/utils/vmClone'
 import { vmUserDataSupported } from '@/utils/vmUserData'
-import { userDataLibraryParams } from '@/utils/userDataContent'
+import { userDataLibraryParams, cniLibraryParams } from '@/utils/userDataContent'
 import kubernetesIcon from '@/assets/icons/kubernetes.svg?inline'
 
 const activeFastCloneStatuses = ['pending', 'running']
@@ -1542,6 +1542,8 @@ export default {
     },
     {
       name: 'cniconfiguration',
+      searchFilters: ['id', 'name', 'domainid', 'account'],
+      customParamHandler: cniLibraryParams,
       title: 'label.cniconfiguration',
       icon: 'solution-outlined',
       docHelp: 'adminguide/virtual_machines.html#user-data-and-meta-data',

@@ -31,7 +31,7 @@ export function cniDeleteIdentity (json, target, byName = false) {
   return userDataDeleteIdentity({ listuserdataresponse: { userdata: rows, count } }, target, byName)
 }
 
-const listKeys = ['keyword', 'name', 'account', 'domainid', 'projectid', 'listall', 'isrecursive', 'page', 'pagesize', 'sortkey', 'sortorder', 'filter']
+const listKeys = ['id', 'q', 'keyword', 'name', 'account', 'domainid', 'projectid', 'listall', 'isrecursive', 'page', 'pagesize', 'sortkey', 'sortorder', 'filter']
 export function cniListQuery (query = {}) {
   return Object.fromEntries(listKeys.filter(key => typeof query[key] === 'string' && query[key].length <= 1024).map(key => [key, query[key]]))
 }

@@ -1,4 +1,7 @@
 {
+  "error.fetching.data": "Unable to load data. Check the filters and retry.",
+  "label.advanced.search": "Advanced search",
+  "message.cni.search.help": "UUID search is exact; basic name search matches part of a name. Advanced name search is exact. Sorting applies only to the current page.",
   "message.cni.scope.result.changed": "The CNI registration scope changed while the request was running. Check the original account or project list before retrying.",
   "message.success.register.cni.config": "CNI configuration registered:",
   "message.cni.submitting": "Registering CNI configuration. Keep this dialog open.",
