@@ -923,6 +923,7 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import BulkActionProgress from '@/components/view/BulkActionProgress'
 import { bulkColumns, updateBulkItem } from '@/utils/bulkAction'
 import { userDataDeleteTargets } from '@/utils/userDataDeletion'
+import { cniDeleteTargets, cniListLocation } from '@/utils/cniDeletion'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import DetailsInput from '@/components/widgets/DetailsInput'
 import AdvisoriesView from '@/components/view/AdvisoriesView'
@@ -1630,6 +1631,7 @@ export default {
       delete params.filter
       delete params.irefresh
       delete params.autoscheduled
+      delete params.cnireturn
 
       this.searchFilters = this.$route && this.$route.meta && this.$route.meta.searchFilters
       this.filters = this.$route && this.$route.meta && this.$route.meta.filters
@@ -2090,6 +2092,18 @@ export default {
       return request
     },
     closeAction (result) {
+      const cniAction = this.currentAction?.api === 'deleteCniConfiguration' && this.currentAction.cniListScope === this.listScope()
+      const cniLocation = this.currentAction?.cniListLocation
+      const deletedCniDetail = cniAction && this.dataView && result?.removed?.includes(this.resource?.id)
+      if (cniAction && result?.removed?.length) {
+        const removed = new Set(result.removed)
+        this.items = this.items.filter(item => !removed.has(item.id))
+        this.selectedItems = this.items.filter(item => (result.retained || []).includes(item.id))
+        this.selectedRowKeys = this.selectedItems.map(item => item.id)
+        // Invalidate old detail/list reads before routing; stale responses cannot revive deleted actions.
+        this.listRequestVersion++; this.listRequestPending = false; this.listLoadedScope = null
+        if (deletedCniDetail) { this.resource = {}; this.items = []; this.itemCount = 0 }
+      }
       const deletedSshDetail = this.currentAction?.api === 'deleteSSHKeyPair' && isSshKeyPairDetailRoute(this.$route) && result?.removed?.includes(this.resource?.id)
       if (this.currentAction?.api === 'deleteSSHKeyPair' && result?.clearSelection) { this.selectedRowKeys = []; this.selectedItems = [] }
       const deletedUserDataDetail = this.currentAction?.api === 'deleteUserData' && this.dataView && result?.removed?.includes(this.resource?.id)
@@ -2106,6 +2120,7 @@ export default {
       this.showAction = false
       this.currentAction = {}
       this.actionConfirmText = ''
+      if (deletedCniDetail) this.$router.replace(cniLocation || { path: '/cniconfiguration' })
       if (deletedSshDetail) this.$router.push('/ssh')
       if (deletedUserDataDetail) this.$router.push('/userdata')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.
@@ -2159,6 +2174,14 @@ export default {
     execAction (action, isGroupAction) {
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
+      if (action.api === 'deleteCniConfiguration') {
+        if (!['listCniConfiguration', 'deleteCniConfiguration'].every(api => api in this.$store.getters.apis)) return
+        const request = { ...action, invokedAsGroupAction: !!isGroupAction }
+        this.currentAction = { ...request, cniTargets: cniDeleteTargets(request, this.selectedItems), cniListScope: this.listScope(), cniListLocation: cniListLocation(this.$route) }
+        this.resource = action.resource || {}
+        this.showAction = true
+        return
+      }
       if (action.api === 'deleteUserData') {
         if (!('deleteUserData' in this.$store.getters.apis) || !('listUserData' in this.$store.getters.apis)) return
         const request = { ...action, invokedAsGroupAction: !!isGroupAction }

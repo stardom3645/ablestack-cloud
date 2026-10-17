@@ -9003,5 +9003,11 @@
   "message.cni.usage.total": "총 {0}개 클러스터",
   "message.cni.usage.nodes.title": "{0} 연결 노드",
   "message.cni.usage.nodes.empty": "연결된 노드가 없습니다.",
-  "message.cni.usage.nodes.forbidden": "노드를 조회할 권한이 없어 클러스터 정보만 표시합니다."
+  "message.cni.usage.nodes.forbidden": "노드를 조회할 권한이 없어 클러스터 정보만 표시합니다.",
+  "message.cni.delete.scope": "선택한 CNI 구성을 삭제합니다. 요청 직전에 사용 여부를 다시 확인하며 최종 삭제 가능 여부는 서버가 판단합니다. 완료한 항목은 제거하고 실패한 항목은 유지합니다.",
+  "message.cni.delete.unsupported": "사용처 조회 권한 또는 CNI 필터 지원이 없어 삭제할 수 없습니다.",
+  "message.cni.delete.unavailable": "로그인·권한·프로젝트·화면 또는 선택 대상이 변경됐습니다. 창을 닫고 CNI 구성을 다시 선택하세요.",
+  "message.cni.delete.checking": "현재 Kubernetes 사용 여부를 확인하는 중입니다.",
+  "message.cni.delete.incomplete": "현재 사용 여부를 확인하지 못했습니다. 미사용을 의미하지 않습니다. 사용처를 새로고침한 뒤 삭제하세요.",
+  "message.cni.delete.inuse": "Kubernetes 클러스터가 이 CNI 구성을 참조하고 있습니다. 클러스터 참조를 제거한 뒤 삭제하세요."
 }

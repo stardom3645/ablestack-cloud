@@ -9038,5 +9038,11 @@
   "message.cni.usage.total": "{0} cluster(s) in total",
   "message.cni.usage.nodes.title": "Nodes linked to {0}",
   "message.cni.usage.nodes.empty": "No nodes are linked to this cluster.",
-  "message.cni.usage.nodes.forbidden": "Only cluster information is shown because you do not have permission to view nodes."
+  "message.cni.usage.nodes.forbidden": "Only cluster information is shown because you do not have permission to view nodes.",
+  "message.cni.delete.scope": "Delete the selected CNI configurations. Live usage is checked again before each request; the server makes the final decision. Completed rows are removed and failed rows remain.",
+  "message.cni.delete.unsupported": "Usage lookup is unavailable or does not support the CNI filter. Deletion is disabled.",
+  "message.cni.delete.unavailable": "The login, permissions, project, screen, or selected target changed. Close this dialog and select the CNI configuration again.",
+  "message.cni.delete.checking": "Checking current Kubernetes usage…",
+  "message.cni.delete.incomplete": "Current usage could not be confirmed. This is not a zero-usage result. Refresh usage before deleting.",
+  "message.cni.delete.inuse": "A Kubernetes cluster still references this CNI configuration. Remove the cluster reference before deleting."
 }
