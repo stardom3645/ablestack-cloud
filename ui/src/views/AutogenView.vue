@@ -1180,6 +1180,8 @@ export default {
     },
     '$route' (to, from) {
       if (to.fullPath !== from.fullPath && !to.path.startsWith('/action/') && to?.query?.tab !== 'browser') {
+        if (to.meta?.name === 'affinitygroup' && from.meta?.name === 'affinitygroup' && to.params?.id && to.path === from.path &&
+          JSON.stringify({ ...to.query, tab: undefined }) === JSON.stringify({ ...from.query, tab: undefined })) return
         if (to.meta?.name === 'cniconfiguration' && from.meta?.name === 'cniconfiguration' && to.params?.id &&
           cniHistoryRouteKey(to) === cniHistoryRouteKey(from)) return
         if (to.meta?.name === 'vmgroup' && from.meta?.name === 'vmgroup' &&
