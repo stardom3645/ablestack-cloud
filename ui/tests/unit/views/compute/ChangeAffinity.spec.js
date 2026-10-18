@@ -133,12 +133,16 @@ test('unknown POST outcome blocks another submit and survives close/reopen', asy
 })
 test('close/unmount while pending suppresses late component success and refresh callbacks', async () => {
   let queryResolve
-  const { wrapper, success, refresh } = mount(); await flush()
-  getAPI.mockImplementation(cmd => cmd === 'queryAsyncJobResult' ? new Promise(resolve => { queryResolve = resolve }) : Promise.resolve({ listvirtualmachinesresponse: { virtualmachine: [resource] } }))
+  const { wrapper, success, refresh } = mount(); await flush(); wrapper.vm.selectedRowKeys = ['group']
+  getAPI.mockImplementation(cmd => cmd === 'queryAsyncJobResult' ? new Promise(resolve => { queryResolve = resolve }) : Promise.resolve(cmd === 'listVirtualMachines' ? { listvirtualmachinesresponse: { virtualmachine: [resource] } } : { listaffinitygroupsresponse: { count: 1, affinitygroup: [{ id: 'group' }] } }))
   const p = wrapper.vm.handleSubmit(); await flush()
   wrapper.vm.closeAction(); wrapper.unmount()
   queryResolve({ queryasyncjobresultresponse: { jobstatus: 1 } }); await p
   expect(success).not.toHaveBeenCalled(); expect(refresh).not.toHaveBeenCalled()
+  const reopened = mount(); await flush()
+  expect(reopened.wrapper.vm.selectedRowKeys).toEqual(['group'])
+  expect(reopened.wrapper.vm.operation.status).toBe('idle')
+  expect(reopened.success).not.toHaveBeenCalled(); expect(postAPI).toHaveBeenCalledTimes(1)
 })
 test('security scope change closes the dialog and suppresses late mutation receipt', async () => {
   let respond

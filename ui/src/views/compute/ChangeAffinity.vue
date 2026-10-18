@@ -166,9 +166,9 @@ export default {
     bindOperation () {
       const store = this.$store
       this.affinityOperation = getAffinityOperation(this.securityScope, this.resource.id, { get: getAPI, post: postAPI, getScope: () => affinitySessionScope(store) })
-      if (this.affinityOperation.snapshot().status === 'succeeded') this.affinityOperation.acknowledge()
       const previous = this.affinityOperation.snapshot()
       if (previous.status !== 'idle') this.selectedRowKeys = previous.ids
+      if (previous.status === 'succeeded') this.affinityOperation.acknowledge()
       this.announced = false
       const scope = this.securityScope
       this.unsubscribeOperation = this.affinityOperation.subscribe(state => {
