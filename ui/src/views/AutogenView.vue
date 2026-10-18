@@ -2201,6 +2201,13 @@ export default {
     execAction (action, isGroupAction) {
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
+      if (action.api === 'deleteAffinityGroup') {
+        if (!['listAffinityGroups', 'deleteAffinityGroup'].every(api => api in this.$store.getters.apis)) return
+        this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, affinityTargets: Object.freeze((isGroupAction ? this.selectedItems : [action.resource]).filter(Boolean).map(row => Object.freeze({ ...row }))) }
+        this.resource = action.resource || {}
+        this.showAction = true
+        return
+      }
       if (action.api === 'deleteCniConfiguration') {
         if (!['listCniConfiguration', 'deleteCniConfiguration'].every(api => api in this.$store.getters.apis)) return
         const request = { ...action, invokedAsGroupAction: !!isGroupAction }

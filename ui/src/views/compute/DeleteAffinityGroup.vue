@@ -8,6 +8,7 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
 <template>
   <MoldDialog size="md" :title="$t('label.delete.affinity.group')" @cancel="$emit('close-action')">
+    <p v-if="progress">{{ progress }}</p>
     <a-descriptions :column="1" bordered>
       <a-descriptions-item :label="$t('label.name')">{{ resource.name }}</a-descriptions-item>
       <a-descriptions-item :label="$t('label.affinity.owner')">{{ resource.project || resource.account }} / {{ resource.domain }}</a-descriptions-item>
@@ -37,8 +38,8 @@ import { affinityMemberCount } from '@/utils/affinityGroupMembers'
 export default {
   name: 'DeleteAffinityGroup',
   components: { MoldDialog },
-  props: { resource: { type: Object, required: true } },
-  emits: ['close-action'],
+  props: { resource: { type: Object, required: true }, queueMode: { type: Boolean, default: false }, progress: { type: String, default: '' } },
+  emits: ['close-action', 'deleted'],
   data: () => ({ count: null, error: '', loading: false, operation: { status: 'idle' } }),
   computed: { scope () { return affinitySessionScope(this.$store) + '|' + this.resource.id } },
   created () {
@@ -48,7 +49,10 @@ export default {
     this.unsubscribe = this.receipt.subscribe(state => {
       if (!this.alive) return
       this.operation = state
-      if (state.status === 'succeeded') { this.$emit('close-action'); this.$router.push('/affinitygroup') }
+      if (state.status === 'succeeded') {
+        if (this.queueMode) this.$emit('deleted', this.resource.id)
+        else { this.$emit('close-action'); this.$router.push('/affinitygroup') }
+      }
     })
     this.load()
   },

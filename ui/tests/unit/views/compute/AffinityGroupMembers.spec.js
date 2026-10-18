@@ -9,6 +9,7 @@ import { shallowMount } from '@vue/test-utils'
 import { nextTick, reactive } from 'vue'
 import AffinityGroupMembers from '@/views/compute/AffinityGroupMembers.vue'
 import DeleteAffinityGroup from '@/views/compute/DeleteAffinityGroup.vue'
+import DeleteAffinityGroups from '@/views/compute/DeleteAffinityGroups.vue'
 import { getAPI, postAPI } from '@/api'
 import { clearAffinityOperations } from '@/utils/affinityGroupOperations'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
@@ -84,4 +85,16 @@ test('delete dialog loads exact total and requires reconfirmation after mapping 
   groups = { ...group, virtualmachineIds: ['one', 'two'] }
   await w.vm.submit(); expect(postAPI).not.toHaveBeenCalled(); expect(w.vm.count).toBe(2); expect(w.vm.operation.status).toBe('failed')
   await w.vm.submit(); expect(postAPI).toHaveBeenCalledTimes(1); expect(w.vm.$router.push).toHaveBeenCalledWith('/affinitygroup')
+})
+test('selected group deletion confirms one target at a time and cancellation preserves unsubmitted targets', async () => {
+  const action = { affinityTargets: [group, { ...group, id: 'second', name: 'Second' }] }
+  const w = shallowMount(DeleteAffinityGroups, { props: { currentAction: action }, global: { mocks: { $route: { params: {}, query: {} }, $router: { push: jest.fn() } } } }); wrappers.push(w)
+  expect(w.findComponent(DeleteAffinityGroup).props('resource').id).toBe('target')
+  action.affinityTargets.pop()
+  expect(w.vm.targets).toHaveLength(2)
+  w.findComponent(DeleteAffinityGroup).vm.$emit('deleted', 'target'); await nextTick()
+  expect(w.findComponent(DeleteAffinityGroup).props('resource').id).toBe('second')
+  w.findComponent(DeleteAffinityGroup).vm.$emit('close-action'); await nextTick()
+  expect(w.emitted('refresh-data')).toHaveLength(1); expect(w.emitted('close-action')).toHaveLength(1)
+  expect(postAPI).not.toHaveBeenCalled()
 })

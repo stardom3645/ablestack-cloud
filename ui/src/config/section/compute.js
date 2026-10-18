@@ -1681,12 +1681,14 @@ export default {
           api: 'deleteAffinityGroup',
           icon: 'delete-outlined',
           label: 'label.delete.affinity.group',
+          toolbarLabel: 'label.delete.affinity.group',
           docHelp: 'adminguide/virtual_machines.html#delete-an-affinity-group',
           message: 'message.delete.affinity.group',
           dataView: true,
           selfManagedDialog: true,
+          groupAction: true,
           popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DeleteAffinityGroup.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DeleteAffinityGroups.vue')))
         }
       ]
     }
