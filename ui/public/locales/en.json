@@ -9190,5 +9190,6 @@
   "message.affinity.types.failed": "Could not load affinity group types. Retry the lookup.",
   "message.affinity.types.loading": "Loading available affinity group types.",
   "label.affinity.create.owner": "Owner scope",
-  "message.affinity.create.owner.empty": "Select an account or project in this domain. Creation requires an available owner."
+  "message.affinity.create.owner.empty": "Select an account or project in this domain. Creation requires an available owner.",
+  "message.affinity.search.account.domain": "Select a domain before filtering by account."
 }

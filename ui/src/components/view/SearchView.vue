@@ -68,7 +68,8 @@
                     @search="searchVmOptions($event, field)"
                     @popupScroll="moreVmOptions($event, field)"
                     :loading="field.loading"
-                    :disabled="apiName === 'listAffinityGroups' && (field.loading || !!field.error)"
+                    :disabled="apiName === 'listAffinityGroups' && (field.loading || !!field.error || (field.name === 'account' && !form.domainid))"
+                    :placeholder="apiName === 'listAffinityGroups' && field.name === 'account' && !form.domainid ? $t('message.affinity.search.account.domain') : undefined"
                     @input="field.name === 'virtualmachineid' && $route.name === 'vmsnapshot' ? null : onchange($event, field.name)"
                     @change="onSelectFieldChange(field.name)">
                     <a-select-option
@@ -238,6 +239,10 @@ export default {
         this.searchQuery = to.query.q
       }
       this.updateIsFiltered()
+      if (this.apiName === 'listAffinityGroups' && to?.meta?.name === 'affinitygroup' && this.visibleFilter) {
+        this.fillFormFieldValues()
+        this.fetchAffinityFilters(this.fields.map(field => field.name))
+      }
     }
   },
   mounted () {
@@ -993,11 +998,14 @@ export default {
         const version = this.affinityOptionsVersion[field.name] = (this.affinityOptionsVersion[field.name] || 0) + 1
         field.loading = true; field.error = false; field.opts = []
         try {
+          if (field.name === 'account' && !domainid) return
           const rows = field.name === 'type'
             ? affinityTypeOptions(await getAPI('listAffinityGroupTypes', { ignoreproject: true }, { preserveOnFailure: true, timeout: 15000 }))
             : await affinityOwnerOptions(getAPI, { domainid: 'domain', account: 'account', projectid: 'project' }[field.name], domainid)
           if (version !== this.affinityOptionsVersion[field.name] || (['account', 'projectid'].includes(field.name) && domainid !== this.form.domainid)) return
-          field.opts = this.sortArray(rows.map(row => ({ ...row, ...(row.labelKey ? { name: this.$t(row.labelKey) } : {}) })), field.name === 'domainid' ? 'path' : 'name')
+          // Root-admin listAccounts can include descendants despite isrecursive=false.
+          const eligible = rows.filter(row => !['account', 'projectid'].includes(field.name) || !domainid || row.domainid === domainid)
+          field.opts = this.sortArray(eligible.map(row => ({ ...row, ...(row.labelKey ? { name: this.$t(row.labelKey) } : {}) })), field.name === 'domainid' ? 'path' : 'name')
         } catch (_) { if (version === this.affinityOptionsVersion[field.name]) field.error = true } finally {
           if (version === this.affinityOptionsVersion[field.name]) field.loading = false
         }
@@ -1850,6 +1858,10 @@ export default {
       this.$emit('search', this.paramsFilter)
     },
     handleSubmit () {
+      if (this.apiName === 'listAffinityGroups' && this.form.account && !this.form.domainid) {
+        this.$message.error(this.$t('message.affinity.search.account.domain'))
+        return
+      }
       this.paramsFilter = {}
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)

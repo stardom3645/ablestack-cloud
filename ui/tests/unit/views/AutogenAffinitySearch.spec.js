@@ -65,3 +65,25 @@ test('search errors keep the route recoverable and late list responses are ignor
   let done; getAPI.mockImplementationOnce(() => new Promise(resolve => { done = resolve })); const old = c.fetchData(); route({ name: 'new' }); await c.fetchData(); done({ listaffinitygroupsresponse: { count: 1, affinitygroup: [{ id: 'stale' }] } }); await old; expect(c.items[0].id).toBe('id')
   route({ domainid: 'invalid' }); getAPI.mockRejectedValueOnce({ response: { status: 431 } }); await c.fetchData(); expect(c.listRefreshError).toBe(true); expect(c.$router.push).not.toHaveBeenCalled()
 })
+
+test('root-admin descendant accounts and projects are excluded from a selected domain', async () => {
+  const s = search(); s.initFields(); s.form = { domainid: 'root' }
+  getAPI.mockImplementation(command => Promise.resolve(command === 'listAccounts'
+    ? { listaccountsresponse: { count: 2, account: [{ id: 'a', name: 'root-owner', domainid: 'root' }, { id: 'b', name: 'child-owner', domainid: 'child' }] } }
+    : { listprojectsresponse: { count: 2, project: [{ id: 'p', name: 'root-project', domainid: 'root' }, { id: 'q', name: 'child-project', domainid: 'child' }] } }))
+  await s.fetchAffinityFilters(['account', 'projectid'])
+  expect(s.fields.find(row => row.name === 'account').opts.map(row => row.name)).toEqual(['root-owner'])
+  expect(s.fields.find(row => row.name === 'projectid').opts.map(row => row.id)).toEqual(['p'])
+})
+
+test('Back/Forward updates an already open affinity filter form from the canonical route', () => {
+  route({ projectid: 'project' }); const s = search(); s.initFields(); s.fillFormFieldValues(); s.visibleFilter = true; s.fetchAffinityFilters = jest.fn()
+  route({ account: 'owner', domainid: 'root' }); s.$route = c.$route
+  Search.watch.$route.call(s, s.$route, {})
+  expect(s.form.account).toBe('owner'); expect(s.form.projectid).toBeUndefined(); expect(s.fetchAffinityFilters).toHaveBeenCalledWith(filters)
+})
+test('account lookup and submit require an explicit domain without silently changing the search scope', async () => {
+  const s = search(); s.initFields(); await s.fetchAffinityFilters(['account']); expect(getAPI).not.toHaveBeenCalled()
+  s.form = { account: 'owner' }; s.handleSubmit(); expect(s.$emit).not.toHaveBeenCalled(); expect(s.$message.error).toHaveBeenCalledWith('message.affinity.search.account.domain')
+  s.form.domainid = 'root'; s.handleSubmit(); await Promise.resolve(); expect(s.$emit).toHaveBeenCalledWith('search', { account: 'owner', domainid: 'root' })
+})

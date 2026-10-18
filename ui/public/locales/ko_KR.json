@@ -9155,5 +9155,6 @@
   "message.affinity.types.failed": "Affinity 그룹 유형을 조회하지 못했습니다. 다시 조회하세요.",
   "message.affinity.types.loading": "사용 가능한 Affinity 그룹 유형을 조회하고 있습니다.",
   "label.affinity.create.owner": "소유 범위",
-  "message.affinity.create.owner.empty": "선택한 도메인의 계정 또는 프로젝트를 선택하세요. 선택 가능한 소유자가 없으면 생성할 수 없습니다."
+  "message.affinity.create.owner.empty": "선택한 도메인의 계정 또는 프로젝트를 선택하세요. 선택 가능한 소유자가 없으면 생성할 수 없습니다.",
+  "message.affinity.search.account.domain": "계정으로 검색하려면 먼저 도메인을 선택하세요."
 }
