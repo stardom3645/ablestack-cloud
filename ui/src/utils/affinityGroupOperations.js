@@ -130,7 +130,11 @@ export function getAffinityOperation (scope, id, { get, post, getScope = () => s
       publish({ status: 'preparing', params: { ...params }, jobId: '', ids: [...new Set(params.affinitygroupids?.split(',').filter(Boolean) || [])], error: '' })
       running = (async () => {
         try {
-          await prepare()
+          const prepared = await prepare()
+          if (prepared) {
+            params = { ...params, ...prepared }
+            publish({ params: { ...params }, ids: [...new Set(params.affinitygroupids?.split(',').filter(Boolean) || [])] })
+          }
         } catch (error) {
           publish({ status: 'failed', error: affinityApiError(error) || error.message || 'message.affinity.operation.failed' })
           return snapshot()

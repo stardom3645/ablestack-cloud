@@ -28,6 +28,7 @@ import { isCloneBlockedByExtraConfigDisk } from '@/utils/vmClone'
 import { vmUserDataSupported } from '@/utils/vmUserData'
 import { userDataLibraryParams, cniLibraryParams } from '@/utils/userDataContent'
 import { affinityGroupListParams } from '@/utils/affinityGroupCreation'
+import { affinityMemberCount } from '@/utils/affinityGroupMembers'
 import kubernetesIcon from '@/assets/icons/kubernetes.svg?inline'
 
 const activeFastCloneStatuses = ['pending', 'running']
@@ -1631,7 +1632,7 @@ export default {
       searchFilters: ['name', 'type', 'domainid', 'account', 'projectid'],
       customParamHandler: affinityGroupListParams,
       columns: () => {
-        var fields = ['name', 'type', 'description']
+        var fields = ['name', 'type', { affinitymembercount: affinityMemberCount }, 'description']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
           fields.push('account')
           if (store.getters.listAllProjects) {
@@ -1643,7 +1644,7 @@ export default {
         }
         return fields
       },
-      details: ['name', 'id', 'description', 'type', 'account', 'domain', 'dedicatedresources'],
+      details: ['name', 'id', 'description', 'type', 'affinitymembercount', 'account', 'project', 'domain', 'dedicatedresources'],
       related: [{
         name: 'vm',
         title: 'label.instances',
@@ -1653,6 +1654,10 @@ export default {
         {
           name: 'details',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+        },
+        {
+          name: 'instances',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/AffinityGroupMembers.vue')))
         },
         {
           name: 'events',
@@ -1679,9 +1684,9 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#delete-an-affinity-group',
           message: 'message.delete.affinity.group',
           dataView: true,
-          groupAction: true,
+          selfManagedDialog: true,
           popup: true,
-          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DeleteAffinityGroup.vue')))
         }
       ]
     }
