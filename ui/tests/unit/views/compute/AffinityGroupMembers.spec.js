@@ -54,6 +54,14 @@ test('batch partial failure retries only failed VM and preserves other group IDs
   expect(postAPI.mock.calls.map(call => call[1].id)).toEqual(['one', 'two', 'one'])
   expect(w.vm.batch.results.one.status).toBe('succeeded')
 })
+test('a newly confirmed batch clears a known terminal failure instead of silently skipping it', async () => {
+  const w = mount(); await flush()
+  postAPI.mockRejectedValueOnce(Object.assign(new Error('denied'), { response: { data: { errorresponse: { errorcode: 431, errortext: 'denied' } } } }))
+  w.vm.confirm('add', [fresh[0]]); await w.vm.execute(false)
+  expect(w.vm.batch.results.one.status).toBe('failed')
+  w.vm.confirm('add', [fresh[0]]); expect(w.vm.batch.results.one.status).toBe('idle')
+  await w.vm.execute(false); expect(w.vm.batch.results.one.status).toBe('succeeded'); expect(postAPI).toHaveBeenCalledTimes(2)
+})
 test('unknown POST outcome blocks both resubmission and new batch; result survives remount', async () => {
   const w = mount(); await flush(); postAPI.mockRejectedValue(new Error('transport'))
   w.vm.confirm('add', [fresh[0]]); await w.vm.execute(false)

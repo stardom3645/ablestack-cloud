@@ -52,6 +52,7 @@ show-size-changer
     <MoldDialog v-if="dialog" size="lg" :title="$t('label.affinity.members.' + (dialog === 'results' ? 'results' : mode))" @cancel="closeDialog">
       <p>{{ resource.name }} · {{ resource.project || resource.account }} / {{ resource.domain }}</p>
       <p>{{ $t('message.affinity.members.help') }}</p>
+      <p v-if="busy" role="status">{{ $t('message.affinity.operation.close') }}</p>
       <template v-if="dialog === 'choose'">
         <a-input-search v-model:value="candidateDraft" :placeholder="$t('label.search')" allow-clear @search="candidateSearch" />
         <a-alert v-if="candidateError" type="error" :message="text(candidateError)"><template #description><a-button @click="fetchCandidates">{{ $t('label.retry') }}</a-button></template></a-alert>
@@ -216,7 +217,7 @@ export default {
       if (Object.values(this.batch.results).some(row => affinityMemberLocked(row.status))) { this.dialog = 'results'; return }
       this.unsubscribers.forEach(fn => fn()); this.unsubscribers = []
       this.batch.mode = mode; this.mode = mode; this.batch.targets = targets.map(affinityMemberSnapshot); this.batch.results = {}
-      for (const vm of targets) { const op = this.operation(vm); if (op.snapshot().status === 'succeeded') op.acknowledge(); this.observe(vm) }
+      for (const vm of targets) { const op = this.operation(vm); if (['succeeded', 'failed'].includes(op.snapshot().status)) op.acknowledge(); this.observe(vm) }
       this.dialog = 'confirm'
     },
     async execute (retry) {
