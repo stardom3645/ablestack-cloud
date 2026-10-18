@@ -203,6 +203,8 @@ export default {
       try {
         const value = affinityMemberPage(await getAPI('listVirtualMachines', affinityMemberParams(this.resource, this.candidatePage, 10, this.candidateKeyword, false), { preserveOnFailure: true, timeout: 15000 }))
         if (!current()) return
+        const last = Math.max(1, Math.ceil(value.count / 10))
+        if (this.candidatePage > last) { this.candidatePage = last; this.fetchCandidates(); return }
         this.candidates = value.rows; this.candidateTotal = value.count; this.candidateError = ''
       } catch (error) { if (current()) this.candidateError = affinityApiError(error) || 'message.affinity.members.lookup' } finally { if (current()) this.candidateLoading = false }
     },

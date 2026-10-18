@@ -38,6 +38,12 @@ test('full mapping count and query total are independent of the current page; fa
   expect(w.vm.memberCount).toBe(3); expect(w.vm.total).toBe(3); expect(w.vm.rows).toHaveLength(2)
   failList = true; await w.vm.fetchData(); expect(w.vm.rows).toHaveLength(2); expect(w.vm.total).toBe(3); expect(w.vm.error).toBe('offline')
 })
+test('refresh clamps an emptied last member page and fetches the remaining page', async () => {
+  const w = mount(); await flush(); groups = { ...group, virtualmachineIds: ['one'] }
+  getAPI.mockImplementation(async (cmd, params) => cmd === 'listAffinityGroups' ? { listaffinitygroupsresponse: { affinitygroup: [groups] } } : { listvirtualmachinesresponse: { count: 1, ...(params.page === 1 ? { virtualmachine: [fresh[0]] } : {}) } })
+  w.vm.page = 2; await w.vm.fetchData(); await flush()
+  expect(w.vm.page).toBe(1); expect(w.vm.total).toBe(1); expect(w.vm.rows[0].id).toBe('one'); expect(w.vm.error).toBe('')
+})
 test('batch partial failure retries only failed VM and preserves other group IDs', async () => {
   const w = mount(); await flush()
   postAPI.mockRejectedValueOnce(Object.assign(new Error('denied'), { response: { data: { errorresponse: { errorcode: 431, errortext: 'denied' } } } }))

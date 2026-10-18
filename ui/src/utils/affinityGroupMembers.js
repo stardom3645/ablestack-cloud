@@ -21,7 +21,7 @@ export function affinityMemberPage (response) {
   if (!value || (value.count !== undefined && (!Number.isInteger(value.count) || value.count < 0))) throw new Error('message.affinity.members.lookup')
   const rows = value.virtualmachine || []
   const count = value.count || 0
-  if (!Array.isArray(rows) || rows.length > count || (count > 0 && !rows.length)) throw new Error('message.affinity.members.lookup')
+  if (!Array.isArray(rows) || rows.length > count) throw new Error('message.affinity.members.lookup')
   return { rows, count }
 }
 

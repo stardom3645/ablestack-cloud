@@ -18,9 +18,12 @@ test('count uses all unique mapping IDs independently of visible rows and empty 
   expect(affinityMemberPage({ listvirtualmachinesresponse: { count: 11, virtualmachine: [{ id: 'a' }] } }).count).toBe(11)
   expect(affinityMemberPage({ listvirtualmachinesresponse: {} })).toEqual({ rows: [], count: 0 })
 })
-test.each([{}, { count: -1 }, { count: 1 }, { count: '1' }, { count: 0, virtualmachine: [{}] }])('malformed or missing count never fabricates an empty result %s', value => {
+test.each([{}, { count: -1 }, { count: '1' }, { count: 0, virtualmachine: [{}] }])('malformed or missing count never fabricates an empty result %s', value => {
   if (Object.keys(value).length) expect(() => affinityMemberPage({ listvirtualmachinesresponse: value })).toThrow()
   else expect(() => affinityMemberPage({})).toThrow()
+})
+test('an emptied last page preserves the total so its caller can clamp and refetch', () => {
+  expect(affinityMemberPage({ listvirtualmachinesresponse: { count: 10 } })).toEqual({ rows: [], count: 10 })
 })
 test('all-project member listing and project candidate queries keep scopes explicit', () => {
   expect(affinityMemberParams(group, 2, 10, 'find')).toMatchObject({ affinitygroupid: 'target', listall: true, projectid: '-1', page: 2, pagesize: 10, keyword: 'find' })
