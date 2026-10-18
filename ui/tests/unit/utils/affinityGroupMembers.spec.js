@@ -26,6 +26,7 @@ test('all-project member listing and project candidate queries keep scopes expli
   expect(affinityMemberParams(group, 2, 10, 'find')).toMatchObject({ affinitygroupid: 'target', listall: true, projectid: '-1', page: 2, pagesize: 10, keyword: 'find' })
   expect(affinityMemberParams({ ...group, projectid: 'project' }, 1, 10, '', false)).toMatchObject({ projectid: 'project', domainid: 'domain' })
   expect(affinityMemberParams(group, 1, 10, '', false)).toMatchObject({ account: 'owner', domainid: 'domain' })
+  expect(affinityMemberParams(group, 1, 10, '', false)).not.toHaveProperty('projectid')
 })
 test('add reads current memberships and preserves unrelated groups', async () => {
   const get = lookup()

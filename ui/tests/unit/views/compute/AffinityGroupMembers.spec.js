@@ -39,7 +39,7 @@ test('full mapping count and query total are independent of the current page; fa
 })
 test('batch partial failure retries only failed VM and preserves other group IDs', async () => {
   const w = mount(); await flush()
-  postAPI.mockImplementationOnce(async () => { throw { response: { data: { errorresponse: { errorcode: 431, errortext: 'denied' } } } } })
+  postAPI.mockRejectedValueOnce(Object.assign(new Error('denied'), { response: { data: { errorresponse: { errorcode: 431, errortext: 'denied' } } } }))
   w.vm.confirm('add', fresh.slice(0, 2)); await w.vm.execute(false)
   expect(w.vm.batch.results.one.status).toBe('failed'); expect(w.vm.batch.results.two.status).toBe('succeeded')
   expect(postAPI.mock.calls[1][1]).toEqual({ id: 'two', affinitygroupids: 'other,target' })

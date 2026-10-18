@@ -28,11 +28,10 @@ export function affinityMemberPage (response) {
 export function affinityMemberParams (group, page, pagesize, keyword, members = true) {
   return {
     listall: true,
-    projectid: group.projectid || '-1',
     page,
     pagesize,
     details: 'min,affgrp',
-    ...(members ? { affinitygroupid: group.id } : (group.type === 'ExplicitDedication' ? { domainid: group.domainid, isrecursive: true } : affinityOwnerParams(group))),
+    ...(members ? { affinitygroupid: group.id, projectid: group.projectid || '-1' } : (group.type === 'ExplicitDedication' ? { domainid: group.domainid, isrecursive: true, projectid: '-1' } : affinityOwnerParams(group))),
     ...(keyword ? { keyword } : {})
   }
 }
