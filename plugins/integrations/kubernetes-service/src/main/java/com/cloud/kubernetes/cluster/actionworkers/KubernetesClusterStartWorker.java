@@ -39,6 +39,9 @@ import com.cloud.network.vpc.NetworkACL;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.user.UserDataVO;
 import org.apache.cloudstack.api.BaseCmd;
+import org.apache.cloudstack.api.command.user.kubernetes.cluster.CreateKubernetesClusterCmd;
+import org.apache.cloudstack.framework.jobs.AsyncJob;
+import org.apache.cloudstack.framework.jobs.AsyncJobExecutionContext;
 import org.apache.cloudstack.api.InternalIdentity;
 import org.apache.cloudstack.framework.ca.Certificate;
 import org.apache.cloudstack.utils.security.CertUtils;
@@ -773,6 +776,9 @@ public class KubernetesClusterStartWorker extends KubernetesClusterResourceModif
     public void recordCreationOperationFailure() {
         KubernetesCluster current = kubernetesClusterDao.findById(kubernetesCluster.getId());
         if (current == null) { return; }
+        if (current.getState() == KubernetesCluster.State.Starting || current.getState() == KubernetesCluster.State.Error) {
+            recordNodeProvisioningFailure(current);
+        }
         if (current.getState() == KubernetesCluster.State.Created
                 && CollectionUtils.isEmpty(kubernetesClusterVmMapDao.listByClusterId(kubernetesCluster.getId()))) {
             kubernetesClusterDetailsDao.addDetail(kubernetesCluster.getId(), "lifecycle.provisioning.phase", "Preflight", false);
@@ -781,6 +787,25 @@ public class KubernetesClusterStartWorker extends KubernetesClusterResourceModif
         } else if (current.getState() == KubernetesCluster.State.Starting) {
             stateTransitTo(kubernetesCluster.getId(), KubernetesCluster.Event.CreateFailed);
         }
+    }
+
+    protected void recordNodeProvisioningFailure(KubernetesCluster current) {
+        KubernetesClusterDetailsVO phase = kubernetesClusterDetailsDao.findDetail(current.getId(), "lifecycle.provisioning.phase");
+        KubernetesClusterDetailsVO ownership = kubernetesClusterDetailsDao.findDetail(current.getId(), "provider.ownership.v1");
+        AsyncJobExecutionContext context = AsyncJobExecutionContext.getCurrent();
+        AsyncJob job = context == null ? null : context.getJob();
+        if (current.getClusterType() != KubernetesCluster.ClusterType.CloudManaged
+                || phase == null || !"Nodes".equals(phase.getValue())
+                || StringUtils.isNotBlank(current.getEndpoint())
+                || kubernetesClusterDetailsDao.findDetail(current.getId(), "lifecycle.bootstrap.started") != null
+                || (ownership != null && "true".equals(ownership.getValue()))
+                || job == null || !CreateKubernetesClusterCmd.class.getName().equals(job.getCmd())
+                || !"KubernetesCluster".equals(job.getInstanceType())
+                || !Long.valueOf(current.getId()).equals(job.getInstanceId()) || StringUtils.isBlank(job.getUuid())) {
+            return;
+        }
+        kubernetesClusterDetailsDao.addDetail(current.getId(), "lifecycle.creation.failed.job", job.getUuid(), false);
+        kubernetesClusterDetailsDao.addDetail(current.getId(), "lifecycle.provisioning.phase", "NodeProvisioningFailed", false);
     }
 
     protected boolean initializeCreationComponent(String component, java.util.function.BooleanSupplier initialize) {
