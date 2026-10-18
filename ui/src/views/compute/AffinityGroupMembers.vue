@@ -33,7 +33,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
       :locale="{ emptyText: $t(canRead ? 'message.affinity.members.empty' : 'message.affinity.members.restricted') }"
       :row-selection="canChange ? { selectedRowKeys: selection, preserveSelectedRowKeys: true, onChange: selectMembers, getCheckboxProps: vm => ({ disabled: !eligible(vm) || busy || !!error }) } : undefined">
       <template #bodyCell="{ column, record, text: value }">
-        <template v-if="column.key === 'displayname'"><router-link :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div>{{ record.name }}</div></template>
+        <template v-if="column.key === 'displayname'"><router-link :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div>{{ record.instancename || $t('label.affinity.members.unavailable') }}</div></template>
         <template v-else-if="column.key === 'state'"><Status :text="record.state" /></template>
         <template v-else-if="column.key === 'reason'">{{ eligible(record) ? '' : $t('message.affinity.vm.stopped') }}</template>
         <template v-else>{{ value || $t('label.affinity.members.unavailable') }}</template>
@@ -67,7 +67,7 @@ show-size-changer
 :scroll="{ x: 900 }"
           :row-selection="{ selectedRowKeys: candidateSelection, preserveSelectedRowKeys: true, onChange: selectCandidates, getCheckboxProps: vm => ({ disabled: !eligible(vm) || linked(vm) || !!candidateError || candidateLoading }) }">
           <template #bodyCell="{ column, record, text: value }">
-            <template v-if="column.key === 'displayname'"><router-link :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div>{{ record.name }}</div></template>
+            <template v-if="column.key === 'displayname'"><router-link :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div>{{ record.instancename || $t('label.affinity.members.unavailable') }}</div></template>
             <template v-else-if="column.key === 'reason'">{{ linked(record) ? $t('message.affinity.members.already') : (!eligible(record) ? $t('message.affinity.vm.stopped') : '') }}</template>
             <template v-else>{{ value || $t('label.affinity.members.unavailable') }}</template>
           </template>
