@@ -73,6 +73,12 @@ test('Running rows and missing API permission cannot start member changes', asyn
   const w = mount(); await flush(); w.vm.confirm('add', [{ ...fresh[0], state: 'Running' }]); expect(w.vm.dialog).toBe('')
   delete store.getters.apis.updateVMAffinityGroup; w.vm.confirm('add', [fresh[0]]); expect(w.vm.dialog).toBe(''); expect(postAPI).not.toHaveBeenCalled()
 })
+test('restricted VM listing retains the full mapping count and does not claim the group is empty', async () => {
+  delete store.getters.apis.listVirtualMachines
+  const w = mount(); await flush()
+  expect(w.vm.memberCount).toBe(3); expect(w.vm.rows).toEqual([]); expect(w.vm.canRead).toBe(false)
+  expect(w.text()).toContain('message.affinity.members.restricted'); expect(getAPI).not.toHaveBeenCalled()
+})
 test('delete dialog loads exact total and requires reconfirmation after mapping changes', async () => {
   const w = mount(DeleteAffinityGroup); await flush(); expect(w.vm.count).toBe(3)
   groups = { ...group, virtualmachineIds: ['one', 'two'] }

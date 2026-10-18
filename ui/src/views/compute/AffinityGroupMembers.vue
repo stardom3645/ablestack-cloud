@@ -146,10 +146,10 @@ export default {
     hasIdle () { return Object.values(this.batch.results).some(row => row.status === 'idle') },
     columns () { return ['displayname', 'state', 'hostname', 'account', 'project', 'domain', 'reason'].map(key => ({ key, dataIndex: key, title: this.$t('label.' + (key === 'reason' ? 'affinity.members.reason' : key)) })) }
   },
-  created () { this.alive = true; this.version = 0; this.candidateVersion = 0; this.unsubscribers = []; this.bindBatch(); this.fetchData() },
+  created () { this.alive = true; this.version = 0; this.candidateVersion = 0; this.unsubscribers = []; this.memberCount = affinityMemberCount(this.resource); this.bindBatch(); this.fetchData() },
   beforeUnmount () { this.alive = false; this.version++; this.candidateVersion++; this.unsubscribers.forEach(fn => fn()) },
   watch: {
-    scope () { this.version++; this.candidateVersion++; this.unsubscribers.forEach(fn => fn()); this.unsubscribers = []; this.rows = []; this.total = 0; this.memberCount = 0; this.selection = []; this.selected = {}; this.error = ''; this.dialog = ''; this.page = 1; this.keyword = ''; this.draftKeyword = ''; this.bindBatch(); this.fetchData() },
+    scope () { this.version++; this.candidateVersion++; this.unsubscribers.forEach(fn => fn()); this.unsubscribers = []; this.rows = []; this.total = 0; this.memberCount = affinityMemberCount(this.resource); this.selection = []; this.selected = {}; this.error = ''; this.dialog = ''; this.page = 1; this.keyword = ''; this.draftKeyword = ''; this.bindBatch(); this.fetchData() },
     active (value) { if (value) this.fetchData(); else { this.version++; this.candidateVersion++; this.dialog = '' } }
   },
   methods: {
