@@ -200,3 +200,13 @@ test('shared submit guard applies to active library lookup, while manual/templat
   vm.userdataTabKey = 'userdataregistered'; vm.userdataDefaultOverridePolicy = 'DENYOVERRIDE'; expect(blocked.call(vm)).toBe(false)
   expect(userDataOwnerParams({ account: 'a', domainid: 'd', projectid: 'p' })).toEqual({ projectid: 'p' })
 })
+
+test('CNI project picker shows the project owner while generic UserData keeps its existing columns', async () => {
+  getAPI.mockResolvedValue({ listcniconfigurationresponse: { count: 0, cniconfig: [] } })
+  const w = mount({ resourceKind: 'cni', scope: { projectid: 'project' } }, { listCniConfiguration: {} }); await flush()
+  expect(w.vm.columns[1]).toMatchObject({ key: 'project', dataIndex: 'project' })
+  await w.setProps({ scope: { account: 'owner', domainid: 'domain' } }); await flush()
+  expect(w.vm.columns[1].key).toBe('account')
+  await w.setProps({ resourceKind: 'userdata', scope: { projectid: 'project' } }); await flush()
+  expect(w.vm.columns[1].key).toBe('account'); w.unmount()
+})

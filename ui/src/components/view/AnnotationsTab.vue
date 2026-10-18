@@ -67,7 +67,7 @@
           <a-list-item>
             <a-comment
               class="comment"
-              :content="item.annotation"
+              :content="annotationText(item)"
               :datetime="$toLocaleDate(item.created)"
               :author="item.username" >
               <template #avatar>
@@ -185,6 +185,10 @@ export default {
     this.fetchData()
   },
   methods: {
+    annotationText (item) {
+      return this.$route.path?.startsWith('/cniconfiguration/') && item.annotation?.startsWith('MOLD_CNI_CLONE/1\n')
+        ? this.$t('label.cni.clone.relation') : item.annotation
+    },
     generateAnnotationType () {
       switch (this.resourceType) {
         case 'UserVm': return 'VM'
