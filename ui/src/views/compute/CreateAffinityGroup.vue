@@ -10,6 +10,10 @@ or implied. See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <MoldDialog class="affinity-create-dialog" size="md" :title="$t('label.add.affinity.group')" @cancel="closeAction">
+    <template #title>
+      {{ $t('label.add.affinity.group') }}
+      <a v-if="currentAction.docHelp" :href="documentationUrl($config.docBase, currentAction.docHelp, $i18n.locale)" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
+    </template>
     <a-form ref="createForm" :model="form" :rules="rules" layout="vertical" @keydown.ctrl.enter.prevent="handleSubmit" @finish="handleSubmit">
       <a-alert v-if="typesLoading || typesError || !types.length" :type="typesError ? 'error' : 'info'" show-icon :message="$t(typesLoading ? 'message.affinity.types.loading' : typesError ? 'message.affinity.types.failed' : 'message.affinity.types.empty')">
         <template v-if="!typesLoading" #description><a-button size="small" :disabled="operationLocked" @click="loadTypes">{{ $t('label.retry') }}</a-button></template>
@@ -36,7 +40,7 @@ limitations under the License. -->
         </a-select>
       </a-form-item>
       <AffinityGroupOwner v-if="isAdmin && !operationLocked" :initial-owner="owner" :disabled="validating" @change="ownerChanged" />
-      <p v-else>{{ $t('label.affinity.owner') }}: {{ owner.projectid || owner.account }} / {{ owner.domainid }}</p>
+      <p v-else>{{ $t('label.affinity.create.owner') }}: {{ owner.projectid || owner.account }} / {{ owner.domainid }}</p>
     </a-form>
     <template #footer>
       <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
@@ -50,10 +54,12 @@ import MoldDialog from '@/components/view/MoldDialog'
 import AffinityGroupOwner from './AffinityGroupOwner'
 import { affinityNameValid, affinityTypeOptions } from '@/utils/affinityGroupCreation'
 import { affinitySessionScope, getAffinityOperation } from '@/utils/affinityGroupOperations'
+import { documentationUrl } from '@/utils/cniFileImport'
 
 export default {
   name: 'CreateAffinityGroup',
   components: { MoldDialog, AffinityGroupOwner },
+  props: { currentAction: { type: Object, default: () => ({}) } },
   emits: ['refresh-data', 'close-action'],
   data () {
     const user = this.$store.getters.userInfo || {}; const project = this.$store.getters.project || {}
@@ -87,7 +93,8 @@ export default {
   beforeUnmount () { this.alive = false; this.typesVersion++; if (this.unsubscribe) this.unsubscribe() },
   watch: { securityScope () { if (this.unsubscribe) this.unsubscribe(); this.$emit('close-action') } },
   methods: {
-    errorText (text) { return text.startsWith('message.') ? this.$t(text) : text },
+    documentationUrl,
+    errorText (text) { return text.startsWith('message.') ? this.$t(text === 'message.affinity.operation.failed' ? 'message.affinity.create.failed' : text) : text },
     ownerChanged ({ owner, ready }) { this.owner = owner; this.ownerReady = ready },
     async loadTypes () {
       const version = ++this.typesVersion; const scope = this.securityScope

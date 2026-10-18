@@ -26,7 +26,7 @@ limitations under the License. -->
         <a-select-option v-for="row in options" :key="row.id" :value="kind === 'account' ? row.name : row.id" :label="row.name">{{ row.name }}</a-select-option>
       </a-select>
     </a-form-item>
-    <a-alert v-if="error || (!loading && !selection)" type="warning" show-icon :message="$t(error ? 'message.affinity.owner.load.failed' : 'message.affinity.owner.unavailable')">
+    <a-alert v-if="error || (!loading && !selection)" type="warning" show-icon :message="$t(error ? 'message.affinity.owner.load.failed' : 'message.affinity.create.owner.empty')">
       <template #description><a-button :disabled="disabled" size="small" @click="retry">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
   </div>

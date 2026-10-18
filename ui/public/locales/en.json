@@ -9188,5 +9188,7 @@
   "message.affinity.owner.load.failed": "Could not load owners. Retry before selecting an owner.",
   "message.affinity.types.empty": "No affinity group types are available.",
   "message.affinity.types.failed": "Could not load affinity group types. Retry the lookup.",
-  "message.affinity.types.loading": "Loading available affinity group types."
+  "message.affinity.types.loading": "Loading available affinity group types.",
+  "label.affinity.create.owner": "Owner scope",
+  "message.affinity.create.owner.empty": "Select an account or project in this domain. Creation requires an available owner."
 }
