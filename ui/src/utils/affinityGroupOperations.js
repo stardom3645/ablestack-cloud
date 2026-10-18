@@ -65,10 +65,10 @@ export function getAffinityOperation (scope, id, { get, post, getScope = () => s
   }
   if (operations.has(id)) return operations.get(id)
   let valid = true
-  let state = { status: 'idle', jobId: '', ids: [], error: '' }
+  let state = { status: 'idle', jobId: '', ids: [], error: '', params: {} }
   let running
   const listeners = new Set()
-  const snapshot = () => ({ ...state, ids: [...state.ids] })
+  const snapshot = () => ({ ...state, ids: [...state.ids], params: { ...state.params } })
   const current = () => {
     if (valid && getScope() !== scope) clearAffinityOperations()
     return valid
@@ -122,12 +122,12 @@ export function getAffinityOperation (scope, id, { get, post, getScope = () => s
       tracker.clear()
     },
     acknowledge () {
-      if (['succeeded', 'failed'].includes(state.status)) state = { status: 'idle', jobId: '', ids: [], error: '' }
+      if (['succeeded', 'failed'].includes(state.status)) state = { status: 'idle', jobId: '', ids: [], error: '', params: {} }
     },
     run (command, params, prepare = async () => {}) {
       if (!current()) return Promise.resolve(snapshot())
       if (!['idle', 'failed'].includes(state.status)) return running || Promise.resolve(snapshot())
-      publish({ status: 'preparing', jobId: '', ids: [...new Set(params.affinitygroupids?.split(',').filter(Boolean) || [])], error: '' })
+      publish({ status: 'preparing', params: { ...params }, jobId: '', ids: [...new Set(params.affinitygroupids?.split(',').filter(Boolean) || [])], error: '' })
       running = (async () => {
         try {
           await prepare()

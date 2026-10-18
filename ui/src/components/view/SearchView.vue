@@ -68,6 +68,7 @@
                     @search="searchVmOptions($event, field)"
                     @popupScroll="moreVmOptions($event, field)"
                     :loading="field.loading"
+                    :disabled="apiName === 'listAffinityGroups' && (field.loading || !!field.error)"
                     @input="field.name === 'virtualmachineid' && $route.name === 'vmsnapshot' ? null : onchange($event, field.name)"
                     @change="onSelectFieldChange(field.name)">
                     <a-select-option
@@ -130,6 +131,9 @@
                     :filterOption="(inputValue, option) => {
                       return option.value.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1
                     }" />
+                  <a-alert v-if="apiName === 'listAffinityGroups' && field.error" type="error" :message="$t('error.fetching.data')">
+                    <template #description><a-button size="small" @click="fetchAffinityFilters([field.name])">{{ $t('label.retry') }}</a-button></template>
+                  </a-alert>
                 </a-form-item>
                 <div class="filter-group-button">
                   <a-button
@@ -156,7 +160,7 @@
               class="filter-button"
               size="small"
               :aria-label="$t('label.advanced.search')"
-                  @click="() => { if (apiName !== 'listCniConfiguration') searchQuery = null }">
+                  @click="() => { if (!['listCniConfiguration', 'listAffinityGroups'].includes(apiName)) searchQuery = null }">
               <filter-two-tone v-if="isFiltered" />
               <filter-outlined v-else />
             </a-button>
@@ -175,6 +179,7 @@ import TooltipButton from '@/components/widgets/TooltipButton'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import Status from '@/components/widgets/Status'
 import { i18n } from '@/locales'
+import { affinityOwnerOptions, affinityTypeOptions } from '@/utils/affinityGroupCreation'
 
 export default {
   name: 'SearchView',
@@ -212,6 +217,7 @@ export default {
       vmOptionTotal: 0,
       vmOptionKeyword: '',
       cniOptionsVersion: {},
+      affinityOptionsVersion: {},
       vmOptionVersion: 0
     }
   },
@@ -282,6 +288,14 @@ export default {
       this.fetchDynamicFieldData(fieldname, event.target.value)
     },
     onSelectFieldChange (fieldname) {
+      if (this.apiName === 'listAffinityGroups') {
+        if (fieldname === 'domainid') {
+          this.form.account = undefined; this.form.projectid = undefined
+          this.fetchAffinityFilters(['account', 'projectid'])
+        } else if (fieldname === 'projectid' && this.form.projectid) this.form.account = undefined
+        else if (fieldname === 'account' && this.form.account) this.form.projectid = undefined
+        return
+      }
       const fetchAccountOptions = fieldname === 'domainid' && this.fields.some((field) => field.name === 'account')
       if (fetchAccountOptions) {
         if (this.apiName === 'listCniConfiguration') this.form.account = undefined
@@ -301,6 +315,7 @@ export default {
       this.initFormFieldData()
     },
     retrieveFieldLabel (fieldName) {
+      if (this.apiName === 'listAffinityGroups' && fieldName === 'projectid') return this.$t('label.project')
       if (fieldName === 'groupid') {
         fieldName = 'group'
       }
@@ -377,6 +392,10 @@ export default {
           type = 'boolean'
         }
 
+        if (this.apiName === 'listAffinityGroups' && item === 'projectid') {
+          if (!('listProjects' in this.$store.getters.apis)) return
+          type = 'list'
+        }
         this.fields.push({
           type: type,
           name: item,
@@ -541,6 +560,7 @@ export default {
       }
     },
     async fetchDynamicFieldData (arrayField, searchKeyword) {
+      if (this.apiName === 'listAffinityGroups') return this.fetchAffinityFilters(arrayField)
       if (this.apiName === 'listCniConfiguration') return this.fetchCniOwnerOptions(arrayField, searchKeyword)
       const promises = []
       let typeIndex = -1
@@ -966,6 +986,23 @@ export default {
         }
       })
     },
+    async fetchAffinityFilters (arrayField) {
+      const domainid = this.form.domainid
+      const fields = this.fields.filter(field => ['type', 'domainid', 'account', 'projectid'].includes(field.name) && arrayField.includes(field.name))
+      await Promise.all(fields.map(async field => {
+        const version = this.affinityOptionsVersion[field.name] = (this.affinityOptionsVersion[field.name] || 0) + 1
+        field.loading = true; field.error = false; field.opts = []
+        try {
+          const rows = field.name === 'type'
+            ? affinityTypeOptions(await getAPI('listAffinityGroupTypes', { ignoreproject: true }, { preserveOnFailure: true, timeout: 15000 }))
+            : await affinityOwnerOptions(getAPI, { domainid: 'domain', account: 'account', projectid: 'project' }[field.name], domainid)
+          if (version !== this.affinityOptionsVersion[field.name] || (['account', 'projectid'].includes(field.name) && domainid !== this.form.domainid)) return
+          field.opts = this.sortArray(rows.map(row => ({ ...row, ...(row.labelKey ? { name: this.$t(row.labelKey) } : {}) })), field.name === 'domainid' ? 'path' : 'name')
+        } catch (_) { if (version === this.affinityOptionsVersion[field.name]) field.error = true } finally {
+          if (version === this.affinityOptionsVersion[field.name]) field.loading = false
+        }
+      }))
+    },
     async fetchCniOwnerOptions (arrayField, searchKeyword) {
       const domainid = this.form.domainid
       const fields = this.fields.filter(field => ['domainid', 'account'].includes(field.name) && arrayField.includes(field.name))
@@ -987,7 +1024,7 @@ export default {
     },
     initFormFieldData () {
       const arrayField = this.initFields()
-      if (this.apiName === 'listCniConfiguration') this.fillFormFieldValues()
+      if (['listCniConfiguration', 'listAffinityGroups'].includes(this.apiName)) this.fillFormFieldValues()
 
       this.fetchStaticFieldData(arrayField)
 
@@ -1791,6 +1828,11 @@ export default {
       this.searchQuery = null
       this.paramsFilter = {}
 
+      if (this.apiName === 'listAffinityGroups') {
+        await this.fetchAffinityFilters(['domainid', 'account', 'projectid', 'type'])
+        this.$emit('search', {})
+        return
+      }
       const refreshAccountOptions = ['account', 'domainid'].every((field) => {
         return this.fields.some((searchViewField) => searchViewField.name === field)
       })
@@ -1832,7 +1874,7 @@ export default {
       this.$emit('change-filter', filter)
     },
     updateIsFiltered () {
-      const params = this.apiName === 'listCniConfiguration' ? this.$route.query : this.searchParams
+      const params = ['listCniConfiguration', 'listAffinityGroups'].includes(this.apiName) ? this.$route.query : this.searchParams
       this.isFiltered = this.searchFilters.some(item => {
         if (params[item]) {
           return true

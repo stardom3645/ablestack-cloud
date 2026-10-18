@@ -27,6 +27,7 @@ import { isFastClonePowerOperationBlocked, getFastClonePowerBlockedLabel, getFas
 import { isCloneBlockedByExtraConfigDisk } from '@/utils/vmClone'
 import { vmUserDataSupported } from '@/utils/vmUserData'
 import { userDataLibraryParams, cniLibraryParams } from '@/utils/userDataContent'
+import { affinityGroupListParams } from '@/utils/affinityGroupCreation'
 import kubernetesIcon from '@/assets/icons/kubernetes.svg?inline'
 
 const activeFastCloneStatuses = ['pending', 'running']
@@ -1627,7 +1628,8 @@ export default {
       icon: 'swap-outlined',
       docHelp: 'adminguide/virtual_machines.html#affinity-groups',
       permission: ['listAffinityGroups'],
-      searchFilters: ['name', 'zoneid', 'domainid', 'account', 'type'],
+      searchFilters: ['name', 'type', 'domainid', 'account', 'projectid'],
+      customParamHandler: affinityGroupListParams,
       columns: () => {
         var fields = ['name', 'type', 'description']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
@@ -1662,6 +1664,7 @@ export default {
       actions: [
         {
           api: 'createAffinityGroup',
+          selfManagedDialog: true,
           icon: 'plus-outlined',
           label: 'label.add.affinity.group',
           docHelp: 'adminguide/virtual_machines.html#creating-a-new-affinity-group',

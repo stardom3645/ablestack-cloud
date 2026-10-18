@@ -918,6 +918,7 @@ import { documentationUrl } from '@/utils/cniFileImport'
 import ListView from '@/components/view/ListView'
 import ResourceView from '@/components/view/ResourceView'
 import ActionButton from '@/components/view/ActionButton'
+import { affinityGroupQuery } from '@/utils/affinityGroupCreation'
 import SearchView from '@/components/view/SearchView'
 import SearchFilter from '@/components/view/SearchFilter'
 import OsLogo from '@/components/widgets/OsLogo'
@@ -1149,7 +1150,7 @@ export default {
 
     this.currentPath = this.$route.fullPath
     this.fetchData()
-    if ('projectid' in this.$route.query && !isSshKeyPairDetailRoute(this.$route)) {
+    if ('projectid' in this.$route.query && this.$route.meta?.name !== 'affinitygroup' && !isSshKeyPairDetailRoute(this.$route)) {
       this.switchProject(this.$route.query.projectid)
     }
     this.setModalWidthByScreen()
@@ -1195,7 +1196,7 @@ export default {
         this.clearAutoRefresh()
         this.fetchData()
         this.scheduleAutoRefresh()
-        if ('projectid' in to.query && !isSshKeyPairDetailRoute(to)) {
+        if ('projectid' in to.query && to.meta?.name !== 'affinitygroup' && !isSshKeyPairDetailRoute(to)) {
           this.switchProject(to.query.projectid)
         }
       }
@@ -1523,6 +1524,12 @@ export default {
       })
     },
     fetchData (params = {}) {
+      if (this.$route.meta?.name === 'affinitygroup') {
+        const clean = affinityGroupQuery(this.$route.query)
+        if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) {
+          return this.$router.replace({ query: clean })
+        }
+      }
       if (isSshKeyPairDetailRoute(this.$route)) {
         const context = this.listScope()
         if (this.sshKeyPairDetailContext !== context) {
@@ -1860,7 +1867,7 @@ export default {
       }
 
       if (this.$store.getters.listAllProjects && !this.projectView) {
-        params.projectid = '-1'
+        params.projectid = this.$route.meta?.name === 'affinitygroup' ? (this.$route.query.projectid || '-1') : '-1'
       }
 
       params.page = this.page
@@ -1908,7 +1915,7 @@ export default {
       if (['listVirtualMachines', 'listVirtualMachinesMetrics'].includes(requestApi)) {
         params = sshKeyPairVmParams(params, this.$route.query)
       }
-      const cniQuery = this.$route.meta?.name === 'cniconfiguration'
+      const cniQuery = ['cniconfiguration', 'affinitygroup'].includes(this.$route.meta?.name)
       const response = vmGroups || sshDetail || cniQuery ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
       const request = response.then(async json => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
