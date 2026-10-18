@@ -1594,6 +1594,16 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/RegisterUserData.vue')))
         },
         {
+          api: 'registerCniConfiguration',
+          selfManagedDialog: true,
+          show: (_, store) => ['listCniConfiguration', 'registerCniConfiguration', 'listAnnotations', 'addAnnotation'].every(api => api in store.apis),
+          icon: 'copy-outlined',
+          label: 'label.cni.clone',
+          dataView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CloneCniConfiguration.vue')))
+        },
+        {
           api: 'deleteCniConfiguration',
           selfManagedDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DeleteCniConfiguration.vue'))),
