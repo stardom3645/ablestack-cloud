@@ -240,10 +240,10 @@ export default {
           }
           await op.run('updateVMAffinityGroup', { id: original.id }, () => prepareAffinityMemberChange(getAPI, group, snapshot, batch.mode, current))
         }
-        if (current()) { this.selection = []; this.selected = {}; await Promise.all([this.fetchData(), this.parentFetchData()]) }
+        if (current()) { this.selection = []; this.selected = {}; await Promise.all([this.fetchData(), this.parentFetchData({ irefresh: true })]) }
       } finally { batch.busy = false }
     },
-    async recheck (vm) { await this.operation(vm).recheck(); if (this.alive) { await this.fetchData(); this.parentFetchData() } }
+    async recheck (vm) { await this.operation(vm).recheck(); if (this.alive) { await this.fetchData(); this.parentFetchData({ irefresh: true }) } }
   }
 }
 </script>

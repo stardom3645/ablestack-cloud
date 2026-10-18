@@ -16,13 +16,13 @@ jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 const group = { id: 'target', name: 'Target', account: 'owner', domainid: 'domain', virtualmachineIds: ['one', 'two', 'three'] }
 const vms = ['one', 'two', 'three'].map(id => ({ id, name: id, state: 'Stopped', account: 'owner', domainid: 'domain', affinitygroup: [{ id: 'other' }] }))
 const flush = async () => { for (let i = 0; i < 30; i++) { await Promise.resolve(); await nextTick() } }
-let wrappers; let store; let fresh; let groups; let failList
+let wrappers; let store; let fresh; let groups; let failList; let parentRefresh
 function mount (component = AffinityGroupMembers) {
-  const wrapper = shallowMount(component, { props: { resource: group }, global: { renderStubDefaultSlot: true, provide: { parentFetchData: jest.fn() }, mocks: { $store: store, $route: { fullPath: '/affinitygroup/target', query: {} }, $router: { push: jest.fn() }, $t: key => key }, stubs: { MoldDialog: { template: '<div><slot/><slot name="footer"/></div>' } } } })
+  const wrapper = shallowMount(component, { props: { resource: group }, global: { renderStubDefaultSlot: true, provide: { parentFetchData: parentRefresh }, mocks: { $store: store, $route: { fullPath: '/affinitygroup/target', query: {} }, $router: { push: jest.fn() }, $t: key => key }, stubs: { MoldDialog: { template: '<div><slot/><slot name="footer"/></div>' } } } })
   wrappers.push(wrapper); return wrapper
 }
 beforeEach(() => {
-  clearAffinityOperations(); wrappers = []; jest.clearAllMocks(); failList = false; groups = { ...group }; fresh = vms.map(vm => ({ ...vm, affinitygroup: [...vm.affinitygroup] }))
+  clearAffinityOperations(); wrappers = []; jest.clearAllMocks(); parentRefresh = jest.fn(); failList = false; groups = { ...group }; fresh = vms.map(vm => ({ ...vm, affinitygroup: [...vm.affinitygroup] }))
   store = reactive({ state: { user: { token: Math.random() } }, getters: { userInfo: { id: 'user' }, project: {}, apis: { listVirtualMachines: {}, listAffinityGroups: {}, updateVMAffinityGroup: {} } } })
   getAPI.mockImplementation(async (cmd, params) => {
     if (cmd === 'queryAsyncJobResult') return { queryasyncjobresultresponse: { jobstatus: 1 } }
@@ -61,6 +61,16 @@ test('a newly confirmed batch clears a known terminal failure instead of silentl
   expect(w.vm.batch.results.one.status).toBe('failed')
   w.vm.confirm('add', [fresh[0]]); expect(w.vm.batch.results.one.status).toBe('idle')
   await w.vm.execute(false); expect(w.vm.batch.results.one.status).toBe('succeeded'); expect(postAPI).toHaveBeenCalledTimes(2)
+})
+test('completion and receipt recheck refresh the parent without clearing its resource or closing results', async () => {
+  const w = mount(); await flush()
+  // Autogen's ordinary load may reset resource when the tab URL changes its scope.
+  parentRefresh.mockImplementation(options => { if (!options?.irefresh) return w.setProps({ resource: {} }) })
+  w.vm.confirm('add', [fresh[0]]); await w.vm.execute(false); await flush()
+  expect(w.vm.dialog).toBe('results'); expect(w.vm.batch.results.one.status).toBe('succeeded')
+  await w.vm.recheck(fresh[0]); await flush()
+  expect(w.vm.dialog).toBe('results'); expect(w.props('resource').id).toBe('target')
+  expect(parentRefresh.mock.calls).toEqual([[{ irefresh: true }], [{ irefresh: true }]])
 })
 test('unknown POST outcome blocks both resubmission and new batch; result survives remount', async () => {
   const w = mount(); await flush(); postAPI.mockRejectedValue(new Error('transport'))
