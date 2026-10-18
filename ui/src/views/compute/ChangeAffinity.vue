@@ -35,6 +35,13 @@
       </template>
     </a-alert>
 
+    <affinity-selection-summary
+      :key="resourceOwnerKey"
+      :ids="selectedRowKeys"
+      :groups="[...(resource.affinitygroup || []), ...items]"
+      :disabled="operationLocked || !vmSupported"
+      @change="onSelectChange" />
+
     <div class="form__item">
       <a-input-search
         style="margin-bottom: 10px;"
@@ -52,10 +59,9 @@
         :columns="columns"
         :dataSource="items"
         :rowKey="record => record.id || record.name"
-        :pagination="{showSizeChanger: true, total: total, disabled: operationLocked}"
-        :rowSelection="{selectedRowKeys: selectedRowKeys, onChange: onSelectChange, getCheckboxProps: () => ({ disabled: operationLocked || !vmSupported })}"
+        :pagination="{current: options.page, pageSize: options.pageSize, showSizeChanger: true, total: total, disabled: operationLocked}"
+        :rowSelection="{selectedRowKeys: selectedRowKeys, preserveSelectedRowKeys: true, onChange: onSelectChange, getCheckboxProps: () => ({ disabled: operationLocked || !vmSupported })}"
         @change="handleTableChange"
-        @handle-search-filter="handleTableChange"
         style="overflow-y: auto"/>
     </div>
 
@@ -71,9 +77,12 @@
 import { getAPI, postAPI } from '@/api'
 import { genericCompare } from '@/utils/sort.js'
 import { affinityOwnerParams, affinityOwnerKey, affinitySessionScope, affinityApiError, affinityVmCanChange, getAffinityOperation } from '@/utils/affinityGroupOperations'
+import { affinitySelectionIds } from '@/utils/affinityGroupSelection'
+import AffinitySelectionSummary from './wizard/AffinitySelectionSummary.vue'
 
 export default {
   name: 'ChangeAffinity',
+  components: { AffinitySelectionSummary },
   props: {
     resource: {
       type: Object,
@@ -150,6 +159,10 @@ export default {
       if (this.unsubscribeOperation) this.unsubscribeOperation()
       this.requestToken++
       this.items = []
+      this.total = 0
+      this.filter = ''
+      this.options = { page: 1, pageSize: 10, keyword: '' }
+      this.fetchError = ''
       this.loaded = false
       this.selectedRowKeys = (this.resource.affinitygroup || []).map(group => group.id)
       this.bindOperation()
@@ -212,17 +225,19 @@ export default {
     },
     onSelectChange (selectedRowKeys) {
       if (this.operationLocked) return
-      this.selectedRowKeys = selectedRowKeys
+      this.selectedRowKeys = affinitySelectionIds(selectedRowKeys)
     },
     handleSearch (keyword) {
       if (this.operationLocked) return
       this.filter = keyword
       this.options.keyword = keyword
+      this.options.page = 1
       this.fetchData()
     },
-    handleTableChange (pagination) {
+    handleTableChange (pagination, filters, sorter, extra) {
       if (this.operationLocked) return
-      this.options.page = pagination.current
+      if (extra?.action === 'sort' || extra?.action === 'filter') return
+      this.options.page = pagination.pageSize !== this.options.pageSize ? 1 : pagination.current
       this.options.pageSize = pagination.pageSize
       this.fetchData()
     },
