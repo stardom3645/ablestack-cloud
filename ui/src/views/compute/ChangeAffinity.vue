@@ -23,7 +23,7 @@
     <a-alert v-if="ownerLabel" type="info" show-icon :message="$t('label.affinity.owner') + ': ' + ownerLabel" style="margin-bottom: 12px" />
     <a-alert v-if="!vmSupported" type="warning" show-icon :message="$t('message.affinity.vm.stopped')" style="margin-bottom: 12px" />
     <a-alert v-if="fetchError" type="error" show-icon :message="errorText(fetchError)" style="margin-bottom: 12px">
-      <template #action><a-button size="small" :loading="fetching" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
+      <template #description><a-button size="small" :loading="fetching" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
     <a-alert v-if="operation.status !== 'idle'" :type="operationType" show-icon :message="$t('message.affinity.operation.' + operation.status)" style="margin-bottom: 12px">
       <template #description>
@@ -31,8 +31,8 @@
         <div v-if="operation.jobId">{{ $t('label.affinity.job') }}: {{ operation.jobId }}</div>
         <div v-if="operationLocked">{{ $t('message.affinity.operation.close') }}</div>
         <div v-if="operation.status === 'unknown' && !operation.jobId">{{ $t('message.affinity.operation.no.receipt') }}</div>
+        <a-button v-if="canRecheck" size="small" style="margin-top: 8px" @click="recheckOperation">{{ $t('label.affinity.recheck') }}</a-button>
       </template>
-      <template v-if="canRecheck" #action><a-button size="small" @click="recheckOperation">{{ $t('label.affinity.recheck') }}</a-button></template>
     </a-alert>
 
     <div class="form__item">

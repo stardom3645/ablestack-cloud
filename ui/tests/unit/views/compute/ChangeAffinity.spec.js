@@ -17,6 +17,7 @@
 
 import { shallowMount } from '@vue/test-utils'
 import { nextTick, reactive } from 'vue'
+import { Alert, Button } from 'ant-design-vue'
 import ChangeAffinity from '@/views/compute/ChangeAffinity.vue'
 import { getAPI, postAPI } from '@/api'
 import { clearAffinityOperations } from '@/utils/affinityGroupOperations'
@@ -31,9 +32,11 @@ function mount (row = {}) {
   const wrapper = shallowMount(ChangeAffinity, {
     props: { resource: vm },
     global: {
+      renderStubDefaultSlot: true,
       provide: { parentFetchData: refresh },
+      components: { AAlert: Alert, AButton: Button },
       mocks: { $store: store, $t: key => key, $notification: { success } },
-      stubs: { 'a-alert': { template: '<section><slot/><slot name="description"/><slot name="action"/></section>' }, 'a-form': { template: '<form><slot/></form>' } }
+      stubs: { AAlert: false, AButton: false, 'a-form': { template: '<form><slot/></form>' } }
     }
   })
   wrappers.push(wrapper)
@@ -75,6 +78,7 @@ test('lookup failure retains prior rows and selection and offers safe retry', as
   await wrapper.vm.fetchData()
   expect(wrapper.vm.items).toEqual(previous); expect(wrapper.vm.selectedRowKeys).toEqual(['existing'])
   expect(wrapper.vm.canSubmit).toBe(false)
+  expect(wrapper.findAll('button').some(button => button.text() === 'label.retry')).toBe(true)
   await wrapper.vm.fetchData(); expect(wrapper.vm.canSubmit).toBe(true)
 })
 test('receipt alone never announces success; success and refresh occur after final status only', async () => {
@@ -130,6 +134,23 @@ test('unknown POST outcome blocks another submit and survives close/reopen', asy
   const reopened = mount(); await flush()
   expect(reopened.wrapper.vm.operation.status).toBe('unknown'); expect(reopened.wrapper.vm.selectedRowKeys).toEqual(['group'])
   await reopened.wrapper.vm.handleSubmit(); expect(postAPI).toHaveBeenCalledTimes(1)
+})
+test('real Alert renders recheck after query exhaustion; the button queries the same receipt without another POST', async () => {
+  const { wrapper, success } = mount(); await flush()
+  getAPI.mockImplementation(cmd => {
+    if (cmd === 'queryAsyncJobResult') return Promise.reject(new Error('offline'))
+    return Promise.resolve({ listvirtualmachinesresponse: { virtualmachine: [resource] } })
+  })
+  const pending = wrapper.vm.handleSubmit(); await flush()
+  for (const delay of [1500, 3000, 6000]) { jest.advanceTimersByTime(delay); await flush() }
+  await pending; await flush()
+  expect(wrapper.vm.operation.status).toBe('unknown')
+  const recheck = wrapper.findAll('button').find(button => button.text() === 'label.affinity.recheck')
+  expect(recheck).toBeDefined(); expect(recheck.attributes('disabled')).toBeUndefined()
+  expect(success).not.toHaveBeenCalled()
+  getAPI.mockResolvedValue({ queryasyncjobresultresponse: { jobstatus: 1 } })
+  await recheck.trigger('click'); await flush()
+  expect(success).toHaveBeenCalledTimes(1); expect(postAPI).toHaveBeenCalledTimes(1)
 })
 test('close/unmount while pending suppresses late component success and refresh callbacks', async () => {
   let queryResolve
