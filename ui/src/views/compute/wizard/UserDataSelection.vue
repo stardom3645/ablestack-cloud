@@ -47,6 +47,7 @@
       <template #headerCell="{ column }">
         <template v-if="column.key === 'name'"><solution-outlined /> {{ $t(resourceLabel) }}</template>
         <template v-if="column.key === 'account'"><user-outlined /> {{ $t('label.account') }}</template>
+        <template v-if="column.key === 'project'"><project-outlined /> {{ $t('label.project') }}</template>
         <template v-if="column.key === 'domain'"><block-outlined /> {{ $t('label.domain') }}</template>
       </template>
     </a-table>
@@ -84,15 +85,18 @@ export default {
       listError: '',
       selectionError: '',
       generation: 0,
-      active: true,
-      columns: [
-        { key: 'name', dataIndex: 'name', width: '40%' },
-        { key: 'account', dataIndex: 'account', width: '30%' },
-        { key: 'domain', dataIndex: 'domain', width: '30%' }
-      ]
+      active: true
     }
   },
   computed: {
+    columns () {
+      const owner = this.resourceKind === 'cni' && this.owner.projectid ? 'project' : 'account'
+      return [
+        { key: 'name', dataIndex: 'name', width: '40%' },
+        { key: owner, dataIndex: owner, width: '30%' },
+        { key: 'domain', dataIndex: 'domain', width: '30%' }
+      ]
+    },
     apiCommand () { return this.resourceKind === 'cni' ? 'listCniConfiguration' : 'listUserData' },
     responseName () { return this.resourceKind === 'cni' ? 'listcniconfigurationresponse' : 'listuserdataresponse' },
     objectName () { return this.resourceKind === 'cni' ? 'cniconfig' : 'userdata' },

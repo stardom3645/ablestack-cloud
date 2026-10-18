@@ -172,3 +172,19 @@ test('real ResourceView injection blocks exports on parent refresh/failure and r
     expect(content.vm.exportable).toBe(true); expect(content.vm.display).toBe('new body after parent refresh\r\n'); expect(getAPI).toHaveBeenCalledTimes(2)
   } finally { wrapper.unmount() }
 })
+
+test('history-only URL paging keeps the parent identity scope and skips clearing its resource', () => {
+  const from = { meta: { name: 'cniconfiguration' }, params: { id: source.id }, path: '/cniconfiguration/' + source.id, query: { tab: 'cni.history' }, fullPath: '/cni?tab=cni.history' }
+  const to = { ...from, query: { tab: 'cni.history', cnihistorypage: '2', cnihistorysize: '20', cnihistoryq: 'clone' }, fullPath: '/cni?tab=cni.history&cnihistorypage=2' }
+  const ctx = { $route: from, $store: { getters: { userInfo: { id: 'user' }, project: {} } }, resource: source, resetSelection: jest.fn(), fetchData: jest.fn() }
+  const before = Autogen.methods.listScope.call(ctx); ctx.$route = to
+  expect(Autogen.methods.listScope.call(ctx)).toBe(before)
+  Autogen.watch.$route.call(ctx, to, from)
+  expect(ctx.fetchData).not.toHaveBeenCalled(); expect(ctx.resetSelection).not.toHaveBeenCalled(); expect(ctx.resource).toBe(source)
+  ctx.$route = { ...to, query: { ...to.query, projectid: 'different' } }
+  expect(Autogen.methods.listScope.call(ctx)).not.toBe(before)
+  ctx.$route = { ...to, path: '/cniconfiguration/another', params: { id: 'another' } }
+  expect(Autogen.methods.listScope.call(ctx)).not.toBe(before)
+  ctx.$route = to; ctx.$store.getters.project.id = 'changed'
+  expect(Autogen.methods.listScope.call(ctx)).not.toBe(before)
+})

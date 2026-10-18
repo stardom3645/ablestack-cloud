@@ -102,7 +102,7 @@ test('tab changes use Vue router history and invisible deep links use a visible 
 })
 test('CNI route removes the unsafe VM shortcut, adds a gated usage tab, and preserves ordinary UserData', () => {
   const routes = compute.children || compute; const cni = routes.find(r => r.name === 'cniconfiguration'); const user = routes.find(r => r.name === 'userdata')
-  expect(cni.related).toBeUndefined(); expect(cni.tabs.map(t => t.name)).toEqual(['details', 'cni.content', 'cni.usage', 'comments']); expect(cni.tabs.find(t => t.name === 'cni.usage').show()).toBe(true)
+  expect(cni.related).toBeUndefined(); expect(cni.tabs.map(t => t.name)).toEqual(['details', 'cni.content', 'cni.usage', 'cni.history', 'comments']); expect(cni.tabs.find(t => t.name === 'cni.usage').show()).toBe(true)
   delete store.getters.apis.listKubernetesClusters; expect(cni.tabs.find(t => t.name === 'cni.usage').show()).toBe(false); store.getters.apis.listKubernetesClusters = {}
   expect(user.related[0].param).toBe('userdataid'); expect(user.tabs.some(t => t.name === 'userdata.usage.vms')).toBe(true)
 })
@@ -121,4 +121,16 @@ test('rendered cluster and node links preserve raw text, UUID targets and projec
   wrapper.vm.expand(true, row); await wrapper.vm.$nextTick(); const links = wrapper.findAllComponents(RouterLinkStub)
   expect(links.map(l => l.props('to'))).toEqual(expect.arrayContaining([{ path: '/kubernetes/' + clusterid, query: { projectid } }, { path: '/vm/' + nodeid, query: { projectid } }]))
   expect(wrapper.text()).toContain('USER.LOGIN'); wrapper.unmount()
+})
+test('CNI history requires both read APIs and never requires registration permissions', () => {
+  const cni = (compute.children || compute).find(r => r.name === 'cniconfiguration'); const tab = cni.tabs.find(t => t.name === 'cni.history')
+  expect(tab.show()).toBe(false); store.getters.apis.listCniConfiguration = {}; expect(tab.show()).toBe(false)
+  store.getters.apis.listAnnotations = {}; expect(tab.show()).toBe(true)
+  delete store.getters.apis.listAnnotations; delete store.getters.apis.listCniConfiguration
+})
+
+test('resource context distinguishes a transient parent read from lost action readiness', () => {
+  const vm = { readyForActions: false, readPending: true, loading: false }; const context = ResourceView.provide.call(vm)
+  expect(context.resourceActionReady()).toBe(false); expect(context.resourceReadPending()).toBe(true)
+  vm.readPending = false; expect(context.resourceReadPending()).toBe(false)
 })

@@ -92,6 +92,7 @@ export default {
   mixins: [mixinDevice],
   props: {
     readyForActions: { type: Boolean, default: true },
+    readPending: { type: Boolean, default: false },
     resource: {
       type: Object,
       required: true
@@ -120,7 +121,7 @@ export default {
       default: ''
     }
   },
-  provide () { return { resourceActionReady: () => this.readyForActions } },
+  provide () { return { resourceActionReady: () => this.readyForActions, resourceReadPending: () => this.readPending || this.loading } },
   data () {
     return {
       activeTab: '',

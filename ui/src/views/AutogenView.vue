@@ -828,6 +828,7 @@
         <resource-view
           v-else-if="(!isSshKeyPairDetail || sshKeyPairDetailVisible) && ($route.meta?.name !== 'vmgroup' || resource.id || loading)"
           :key="isSshKeyPairDetail ? listScope() : $route.path"
+          :readPending="listRequestPending"
           :readyForActions="isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name === 'cniconfiguration' ? cniDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady))"
           :resource="resource"
           :loading="loading"
@@ -925,6 +926,7 @@ import BulkActionProgress from '@/components/view/BulkActionProgress'
 import { bulkColumns, updateBulkItem } from '@/utils/bulkAction'
 import { userDataDeleteTargets } from '@/utils/userDataDeletion'
 import { cniDeleteTargets, cniListLocation } from '@/utils/cniDeletion'
+import { cniHistoryRouteKey } from '@/utils/cniHistory'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import DetailsInput from '@/components/widgets/DetailsInput'
 import AdvisoriesView from '@/components/view/AdvisoriesView'
@@ -1177,6 +1179,8 @@ export default {
     },
     '$route' (to, from) {
       if (to.fullPath !== from.fullPath && !to.path.startsWith('/action/') && to?.query?.tab !== 'browser') {
+        if (to.meta?.name === 'cniconfiguration' && from.meta?.name === 'cniconfiguration' && to.params?.id &&
+          cniHistoryRouteKey(to) === cniHistoryRouteKey(from)) return
         if (to.meta?.name === 'vmgroup' && from.meta?.name === 'vmgroup' &&
           vmGroupQueryScope(to, this.$store.getters, this.$store.state?.user?.token) === vmGroupQueryScope(from, this.$store.getters, this.$store.state?.user?.token)) {
           this.fetchData({ irefresh: true })
@@ -1438,7 +1442,8 @@ export default {
     listScope () {
       if (isSshKeyPairDetailRoute(this.$route)) return sshKeyPairDetailScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
       if (this.$route.meta?.name === 'vmgroup') return vmGroupQueryScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
-      return JSON.stringify([this.$route.fullPath, this.$store.getters.project?.id,
+      const routeKey = this.$route.meta?.name === 'cniconfiguration' && this.$route.params?.id ? cniHistoryRouteKey(this.$route) : this.$route.fullPath
+      return JSON.stringify([routeKey, this.$store.getters.project?.id,
         this.$store.getters.userInfo?.id, this.$store.getters.metrics, this.$store.getters.listAllProjects])
     },
     getStyle () {

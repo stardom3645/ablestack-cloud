@@ -1578,6 +1578,11 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CniUsage.vue')))
         },
         {
+          name: 'cni.history',
+          show: () => ['listCniConfiguration', 'listAnnotations'].every(api => !!store.getters.apis?.[api]),
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CniHistory.vue')))
+        },
+        {
           name: 'comments',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
         }
