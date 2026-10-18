@@ -9158,6 +9158,8 @@
   "message.affinity.create.owner.empty": "선택한 도메인의 계정 또는 프로젝트를 선택하세요. 선택 가능한 소유자가 없으면 생성할 수 없습니다.",
   "message.affinity.search.account.domain": "계정으로 검색하려면 먼저 도메인을 선택하세요.",
   "label.affinitymembercount": "연결 VM 수",
+  "label.selected": "선택",
+  "message.affinity.operation.idle": "아직 제출하지 않았습니다.",
   "label.affinity.members": "연결 가상머신",
   "label.affinity.members.visible": "조회 결과",
   "label.affinity.members.add": "가상머신 연결",

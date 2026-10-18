@@ -9193,6 +9193,8 @@
   "message.affinity.create.owner.empty": "Select an account or project in this domain. Creation requires an available owner.",
   "message.affinity.search.account.domain": "Select a domain before filtering by account.",
   "label.affinitymembercount": "Linked VM count",
+  "label.selected": "Selected",
+  "message.affinity.operation.idle": "Not submitted yet.",
   "label.affinity.members": "Linked instances",
   "label.affinity.members.visible": "Query results",
   "label.affinity.members.add": "Link instances",
