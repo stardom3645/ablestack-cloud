@@ -23,7 +23,7 @@ under the License.
       <strong>{{ $t('label.affinity.selection') }}: {{ ids.length }}</strong>
       <a-button size="small" :disabled="disabled || !ids.length" @click="$emit('change', [])">{{ $t('label.affinity.clear.all') }}</a-button>
     </div>
-    <p class="ant-typography ant-typography-secondary">{{ $t('message.affinity.selection.scope') }}</p>
+    <p>{{ $t('message.affinity.selection.scope') }}</p>
     <ul v-if="ids.length">
       <li v-for="id in ids" :key="id">
         <a-button size="small" :disabled="disabled" :title="(names[id] || id) + ' (' + id + ')'" :aria-label="$t('label.affinity.remove.selection') + ': ' + (names[id] || id)" @click="$emit('change', ids.filter(value => value !== id))">
