@@ -46,7 +46,7 @@ beforeEach(() => {
     if (cmd === 'queryAsyncJobResult') return Promise.resolve({ queryasyncjobresultresponse: { jobstatus: 1 } })
     return Promise.resolve({ listaffinitygroupsresponse: { count: 1, affinitygroup: [{ id: params.id || 'group', account: 'owner', name: 'eligible' }] } })
   })
-  postAPI.mockResolvedValue({ updatevmaffinitygroupresponse: { jobid: 'job' } })
+  postAPI.mockResolvedValue({ updatevirtualmachineresponse: { jobid: 'job' } })
 })
 afterEach(() => { wrappers.forEach(w => { if (w.exists()) w.unmount() }); clearAffinityOperations(); jest.useRealTimers() })
 
@@ -146,7 +146,7 @@ test('security scope change closes the dialog and suppresses late mutation recei
   postAPI.mockImplementation(() => new Promise(resolve => { respond = resolve }))
   const p = wrapper.vm.handleSubmit(); await flush()
   store.state.user.token = 'new-session'; await flush()
-  respond({ updatevmaffinitygroupresponse: { jobid: 'old-job' } }); await p
+  respond({ updatevirtualmachineresponse: { jobid: 'old-job' } }); await p
   expect(wrapper.emitted('close-action')).toBeTruthy(); expect(success).not.toHaveBeenCalled()
   expect(getAPI.mock.calls.some(([cmd]) => cmd === 'queryAsyncJobResult')).toBe(false)
 })

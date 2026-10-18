@@ -18,7 +18,7 @@
 import { affinityOwnerParams, affinityOwnerKey, affinityVmCanChange, affinityApiError, clearAffinityOperations, getAffinityOperation } from '@/utils/affinityGroupOperations'
 const flush = async () => { for (let i = 0; i < 16; i++) await Promise.resolve() }
 const vm = { id: 'vm', domainid: 'domain', account: 'owner', state: 'Stopped', hypervisor: 'KVM' }
-const receipt = { updatevmaffinitygroupresponse: { jobid: 'job' } }
+const receipt = { updatevirtualmachineresponse: { jobid: 'job' } }
 function setup (options = {}) {
   const get = jest.fn().mockResolvedValue({ queryasyncjobresultresponse: { jobstatus: 1 } })
   const post = jest.fn().mockResolvedValue(receipt)
@@ -43,7 +43,7 @@ test.each([{ hypervisor: 'External' }, { vmtype: 'sharedfsvm' }, { vmtype: 'cksn
   expect(affinityVmCanChange({ ...vm, ...unsupported })).toBe(false)
 })
 test('server error envelope is parsed without exposing transport config', () => {
-  expect(affinityApiError({ response: { data: { updatevmaffinitygroupresponse: { errorcode: 530, errortext: 'Owner rejected' } } } })).toBe('Owner rejected')
+  expect(affinityApiError({ response: { data: { updatevirtualmachineresponse: { errorcode: 530, errortext: 'Owner rejected' } } } })).toBe('Owner rejected')
   expect(affinityApiError({ response: { data: { errorresponse: { errorcode: 431 } } } })).toBe('message.affinity.operation.failed')
   expect(affinityApiError({ config: { data: 'private' } })).toBe('')
 })
@@ -62,7 +62,7 @@ test('jobstatus=2 preserves actual failure and desired selection, then permits e
   const { op, get, post } = setup()
   get.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 2, jobresult: { errortext: 'Different accounts' } } })
   expect(await op.run('updateVMAffinityGroup', { id: 'vm', affinitygroupids: 'a' })).toMatchObject({ status: 'failed', error: 'Different accounts', ids: ['a'] })
-  post.mockResolvedValueOnce({ updatevmaffinitygroupresponse: { jobid: 'retry-job' } })
+  post.mockResolvedValueOnce({ updatevirtualmachineresponse: { jobid: 'retry-job' } })
   expect((await op.run('updateVMAffinityGroup', { id: 'vm', affinitygroupids: '' })).status).toBe('succeeded')
   expect(post).toHaveBeenLastCalledWith('updateVMAffinityGroup', { id: 'vm', affinitygroupids: '' }, expect.objectContaining({ preserveOnFailure: true }))
 })
@@ -97,7 +97,7 @@ test('bounded timeout can be rechecked without resubmission', async () => {
   expect((await p).status).toBe('timeout')
   expect((await op.recheck()).status).toBe('succeeded'); expect(post).toHaveBeenCalledTimes(1)
 })
-test.each([{}, { updatevmaffinitygroupresponse: {} }])('missing receipt %p is unknown, never successful or automatically resubmitted', async response => {
+test.each([{}, { updatevirtualmachineresponse: {} }])('missing receipt %p is unknown, never successful or automatically resubmitted', async response => {
   const { op, post } = setup(); post.mockResolvedValue(response)
   expect((await op.run('updateVMAffinityGroup', { id: 'vm' })).status).toBe('unknown')
   await op.run('updateVMAffinityGroup', { id: 'vm' }); await op.recheck()

@@ -146,7 +146,9 @@ export function getAffinityOperation (scope, id, { get, post, getScope = () => s
           return snapshot()
         }
         if (!current()) return snapshot()
-        const envelope = response?.[command.toLowerCase() + 'response']
+        // UpdateVMAffinityGroupCmd reuses UpdateVMCmd's response name.
+        const responseName = command === 'updateVMAffinityGroup' ? 'updatevirtualmachineresponse' : command.toLowerCase() + 'response'
+        const envelope = response?.[responseName]
         if (!envelope?.jobid) {
           publish({ status: 'unknown', error: '' })
           return snapshot()
