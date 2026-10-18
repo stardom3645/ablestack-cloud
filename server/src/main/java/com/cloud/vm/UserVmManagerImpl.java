@@ -1843,31 +1843,49 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         NicProfile guestNic = null;
         boolean cleanUp = true;
+        RuntimeException addFailure = null;
 
         try {
             guestNic = _itMgr.addVmToNetwork(vmInstance, network, profile);
+            if (guestNic == null) {
+                throw new CloudRuntimeException("NIC addition did not return a NIC; refresh the VM networks before retrying");
+            }
             saveExtraDhcpOptions(guestNic.getId(), cmd.getDhcpOptionsMap());
             _networkMgr.configureExtraDhcpOptions(network, guestNic.getId(), cmd.getDhcpOptionsMap());
             cleanUp = false;
-        } catch (ResourceUnavailableException e) {
-            throw new CloudRuntimeException("Unable to add NIC to " + vmInstance + ": " + e);
-        } catch (InsufficientCapacityException e) {
-            throw new CloudRuntimeException("Insufficient capacity when adding NIC to " + vmInstance + ": " + e);
-        } catch (ConcurrentOperationException e) {
-            throw new CloudRuntimeException("Concurrent operations on adding NIC to " + vmInstance + ": " + e);
+        } catch (ResourceUnavailableException | InsufficientCapacityException | ConcurrentOperationException error) {
+            addFailure = new CloudRuntimeException("Unable to add NIC to " + vmInstance.getInstanceName() + ": " + error.getMessage(), error);
+            throw addFailure;
+        } catch (RuntimeException error) {
+            addFailure = error;
+            throw error;
         } finally {
-            if(cleanUp) {
-                try {
-                    _itMgr.removeVmFromNetwork(vmInstance, network, null);
-                } catch (ResourceUnavailableException e) {
-                    throw new CloudRuntimeException("Error while cleaning up NIC " + e);
-                }
+            if (cleanUp && guestNic != null) {
+                rollbackAddedNic(vmInstance, network, guestNic, addFailure);
             }
         }
         CallContext.current().putContextParameter(Nic.class, guestNic.getUuid());
         logger.debug(String.format("Successful addition of %s from %s through %s", network, vmInstance, guestNic));
         publishNicEventMessageBus(vmInstance.getId(), vmInstance.getAccountId(), guestNic.getId(), EVENT_NIC_CREATE);
         return _vmDao.findById(vmInstance.getId());
+    }
+
+    protected void rollbackAddedNic(UserVmVO vm, NetworkVO network, NicProfile added, RuntimeException original) {
+        try {
+            NicVO nic = _nicDao.findById(added.getId());
+            if (nic == null || nic.getRemoved() != null) { return; }
+            if (nic.getInstanceId() != vm.getId() || nic.getNetworkId() != network.getId()
+                    || !Objects.equals(nic.getUuid(), added.getUuid())) {
+                throw new CloudRuntimeException("NIC rollback identity changed; refresh the VM networks");
+            }
+            if (!_itMgr.removeNicFromVm(vm, nic)) {
+                throw new CloudRuntimeException("NIC rollback did not complete; refresh the VM networks");
+            }
+        } catch (Exception cleanupError) {
+            logger.warn("Unable to roll back newly added NIC {}", added.getId(), cleanupError);
+            if (original == null) { throw new CloudRuntimeException("Unable to roll back newly added NIC", cleanupError); }
+            original.addSuppressed(cleanupError);
+        }
     }
 
     private void validateVmZoneTypeForAddNic(UserVmVO vmInstance, DataCenter dc) {
