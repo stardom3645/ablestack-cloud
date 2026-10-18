@@ -164,4 +164,10 @@ test.each([DeployVM, Backup, Vnf, AutoScale])('$name wizard uses the complete fo
   expect(vm.options.affinityGroups).toEqual([groups[13]]); expect(vm.form.affinitygroupids).toEqual(['g1', 'g14'])
   await Wizard.methods.fetchOptions.call(vm, vm.params.affinityGroups, 'affinityGroups')
   expect(vm.affinityGroupsError).toBe(''); expect(vm.loading.affinityGroups).toBe(false)
+  vm.params.affinityGroups.options = { ...query, account: 'new-owner', domainid: 'domain' }
+  getAPI.mockRejectedValueOnce(new Error('new owner lookup failed'))
+  await Wizard.methods.fetchOptions.call(vm, vm.params.affinityGroups, 'affinityGroups')
+  expect(vm.options.affinityGroups).toEqual([]); expect(vm.rowCount.affinityGroups).toBe(0)
+  expect(vm.form.affinitygroupids).toEqual([]); expect(vm.affinityGroups).toEqual([])
+  expect(vm.affinityGroupsError).toBe('message.affinity.lookup.failed')
 })

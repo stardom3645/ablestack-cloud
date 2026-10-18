@@ -36,6 +36,18 @@ export async function fetchAffinityGroupOptions (vm, param) {
   vm.affinityLookupToken = token
   const query = { ...param.options }
   const scope = affinitySelectionScope(vm.$store, query, vm.zoneId)
+  if (vm.affinityLookupScope && scope !== vm.affinityLookupScope) {
+    const previous = JSON.parse(vm.affinityLookupScope)
+    const next = JSON.parse(scope)
+    const initialZone = !previous[4] && next[4] && JSON.stringify(previous.slice(0, 4)) === JSON.stringify(next.slice(0, 4))
+    if (!initialZone) {
+      vm.options.affinityGroups = []
+      vm.rowCount.affinityGroups = 0
+      vm.form.affinitygroupids = []
+      vm.affinityGroups = []
+    }
+  }
+  vm.affinityLookupScope = scope
   const current = () => vm.affinityLookupToken === token && !vm.$?.isUnmounted && scope === affinitySelectionScope(vm.$store, vm.params.affinityGroups.options, vm.zoneId)
   vm.loading.affinityGroups = true
   vm.affinityGroupsError = ''
