@@ -53,6 +53,7 @@
     </div>
 
     <div class="form__item">
+      <p v-if="loaded && !fetching" role="status" class="affinity-result-count">{{ $t('label.total') }} {{ total }} {{ $t('label.items') }} · {{ options.page }} {{ $t('label.page') }}</p>
       <a-table
         size="small"
         :loading="loading"

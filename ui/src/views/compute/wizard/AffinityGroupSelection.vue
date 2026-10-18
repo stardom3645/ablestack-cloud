@@ -22,7 +22,7 @@
       <template #description><a-button size="small" :loading="loading" @click="requestPage">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
     <a-input-search
-      style="width: 25vw;float: right;margin-bottom: 10px; z-index: 8"
+      style="width: 100%; margin: 10px 0"
       :placeholder="$t('label.search')"
       v-model:value="filter"
       @search="handleSearch" />

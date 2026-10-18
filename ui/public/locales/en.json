@@ -9146,6 +9146,7 @@
   "message.cni.history.unverified": "Configuration details are unverified. Refresh the current CNI using the top Update button before reading history or comparing.",
   "label.affinity.selection": "Total selected",
   "label.affinity.clear.all": "Clear selections on all pages",
+  "label.affinity.remove.selection": "Remove selection",
   "message.affinity.selection.scope": "The table header checkbox applies to the current page only. Selections are retained across searches and pages. Remove individual selections below.",
   "label.affinity.owner": "VM owner scope",
   "label.affinity.job": "Job ID",

@@ -94,6 +94,7 @@ test('controlled search and size reset page one while zero results retain select
   expect(w.find('.ant-pagination-item-active').text()).toBe('1'); expect(w.vm.total).toBe(1)
   await w.vm.handleSearch('no-match'); await flush()
   expect(w.vm.items).toEqual([]); expect(w.vm.total).toBe(0); expect(w.vm.fetchError).toBe('')
+  expect(w.find('[role="status"]').text()).toBe('label.total 0 label.items · 1 label.page')
   expect(w.vm.selectedRowKeys).toEqual(['g14'])
   await w.vm.handleTableChange({ current: 2, pageSize: 20 }); await flush()
   expect(w.vm.options).toMatchObject({ page: 1, pageSize: 20 })

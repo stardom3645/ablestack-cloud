@@ -23,10 +23,10 @@ under the License.
       <strong>{{ $t('label.affinity.selection') }}: {{ ids.length }}</strong>
       <a-button size="small" :disabled="disabled || !ids.length" @click="$emit('change', [])">{{ $t('label.affinity.clear.all') }}</a-button>
     </div>
-    <p>{{ $t('message.affinity.selection.scope') }}</p>
+    <p class="ant-typography ant-typography-secondary">{{ $t('message.affinity.selection.scope') }}</p>
     <ul v-if="ids.length">
       <li v-for="id in ids" :key="id">
-        <a-button size="small" :disabled="disabled" :title="id" :aria-label="$t('label.remove') + ': ' + (names[id] || id)" @click="$emit('change', ids.filter(value => value !== id))">
+        <a-button size="small" :disabled="disabled" :title="(names[id] || id) + ' (' + id + ')'" :aria-label="$t('label.affinity.remove.selection') + ': ' + (names[id] || id)" @click="$emit('change', ids.filter(value => value !== id))">
           {{ names[id] || id }} ×
         </a-button>
       </li>
@@ -59,7 +59,9 @@ export default {
 .affinity-selection-summary {
   margin: 12px 0;
   .selection-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  p { margin: 8px 0; color: var(--text-color-secondary, #666); }
+  p { margin: 8px 0; }
   ul { display: flex; flex-wrap: wrap; gap: 6px; max-height: 120px; overflow-y: auto; padding: 0; margin: 0; list-style: none; }
+  li, button { max-width: 100%; }
+  li button { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 </style>
