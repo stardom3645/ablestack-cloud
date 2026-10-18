@@ -157,7 +157,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				156 button barcode
 					157 image barcode
 				158 link Description: d3e43a02-2204-433a-9c69-ecf774731389 , Value: javascript:;
-				159 text CPU 2 CPU x 2.00 GHz 
+				159 text CPU 2 CPU x 2.00 GHz
 				160 image question-circle
 				161 text x86_64 메모리 2048 MB 메모리 네트워크
 				162 image wifi
@@ -170,29 +170,29 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				169 text Affinity 그룹
 				170 image swap
 				171 link Description: qa-ag02-20261019-13, Value: 10.10.31.10:8080/client/#/affinitygroup/90571baa-0f3f-44c6-a0d3-6fe688a4dc4e
-				172 text , 
+				172 text ,
 				173 link Description: qa-ag02-20261019-12, Value: 10.10.31.10:8080/client/#/affinitygroup/d232e085-d19a-4ec3-82c8-08f442c17a26
-				174 text , 
+				174 text ,
 				175 link Description: qa-ag02-20261019-10, Value: 10.10.31.10:8080/client/#/affinitygroup/b78c75fc-abe9-4db3-9fbe-5dd02f714595
-				176 text , 
+				176 text ,
 				177 link Description: qa-ag02-20261019-09, Value: 10.10.31.10:8080/client/#/affinitygroup/84f28680-0d67-48dd-bdc3-13b4a094a355
-				178 text , 
+				178 text ,
 				179 link Description: qa-ag02-20261019-08, Value: 10.10.31.10:8080/client/#/affinitygroup/bb2b8db2-f453-4215-9079-585135729f10
-				180 text , 
+				180 text ,
 				181 link Description: qa-ag02-20261019-07, Value: 10.10.31.10:8080/client/#/affinitygroup/d67e6414-d403-4a48-912f-321e52cbbfc6
-				182 text , 
+				182 text ,
 				183 link Description: qa-ag02-20261019-06, Value: 10.10.31.10:8080/client/#/affinitygroup/bd0f1f15-9be6-44f6-920d-3a205295b6ec
-				184 text , 
+				184 text ,
 				185 link Description: qa-ag02-20261019-05, Value: 10.10.31.10:8080/client/#/affinitygroup/b6f438ac-c7cb-477c-af10-d02a375a1a7e
-				186 text , 
+				186 text ,
 				187 link Description: qa-ag02-20261019-04, Value: 10.10.31.10:8080/client/#/affinitygroup/936bf93a-dacc-47b3-a471-a3076a2fdbb3
-				188 text , 
+				188 text ,
 				189 link Description: qa-ag02-20261019-03, Value: 10.10.31.10:8080/client/#/affinitygroup/9151bf9f-7f94-4c06-a6d8-2563d014622a
-				190 text , 
+				190 text ,
 				191 link Description: qa-ag02-20261019-02, Value: 10.10.31.10:8080/client/#/affinitygroup/aa5d1372-8974-4e86-bb73-d4e7c9ae0362
-				192 text , 
+				192 text ,
 				193 link Description: qa-ag02-20261019-11, Value: 10.10.31.10:8080/client/#/affinitygroup/7a68f766-421e-4b03-b854-c0fd366852df
-				194 text , 
+				194 text ,
 				195 link Description: qa-ag02-20261019-14, Value: 10.10.31.10:8080/client/#/affinitygroup/38cea24d-b9d0-480b-87bd-4d00248419d8
 				196 text 템플릿
 				197 image save

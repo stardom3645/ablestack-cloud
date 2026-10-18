@@ -30,6 +30,8 @@
 
 WSL ext4에서 **7 suite / 137 tests 통과**, 변경 파일 lint 통과. 실제 Ant Design Table 체크박스·머리글·페이지·정렬·요약 버튼, 0건의 명시적 건수/페이지, 사전 채움·범위 전환, 네 부모의 전체 ID/최신 조회/오류 보존 통합, 기존 AG-01·jobTracker·API transport·생성 전검증 회귀를 포함한다.
 
+텍스트 증거는 줄 끝 공백과 개행 형식만 정규화했다. 결과와 필드 내용은 유지했다.
+
 [테스트](evidence/unit.txt), [lint](evidence/lint.txt), [최종 UI 빌드](evidence/build.txt), [Windows/WSL 소스 해시](evidence/source-manifest.json).
 
 빌드의 기존 Browserslist·asset/entrypoint 크기 경고와 Jest의 기존 컴포넌트 등록/입력/브라우저 스타일 환경 경고가 있다. 전체 Cloud 빌드 또는 등록된 GitHub CI의 합격을 의미하지 않는다.

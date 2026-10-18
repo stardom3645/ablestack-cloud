@@ -220,17 +220,17 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 								480 content list
 									481 container
 										482 radio button (settable, integer) Description:   Ubuntu 26.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 1
-										483 text    Ubuntu 26.04 Server Base Install (without QGA) 
+										483 text    Ubuntu 26.04 Server Base Install (without QGA)
 										484 image arrows-alt
 										485 text 추천 공개 HVM
 									486 container
 										487 radio button (settable, integer) Description:   Ubuntu 24.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										488 text    Ubuntu 24.04 Server Base Install (without QGA) 
+										488 text    Ubuntu 24.04 Server Base Install (without QGA)
 										489 image arrows-alt
 										490 text 추천 공개 HVM
 									491 container
 										492 radio button (settable, integer) Description:   Ubuntu 22.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										493 text    Ubuntu 22.04 Server Base Install (without QGA) 
+										493 text    Ubuntu 22.04 Server Base Install (without QGA)
 										494 image arrows-alt
 										495 text 추천 공개 HVM
 									496 container
@@ -796,10 +796,10 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 							412 container
 								413 combo box (settable) rc_select_16
 								1012 text 10 / 쪽
-					414 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터 
+					414 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터
 						415 text 9
 						416 text 확장 모드
-						1013 text 고급 설정 표시 
+						1013 text 고급 설정 표시
 						1014 switch 1
 						1015 text 부팅 유형
 						1016 container
@@ -878,7 +878,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 						1089 text entry area (settable) 추가 설정 info-circle, ID: form_item_extraconfig
 						1090 text Affinity 그룹
 						1091 container
-							1092 text 이 VM이 속할 Affinity 그룹을 선택하십시오. 
+							1092 text 이 VM이 속할 Affinity 그룹을 선택하십시오.
 							1093 container
 								1094 text field (settable) qa-ag02-20261019-14
 								1095 button search
@@ -979,7 +979,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				1262 text OS 유형
 				1263 text Ubuntu 26.04 (64-bit)
 				1264 text CPU
-				1265 text 1 CPU x 2.00 GHz 
+				1265 text 1 CPU x 2.00 GHz
 				1266 image question-circle
 				1267 text 메모리
 				1268 text 1024 MB 메모리
@@ -992,7 +992,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				1302 text Affinity 그룹
 				1303 image swap
 				1304 link Description: qa-ag02-20261019-01, Value: 10.10.31.10:8080/client/#/affinitygroup/d57c65c9-6d27-4bfe-817d-a08ea8d08ce1
-				1305 text , 
+				1305 text ,
 				1306 link Description: qa-ag02-20261019-11, Value: 10.10.31.10:8080/client/#/affinitygroup/7a68f766-421e-4b03-b854-c0fd366852df
 				1275 text 템플릿
 				1276 image save

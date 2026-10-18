@@ -220,17 +220,17 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 								456 content list
 									457 container
 										458 radio button (settable, integer) Description:   Ubuntu 26.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 1
-										459 text    Ubuntu 26.04 Server Base Install (without QGA) 
+										459 text    Ubuntu 26.04 Server Base Install (without QGA)
 										460 image arrows-alt
 										461 text 추천 공개 HVM
 									462 container
 										463 radio button (settable, integer) Description:   Ubuntu 24.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										464 text    Ubuntu 24.04 Server Base Install (without QGA) 
+										464 text    Ubuntu 24.04 Server Base Install (without QGA)
 										465 image arrows-alt
 										466 text 추천 공개 HVM
 									467 container
 										468 radio button (settable, integer) Description:   Ubuntu 22.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										469 text    Ubuntu 22.04 Server Base Install (without QGA) 
+										469 text    Ubuntu 22.04 Server Base Install (without QGA)
 										470 image arrows-alt
 										471 text 추천 공개 HVM
 									472 container
@@ -796,10 +796,10 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 							388 container
 								389 combo box (settable) rc_select_14
 								988 text 10 / 쪽
-					390 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터 
+					390 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터
 						391 text 9
 						392 text 확장 모드
-						989 text 고급 설정 표시 
+						989 text 고급 설정 표시
 						990 switch 1
 						991 text 부팅 유형
 						992 container
@@ -1069,7 +1069,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				1237 text OS 유형
 				1238 text Ubuntu 26.04 (64-bit)
 				1239 text CPU
-				1240 text 1 CPU x 2.00 GHz 
+				1240 text 1 CPU x 2.00 GHz
 				1241 image question-circle
 				1242 text 메모리
 				1243 text 1024 MB 메모리
@@ -1082,7 +1082,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				1367 text Affinity 그룹
 				1368 image swap
 				1369 link Description: qa-ag02-20261019-01, Value: 10.10.31.10:8080/client/#/affinitygroup/d57c65c9-6d27-4bfe-817d-a08ea8d08ce1
-				1370 text , 
+				1370 text ,
 				1371 link Description: qa-ag02-20261019-11, Value: 10.10.31.10:8080/client/#/affinitygroup/7a68f766-421e-4b03-b854-c0fd366852df
 				1250 text 템플릿
 				1251 image save

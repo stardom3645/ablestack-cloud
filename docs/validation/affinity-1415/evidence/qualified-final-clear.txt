@@ -158,7 +158,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				156 button barcode
 					157 image barcode
 				158 link Description: d3e43a02-2204-433a-9c69-ecf774731389 , Value: javascript:;
-				159 text CPU 2 CPU x 2.00 GHz 
+				159 text CPU 2 CPU x 2.00 GHz
 				160 image question-circle
 				161 text x86_64 메모리 2048 MB 메모리 네트워크
 				162 image wifi

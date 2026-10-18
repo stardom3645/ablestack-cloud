@@ -221,17 +221,17 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 								1308 content list
 									1309 container
 										1310 radio button (settable, integer) Description:   Ubuntu 26.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 1
-										1311 text    Ubuntu 26.04 Server Base Install (without QGA) 
+										1311 text    Ubuntu 26.04 Server Base Install (without QGA)
 										1312 image arrows-alt
 										1313 text 추천 공개 HVM
 									1314 container
 										1315 radio button (settable, integer) Description:   Ubuntu 24.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										1316 text    Ubuntu 24.04 Server Base Install (without QGA) 
+										1316 text    Ubuntu 24.04 Server Base Install (without QGA)
 										1317 image arrows-alt
 										1318 text 추천 공개 HVM
 									1319 container
 										1320 radio button (settable, integer) Description:   Ubuntu 22.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										1321 text    Ubuntu 22.04 Server Base Install (without QGA) 
+										1321 text    Ubuntu 22.04 Server Base Install (without QGA)
 										1322 image arrows-alt
 										1323 text 추천 공개 HVM
 									1324 container
@@ -784,10 +784,10 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 							1856 container
 								1857 combo box (settable) rc_select_43
 								1858 text 10 / 쪽
-					390 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터 
+					390 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터
 						391 text 9
 						392 text 확장 모드
-						1859 text 고급 설정 표시 
+						1859 text 고급 설정 표시
 						1860 switch 1
 						1861 text 부팅 유형
 						1862 container
@@ -1054,7 +1054,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				2116 text OS 유형
 				2117 text Ubuntu 26.04 (64-bit)
 				1239 text CPU
-				1240 text 1 CPU x 2.00 GHz 
+				1240 text 1 CPU x 2.00 GHz
 				1241 image question-circle
 				1242 text 메모리
 				1243 text 1024 MB 메모리

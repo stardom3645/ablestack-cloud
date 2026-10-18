@@ -157,7 +157,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				156 button barcode
 					157 image barcode
 				158 link Description: d3e43a02-2204-433a-9c69-ecf774731389 , Value: javascript:;
-				159 text CPU 2 CPU x 2.00 GHz 
+				159 text CPU 2 CPU x 2.00 GHz
 				160 image question-circle
 				161 text x86_64 메모리 2048 MB 메모리 네트워크
 				162 image wifi
@@ -170,9 +170,9 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				169 text Affinity 그룹
 				170 image swap
 				171 link Description: qa-ag02-20261019-14, Value: 10.10.31.10:8080/client/#/affinitygroup/38cea24d-b9d0-480b-87bd-4d00248419d8
-				268 text , 
+				268 text ,
 				269 link Description: qa-ag02-20261019-01, Value: 10.10.31.10:8080/client/#/affinitygroup/d57c65c9-6d27-4bfe-817d-a08ea8d08ce1
-				270 text , 
+				270 text ,
 				271 link Description: qa-ag02-20261019-11, Value: 10.10.31.10:8080/client/#/affinitygroup/7a68f766-421e-4b03-b854-c0fd366852df
 				172 text 템플릿
 				173 image save

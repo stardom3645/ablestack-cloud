@@ -101,9 +101,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -112,7 +112,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -175,9 +175,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: undefined,
@@ -187,7 +187,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         hypervisor: 'KVM',
         affinitygroup: [],
         projectid: 'project'
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -250,9 +250,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: undefined,
@@ -261,7 +261,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -324,9 +324,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -335,7 +335,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: [ { id: 'existing' } ]
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -398,9 +398,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -409,7 +409,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -472,9 +472,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -483,7 +483,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -546,9 +546,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -557,7 +557,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -621,9 +621,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -632,7 +632,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -696,9 +696,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -707,7 +707,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -771,9 +771,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -782,7 +782,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -845,9 +845,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -856,7 +856,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: [ { id: 'group' } ]
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -919,9 +919,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -930,7 +930,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -988,9 +988,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at mount (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8236:18)
           at shallowMount (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8252:12)
           at mount (/home/ablecloud/work/dhslove/cloud-affinity-1413/ui/tests/unit/views/compute/ChangeAffinity.spec.js:32:19)
-          at Object.<anonymous> (/home/ablecloud/work/dhslove/cloud-affinity-1413/ui/tests/unit/views/compute/ChangeAffinity.spec.js:134:20) 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at Object.<anonymous> (/home/ablecloud/work/dhslove/cloud-affinity-1413/ui/tests/unit/views/compute/ChangeAffinity.spec.js:134:20)
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -999,7 +999,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -1062,9 +1062,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -1073,7 +1073,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -1136,9 +1136,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -1147,7 +1147,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -1205,9 +1205,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at mount (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8236:18)
           at shallowMount (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8252:12)
           at mount (/home/ablecloud/work/dhslove/cloud-affinity-1413/ui/tests/unit/views/compute/ChangeAffinity.spec.js:32:19)
-          at Object.<anonymous> (/home/ablecloud/work/dhslove/cloud-affinity-1413/ui/tests/unit/views/compute/ChangeAffinity.spec.js:163:20) 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at Object.<anonymous> (/home/ablecloud/work/dhslove/cloud-affinity-1413/ui/tests/unit/views/compute/ChangeAffinity.spec.js:163:20)
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -1216,7 +1216,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
     console.warn ../../ablestack-cloud-ssh-1370/ui/node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:40
       [Vue warn]: Component "GroupOutlined" has already been registered in target app.
@@ -1279,9 +1279,9 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
           at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:43:12
           at new Promise (<anonymous>)
           at mapper (/home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:26:19)
-          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41 
-        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... > 
-        at <Anonymous class="form" > 
+          at /home/ablecloud/work/dhslove/ablestack-cloud-ssh-1370/ui/node_modules/jest-jasmine2/build/queueRunner.js:73:41
+        at <AInputSearch style= { 'margin-bottom': '10px' } placeholder="label.search" value=""  ... >
+        at <Anonymous class="form" >
         at <ChangeAffinity resource= {
         id: 'vm',
         account: 'owner',
@@ -1290,7 +1290,7 @@ PASS tests/unit/views/compute/ChangeAffinity.spec.js
         state: 'Stopped',
         hypervisor: 'KVM',
         affinitygroup: []
-      } ref="VTU_COMPONENT" > 
+      } ref="VTU_COMPONENT" >
         at <VTUROOT>
 
 PASS tests/unit/views/compute/AutoScaleCreationPreflight.spec.js

@@ -220,17 +220,17 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 								449 content list
 									450 container
 										451 radio button (settable, integer) Description:   Ubuntu 26.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 1
-										452 text    Ubuntu 26.04 Server Base Install (without QGA) 
+										452 text    Ubuntu 26.04 Server Base Install (without QGA)
 										453 image arrows-alt
 										454 text 추천 공개 HVM
 									455 container
 										456 radio button (settable, integer) Description:   Ubuntu 24.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										457 text    Ubuntu 24.04 Server Base Install (without QGA) 
+										457 text    Ubuntu 24.04 Server Base Install (without QGA)
 										458 image arrows-alt
 										459 text 추천 공개 HVM
 									460 container
 										461 radio button (settable, integer) Description:   Ubuntu 22.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										462 text    Ubuntu 22.04 Server Base Install (without QGA) 
+										462 text    Ubuntu 22.04 Server Base Install (without QGA)
 										463 image arrows-alt
 										464 text 추천 공개 HVM
 									465 container
@@ -796,10 +796,10 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 							381 container
 								382 combo box (settable) rc_select_13
 								1071 text 10 / 쪽
-					383 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터 
+					383 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터
 						384 text 9
 						385 text 확장 모드
-						1119 text 고급 설정 표시 
+						1119 text 고급 설정 표시
 						1120 switch 1
 						1121 text 부팅 유형
 						1122 container
@@ -1062,7 +1062,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				1084 text OS 유형
 				1085 text Ubuntu 26.04 (64-bit)
 				1086 text CPU
-				1087 text 1 CPU x 2.00 GHz 
+				1087 text 1 CPU x 2.00 GHz
 				1088 image question-circle
 				1089 text 메모리
 				1090 text 1024 MB 메모리

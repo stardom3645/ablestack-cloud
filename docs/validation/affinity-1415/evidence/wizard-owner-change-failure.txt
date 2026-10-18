@@ -221,17 +221,17 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 								1307 content list
 									1308 container
 										1309 radio button (settable, integer) Description:   Ubuntu 26.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 1
-										1310 text    Ubuntu 26.04 Server Base Install (without QGA) 
+										1310 text    Ubuntu 26.04 Server Base Install (without QGA)
 										1311 image arrows-alt
 										1312 text 추천 공개 HVM
 									1313 container
 										1314 radio button (settable, integer) Description:   Ubuntu 24.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										1315 text    Ubuntu 24.04 Server Base Install (without QGA) 
+										1315 text    Ubuntu 24.04 Server Base Install (without QGA)
 										1316 image arrows-alt
 										1317 text 추천 공개 HVM
 									1318 container
 										1319 radio button (settable, integer) Description:   Ubuntu 22.04 Server Base Install (without QGA) arrows-alt 추천 공개 HVM  , Value: 0
-										1320 text    Ubuntu 22.04 Server Base Install (without QGA) 
+										1320 text    Ubuntu 22.04 Server Base Install (without QGA)
 										1321 image arrows-alt
 										1322 text 추천 공개 HVM
 									1323 container
@@ -830,10 +830,10 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 							1901 container
 								1902 combo box (settable) rc_select_29
 								1903 text 10 / 쪽
-					390 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터 
+					390 button 9 확장 모드 고급 설정 표시 부팅 유형 UEFI 부팅 모드 LEGACY FT 호환성 info-circle 일반 호환성 TPM 활성화 템플릿 설정 사용 (미지정 시 사용 안 함) Dynamic Scaling 활성화 info-circle 사용자 데이터
 						391 text 9
 						392 text 확장 모드
-						1904 text 고급 설정 표시 
+						1904 text 고급 설정 표시
 						1905 switch 1
 						1906 text 부팅 유형
 						1907 container
@@ -988,7 +988,7 @@ Browser tab: 4, Title: "가상머신 - ABLESTACK-Mold", URL: "http://10.10.31.10
 				2049 text OS 유형
 				2050 text Ubuntu 26.04 (64-bit)
 				1239 text CPU
-				1240 text 1 CPU x 2.00 GHz 
+				1240 text 1 CPU x 2.00 GHz
 				1241 image question-circle
 				1242 text 메모리
 				1243 text 1024 MB 메모리
