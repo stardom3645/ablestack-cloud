@@ -32,7 +32,7 @@ let c
 beforeEach(() => {
   jest.clearAllMocks()
   delete navigator.clipboard
-  c = { resource: { ...source }, sourceType: 'cni', loading: false, resourceActionReady: () => true, tab: 'cni.content', $route: { path: '/cniconfiguration/' + source.id }, $store: { getters: { apis: { listCniConfiguration: {} }, userInfo: { id: 'user' }, project: {} }, state: { user: { token: 'token' } } } }
+  c = { resource: { ...source }, sourceType: 'cni', loading: false, resourceActionReady: () => true, resourceReadPending: () => false, tab: 'cni.content', $route: { path: '/cniconfiguration/' + source.id }, $store: { getters: { apis: { listCniConfiguration: {} }, userInfo: { id: 'user' }, project: {} }, state: { user: { token: 'token' } } } }
   Object.assign(c, Content.data.call(c)); Object.entries(Content.methods).forEach(([key, fn]) => { c[key] = fn.bind(c) }); Object.entries(Content.computed).forEach(([key, fn]) => { Object.defineProperty(c, key, { get: () => fn.call(c) }) })
   getAPI.mockResolvedValue(result())
 })
@@ -153,7 +153,7 @@ test('real ResourceView injection blocks exports on parent refresh/failure and r
   const wrapper = mount({
     data: () => ({ listRequestPending: false, listRefreshError: false, listLoadedScope: 'current', resource: { ...source } }),
     methods: { listScope: () => 'current' },
-    render () { return h(ResourceView, { resource: this.resource, tabs, readyForActions: Autogen.computed.cniDetailActionReady.call(this) }) }
+    render () { return h(ResourceView, { resource: this.resource, tabs, readPending: this.listRequestPending, readyForActions: Autogen.computed.cniDetailActionReady.call(this) }) }
   }, {
     global: {
       mocks: { $route: { path: '/cniconfiguration/' + source.id, params: { id: source.id }, query: { tab: 'cni.content' }, meta: { name: 'cniconfiguration', tabs } }, $router: { push: jest.fn(), replace: jest.fn() }, $t: key => key, $store: { getters: { apis: { listCniConfiguration: {} }, userInfo: {}, project: {} }, state: { app: { device: 'desktop' }, user: { token: 'session' } } } },
@@ -163,13 +163,20 @@ test('real ResourceView injection blocks exports on parent refresh/failure and r
   try {
     await flushPromises(); const content = wrapper.findComponent(Content)
     expect(content.vm.exportable).toBe(true); expect(wrapper.get('.content-code').text()).toContain('한글')
+    content.vm.mode = 'base64'; await flushPromises()
+    const code = wrapper.get('.content-code').element; code.scrollTop = 200; code.scrollLeft = 40
+    const snapshot = content.vm.content
     await wrapper.setData({ listRequestPending: true }); await flushPromises()
-    expect(content.vm.exportable).toBe(false); expect(wrapper.text()).toContain('message.cni.content.unverified')
+    expect(content.vm.exportable).toBe(false); expect(wrapper.text()).not.toContain('message.cni.content.unverified')
+    expect(content.vm.content).toBe(snapshot); expect(wrapper.get('.content-code').element).toBe(code)
+    expect(code.scrollTop).toBe(200); expect(code.scrollLeft).toBe(40); expect(content.vm.mode).toBe('base64')
+    expect(wrapper.get('.userdata-content').attributes('aria-busy')).toBe('true'); expect(getAPI).toHaveBeenCalledTimes(1)
     const copy = wrapper.findAll('button').find(b => b.text().includes('label.copy.clipboard')); expect(copy.element.disabled).toBe(true)
     await wrapper.setData({ listRequestPending: false, listRefreshError: true }); await flushPromises(); expect(content.vm.exportable).toBe(false)
+    expect(wrapper.text()).toContain('message.cni.content.unverified'); expect(wrapper.get('.content-code').element).toBe(code)
     getAPI.mockResolvedValue(result(Buffer.from('new body after parent refresh\r\n').toString('base64')))
     await wrapper.setData({ listRefreshError: false }); await flushPromises()
-    expect(content.vm.exportable).toBe(true); expect(content.vm.display).toBe('new body after parent refresh\r\n'); expect(getAPI).toHaveBeenCalledTimes(2)
+    expect(content.vm.exportable).toBe(true); expect(content.vm.content.text).toBe('new body after parent refresh\r\n'); expect(content.vm.mode).toBe('base64'); expect(wrapper.get('.content-code').element).toBe(code); expect(getAPI).toHaveBeenCalledTimes(2)
   } finally { wrapper.unmount() }
 })
 
@@ -187,4 +194,12 @@ test('history-only URL paging keeps the parent identity scope and skips clearing
   expect(Autogen.methods.listScope.call(ctx)).not.toBe(before)
   ctx.$route = to; ctx.$store.getters.project.id = 'changed'
   expect(Autogen.methods.listScope.call(ctx)).not.toBe(before)
+})
+
+test('explicit parent read state blocks CNI exports but preview content remains independent', async () => {
+  await c.fetchData(); const snapshot = c.content; c.resourceReadPending = () => true
+  expect(c.parentReadPending).toBe(true); expect(c.parentReadReady).toBe(false); expect(c.exportable).toBe(false)
+  await c.fetchData(); expect(getAPI).toHaveBeenCalledTimes(1); expect(c.content).toBe(snapshot)
+  c.previewEncoded = encoded; c.resourceActionReady = () => false
+  expect(c.parentReadPending).toBe(false); expect(c.parentReadReady).toBe(true); expect(c.exportable).toBe(true)
 })

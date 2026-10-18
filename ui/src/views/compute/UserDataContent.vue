@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <section class="userdata-content" :aria-label="$t(contentLabel)" :aria-busy="pending">
+  <section class="userdata-content" :aria-label="$t(contentLabel)" :aria-busy="pending || parentReadPending">
     <template v-if="sourceType === 'vm' && vm">
       <a-descriptions class="vm-userdata-summary" size="small" :column="1" bordered>
         <a-descriptions-item :label="$t('label.vm.displayname')">{{ vm.displayname || vm.name }} ({{ vm.id }})</a-descriptions-item>
@@ -38,7 +38,7 @@
     <a-alert v-if="['error', 'forbidden', 'missing', 'mismatch', 'invalid', 'unsupported'].includes(status)" type="error" show-icon :message="$t(statusMessage)" role="status">
       <template #description><span v-if="content">{{ $t('message.userdata.content.stale') }}</span><a-button v-if="canRead" type="link" :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
-    <a-alert v-if="isCni && content && !parentReadReady" type="warning" show-icon role="status" :message="$t('message.cni.content.unverified')" />
+    <a-alert v-if="isCni && content && !parentReadReady && !parentReadPending" type="warning" show-icon role="status" :message="$t('message.cni.content.unverified')" />
     <a-alert v-if="content?.text === null" type="warning" show-icon :message="$t('message.userdata.content.binary')" />
     <a-alert v-if="feedback" :type="feedbackError ? 'error' : 'success'" show-icon :message="$t(feedback)" role="status" />
     <a-spin :spinning="pending && !content">
@@ -57,12 +57,13 @@ import { userDataDeleteLookup, userDataDeleteIdentity, userDataDeleteError } fro
 export default {
   name: 'UserDataContent',
   props: { resource: { type: Object, required: true }, tab: { type: String, default: '' }, loading: Boolean, sourceType: { type: String, default: 'library' }, previewEncoded: { type: String, default: null } },
-  inject: { resourceActionReady: { default: () => () => true } },
+  inject: { resourceActionReady: { default: () => () => true }, resourceReadPending: { default: () => () => false } },
   data () { return { publishedScope: '', version: 0, disposed: false, pending: false, status: 'loading', content: null, vm: null, comparison: 'unavailable', mode: 'raw', feedback: '', feedbackError: false } },
   computed: {
     isCni () { return this.sourceType === 'cni' },
     contentLabel () { return this.isCni ? 'label.cni.content' : 'label.userdata.content' },
-    parentReadReady () { return this.previewEncoded != null || !this.isCni || (!this.loading && this.resourceActionReady()) },
+    parentReadPending () { return this.previewEncoded == null && this.isCni && (this.loading || this.resourceReadPending()) },
+    parentReadReady () { return this.previewEncoded != null || !this.isCni || (!this.parentReadPending && this.resourceActionReady()) },
     statusMessage () { return 'message.' + (this.isCni && ['missing', 'mismatch', 'unsupported'].includes(this.status) ? 'cni' : 'userdata') + '.content.' + this.status },
     active () { return this.previewEncoded != null || this.tab === (this.isCni ? 'cni.content' : 'userdata.content') && (!this.isCni || this.$route.path.toLowerCase() === '/cniconfiguration/' + (this.resource.id || '').toLowerCase()) },
     canRead () { return this.previewEncoded != null || (this.isCni ? !!this.$store.getters.apis?.listCniConfiguration : this.sourceType === 'vm' ? vmUserDataSupported(this.$store.getters.apis) : !!this.$store.getters.apis?.listUserData) },
