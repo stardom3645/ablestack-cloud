@@ -252,7 +252,7 @@
       <template v-if="column.key === 'templateid'">
         <router-link :to="{ path: '/template/' + record.templateid }">{{ text }}</router-link>
       </template>
-      <template v-if="column.key === 'type'">
+      <template v-if="column.key === 'type' && $route.meta?.name !== 'affinitygroup'">
         <span
           v-if="$route.name === 'vmsnapshot'"
         >{{ $t(text === 'DiskAndMemory' ? 'label.vmsnapshot.disk.memory' : text === 'Disk' ? 'label.vmsnapshot.disk' : text) }}</span>
