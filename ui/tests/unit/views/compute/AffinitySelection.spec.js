@@ -130,6 +130,19 @@ test('wizard initializes once, preserves local selection across fetches and supp
   expect(w.vm.selectedRowKeys).toEqual([])
 })
 
+test('wizard shows the shared policy labels without changing raw types or selected IDs', async () => {
+  const types = ['host affinity', 'host anti-affinity', 'non-strict host affinity', 'non-strict host anti-affinity', 'future-policy']
+  const items = types.map((type, i) => ({ id: `policy-${i}`, name: `policy ${i}`, type, description: `description ${i}` }))
+  const { w } = render(Selector, { items, rowCount: items.length }); await flush()
+  const labels = w.findAll('tbody .affinity-policy-label')
+  expect(labels.map(label => label.text())).toEqual(['label.affinity.type.strict.affinity', 'label.affinity.type.strict.anti', 'label.affinity.type.non.strict.affinity', 'label.affinity.type.non.strict.anti', 'future-policy'])
+  expect(labels.map(label => label.attributes('title'))).toEqual(types)
+  expect(w.findAll('tbody tr').map(row => row.text())).toEqual(expect.arrayContaining([expect.stringContaining('description 0'), expect.stringContaining('policy 4')]))
+  await w.findAll('tbody input[type="checkbox"]')[4].setValue(true); await flush()
+  expect(w.emitted('select-affinity-group-item').at(-1)[0]).toEqual(['policy-4'])
+  expect(items.map(item => item.type)).toEqual(types)
+})
+
 test('wizard scope change clears previous selections and filter, resets pagination and requests the new scope', async () => {
   const { w, s } = render(Selector, { value: ['g14'], owner: { account: 'owner', domainid: 'domain' }, zoneId: 'z1' }); await flush()
   w.vm.handleSearch('old'); w.vm.onChangePage(2, 10)

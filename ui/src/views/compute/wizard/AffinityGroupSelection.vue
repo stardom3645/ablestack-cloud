@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div>
+  <div class="affinity-group-selection">
     {{ $t('message.select.affinity.groups') }}
     <a-alert v-if="error" type="error" show-icon :message="error.startsWith('message.') ? $t(error) : error">
       <template #description><a-button size="small" :loading="loading" @click="requestPage">{{ $t('label.retry') }}</a-button></template>
@@ -35,8 +35,12 @@
       :pagination="false"
       :rowSelection="rowSelection"
       size="middle"
-      :scroll="{ y: 225 }"
+      :scroll="{ x: 640, y: 225 }"
     >
+      <template #bodyCell="{ column, record }">
+        <AffinityGroupPolicy v-if="column.dataIndex === 'type'" :type="record.type" compact />
+        <template v-else>{{ record[column.dataIndex] }}</template>
+      </template>
     </a-table>
 
     <div style="display: block; text-align: right;">
@@ -60,10 +64,11 @@
 <script>
 import { affinitySelectionIds, affinitySelectionScope } from '@/utils/affinityGroupSelection'
 import AffinitySelectionSummary from './AffinitySelectionSummary.vue'
+import AffinityGroupPolicy from '../AffinityGroupPolicy.vue'
 
 export default {
   name: 'AffinityGroupSelection',
-  components: { AffinitySelectionSummary },
+  components: { AffinitySelectionSummary, AffinityGroupPolicy },
   emits: ['select-affinity-group-item', 'handle-search-filter'],
   props: {
     owner: { type: Object, default: () => ({}) },
@@ -187,6 +192,8 @@ export default {
 </script>
 
 <style lang="less" scoped>
+  .affinity-group-selection { min-width: 0; }
+  .affinity-group-selection :deep(.ant-table-cell) { overflow-wrap: anywhere; }
   .ant-table-wrapper {
     margin: 2rem 0;
   }
