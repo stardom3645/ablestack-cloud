@@ -9,9 +9,6 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
 <template>
   <section class="affinity-members">
-    <h3>{{ $t('label.affinity.members') }}</h3>
-    <p class="affinity-secondary">{{ $t('message.affinity.members.help') }}</p>
-    <p role="status" aria-live="polite">{{ $t('label.affinitymembercount') }}: {{ memberCount }} · {{ $t('label.affinity.members.visible') }}: {{ total }}</p>
     <div class="detail-tab-toolbar affinity-members-toolbar">
       <a-button type="primary" :disabled="!canChange || busy" @click="openAdd">{{ $t('label.affinity.members.add') }}</a-button>
       <a-button :disabled="!canChange || busy || !selection.length || !!error" @click="confirmRemove">{{ $t('label.affinity.members.remove') }} ({{ selection.length }})</a-button>
@@ -42,7 +39,9 @@ size="small"
         </template>
       </a-table>
     </div>
-    <a-pagination
+    <div class="affinity-members-footer">
+      <p class="affinity-secondary" role="status" aria-live="polite">{{ $t('label.affinitymembercount') }}: {{ memberCount }} · {{ $t('label.affinity.members.visible') }}: {{ total }}</p>
+      <a-pagination
 class="affinity-members-pagination"
 :current="page"
 :page-size="pagesize"
@@ -51,6 +50,7 @@ class="affinity-members-pagination"
 show-size-changer
 @change="changePage"
 @showSizeChange="changePage" />
+    </div>
 
     <MoldDialog v-if="dialog" class="affinity-dialog" size="lg" :title="$t('label.affinity.members.' + (dialog === 'blocked' ? 'previous' : dialog === 'results' ? 'results' : mode))" @cancel="closeDialog">
       <div class="affinity-dialog-summary"><strong>{{ resource.name }}</strong><span class="affinity-secondary">{{ resource.project || resource.account }} / {{ resource.domain }}</span></div>
@@ -289,6 +289,9 @@ export default {
 .affinity-members-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
 .affinity-members-toolbar :deep(.ant-input-search) { width: 280px; max-width: 100%; margin-left: auto; }
 .affinity-members-pagination { margin-top: 16px; text-align: right; }
+.affinity-members-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
+.affinity-members-footer p { margin: 0; }
+.affinity-members-footer :deep(.ant-pagination) { margin-top: 0; }
 .affinity-member-results { padding-left: 20px; }
 .affinity-member-results li { margin-bottom: 12px; }
 </style>
