@@ -13,9 +13,9 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
       <a-button type="primary" :disabled="!canChange || busy" @click="openAdd">{{ $t('label.affinity.members.add') }}</a-button>
       <a-button :disabled="!canChange || busy || !selection.length || !!error" @click="confirmRemove">{{ $t('label.affinity.members.remove') }} ({{ selection.length }})</a-button>
       <a-button v-if="batch.targets.length" @click="dialog = 'results'">{{ $t('label.affinity.members.results') }}</a-button>
+      <a-button :loading="loading" :aria-label="$t('label.refresh')" :title="$t('label.refresh')" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <div class="detail-tab-toolbar-context">
         <a-input-search v-model:value="draftKeyword" :aria-label="$t('label.affinity.members.search')" :placeholder="$t('label.search')" allow-clear @search="search" />
-        <a-button :loading="loading" :aria-label="$t('label.refresh')" :title="$t('label.refresh')" @click="fetchData"><template #icon><reload-outlined /></template></a-button>
       </div>
     </div>
     <a-alert v-if="error" type="error" show-icon :message="text(error)"><template #description><a-button :loading="loading" @click="fetchData">{{ $t('label.retry') }}</a-button></template></a-alert>
