@@ -66,6 +66,8 @@
 
 관리자 API `getVolumeAllocationCapabilities(storageid, hostid, allocationformat, operation[, allocationpolicy])`를 추가한다. host/pool 연결 관계와 KVM/Up 상태를 검사한다. 작업은 create/copy/resize/restore/migrate/clone이다.
 
+JSON 응답 본문은 `volumeallocationcapability` 객체를 사용한다. 실제 운영 Spring XML에 API 제공자를 등록하고, 빈 주입·명령 발견과 실제 API 직렬화의 객체 이름/false 지원 값을 회귀 검사한다.
+
 Agent는 시작 시 host detail `volume.allocation.capability.version=1`을 광고해야 한다. 광고가 없는 구 Agent에는 새 Command를 보내지 않는다. 광고가 있으면 `GetVolumeAllocationCapabilitiesCommand`에 버전·pool UUID·형식·작업을 담아 질의한다. Answer는 동일 범위와 버전, 실제 런타임에서 확인한 backend(GFS2/RBD), 정책→적용 방식 map을 반환해야 한다. 저장소 이름이나 태그가 GFS2라는 이유로 지원을 추정하지 않는다.
 
 | 백엔드/형식 | 허용 선언 | 적용 방식 식별자 |

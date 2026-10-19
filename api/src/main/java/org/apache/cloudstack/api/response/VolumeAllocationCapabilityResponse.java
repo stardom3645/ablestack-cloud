@@ -23,6 +23,10 @@ import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 public class VolumeAllocationCapabilityResponse extends BaseResponse {
+    public VolumeAllocationCapabilityResponse() {
+        setObjectName("volumeallocationcapability");
+    }
+
     @SerializedName("contractversion") @Param(description = "Allocation protocol version") private int contractVersion = 1;
     @SerializedName("storageid") @Param(description = "Pool UUID") private String storageId;
     @SerializedName("hostid") @Param(description = "Host UUID") private String hostId;

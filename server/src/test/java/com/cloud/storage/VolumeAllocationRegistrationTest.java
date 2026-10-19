@@ -23,16 +23,31 @@ import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.apache.cloudstack.api.command.admin.storage.GetVolumeAllocationCapabilitiesCmd;
+import org.apache.cloudstack.api.response.VolumeAllocationCapabilityResponse;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import com.cloud.agent.AgentManager;
+import com.cloud.api.response.ApiResponseSerializer;
+import com.google.gson.JsonParser;
 import com.cloud.host.dao.HostDao;
 import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.utils.component.PluggableService;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class VolumeAllocationRegistrationTest {
+    @Test public void capabilityJsonHasAStableObjectNameAndFalseSupportFlag() {
+        VolumeAllocationCapabilityResponse response = new VolumeAllocationCapabilityResponse();
+        response.setResponseName("getvolumeallocationcapabilitiesresponse");
+        response.setScope("pool", "host", "raw", "create");
+        response.setReason("AGENT_CAPABILITY_NOT_ADVERTISED");
+        var json = JsonParser.parseString(ApiResponseSerializer.toSerializedString(response, "json"))
+                .getAsJsonObject().getAsJsonObject("getvolumeallocationcapabilitiesresponse");
+        assertFalse(json.has("null"));
+        assertFalse(json.getAsJsonObject("volumeallocationcapability").get("supported").getAsBoolean());
+    }
+
     @Test public void productionXmlRegistersAnInjectedApiProvider() {
         DefaultListableBeanFactory definitions = new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(definitions).loadBeanDefinitions(
