@@ -522,6 +522,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     @Inject
     private DiskOfferingDao _diskOfferingDao;
     @Inject
+    private org.apache.cloudstack.resourcedetail.dao.DiskOfferingDetailsDao allocationDetailsDao;
+    @Inject
     private VMTemplateDao _templateDao;
     @Inject
     private VMTemplateZoneDao _templateZoneDao;
@@ -5358,6 +5360,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (diskOffering == null) {
             throw new InvalidParameterValueException("Specified disk offering cannot be found");
         }
+        com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(allocationDetailsDao.listDetailsKeyPairs(diskOffering.getId()));
         if (diskOffering.isCustomized() && !diskOffering.isComputeOnly()) {
             if (diskSize == null) {
                 throw new InvalidParameterValueException("This disk offering requires a custom size specified");
