@@ -5831,7 +5831,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             return new Pair<>(Collections.emptyList(), uniqueGroupsPair.second());
         }
 
-        Long[] ids = uniqueGroups.stream().map(AffinityGroupJoinVO::getId).toArray(Long[]::new);
+        Long[] ids = new Long[uniqueGroups.size()];
+        for (int i = 0; i < uniqueGroups.size(); i++) {
+            ids[i] = uniqueGroups.get(i).getId();
+        }
         List<AffinityGroupJoinVO> affinityGroups = _affinityGroupJoinDao.searchByIds(ids);
         // The detail lookup may return several VM rows per ID, in a different order from the page.
         affinityGroups.sort(Comparator.comparingLong(AffinityGroupJoinVO::getId));

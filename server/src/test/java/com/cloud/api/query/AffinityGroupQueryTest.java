@@ -110,6 +110,10 @@ public class AffinityGroupQueryTest {
         recursive = true;
         projectCriteria = null;
         permitted.clear();
+        when(cmd.getVirtualMachineId()).thenReturn(null);
+        when(cmd.getId()).thenReturn(null);
+        when(cmd.getDomainId()).thenReturn(null);
+        when(cmd.getProjectId()).thenReturn(null);
         when(cmd.getStartIndex()).thenReturn(0L);
         when(cmd.getPageSizeVal()).thenReturn(2L);
         doAnswer(invocation -> {
