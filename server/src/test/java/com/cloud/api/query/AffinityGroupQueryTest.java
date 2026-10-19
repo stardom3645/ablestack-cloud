@@ -124,7 +124,8 @@ public class AffinityGroupQueryTest {
         when(domainDao.findById(11L)).thenReturn(domain);
         when(domains.getDomainParentIds(11L)).thenReturn(new HashSet<>(Arrays.asList(9L, 11L)));
         when(domainMaps.listByDomain(any())).thenReturn(Arrays.asList(map(91, 9, true), map(92, 9, false), map(93, 11, false), map(91, 9, true)));
-        when(groups.searchAndCount(any(), any(Filter.class))).thenReturn(new Pair<>(Arrays.asList(row(1), row(2)), 4));
+        List<AffinityGroupJoinVO> page = Arrays.asList(row(1), row(2));
+        when(groups.searchAndCount(any(), any(Filter.class))).thenReturn(new Pair<>(page, 4));
         when(groups.searchByIds(any())).thenAnswer(invocation -> new ArrayList<>(Arrays.asList(row(2), row(1), row(1))));
     }
 
