@@ -13,6 +13,8 @@
 // Only its painted card should intercept input above the resource tabs.
 .affinity-library .ant-affix { pointer-events: none; }
 .affinity-library .ant-affix > .breadcrumb-card { pointer-events: auto; }
+.affinity-library .list-view-table-wrapper th { white-space: nowrap; overflow-wrap: normal; }
+.affinity-library .list-view-table-wrapper .ant-table-column-sorters { min-width: 80px; }
 .affinity-library .list-view-table-wrapper .ant-table-cell,
 .affinity-resource .card-content, .affinity-resource .resource-details-list,
 .affinity-dialog .ant-modal-body { overflow-wrap: anywhere; }
@@ -30,6 +32,7 @@
 .affinity-selection-context { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
 .affinity-table-region { width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .affinity-table-region > .ant-table-wrapper { min-width: 1040px; }
+.affinity-table-region .ant-badge-status-text { white-space: nowrap; }
 .affinity-table-region:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 .affinity-members-pagination { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; margin-top: 16px; }
 .affinity-vm-name { display: block; overflow-wrap: anywhere; }
