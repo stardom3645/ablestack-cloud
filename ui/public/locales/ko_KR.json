@@ -9165,6 +9165,8 @@
   "label.affinity.members.add": "가상머신 연결",
   "label.affinity.members.remove": "선택 연결 해제",
   "label.affinity.members.results": "VM별 작업 결과",
+  "label.affinity.members.previous": "이전 VM 작업 확인",
+  "message.affinity.members.previous": "선택한 VM의 이전 Affinity 작업을 먼저 확인해야 합니다. 새 연결 변경은 제출하지 않았습니다. 이전 작업을 확인한 후 최신 목록에서 다시 선택하세요.",
   "label.affinity.members.retry": "최신 상태 확인 후 실패만 재시도",
   "label.affinity.members.continue": "미제출 VM 작업 계속",
   "label.affinity.members.unavailable": "정보 없음 / 접근 제한",

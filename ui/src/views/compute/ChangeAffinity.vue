@@ -181,8 +181,12 @@ export default {
       const store = this.$store
       this.affinityOperation = getAffinityOperation(this.securityScope, this.resource.id, { get: getAPI, post: postAPI, getScope: () => affinitySessionScope(store) })
       const previous = this.affinityOperation.snapshot()
-      if (previous.status !== 'idle') this.selectedRowKeys = previous.ids
-      if (previous.status === 'succeeded') this.affinityOperation.acknowledge()
+      // Preserve this editor's reviewed selection. Terminal receipts belonging
+      // to a group-centered workflow must not replace fresh VM memberships.
+      if (previous.status !== 'idle' &&
+        (!previous.context || !['failed', 'succeeded'].includes(previous.status)) &&
+        Object.prototype.hasOwnProperty.call(previous.params || {}, 'affinitygroupids')) this.selectedRowKeys = previous.ids
+      if (previous.status === 'succeeded' || (previous.status === 'failed' && previous.context)) this.affinityOperation.acknowledge()
       this.announced = false
       const scope = this.securityScope
       this.unsubscribeOperation = this.affinityOperation.subscribe(state => {

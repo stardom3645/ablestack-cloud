@@ -63,9 +63,36 @@ export async function prepareAffinityMemberChange (get, group, snapshot, mode, c
 // Keep batch receipts when the tab/dialog closes. Per-VM locks are shared with
 // ChangeAffinity, so an unknown or pending write can never be silently replaced.
 let batchScope
+let batchSequence = 0
 const batches = new Map()
 export function affinityMemberBatch (scope, groupId) {
-  if (scope !== batchScope) { batches.clear(); batchScope = scope }
-  if (!batches.has(groupId)) batches.set(groupId, { mode: '', targets: [], results: {}, busy: false })
+  if (scope !== batchScope) {
+    for (const batch of batches.values()) releaseAffinityBatchObservers(batch)
+    batches.clear(); batchScope = scope
+  }
+  if (!batches.has(groupId)) batches.set(groupId, { groupId, token: '', mode: '', targets: [], results: {}, busy: false, subscriptions: {} })
   return batches.get(groupId)
+}
+
+function releaseAffinityBatchObservers (batch) {
+  for (const unsubscribe of Object.values(batch.subscriptions || {})) unsubscribe()
+  batch.subscriptions = {}
+}
+
+export function resetAffinityMemberBatch (batch, mode, targets) {
+  releaseAffinityBatchObservers(batch)
+  batch.token = batch.groupId + ':' + (++batchSequence)
+  batch.mode = mode
+  batch.targets = targets.map(affinityMemberSnapshot)
+  batch.results = Object.fromEntries(targets.map(vm => [vm.id, { status: 'idle', error: '', jobId: '' }]))
+}
+
+// The cache, rather than the view, owns receipt observers. Completed receipts
+// stay correlated to their batch when another dialog later updates the same VM.
+export function observeAffinityMemberBatch (batch, vmId, operation) {
+  if (batch.subscriptions[vmId]) return
+  const token = batch.token
+  batch.subscriptions[vmId] = operation.subscribe(state => {
+    if (state.context === token) batch.results[vmId] = state
+  })
 }

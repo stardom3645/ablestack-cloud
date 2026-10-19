@@ -11,7 +11,7 @@ import AffinityGroupMembers from '@/views/compute/AffinityGroupMembers.vue'
 import DeleteAffinityGroup from '@/views/compute/DeleteAffinityGroup.vue'
 import DeleteAffinityGroups from '@/views/compute/DeleteAffinityGroups.vue'
 import { getAPI, postAPI } from '@/api'
-import { clearAffinityOperations } from '@/utils/affinityGroupOperations'
+import { clearAffinityOperations, getAffinityOperation } from '@/utils/affinityGroupOperations'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 const group = { id: 'target', name: 'Target', account: 'owner', domainid: 'domain', virtualmachineIds: ['one', 'two', 'three'] }
 const vms = ['one', 'two', 'three'].map(id => ({ id, name: id, state: 'Stopped', account: 'owner', domainid: 'domain', affinitygroup: [{ id: 'other' }] }))
@@ -80,6 +80,35 @@ test('unknown POST outcome blocks both resubmission and new batch; result surviv
   expect(w.vm.dialog).toBe('results'); expect(postAPI).toHaveBeenCalledTimes(1)
   w.unmount(); wrappers = []; const again = mount(); await flush()
   expect(again.vm.batch.targets[0].id).toBe('one'); expect(again.vm.batch.results.one.status).toBe('unknown')
+})
+test('another workflow receipt blocks a new goal and rechecking it never completes the unsubmitted goal', async () => {
+  groups = { ...group, virtualmachineIds: [] }
+  const normal = getAPI.getMockImplementation(); let queryFails = true
+  getAPI.mockImplementation((cmd, params) => {
+    if (cmd === 'queryAsyncJobResult') return queryFails ? Promise.reject(new Error('offline')) : Promise.resolve({ queryasyncjobresultresponse: { jobstatus: 1 } })
+    if (cmd === 'listVirtualMachines' && params.affinitygroupid) return Promise.resolve({ listvirtualmachinesresponse: {} })
+    return normal(cmd, params)
+  })
+  const w = mount(); await flush()
+  const previous = getAffinityOperation(w.vm.securityScope, 'one', { get: getAPI, post: postAPI, maxRetries: 0 })
+  await previous.run('updateVMAffinityGroup', { id: 'one', affinitygroupids: 'other' })
+  expect(previous.snapshot().status).toBe('unknown')
+  w.vm.confirm('add', [fresh[0]])
+  expect(w.vm.dialog).toBe('blocked'); expect(w.vm.batch.targets).toEqual([])
+  queryFails = false; await w.vm.recheckBlocked()
+  expect(w.vm.blocked.state.status).toBe('succeeded'); expect(w.vm.batch.results).toEqual({}); expect(w.vm.memberCount).toBe(0)
+  expect(postAPI).toHaveBeenCalledTimes(1)
+})
+test('batch receipts remain their own history when another dialog later changes the VM', async () => {
+  const w = mount(); await flush(); w.vm.confirm('add', [fresh[0]]); await w.vm.execute(false)
+  const originalJob = w.vm.batch.results.one.jobId; const op = w.vm.operation(fresh[0])
+  w.unmount(); wrappers = []
+  op.acknowledge(); postAPI.mockResolvedValueOnce({ updatevirtualmachineresponse: { jobid: 'other-dialog-job' } })
+  await op.run('updateVMAffinityGroup', { id: 'one', affinitygroupids: 'external' })
+  const again = mount(); await flush()
+  expect(again.vm.batch.results.one.jobId).toBe(originalJob)
+  expect(again.vm.batch.results.one.status).toBe('succeeded')
+  expect(op.snapshot().jobId).toBe('other-dialog-job')
 })
 test('external change after confirmation prevents POST; explicit retry merges current unrelated groups', async () => {
   const w = mount(); await flush(); w.vm.confirm('add', [fresh[0]])

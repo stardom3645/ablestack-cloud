@@ -49,7 +49,7 @@ show-size-changer
 @change="changePage"
 @showSizeChange="changePage" />
 
-    <MoldDialog v-if="dialog" size="lg" :title="$t('label.affinity.members.' + (dialog === 'results' ? 'results' : mode))" @cancel="closeDialog">
+    <MoldDialog v-if="dialog" size="lg" :title="$t('label.affinity.members.' + (dialog === 'blocked' ? 'previous' : dialog === 'results' ? 'results' : mode))" @cancel="closeDialog">
       <p>{{ resource.name }} · {{ resource.project || resource.account }} / {{ resource.domain }}</p>
       <p>{{ $t('message.affinity.members.help') }}</p>
       <p v-if="busy" role="status">{{ $t('message.affinity.operation.close') }}</p>
@@ -74,6 +74,15 @@ show-size-changer
         </a-table>
         <a-pagination :current="candidatePage" :page-size="10" :total="candidateTotal" @change="candidatePage = $event; fetchCandidates()" />
       </template>
+      <template v-else-if="dialog === 'blocked' && blocked">
+        <p role="alert">{{ $t('message.affinity.members.previous') }}</p>
+        <router-link :to="vmLink(blocked.vm)">{{ blocked.vm.displayname || blocked.vm.name }}</router-link>
+        <p>{{ $t('label.affinity.members.previous') }}: {{ $t('message.affinity.operation.' + blocked.state.status) }}</p>
+        <p v-if="blocked.state.error">{{ text(blocked.state.error) }}</p>
+        <p v-if="blocked.state.jobId">{{ $t('label.affinity.job') }}: {{ blocked.state.jobId }}</p>
+        <p v-if="blocked.state.status === 'unknown' && !blocked.state.jobId">{{ $t('message.affinity.operation.no.receipt') }}</p>
+        <a-button v-if="blocked.state.jobId" :loading="blocked.loading" @click="recheckBlocked">{{ $t('label.affinity.recheck') }}</a-button>
+      </template>
       <template v-else>
         <p v-if="dialog === 'confirm'">{{ $t('message.affinity.members.confirm') }}</p>
         <ul class="affinity-member-results">
@@ -84,6 +93,7 @@ show-size-changer
             <div v-if="batch.results[vm.id]?.jobId">{{ $t('label.affinity.job') }}: {{ batch.results[vm.id].jobId }}</div>
             <p v-if="batch.results[vm.id]?.status === 'unknown' && !batch.results[vm.id]?.jobId">{{ $t('message.affinity.operation.no.receipt') }}</p>
             <a-button v-if="recheckable(batch.results[vm.id])" size="small" @click="recheck(vm)">{{ $t('label.affinity.recheck') }}</a-button>
+            <a-button v-if="batch.results[vm.id]?.previous" size="small" @click="showBlocked(vm)">{{ $t('label.affinity.members.previous') }}</a-button>
           </li>
         </ul>
       </template>
@@ -103,7 +113,7 @@ import { getAPI, postAPI } from '@/api'
 import MoldDialog from '@/components/view/MoldDialog.vue'
 import Status from '@/components/widgets/Status'
 import { affinityOwnerKey, affinitySessionScope, affinityVmCanChange, affinityApiError, getAffinityOperation } from '@/utils/affinityGroupOperations'
-import { affinityMemberCount, affinityVmIds, affinityMemberSnapshot, affinityMemberLocked, affinityMemberPage, affinityMemberParams, prepareAffinityMemberChange, affinityMemberBatch } from '@/utils/affinityGroupMembers'
+import { affinityMemberCount, affinityVmIds, affinityMemberSnapshot, affinityMemberLocked, affinityMemberPage, affinityMemberParams, prepareAffinityMemberChange, affinityMemberBatch, resetAffinityMemberBatch, observeAffinityMemberBatch } from '@/utils/affinityGroupMembers'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 export default {
@@ -125,6 +135,7 @@ export default {
     selection: [],
     selected: {},
     dialog: '',
+    blocked: null,
     mode: '',
     candidates: [],
     candidateTotal: 0,
@@ -147,11 +158,11 @@ export default {
     hasIdle () { return Object.values(this.batch.results).some(row => row.status === 'idle') },
     columns () { return ['displayname', 'state', 'hostname', 'account', 'project', 'domain', 'reason'].map(key => ({ key, dataIndex: key, title: this.$t('label.' + (key === 'reason' ? 'affinity.members.reason' : key)) })) }
   },
-  created () { this.alive = true; this.version = 0; this.candidateVersion = 0; this.unsubscribers = []; this.memberCount = affinityMemberCount(this.resource); this.bindBatch(); this.fetchData() },
-  beforeUnmount () { this.alive = false; this.version++; this.candidateVersion++; this.unsubscribers.forEach(fn => fn()) },
+  created () { this.alive = true; this.version = 0; this.candidateVersion = 0; this.memberCount = affinityMemberCount(this.resource); this.bindBatch(); this.fetchData() },
+  beforeUnmount () { this.alive = false; this.version++; this.candidateVersion++ },
   watch: {
-    scope () { this.version++; this.candidateVersion++; this.unsubscribers.forEach(fn => fn()); this.unsubscribers = []; this.rows = []; this.total = 0; this.memberCount = affinityMemberCount(this.resource); this.selection = []; this.selected = {}; this.error = ''; this.dialog = ''; this.page = 1; this.keyword = ''; this.draftKeyword = ''; this.bindBatch(); this.fetchData() },
-    active (value) { if (value) this.fetchData(); else { this.version++; this.candidateVersion++; this.dialog = '' } }
+    scope () { this.version++; this.candidateVersion++; this.rows = []; this.total = 0; this.memberCount = affinityMemberCount(this.resource); this.selection = []; this.selected = {}; this.error = ''; this.dialog = ''; this.blocked = null; this.page = 1; this.keyword = ''; this.draftKeyword = ''; this.bindBatch(); this.fetchData() },
+    active (value) { if (value) this.fetchData(); else { this.version++; this.candidateVersion++; this.dialog = ''; this.blocked = null } }
   },
   methods: {
     text (value) { return value.startsWith('message.') ? this.$t(value) : value },
@@ -164,10 +175,7 @@ export default {
       this.batch = reactive(affinityMemberBatch(this.securityScope, this.resource.id))
       for (const vm of this.batch.targets) this.observe(vm)
     },
-    observe (vm) {
-      const scope = this.scope
-      this.unsubscribers.push(this.operation(vm).subscribe(state => { if (this.alive && scope === this.scope) this.batch.results[vm.id] = state }))
-    },
+    observe (vm) { observeAffinityMemberBatch(this.batch, vm.id, this.operation(vm)) },
     async fetchData () {
       if (!this.active || !this.canRead) return
       const version = ++this.version; const scope = this.scope
@@ -195,7 +203,7 @@ export default {
       if (!this.canChange || this.busy) return
       this.mode = 'add'; this.dialog = 'choose'; this.candidatePage = 1; this.candidateKeyword = ''; this.candidateDraft = ''; this.candidateSelection = []; this.candidatesSelected = {}; this.candidates = []; this.candidateError = ''; this.fetchCandidates()
     },
-    closeDialog () { this.dialog = ''; this.candidateVersion++ },
+    closeDialog () { this.dialog = ''; this.blocked = null; this.candidateVersion++ },
     candidateSearch (keyword) { this.candidateKeyword = keyword; this.candidatePage = 1; this.fetchCandidates() },
     async fetchCandidates () {
       const version = ++this.candidateVersion; const scope = this.scope
@@ -215,8 +223,9 @@ export default {
       if (!this.canChange || this.busy || !targets.length || targets.some(vm => !vm || !this.eligible(vm))) return
       // Explicit confirmation starts a new batch. Never discard unresolved receipts.
       if (Object.values(this.batch.results).some(row => affinityMemberLocked(row.status))) { this.dialog = 'results'; return }
-      this.unsubscribers.forEach(fn => fn()); this.unsubscribers = []
-      this.batch.mode = mode; this.mode = mode; this.batch.targets = targets.map(affinityMemberSnapshot); this.batch.results = {}
+      const locked = targets.find(vm => affinityMemberLocked(this.operation(vm).snapshot().status))
+      if (locked) { this.showBlocked(locked); return }
+      this.blocked = null; this.mode = mode; resetAffinityMemberBatch(this.batch, mode, targets)
       for (const vm of targets) { const op = this.operation(vm); if (['succeeded', 'failed'].includes(op.snapshot().status)) op.acknowledge(); this.observe(vm) }
       this.dialog = 'confirm'
     },
@@ -230,20 +239,41 @@ export default {
           if (!current()) break
           const op = this.operation(original); const previous = batch.results[original.id]
           if (retry ? previous?.status !== 'failed' : previous?.status !== 'idle') continue
-          let snapshot = original
-          if (retry) {
-            try {
+          const receipt = op.snapshot()
+          if (receipt.context !== batch.token && affinityMemberLocked(receipt.status)) {
+            batch.results[original.id] = { status: 'failed', error: 'message.affinity.members.previous', previous: receipt }; continue
+          }
+          if (receipt.context !== batch.token && ['succeeded', 'failed'].includes(receipt.status)) op.acknowledge()
+          const result = await op.run('updateVMAffinityGroup', { id: original.id }, async () => {
+            let snapshot = original
+            if (retry) {
               const result = await getAPI('listVirtualMachines', { id: original.id, details: 'min,affgrp', ...(original.projectid ? { projectid: original.projectid } : {}), listall: true }, { preserveOnFailure: true, timeout: 15000 })
               snapshot = result.listvirtualmachinesresponse?.virtualmachine?.find(vm => vm.id === original.id)
               if (!snapshot || affinityOwnerKey(snapshot) !== affinityOwnerKey(original)) throw new Error('message.affinity.owner.changed')
-            } catch (error) { batch.results[original.id] = { status: 'failed', error: affinityApiError(error) || error.message }; continue }
-          }
-          await op.run('updateVMAffinityGroup', { id: original.id }, () => prepareAffinityMemberChange(getAPI, group, snapshot, batch.mode, current))
+            }
+            return prepareAffinityMemberChange(getAPI, group, snapshot, batch.mode, current)
+          }, batch.token)
+          if (result.context !== batch.token) batch.results[original.id] = { status: 'failed', error: 'message.affinity.members.previous', previous: result }
         }
         if (current()) { this.selection = []; this.selected = {}; await Promise.all([this.fetchData(), this.parentFetchData({ irefresh: true })]) }
       } finally { batch.busy = false }
     },
-    async recheck (vm) { await this.operation(vm).recheck(); if (this.alive) { await this.fetchData(); this.parentFetchData({ irefresh: true }) } }
+    async recheck (vm) {
+      if (this.operation(vm).snapshot().context !== this.batch.token) { this.showBlocked(vm); return }
+      await this.operation(vm).recheck(); if (this.alive) { await this.fetchData(); this.parentFetchData({ irefresh: true }) }
+    },
+    showBlocked (vm) { this.blocked = { vm: affinityMemberSnapshot(vm), state: this.operation(vm).snapshot(), loading: false }; this.dialog = 'blocked' },
+    async recheckBlocked () {
+      const blocked = this.blocked; const scope = this.scope
+      if (!blocked || blocked.loading) return
+      blocked.loading = true
+      try {
+        await this.operation(blocked.vm).recheck()
+        if (!this.alive || scope !== this.scope || this.blocked !== blocked) return
+        blocked.state = this.operation(blocked.vm).snapshot()
+        await Promise.all([this.fetchData(), this.parentFetchData({ irefresh: true })])
+      } finally { blocked.loading = false }
+    }
   }
 }
 </script>

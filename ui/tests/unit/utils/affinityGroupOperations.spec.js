@@ -47,6 +47,15 @@ test('server error envelope is parsed without exposing transport config', () => 
   expect(affinityApiError({ response: { data: { errorresponse: { errorcode: 431 } } } })).toBe('message.affinity.operation.failed')
   expect(affinityApiError({ config: { data: 'private' } })).toBe('')
 })
+test('client receipt context is correlated without being sent to the API', async () => {
+  const { op, post } = setup()
+  const params = { id: 'vm', affinitygroupids: 'a' }
+  await op.run('updateVMAffinityGroup', params, async () => {}, 'group:1')
+  expect(op.snapshot().context).toBe('group:1')
+  expect(post).toHaveBeenCalledWith('updateVMAffinityGroup', params, expect.any(Object))
+  expect(post.mock.calls[0][1]).not.toHaveProperty('context')
+  op.acknowledge(); expect(op.snapshot()).toMatchObject({ status: 'idle', context: '' })
+})
 test('a receipt is pending until jobstatus=1; repeat submissions are deduplicated', async () => {
   const { op, get, post } = setup()
   get.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 0 } })

@@ -53,6 +53,34 @@ beforeEach(() => {
 })
 afterEach(() => { wrappers.forEach(w => { if (w.exists()) w.unmount() }); clearAffinityOperations(); jest.useRealTimers() })
 
+test('a group-centered preflight failure without replacement IDs cannot clear the VM dialog selection', async () => {
+  const first = mount({ affinitygroup: [{ id: 'kept' }] }); await flush()
+  await first.wrapper.vm.affinityOperation.run('updateVMAffinityGroup', { id: 'vm' }, async () => { throw new Error('message.affinity.members.changed') })
+  first.wrapper.unmount()
+  const again = mount({ affinitygroup: [{ id: 'kept' }, { id: 'external' }] }); await flush()
+  expect(again.wrapper.vm.selectedRowKeys).toEqual(['kept', 'external'])
+  expect(postAPI).not.toHaveBeenCalled()
+})
+
+test('a historical successful group operation does not replace fresh memberships when starting a VM edit', async () => {
+  const first = mount({ affinitygroup: [{ id: 'kept' }] }); await flush()
+  await first.wrapper.vm.affinityOperation.run('updateVMAffinityGroup', { id: 'vm', affinitygroupids: 'kept' }, async () => {}, 'group:1')
+  first.wrapper.unmount()
+  const again = mount({ affinitygroup: [{ id: 'kept' }, { id: 'external' }] }); await flush()
+  expect(again.wrapper.vm.selectedRowKeys).toEqual(['kept', 'external'])
+  expect(again.wrapper.vm.operation.status).toBe('idle')
+})
+
+test('a definitive group-centered failure starts a fresh VM edit without importing another workflow draft', async () => {
+  const first = mount({ affinitygroup: [{ id: 'kept' }] }); await flush()
+  postAPI.mockRejectedValueOnce(Object.assign(new Error('denied'), { response: { data: { errorresponse: { errorcode: 431, errortext: 'denied' } } } }))
+  await first.wrapper.vm.affinityOperation.run('updateVMAffinityGroup', { id: 'vm', affinitygroupids: 'kept,target' }, async () => {}, 'group:1')
+  first.wrapper.unmount()
+  const again = mount({ affinitygroup: [{ id: 'kept' }, { id: 'external' }] }); await flush()
+  expect(again.wrapper.vm.selectedRowKeys).toEqual(['kept', 'external'])
+  expect(again.wrapper.vm.operation.status).toBe('idle')
+})
+
 test('owner-scoped lookup uses account/domain, including server-returned domain shared candidates', async () => {
   getAPI.mockResolvedValue({ listaffinitygroupsresponse: { count: 2, affinitygroup: [{ id: 'owned', account: 'owner' }, { id: 'shared', account: 'system' }] } })
   const { wrapper } = mount(); await flush()

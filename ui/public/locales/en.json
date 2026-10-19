@@ -9200,6 +9200,8 @@
   "label.affinity.members.add": "Link instances",
   "label.affinity.members.remove": "Unlink selected",
   "label.affinity.members.results": "Per-VM results",
+  "label.affinity.members.previous": "Previous VM operation",
+  "message.affinity.members.previous": "Resolve this VM's previous affinity operation first. The new membership change was not submitted. Check the previous operation, then select from the refreshed list.",
   "label.affinity.members.retry": "Refresh and retry failed VMs only",
   "label.affinity.members.continue": "Continue unsubmitted VMs",
   "label.affinity.members.unavailable": "Unavailable / restricted",
