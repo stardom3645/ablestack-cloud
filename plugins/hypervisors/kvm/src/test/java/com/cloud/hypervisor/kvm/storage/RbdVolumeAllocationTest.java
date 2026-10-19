@@ -137,15 +137,27 @@ public class RbdVolumeAllocationTest {
         fails("TARGET_EXISTS", null); assertFalse(command("create")); assertFalse(command("rm"));
     }
 
+    @Test public void rawClusterFreeCannotOverrideSmallerPoolMaxAvail() {
+        runner.available = SIZE - 1; fails("INSUFFICIENT_CAPACITY", null); assertFalse(command("create"));
+    }
+    @Test public void unknownPoolCapacityCannotPublishFull() {
+        runner.missingCapacity = true; fails("CAPACITY_UNVERIFIED", null); assertFalse(command("create"));
+    }
+    @Test public void fullCapabilityIsWithheldWithoutAuthenticatedPoolCapacity() {
+        runner.missingCapacity = true;
+        Map<String,String> methods = adapter.capabilities(pool, "raw", "create");
+        assertFalse(methods.containsKey("full")); assertEquals("rbd-thin", methods.get("off"));
+    }
+
     private static class Fake implements RbdVolumeAllocation.Runner {
         List<List<String>> commands = new ArrayList<>();
         String stage; String fail; boolean cleanupFail; boolean exists; boolean parent; String receipt;
-        long used = SIZE; long infoSize = SIZE; long sourceSize = SIZE;
+        long used = SIZE; long infoSize = SIZE; long sourceSize = SIZE; long available = SIZE * 10; boolean missingCapacity;
         int index(String op) { for (int i = 0; i < commands.size(); i++) if (commands.get(i).contains(op)) return i; return -1; }
         @Override public String run(List<String> args, long timeout) {
             assertTrue(timeout > 0); commands.add(args);
             if (args.contains("--help") || args.contains("help")) return "--thick-provision --exact -n -S compare -F";
-            String op = args.get(0).equals("rbd") && args.contains("--conf") ? args.get(5) : args.get(1);
+            String op = (args.get(0).equals("rbd") || args.get(0).equals("ceph")) && args.contains("--conf") ? args.get(5) : args.get(1);
             if (op.equals("create")) stage = args.get(args.size() - 1).substring(4);
             if (op.equals(fail) || (cleanupFail && op.equals("rm"))) throw new CloudRuntimeException("injected-" + op);
             if (op.equals("help") || op.equals("--help")) return "--thick-provision --exact -n -S compare";
@@ -156,6 +168,7 @@ public class RbdVolumeAllocationTest {
                 if (args.get(0).equals("qemu-img")) return "{\"virtual-size\":" + sourceSize + "}";
                 return "{\"size\":" + infoSize + (parent ? ",\"parent\":{}" : "") + "}";
             }
+            if (op.equals("df")) return missingCapacity ? "{}" : "{\"pools\":[{\"name\":\"rbd\",\"stats\":{\"max_avail\":" + available + "}}]}";
             if (op.equals("du")) return "{\"images\":[{\"provisioned_size\":" + SIZE + ",\"used_size\":" + used + "}]}";
             return "{}";
         }

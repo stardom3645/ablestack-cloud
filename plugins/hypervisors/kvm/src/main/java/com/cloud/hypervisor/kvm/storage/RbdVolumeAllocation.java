@@ -86,7 +86,13 @@ public class RbdVolumeAllocation {
                 return Map.of();
             }
             context.rbd("pool", "stats", "--pool", pool.getSourceDir(), "--format", "json");
-            return Map.of("off", "rbd-thin", "full", "create".equals(operation) ? "rbd-thick-create" : "rbd-thick-convert-n-S0");
+            try {
+                context.poolAvailable(pool.getSourceDir());
+                return Map.of("off", "rbd-thin", "full", "create".equals(operation) ? "rbd-thick-create" : "rbd-thick-convert-n-S0");
+            } catch (RuntimeException unavailable) {
+                // Thin does not need a Full capacity claim. Never infer usable space from raw cluster bytes.
+                return Map.of("off", "rbd-thin");
+            }
         } catch (IOException e) {
             throw new CloudRuntimeException("RBD_ALLOCATION_CAPABILITY_UNAVAILABLE", e);
         }
@@ -168,8 +174,8 @@ public class RbdVolumeAllocation {
             long used = verify(context, finalImage, volume.getSize(), full, sourceUri, sourceFormat);
             return result(volume, intent, operation, method, used);
         }
-        if (full && (pool.getAvailable() <= 0 || pool.getAvailable() < volume.getSize())) {
-            throw new CloudRuntimeException("RBD_ALLOCATION_INSUFFICIENT_CAPACITY: Full requires the entire virtual size before publishing");
+        if (full && Math.min(pool.getAvailable(), context.poolAvailable(pool.getSourceDir())) < volume.getSize()) {
+            throw new CloudRuntimeException("RBD_ALLOCATION_INSUFFICIENT_CAPACITY: Ceph pool max_avail cannot cover the Full virtual size; this check is not a reservation");
         }
         // This unpredictable stage name belongs exclusively to this invocation, even on create timeout.
         String stage = pool.getSourceDir() + "/" + volume.getUuid() + ".allocation-" + UUID.randomUUID();
@@ -289,6 +295,24 @@ public class RbdVolumeAllocation {
             List<String> command = new ArrayList<>(List.of("rbd", "--conf", config.toString(), "--id", user));
             command.addAll(List.of(arguments));
             return run(command.toArray(new String[0]));
+        }
+
+        long poolAvailable(String pool) {
+            try {
+                JsonObject df = json(run("ceph", "--conf", config.toString(), "--id", user, "df", "--format", "json"));
+                for (com.google.gson.JsonElement entry : df.getAsJsonArray("pools")) {
+                    JsonObject row = entry.getAsJsonObject();
+                    if (pool.equals(row.get("name").getAsString())) {
+                        long available = row.getAsJsonObject("stats").get("max_avail").getAsLong();
+                        if (available >= 0) {
+                            return available;
+                        }
+                    }
+                }
+            } catch (RuntimeException unavailable) {
+                throw new CloudRuntimeException("RBD_ALLOCATION_CAPACITY_UNVERIFIED: authenticated Ceph pool max_avail is required for Full", unavailable);
+            }
+            throw new CloudRuntimeException("RBD_ALLOCATION_CAPACITY_UNVERIFIED: target pool max_avail is missing");
         }
 
         String uri(String image) {

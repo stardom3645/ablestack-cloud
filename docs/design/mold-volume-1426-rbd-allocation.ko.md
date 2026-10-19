@@ -22,7 +22,7 @@ RBD의 falloc/lazy thick, QCOW2 metadata, Full 확장, snapshot 복원, 기존 �
 
 동일 요청의 응답이 유실된 경우에는 이미지에 저장된 요청 fingerprint(풀·볼륨 UUID, 볼륨 DB ID, 소유자, 유형, 계약 버전, 형식, 정책, 크기, 작업, 원본)가 정확히 일치하고 데이터·할당 검증을 다시 통과할 때만 기존 이미지를 채택한다. 증거가 없는 동명 이미지, 서로 다른 요청, 데이터 불일치, discard 후 Full 할당량 부족은 거절한다. 호스트 간 중복 요청은 최종 rename 충돌로 처리하며 다른 요청이 공개한 이미지를 삭제하지 않는다.
 
-Full은 가상 크기 전체에 대한 공간과 zeroing·읽기·복사 시간이 필요하다. 생성/복사 command의 대기 시간을 최소 1시간으로 확보하고 실제 작업에는 제한된 예산을 적용한다. 실패하면 async job에 구체적 오류가 전달되며 Ready로 전환하지 않는다. 사전 가용 공간 검사는 예약이 아니므로 동시 사용으로 인한 ENOSPC도 동일 실패 계약으로 처리한다.
+Full은 가상 크기 전체에 대한 공간과 zeroing·읽기·복사 시간이 필요하다. 생성/복사 command의 대기 시간을 최소 1시간으로 확보하고 실제 작업에는 제한된 예산을 적용한다. 실패하면 async job에 구체적 오류가 전달되며 Ready로 전환하지 않는다. Full capability와 실행 시에는 같은 풀의 인증 정보로 `ceph df`의 `max_avail`을 확인한다. 이 값은 복제·CRUSH·full ratio 등을 반영한 풀의 쓰기 가능량 추정치이며 raw 클러스터 여유 바이트로 대체하지 않는다. 조회할 수 없으면 Full capability를 제공하지 않고 실행도 거절한다. Thin은 해당 Full 용량 보장과 분리한다. 사전 가용 공간 검사는 예약이 아니므로 동시 사용으로 인한 ENOSPC도 동일 실패 계약으로 처리한다.
 
 ## 증거와 의미
 
@@ -31,6 +31,7 @@ Full은 가상 크기 전체에 대한 공간과 zeroing·읽기·복사 시간�
 ## 기술 근거
 
 - [Ceph Reef rbd](https://docs.ceph.com/en/reef/man/8/rbd/): thick-provision은 전체 이미지 zeroing을 수행하며 오래 걸릴 수 있다.
+- [Ceph 풀 용량 지표](https://docs.ceph.com/en/reef/rados/operations/monitoring/): MAX AVAIL은 대상 풀에 쓸 수 있는 논리 데이터량의 추정값이다.
 - [QEMU qemu-img](https://www.qemu.org/docs/master/tools/qemu-img.html): convert의 -n, -S 0 및 compare의 크기 차이/zero tail 의미.
 - Epic의 32번 실증: 64MiB thick 전체 할당·zero 읽기, 미리 thick 생성한 대상에 qcow2→RAW 전체 복사 및 동일성 확인. 파일용 resize preallocation의 RBD 적용은 Unsupported로 실패했다.
 
