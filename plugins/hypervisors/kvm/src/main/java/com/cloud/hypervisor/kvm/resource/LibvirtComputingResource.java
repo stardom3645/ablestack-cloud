@@ -5265,7 +5265,18 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             startupCommandsArray[i] = startupCommand;
             i++;
         }
-        return startupCommandsArray;
+        return advertiseAllocation(startupCommandsArray);
+    }
+
+    private static StartupCommand[] advertiseAllocation(StartupCommand[] commands) {
+        if (commands != null) {
+            for (StartupCommand command : commands) {
+                if (command instanceof StartupRoutingCommand) {
+                    ((StartupRoutingCommand) command).getHostDetails().put(com.cloud.storage.VolumeAllocationPolicy.AGENT_VERSION, "1");
+                }
+            }
+        }
+        return commands;
     }
 
     private void addBackupJobDetails(Map<String, String> details) {

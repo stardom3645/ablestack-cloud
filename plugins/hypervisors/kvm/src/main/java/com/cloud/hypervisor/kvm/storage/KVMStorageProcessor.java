@@ -541,6 +541,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer cloneVolumeFromBaseTemplate(final CopyCommand cmd) {
+        Answer allocation = copyAllocatedRbdTemplate(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final DataTO destData = cmd.getDestTO();
         final TemplateObjectTO template = (TemplateObjectTO)srcData;
@@ -626,6 +630,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer copyVolumeFromImageCacheToPrimary(final CopyCommand cmd) {
+        Answer allocation = copyAllocatedRbdTemplate(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final DataTO destData = cmd.getDestTO();
         final DataStoreTO srcStore = srcData.getDataStore();
@@ -2159,6 +2167,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer createVolume(final CreateObjectCommand cmd) {
+        Answer allocation = createAllocatedRbdVolume(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final VolumeObjectTO volume = (VolumeObjectTO)cmd.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)volume.getDataStore();
 
@@ -2225,6 +2237,107 @@ public class KVMStorageProcessor implements StorageProcessor {
         } finally {
             volume.clearPassphrase();
         }
+    }
+
+    private Answer createAllocatedRbdVolume(CreateObjectCommand command) {
+        VolumeObjectTO volume = (VolumeObjectTO) command.getData();
+        PrimaryDataStoreTO store = (PrimaryDataStoreTO) volume.getDataStore();
+        try {
+            if (volume.getAllocation().isEmpty()) {
+                if (store.getPoolType() == StoragePoolType.RBD) {
+                    com.cloud.storage.VolumeAllocationPolicy.requireRbdLegacyThin(volume.getProvisioningType());
+                }
+                return null;
+            }
+            KVMStoragePool pool = storagePoolMgr.getStoragePool(store.getPoolType(), store.getUuid());
+            return new CreateObjectAnswer(new RbdVolumeAllocation().create(volume, pool, null, (long) command.getWait() * 1000));
+        } catch (Exception failure) {
+            return new CreateObjectAnswer(failure.getMessage());
+        } finally {
+            if (!volume.getAllocation().isEmpty()) {
+                volume.clearPassphrase();
+            }
+        }
+    }
+
+    private Answer copyAllocatedRbdTemplate(CopyCommand command) {
+        VolumeObjectTO volume = (VolumeObjectTO) command.getDestTO();
+        PrimaryDataStoreTO store = (PrimaryDataStoreTO) volume.getDataStore();
+        KVMStoragePool secondary = null;
+        try {
+            if (volume.getAllocation().isEmpty()) {
+                if (store.getPoolType() == StoragePoolType.RBD) {
+                    com.cloud.storage.VolumeAllocationPolicy.requireRbdLegacyThin(volume.getProvisioningType());
+                }
+                return null;
+            }
+            if (store.getPoolType() != StoragePoolType.RBD) {
+                throw new CloudRuntimeException("ALLOCATION_BACKEND_UNSUPPORTED: RBD RAW materialized copy only");
+            }
+            KVMStoragePool pool = storagePoolMgr.getStoragePool(store.getPoolType(), store.getUuid());
+            DataTO source = command.getSrcTO();
+            KVMPhysicalDisk disk;
+            if (source instanceof TemplateObjectTO && source.getDataStore() instanceof PrimaryDataStoreTO &&
+                    store.getUuid().equals(((PrimaryDataStoreTO) source.getDataStore()).getUuid())) {
+                disk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), source.getPath());
+            } else if (source instanceof VolumeObjectTO && source.getDataStore() instanceof NfsTO &&
+                    !((VolumeObjectTO) source).requiresEncryption()) {
+                String path = source.getPath();
+                int split = path.lastIndexOf('/');
+                if (split < 0) {
+                    throw new CloudRuntimeException("RBD_ALLOCATION_SOURCE_UNSUPPORTED: image-cache directory missing");
+                }
+                secondary = storagePoolMgr.getStoragePoolByURI(((NfsTO) source.getDataStore()).getUrl() + "/" + path.substring(0, split));
+                String name = path.substring(split + 1);
+                ImageFormat format = ((VolumeObjectTO) source).getFormat();
+                if (format == ImageFormat.QCOW2 && !name.endsWith(".qcow2")) {
+                    name += ".qcow2";
+                }
+                disk = secondary.getPhysicalDisk(name);
+                if (disk != null) {
+                    disk.setFormat(PhysicalDiskFormat.valueOf(format.toString()));
+                }
+            } else {
+                throw new CloudRuntimeException("RBD_ALLOCATION_SOURCE_UNSUPPORTED: materialized primary template or unencrypted image-cache file required");
+            }
+            if (disk == null) {
+                throw new CloudRuntimeException("RBD_ALLOCATION_SOURCE_MISSING: template cannot be replaced with an empty image");
+            }
+            volume.setPath(volume.getUuid());
+            resource.createOrUpdateLogFileForCommand(command, Command.State.PROCESSING_IN_BACKEND);
+            VolumeObjectTO result = new RbdVolumeAllocation().create(volume, pool, disk, command.getWaitInMillSeconds());
+            resource.createOrUpdateLogFileForCommand(command, Command.State.COMPLETED);
+            return new CopyCmdAnswer(result);
+        } catch (Exception failure) {
+            return new CopyCmdAnswer(failure.getMessage());
+        } finally {
+            if (secondary != null) {
+                secondary.delete();
+            }
+            if (!volume.getAllocation().isEmpty()) {
+                volume.clearPassphrase();
+            }
+        }
+    }
+
+    private Answer rejectUnqualifiedRbdCopy(CopyCommand command) {
+        if (command.getSrcTO() instanceof VolumeObjectTO && !((VolumeObjectTO) command.getSrcTO()).getAllocation().isEmpty()) {
+            return new CopyCmdAnswer("ALLOCATION_OPERATION_UNSUPPORTED: migration is not qualified for explicit allocation");
+        }
+        if (command.getDestTO() instanceof VolumeObjectTO) {
+            VolumeObjectTO volume = (VolumeObjectTO) command.getDestTO();
+            if (!volume.getAllocation().isEmpty()) {
+                return new CopyCmdAnswer("ALLOCATION_OPERATION_UNSUPPORTED: snapshot restore and migration are not qualified for explicit allocation");
+            }
+            if (volume.getDataStore() instanceof PrimaryDataStoreTO && ((PrimaryDataStoreTO) volume.getDataStore()).getPoolType() == StoragePoolType.RBD) {
+                try {
+                    com.cloud.storage.VolumeAllocationPolicy.requireRbdLegacyThin(volume.getProvisioningType());
+                } catch (com.cloud.exception.InvalidParameterValueException unsupported) {
+                    return new CopyCmdAnswer(unsupported.getMessage());
+                }
+            }
+        }
+        return null;
     }
 
     KVMPhysicalDisk createBlankVolume(VolumeObjectTO volume, KVMStoragePool pool, PhysicalDiskFormat format, long size) {
@@ -3346,6 +3459,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer createVolumeFromSnapshot(final CopyCommand cmd) {
+        Answer allocation = rejectUnqualifiedRbdCopy(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final SnapshotObjectTO snapshot = (SnapshotObjectTO)srcData;
         final VolumeObjectTO volume = snapshot.getVolume();
@@ -4529,6 +4646,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer copyVolumeFromPrimaryToPrimary(CopyCommand cmd) {
+        Answer allocation = rejectUnqualifiedRbdCopy(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final DataTO destData = cmd.getDestTO();
         final VolumeObjectTO srcVol = (VolumeObjectTO)srcData;

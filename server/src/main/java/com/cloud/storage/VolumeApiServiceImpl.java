@@ -264,6 +264,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
 public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiService, VmWorkJobHandler, Configurable {
+    @Inject private com.cloud.storage.VolumeAllocationService allocationService;
+
     public static final String VM_WORK_JOB_HANDLER = VolumeApiServiceImpl.class.getSimpleName();
 
     @Inject
@@ -796,6 +798,19 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_VOLUME_CREATE, eventDescription = "creating volume", create = true)
     public VolumeVO allocVolume(CreateVolumeCmd cmd) throws ResourceAllocationException {
+        if (cmd.getDiskOfferingId() != null) {
+            DiskOfferingVO allocationOffering = _diskOfferingDao.findById(cmd.getDiskOfferingId());
+            if (allocationOffering != null) {
+                Map<String, String> intent = com.cloud.storage.VolumeAllocationPolicy.requireCreationIntent(_diskOfferingDetailsDao.listDetailsKeyPairs(allocationOffering.getId()));
+                if (!intent.isEmpty() && (allocationOffering.getEncrypt() || cmd.getKmsKeyId() != null)) {
+                    throw new InvalidParameterValueException("ALLOCATION_OPERATION_UNSUPPORTED: encryption is not qualified with explicit allocation");
+                }
+                if (!intent.isEmpty() || cmd.getStorageId() != null) {
+                    allocationService.validateCreate(intent, allocationOffering.getProvisioningType(), cmd.getZoneId(), cmd.getStorageId(), allocationOffering.getTagsArray());
+                }
+            }
+        }
+
         if (cmd.getVirtualMachineId() != null) {
             UserVmVO vm = _userVmDao.findById(cmd.getVirtualMachineId());
             if (vm == null) throw new InvalidParameterValueException("Unable to find VM");
@@ -887,6 +902,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 size = diskOffering.getDiskSize();
             }
 
+            details.putAll(com.cloud.storage.VolumeAllocationPolicy.requireCreationIntent(_diskOfferingDetailsDao.listDetailsKeyPairs(diskOfferingId)));
             DiskOfferingDetailVO bandwidthLimitDetail = _diskOfferingDetailsDao.findDetail(diskOfferingId, Volume.BANDWIDTH_LIMIT_IN_MBPS);
             if (bandwidthLimitDetail != null) {
                 details.put(Volume.BANDWIDTH_LIMIT_IN_MBPS, bandwidthLimitDetail.getValue());
@@ -953,6 +969,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
 
             parentVolume = _volsDao.findByIdIncludingRemoved(snapshotCheck.getVolumeId());
+            com.cloud.storage.VolumeAllocationPolicy.requireUnqualifiedLifecycle(_volsDetailsDao.listDetailsKeyPairs(parentVolume.getId()), "snapshot restore");
+            if (diskOffering != null) com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailsDao.listDetailsKeyPairs(diskOffering.getId()));
 
             // Don't support creating templates from encrypted volumes (yet)
             if (parentVolume.getPassphraseId() != null || parentVolume.getKmsKeyId() != null) {
@@ -1096,6 +1114,10 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
                 if (volume != null && details != null) {
                     List<VolumeDetailVO> volumeDetailsVO = new ArrayList<VolumeDetailVO>();
+                    for (Map.Entry<String, String> entry : com.cloud.storage.VolumeAllocationPolicy.validateStored(details).entrySet()) {
+                        volumeDetailsVO.add(new VolumeDetailVO(volume.getId(), entry.getKey(), entry.getValue(), false));
+                    }
+
                     if (details.containsKey(Volume.BANDWIDTH_LIMIT_IN_MBPS)) {
                         volumeDetailsVO.add(new VolumeDetailVO(volume.getId(), Volume.BANDWIDTH_LIMIT_IN_MBPS, details.get(Volume.BANDWIDTH_LIMIT_IN_MBPS), false));
                     }
@@ -1270,10 +1292,21 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         return volumeVo;
     }
 
+    private void validateAllocationMutation(Long volumeId, Long newDiskOfferingId, String operation) {
+        VolumeVO volume = _volsDao.findById(volumeId);
+        if (volume != null) {
+            com.cloud.storage.VolumeAllocationPolicy.requireUnqualifiedLifecycle(_volsDetailsDao.listDetailsKeyPairs(volume.getId()), operation);
+        }
+        if (newDiskOfferingId != null) {
+            com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailsDao.listDetailsKeyPairs(newDiskOfferingId));
+        }
+    }
+
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_VOLUME_RESIZE, eventDescription = "resizing volume", async = true)
     public VolumeVO resizeVolume(ResizeVolumeCmd cmd) throws ResourceAllocationException {
+        validateAllocationMutation(cmd.getEntityId(), cmd.getNewDiskOfferingId(), "resize");
         Long newSize = cmd.getSize();
         Long newMinIops = cmd.getMinIops();
         Long newMaxIops = cmd.getMaxIops();
@@ -2265,6 +2298,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
     @Override
     public Volume changeDiskOfferingForVolumeInternal(Long volumeId, Long newDiskOfferingId, Long newSize, Long newMinIops, Long newMaxIops, boolean autoMigrateVolume, boolean shrinkOk) throws ResourceAllocationException {
+        validateAllocationMutation(volumeId, newDiskOfferingId, "change disk offering");
 
         VolumeVO volume = _volsDao.findById(volumeId);
         if (volume == null) {
@@ -3933,6 +3967,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
 
         _accountMgr.checkAccess(caller, null, true, vol);
+        com.cloud.storage.VolumeAllocationPolicy.requireUnqualifiedLifecycle(_volsDetailsDao.listDetailsKeyPairs(vol.getId()), "migrate");
 
         if (vol.getState() != Volume.State.Ready) {
             throw new InvalidParameterValueException("Volume must be in ready state");

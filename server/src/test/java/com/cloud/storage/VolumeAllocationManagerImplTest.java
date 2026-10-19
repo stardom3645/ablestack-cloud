@@ -115,9 +115,10 @@ public class VolumeAllocationManagerImplTest {
     @Test public void rbdLazyThickAdvertisementIsRejected() throws Exception {
         answer("pool", "RBD", "create", Map.of("falloc", "invented-lazy")); reason("INVALID_AGENT_CAPABILITY");
     }
-    @Test public void qualifiedDeclarationStillNeedsExecutionAdapter() throws Exception {
+    @Test public void qualifiedRbdDeclarationEnablesOnlyImplementedOperation() throws Exception {
         answer("pool", "RBD", "create", Map.of("off", "rbd-thin", "full", "rbd-thick-create"));
-        reason("ALLOCATION_EXECUTION_NOT_IMPLEMENTED");
+        org.junit.Assert.assertTrue(manager.getCapabilities(cmd).isSupported());
+        assertEquals(null, manager.getCapabilities(cmd).getReason());
         assertEquals(2, manager.getCapabilities(cmd).getAgentPolicies().size());
     }
     @Test(expected = InvalidParameterValueException.class) public void disconnectedPoolHostIsInvalid() {
@@ -134,6 +135,53 @@ public class VolumeAllocationManagerImplTest {
     }
     @Test(expected = InvalidParameterValueException.class) public void rawMetadataRequestIsInvalid() {
         when(cmd.getAllocationPolicy()).thenReturn("metadata"); manager.getCapabilities(cmd);
+    }
+
+    private void qualifiedPool() throws Exception {
+        when(pool.getDataCenterId()).thenReturn(10L); when(pool.getStatus()).thenReturn(StoragePoolStatus.Up);
+        when(poolDao.listByDataCenterId(10L)).thenReturn(java.util.List.of(pool));
+        when(poolDao.searchForStoragePoolTags(1L)).thenReturn(java.util.List.of("rbd"));
+        StoragePoolHostVO connection = mock(StoragePoolHostVO.class); when(connection.getHostId()).thenReturn(2L);
+        when(poolHostDao.listByPoolId(1L)).thenReturn(java.util.List.of(connection));
+        when(host.getDetail(VolumeAllocationPolicy.AGENT_VERSION)).thenReturn("1");
+        when(agentManager.send(eq(2L), any(GetVolumeAllocationCapabilitiesCommand.class))).thenAnswer(invocation -> {
+            GetVolumeAllocationCapabilitiesCommand command = invocation.getArgument(1);
+            return new GetVolumeAllocationCapabilitiesAnswer(command, "RBD", Map.of("off", "rbd-thin", "full",
+                    "create".equals(command.getOperation()) ? "rbd-thick-create" : "rbd-thick-convert-n-S0"));
+        });
+    }
+    @Test public void matchingPoolRequiresBothCreateAndCopy() throws Exception {
+        qualifiedPool(); manager.validateCreate(VolumeAllocationPolicy.request("full", "raw", null), Storage.ProvisioningType.FAT, 10, 1L, new String[]{"rbd"});
+    }
+    @Test(expected = InvalidParameterValueException.class) public void oldAgentCannotExecuteNewPolicy() throws Exception {
+        qualifiedPool(); when(host.getDetail(VolumeAllocationPolicy.AGENT_VERSION)).thenReturn(null);
+        manager.validateCreate(VolumeAllocationPolicy.request("off", "raw", null), Storage.ProvisioningType.THIN, 10, 1L, null);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void anyEligibleOldHostBlocksPool() throws Exception {
+        qualifiedPool(); HostVO old = mock(HostVO.class); when(old.getStatus()).thenReturn(Status.Up); when(old.getHypervisorType()).thenReturn(HypervisorType.KVM); when(old.getUuid()).thenReturn("old");
+        when(hostDao.findById(3L)).thenReturn(old); StoragePoolHostVO second = mock(StoragePoolHostVO.class); when(second.getHostId()).thenReturn(3L);
+        StoragePoolHostVO first = poolHostDao.listByPoolId(1L).get(0);
+        when(poolHostDao.listByPoolId(1L)).thenReturn(java.util.List.of(first, second));
+        manager.validateCreate(VolumeAllocationPolicy.request("full", "raw", null), Storage.ProvisioningType.FAT, 10, 1L, null);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void explicitOtherBackendCannotFallback() throws Exception {
+        qualifiedPool(); when(pool.getPoolType()).thenReturn(Storage.StoragePoolType.SharedMountPoint);
+        manager.validateCreate(VolumeAllocationPolicy.request("full", "raw", null), Storage.ProvisioningType.FAT, 10, 1L, null);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void tagMismatchCannotFallback() throws Exception {
+        qualifiedPool(); manager.validateCreate(VolumeAllocationPolicy.request("full", "raw", null), Storage.ProvisioningType.FAT, 10, null, new String[]{"other"});
+    }
+    @Test(expected = InvalidParameterValueException.class) public void legacyFatCannotClaimRbdAllocation() throws Exception {
+        qualifiedPool(); manager.validateCreate(Map.of(), Storage.ProvisioningType.FAT, 10, 1L, null);
+    }
+    @Test public void legacyThinRetainsCompatibilityWithoutNewAgentProtocol() throws Exception {
+        qualifiedPool(); when(host.getDetail(VolumeAllocationPolicy.AGENT_VERSION)).thenReturn(null);
+        manager.validateCreate(Map.of(), Storage.ProvisioningType.THIN, 10, 1L, null); verifyNoInteractions(agentManager);
+    }
+
+    @Test public void unsupportedRbdLifecycleHasAnExplicitReasonWithoutAgentExecution() {
+        when(cmd.getOperation()).thenReturn("resize");
+        reason("ALLOCATION_OPERATION_UNSUPPORTED"); verifyNoInteractions(agentManager);
     }
 
 }

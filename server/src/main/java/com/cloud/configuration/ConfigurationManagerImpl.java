@@ -344,6 +344,8 @@ import com.googlecode.ipv6.IPv6Address;
 import com.googlecode.ipv6.IPv6Network;
 
 public class ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, ConfigurationService, Configurable {
+    @Inject private com.cloud.storage.VolumeAllocationService allocationService;
+
     public static final String PERACCOUNT = "peraccount";
     public static final String PERZONE = "perzone";
     public static final String CLUSTER_NODES_DEFAULT_START_SSH_PORT = "2222";
@@ -7155,7 +7157,10 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     @Override
     public void checkDiskOfferingAccess(final Account caller, final DiskOffering dof, DataCenter zone) {
         if (dof != null) {
-            VolumeAllocationPolicy.requireLegacyExecution(diskOfferingDetailsDao.listDetailsKeyPairs(dof.getId()));
+            java.util.Map<String, String> intent = VolumeAllocationPolicy.requireCreationIntent(diskOfferingDetailsDao.listDetailsKeyPairs(dof.getId()));
+            if (!intent.isEmpty()) {
+                allocationService.validateCreate(intent, dof.getProvisioningType(), zone.getId(), null, dof.getTagsArray());
+            }
         }
         for (final SecurityChecker checker : _secChecker) {
             if (checker.checkAccess(caller, dof, zone)) {

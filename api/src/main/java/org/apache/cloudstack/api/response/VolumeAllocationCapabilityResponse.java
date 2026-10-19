@@ -43,6 +43,7 @@ public class VolumeAllocationCapabilityResponse extends BaseResponse {
     public void setReason(String value) { reason = value; }
     public String getReason() { return reason; }
     public boolean isSupported() { return supported; }
+    public void setSupported(boolean value) { supported = value; }
     public void setAgentPolicies(String value, Map<String, String> policies) { backend = value; agentPolicies = policies; }
     public Map<String, String> getAgentPolicies() { return agentPolicies; }
 }

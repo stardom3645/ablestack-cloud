@@ -1160,7 +1160,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
             minIops = minIops != null ? minIops : offering.getMinIops();
             maxIops = maxIops != null ? maxIops : offering.getMaxIops();
 
-            com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
+            com.cloud.storage.VolumeAllocationPolicy.requireCreationIntent(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
             VolumeVO vol = new VolumeVO(type, name, vm.getDataCenterId(), owner.getDomainId(), owner.getId(), offering.getId(), offering.getProvisioningType(), size, minIops, maxIops, null);
             if (vm != null) {
                 vol.setInstanceId(vm.getId());
@@ -1226,7 +1226,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         minIops = minIops != null ? minIops : offering.getMinIops();
         maxIops = maxIops != null ? maxIops : offering.getMaxIops();
 
-        com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
+        com.cloud.storage.VolumeAllocationPolicy.requireCreationIntent(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
         VolumeVO vol = new VolumeVO(type, name, vm.getDataCenterId(), owner.getDomainId(), owner.getId(), offering.getId(), offering.getProvisioningType(), size, minIops, maxIops, null);
         if (vm != null) {
             vol.setInstanceId(vm.getId());
@@ -1277,7 +1277,10 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
 
     private DiskProfile allocateTemplatedVolume(Type type, String name, DiskOffering offering, Long rootDisksize, Long minIops, Long maxIops, VirtualMachineTemplate template, VirtualMachine vm,
                                                 Account owner, long deviceId, String configurationId, Long kmsKeyId, Volume volume, Snapshot snapshot) {
-        com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
+        com.cloud.storage.VolumeAllocationPolicy.requireCreationIntent(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
+        if (volume != null || snapshot != null) {
+            com.cloud.storage.VolumeAllocationPolicy.requireUnqualifiedLifecycle(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()), "restore/attach existing root");
+        }
         assert (template.getFormat() != ImageFormat.ISO) : "ISO is not a template.";
 
         if (volume != null) {
@@ -1439,6 +1442,14 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
 
     @Override
     public void saveVolumeDetails(Long diskOfferingId, Long volumeId) {
+        java.util.Map<String, String> frozen = com.cloud.storage.VolumeAllocationPolicy.validateStored(_volDetailDao.listDetailsKeyPairs(volumeId));
+        java.util.Map<String, String> intent = com.cloud.storage.VolumeAllocationPolicy.requireCreationIntent(_diskOfferingDetailDao.listDetailsKeyPairs(diskOfferingId));
+        if (frozen.isEmpty() && !intent.isEmpty()) {
+            for (java.util.Map.Entry<String, String> entry : intent.entrySet()) {
+                _volDetailDao.addDetail(volumeId, entry.getKey(), entry.getValue(), false);
+            }
+        }
+
         List<VolumeDetailVO> volumeDetailsVO = new ArrayList<>();
         DiskOfferingDetailVO bandwidthLimitDetail = _diskOfferingDetailDao.findDetail(diskOfferingId, Volume.BANDWIDTH_LIMIT_IN_MBPS);
         if (bandwidthLimitDetail != null) {

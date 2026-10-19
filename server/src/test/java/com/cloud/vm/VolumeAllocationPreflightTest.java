@@ -41,6 +41,9 @@ public class VolumeAllocationPreflightTest {
     @Mock private DiskOfferingDetailsDao detailsDao;
     @Mock private DiskOffering offering;
     @Mock private VolumeApiService volumeService;
+    @Mock private com.cloud.storage.VolumeAllocationService allocationService;
+    @Mock private com.cloud.storage.dao.VolumeDao volumeDao;
+    @Mock private com.cloud.storage.dao.VolumeDetailsDao volumeDetails;
     @Before public void setUp() {
         when(offering.getId()).thenReturn(1L);
         when(offering.getDiskSize()).thenReturn(1073741824L);
@@ -61,7 +64,7 @@ public class VolumeAllocationPreflightTest {
     }
     @Test public void linkedCustomRootIsRejectedInPreflight() {
         when(offering.isCustomized()).thenReturn(true);
-        reject(VolumeAllocationPolicy.request("full", "raw", null));
+        reject(VolumeAllocationPolicy.request("falloc", "raw", null));
     }
     @Test public void dataOfferingIsRejectedInPreflight() {
         reject(VolumeAllocationPolicy.request("metadata", "qcow2", null));
@@ -71,4 +74,25 @@ public class VolumeAllocationPreflightTest {
         Long size = ReflectionTestUtils.invokeMethod(manager, "verifyAndGetDiskSize", offering, null);
         assertEquals(Long.valueOf(1073741824L), size);
     }
+    @Test public void rawFullSyntaxCanProceedOnlyToBackendCapabilityValidation() {
+        when(detailsDao.listDetailsKeyPairs(1L)).thenReturn(VolumeAllocationPolicy.request("full", "raw", null));
+        com.cloud.dc.DataCenter zone = org.mockito.Mockito.mock(com.cloud.dc.DataCenter.class); when(zone.getId()).thenReturn(10L);
+        ReflectionTestUtils.invokeMethod(manager, "validateAllocationOffering", offering, zone);
+        org.mockito.Mockito.verify(allocationService).validateCreate(org.mockito.ArgumentMatchers.anyMap(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any());
+        verifyNoInteractions(volumeService);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void fullVmCloneIsBlockedBeforeMutation() {
+        com.cloud.storage.VolumeVO volume = org.mockito.Mockito.mock(com.cloud.storage.VolumeVO.class); when(volume.getId()).thenReturn(2L);
+        when(volumeDao.findByInstance(3L)).thenReturn(java.util.List.of(volume));
+        when(volumeDetails.listDetailsKeyPairs(2L)).thenReturn(VolumeAllocationPolicy.request("full", "raw", null));
+        ReflectionTestUtils.invokeMethod(manager, "requireUnqualifiedVmAllocation", 3L, "VM clone");
+    }
+
+    @Test(expected = InvalidParameterValueException.class) public void fullVmStorageMigrationIsBlockedAtEntry() throws Exception {
+        com.cloud.storage.VolumeVO volume = org.mockito.Mockito.mock(com.cloud.storage.VolumeVO.class); when(volume.getId()).thenReturn(2L);
+        when(volumeDao.findByInstance(3L)).thenReturn(java.util.List.of(volume));
+        when(volumeDetails.listDetailsKeyPairs(2L)).thenReturn(VolumeAllocationPolicy.request("full", "raw", null));
+        manager.migrateVirtualMachineWithVolume(3L, null, Map.of());
+    }
+
 }

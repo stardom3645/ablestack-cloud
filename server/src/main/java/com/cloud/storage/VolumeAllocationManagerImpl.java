@@ -56,8 +56,12 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
         if (pool == null || host == null || poolHostDao.findByPoolHost(pool.getId(), host.getId()) == null) {
             throw new InvalidParameterValueException("Host must be connected to the specified primary storage pool");
         }
-        if (cmd.getAllocationPolicy() != null) {
-            String policy = VolumeAllocationPolicy.request(cmd.getAllocationPolicy(), format, null).get(VolumeAllocationPolicy.POLICY);
+        return capabilities(pool, host, format, operation, cmd.getAllocationPolicy());
+    }
+
+    private VolumeAllocationCapabilityResponse capabilities(StoragePoolVO pool, HostVO host, String format, String operation, String requestedPolicy) {
+        if (requestedPolicy != null) {
+            String policy = VolumeAllocationPolicy.request(requestedPolicy, format, null).get(VolumeAllocationPolicy.POLICY);
             if (pool.getPoolType() == Storage.StoragePoolType.RBD &&
                     (!"raw".equals(format) || "falloc".equals(policy) ||
                     ("full".equals(policy) && !List.of("create", "copy").contains(operation)))) {
@@ -72,6 +76,11 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
         }
         if (host.getStatus() != Status.Up || host.getHypervisorType() != HypervisorType.KVM) {
             response.setReason("HOST_NOT_AVAILABLE");
+            return response;
+        }
+        if (pool.getPoolType() == Storage.StoragePoolType.RBD &&
+                (!"raw".equals(format) || !List.of("create", "copy").contains(operation))) {
+            response.setReason("ALLOCATION_OPERATION_UNSUPPORTED");
             return response;
         }
         try {
@@ -101,8 +110,11 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
             }
             VolumeAllocationPolicy.validateCapability(capability.getBackend(), format, operation, capability.getMethods());
             response.setAgentPolicies(capability.getBackend(), capability.getMethods());
-            // VOL-03/VOL-04 will enable individual execution adapters only after runtime qualification.
-            response.setReason("ALLOCATION_EXECUTION_NOT_IMPLEMENTED");
+            boolean implemented = "RBD".equals(capability.getBackend()) && "raw".equals(format) &&
+                    List.of("create", "copy").contains(operation) &&
+                    (requestedPolicy == null || capability.getMethods().containsKey(requestedPolicy.toLowerCase(Locale.ROOT)));
+            response.setSupported(implemented);
+            response.setReason(implemented ? null : "ALLOCATION_EXECUTION_NOT_IMPLEMENTED");
         } catch (InvalidParameterValueException e) {
             response.setReason("INVALID_AGENT_CAPABILITY");
         } catch (Exception e) {
@@ -111,4 +123,58 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
         }
         return response;
     }
+    @Override
+    public void validateCreate(java.util.Map<String, String> details, Storage.ProvisioningType legacy,
+            long zoneId, Long poolId, String[] tags) {
+        java.util.Map<String, String> intent = VolumeAllocationPolicy.requireCreationIntent(details);
+        if (intent.isEmpty() && poolId == null) {
+            return;
+        }
+        List<StoragePoolVO> pools = poolId == null ? poolDao.listByDataCenterId(zoneId) :
+                java.util.Collections.singletonList(poolDao.findById(poolId));
+        boolean qualified = false;
+        for (StoragePoolVO pool : pools) {
+            if (pool == null || pool.getDataCenterId() != zoneId || pool.getStatus() != StoragePoolStatus.Up) {
+                continue;
+            }
+            List<String> poolTags = poolDao.searchForStoragePoolTags(pool.getId());
+            if (tags != null && tags.length > 0 && (poolTags == null || !poolTags.containsAll(java.util.Arrays.asList(tags)))) {
+                continue;
+            }
+            if (intent.isEmpty()) {
+                if (pool.getPoolType() == Storage.StoragePoolType.RBD) {
+                    VolumeAllocationPolicy.requireRbdLegacyThin(legacy);
+                }
+                return;
+            }
+            if (pool.getPoolType() != Storage.StoragePoolType.RBD) {
+                // Explicit selection cannot silently fall through to a different backend.
+                if (poolId != null) {
+                    throw new InvalidParameterValueException("ALLOCATION_BACKEND_UNSUPPORTED: only RBD RAW execution is qualified");
+                }
+                continue;
+            }
+            boolean hasUpHost = false;
+            boolean allQualified = true;
+            for (com.cloud.storage.StoragePoolHostVO connection : poolHostDao.listByPoolId(pool.getId())) {
+                HostVO host = hostDao.findById(connection.getHostId());
+                if (host == null || host.getStatus() != Status.Up) {
+                    continue;
+                }
+                hasUpHost = true;
+                for (String operation : List.of("create", "copy")) {
+                    VolumeAllocationCapabilityResponse capability = capabilities(pool, host, "raw", operation, intent.get(VolumeAllocationPolicy.POLICY));
+                    allQualified &= capability.isSupported();
+                }
+            }
+            qualified |= hasUpHost && allQualified;
+            if (poolId != null && !qualified) {
+                throw new InvalidParameterValueException("ALLOCATION_AGENT_UNAVAILABLE: all eligible hosts must advertise and verify RBD RAW create/copy capability");
+            }
+        }
+        if (!intent.isEmpty() && !qualified) {
+            throw new InvalidParameterValueException("ALLOCATION_AGENT_UNAVAILABLE: no matching qualified RBD pool and Agent; no legacy fallback is allowed");
+        }
+    }
+
 }
