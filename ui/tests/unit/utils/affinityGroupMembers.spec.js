@@ -5,7 +5,7 @@
 // at http://www.apache.org/licenses/LICENSE-2.0 . Unless required by law,
 // software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied.
-import { affinityMemberCount, affinityMemberPage, affinityMemberParams, affinityMemberSnapshot, prepareAffinityMemberChange, affinityMemberBatch } from '@/utils/affinityGroupMembers'
+import { affinityMemberCount, affinityMemberPage, affinityMemberParams, affinityGroupQueryParams, affinityMemberSnapshot, prepareAffinityMemberChange, affinityMemberBatch } from '@/utils/affinityGroupMembers'
 
 const group = { id: 'target', account: 'owner', domainid: 'domain' }
 const vm = { id: 'vm', account: 'owner', domainid: 'domain', state: 'Stopped', affinitygroup: [{ id: 'other' }] }
@@ -25,11 +25,15 @@ test.each([{}, { count: -1 }, { count: '1' }, { count: 0, virtualmachine: [{}] }
 test('an emptied last page preserves the total so its caller can clamp and refetch', () => {
   expect(affinityMemberPage({ listvirtualmachinesresponse: { count: 10 } })).toEqual({ rows: [], count: 10 })
 })
-test('all-project member listing and project candidate queries keep scopes explicit', () => {
-  expect(affinityMemberParams(group, 2, 10, 'find')).toMatchObject({ affinitygroupid: 'target', listall: true, projectid: '-1', page: 2, pagesize: 10, keyword: 'find' })
+test('account, project and shared member queries keep their actual owner scopes', () => {
+  expect(affinityMemberParams(group, 2, 10, 'find')).toMatchObject({ affinitygroupid: 'target', listall: true, account: 'owner', domainid: 'domain', page: 2, pagesize: 10, keyword: 'find' })
   expect(affinityMemberParams({ ...group, projectid: 'project' }, 1, 10, '', false)).toMatchObject({ projectid: 'project', domainid: 'domain' })
   expect(affinityMemberParams(group, 1, 10, '', false)).toMatchObject({ account: 'owner', domainid: 'domain' })
   expect(affinityMemberParams(group, 1, 10, '', false)).not.toHaveProperty('projectid')
+  expect(affinityMemberParams(group, 1, 10, '')).not.toHaveProperty('projectid')
+  expect(affinityMemberParams({ ...group, type: 'ExplicitDedication' }, 1, 10, '')).toMatchObject({ affinitygroupid: 'target', domainid: 'domain', isrecursive: true, projectid: '-1' })
+  expect(affinityGroupQueryParams(group)).toEqual({ id: 'target', listall: true, account: 'owner', domainid: 'domain' })
+  expect(affinityGroupQueryParams({ ...group, projectid: 'p' })).toEqual({ id: 'target', listall: true, projectid: 'p', domainid: 'domain' })
 })
 test('add reads current memberships and preserves unrelated groups', async () => {
   const get = lookup()

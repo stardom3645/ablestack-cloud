@@ -38,6 +38,16 @@ test('full mapping count and query total are independent of the current page; fa
   expect(w.vm.memberCount).toBe(3); expect(w.vm.total).toBe(3); expect(w.vm.rows).toHaveLength(2)
   failList = true; await w.vm.fetchData(); expect(w.vm.rows).toHaveLength(2); expect(w.vm.total).toBe(3); expect(w.vm.error).toBe('offline')
 })
+test.each([AffinityGroupMembers, DeleteAffinityGroup])('$name reads an account group in its owner scope instead of the caller all-project scope', async component => {
+  const normal = getAPI.getMockImplementation()
+  getAPI.mockImplementation((cmd, params) => cmd === 'listAffinityGroups' && (params.projectid === '-1' || params.account !== group.account || params.domainid !== group.domainid)
+    ? Promise.resolve({ listaffinitygroupsresponse: {} }) : normal(cmd, params))
+  const w = mount(component); await flush()
+  expect(w.vm.error).toBe('')
+  expect(component === AffinityGroupMembers ? w.vm.memberCount : w.vm.count).toBe(3)
+  expect(getAPI).toHaveBeenCalledWith('listAffinityGroups', { id: 'target', listall: true, domainid: 'domain', account: 'owner' }, expect.any(Object))
+})
+
 test('refresh clamps an emptied last member page and fetches the remaining page', async () => {
   const w = mount(); await flush(); groups = { ...group, virtualmachineIds: ['one'] }
   getAPI.mockImplementation(async (cmd, params) => cmd === 'listAffinityGroups' ? { listaffinitygroupsresponse: { affinitygroup: [groups] } } : { listvirtualmachinesresponse: { count: 1, ...(params.page === 1 ? { virtualmachine: [fresh[0]] } : {}) } })

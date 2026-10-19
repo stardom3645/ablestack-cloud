@@ -117,7 +117,7 @@ import { getAPI, postAPI } from '@/api'
 import MoldDialog from '@/components/view/MoldDialog.vue'
 import Status from '@/components/widgets/Status'
 import { affinityOwnerKey, affinitySessionScope, affinityVmCanChange, affinityApiError, getAffinityOperation } from '@/utils/affinityGroupOperations'
-import { affinityMemberCount, affinityVmIds, affinityMemberSnapshot, affinityMemberLocked, affinityMemberPage, affinityMemberParams, prepareAffinityMemberChange, affinityMemberBatch, resetAffinityMemberBatch, observeAffinityMemberBatch } from '@/utils/affinityGroupMembers'
+import { affinityMemberCount, affinityVmIds, affinityMemberSnapshot, affinityMemberLocked, affinityMemberPage, affinityMemberParams, affinityGroupQueryParams, prepareAffinityMemberChange, affinityMemberBatch, resetAffinityMemberBatch, observeAffinityMemberBatch } from '@/utils/affinityGroupMembers'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 import { affinityResultTone } from '@/utils/affinityGroupPresentation'
 
@@ -191,7 +191,7 @@ export default {
       try {
         const [response, groupResponse] = await Promise.all([
           getAPI('listVirtualMachines', affinityMemberParams(this.resource, this.page, this.pagesize, this.keyword), { preserveOnFailure: true, timeout: 15000 }),
-          getAPI('listAffinityGroups', { id: this.resource.id, listall: true, projectid: this.resource.projectid || '-1' }, { preserveOnFailure: true, timeout: 15000 })
+          getAPI('listAffinityGroups', affinityGroupQueryParams(this.resource), { preserveOnFailure: true, timeout: 15000 })
         ])
         const group = groupResponse?.listaffinitygroupsresponse?.affinitygroup?.find(row => row.id === this.resource.id)
         if (!group || affinityOwnerKey(group) !== affinityOwnerKey(this.resource)) throw new Error('message.affinity.owner.changed')

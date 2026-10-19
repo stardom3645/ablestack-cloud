@@ -34,7 +34,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
 import { getAPI, postAPI } from '@/api'
 import MoldDialog from '@/components/view/MoldDialog.vue'
 import { affinityOwnerKey, affinitySessionScope, affinityApiError, getAffinityOperation } from '@/utils/affinityGroupOperations'
-import { affinityMemberCount } from '@/utils/affinityGroupMembers'
+import { affinityMemberCount, affinityGroupQueryParams } from '@/utils/affinityGroupMembers'
 export default {
   name: 'DeleteAffinityGroup',
   components: { MoldDialog },
@@ -61,7 +61,7 @@ export default {
   methods: {
     text (value) { return value.startsWith('message.') ? this.$t(value) : value },
     async group () {
-      const response = await getAPI('listAffinityGroups', { id: this.resource.id, listall: true, projectid: this.resource.projectid || '-1' }, { preserveOnFailure: true, timeout: 15000 })
+      const response = await getAPI('listAffinityGroups', affinityGroupQueryParams(this.resource), { preserveOnFailure: true, timeout: 15000 })
       const group = response?.listaffinitygroupsresponse?.affinitygroup?.find(row => row.id === this.resource.id)
       if (!group || affinityOwnerKey(group) !== affinityOwnerKey(this.resource) || group.name !== this.resource.name) throw new Error('message.affinity.owner.changed')
       return group

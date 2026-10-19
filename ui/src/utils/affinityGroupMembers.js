@@ -31,9 +31,14 @@ export function affinityMemberParams (group, page, pagesize, keyword, members = 
     page,
     pagesize,
     details: 'min,affgrp',
-    ...(members ? { affinitygroupid: group.id, projectid: group.projectid || '-1' } : (group.type === 'ExplicitDedication' ? { domainid: group.domainid, isrecursive: true, projectid: '-1' } : affinityOwnerParams(group))),
+    ...(group.type === 'ExplicitDedication' ? { domainid: group.domainid, isrecursive: true, projectid: '-1' } : affinityOwnerParams(group)),
+    ...(members ? { affinitygroupid: group.id } : {}),
     ...(keyword ? { keyword } : {})
   }
+}
+
+export function affinityGroupQueryParams (group) {
+  return { id: group.id, listall: true, ...(group.type === 'ExplicitDedication' ? { domainid: group.domainid, isrecursive: true, projectid: '-1' } : affinityOwnerParams(group)) }
 }
 
 // The server's owner-scoped group lookup is authoritative for domain-shared groups.
