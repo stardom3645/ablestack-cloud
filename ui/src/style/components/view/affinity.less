@@ -9,6 +9,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 .affinity-library, .affinity-resource, .affinity-members { min-width: 0; }
+// The affix wrapper can retain extra height after a mobile toolbar resize.
+// Only its painted card should intercept input above the resource tabs.
+.affinity-library .ant-affix { pointer-events: none; }
+.affinity-library .ant-affix > .breadcrumb-card { pointer-events: auto; }
 .affinity-library .list-view-table-wrapper .ant-table-cell,
 .affinity-resource .card-content, .affinity-resource .resource-details-list,
 .affinity-dialog .ant-modal-body { overflow-wrap: anywhere; }
