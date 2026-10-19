@@ -479,6 +479,7 @@ export default {
           disabled: disableDuringFastCloneFlatten,
           tooltip: (record, store, selectedItems) => getFastCloneOperationTooltip(record, store, selectedItems, 'label.change.affinity'),
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ChangeAffinity'))),
+          selfManagedDialog: true,
           popup: true
         },
         {

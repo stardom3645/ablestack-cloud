@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <MoldDialog class="affinity-create-dialog" size="md" :title="$t('label.add.affinity.group')" @cancel="closeAction">
+  <MoldDialog class="affinity-create-dialog affinity-dialog" size="md" :title="$t('label.add.affinity.group')" @cancel="closeAction">
     <template #title>
       {{ $t('label.add.affinity.group') }}
       <a v-if="currentAction.docHelp" :href="documentationUrl($config.docBase, currentAction.docHelp, $i18n.locale)" :aria-label="$t('label.help')" target="_blank" rel="noopener noreferrer"><question-circle-outlined /></a>
@@ -39,8 +39,9 @@ limitations under the License. -->
           <a-select-option v-for="type in types" :key="type.id" :value="type.id" :label="type.labelKey ? $t(type.labelKey) : type.name">{{ type.labelKey ? $t(type.labelKey) : type.name }}</a-select-option>
         </a-select>
       </a-form-item>
+      <p v-if="form.type" class="affinity-secondary"><AffinityGroupPolicy :type="form.type" /></p>
       <AffinityGroupOwner v-if="isAdmin && !operationLocked" :initial-owner="owner" :disabled="validating" @change="ownerChanged" />
-      <p v-else>{{ $t('label.affinity.create.owner') }}: {{ owner.projectid || owner.account }} / {{ owner.domainid }}</p>
+      <p v-else class="affinity-secondary">{{ $t('label.affinity.create.owner') }}: {{ ownerSummary }}</p>
     </a-form>
     <template #footer>
       <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
@@ -52,13 +53,14 @@ limitations under the License. -->
 import { getAPI, postAPI } from '@/api'
 import MoldDialog from '@/components/view/MoldDialog'
 import AffinityGroupOwner from './AffinityGroupOwner'
+import AffinityGroupPolicy from './AffinityGroupPolicy'
 import { affinityNameValid, affinityTypeOptions } from '@/utils/affinityGroupCreation'
 import { affinitySessionScope, getAffinityOperation } from '@/utils/affinityGroupOperations'
 import { documentationUrl } from '@/utils/cniFileImport'
 
 export default {
   name: 'CreateAffinityGroup',
-  components: { MoldDialog, AffinityGroupOwner },
+  components: { MoldDialog, AffinityGroupOwner, AffinityGroupPolicy },
   props: { currentAction: { type: Object, default: () => ({}) } },
   emits: ['refresh-data', 'close-action'],
   data () {
@@ -67,6 +69,7 @@ export default {
       form: { name: '', description: '', type: undefined },
       owner: { domainid: project.domainid || user.domainid, ...(project.id ? { projectid: project.id } : { account: user.account }) },
       ownerReady: !['Admin', 'DomainAdmin'].includes(user.roletype),
+      ownerLabels: null,
       validating: false,
       types: [],
       typesLoading: true,
@@ -75,6 +78,11 @@ export default {
     }
   },
   computed: {
+    ownerSummary () {
+      const user = this.$store.getters.userInfo || {}; const project = this.$store.getters.project || {}
+      const labels = this.ownerLabels?.key === JSON.stringify(this.owner) ? this.ownerLabels : {}
+      return [labels.name || (this.owner.projectid ? (project.id === this.owner.projectid ? project.name : this.owner.projectid) : this.owner.account), labels.domain || (user.domainid === this.owner.domainid ? user.domain : this.owner.domainid)].filter(Boolean).join(' / ')
+    },
     isAdmin () { return ['Admin', 'DomainAdmin'].includes(this.$store.getters.userInfo.roletype) },
     securityScope () { return affinitySessionScope(this.$store) },
     busy () { return ['preparing', 'submitting', 'pending', 'retrying'].includes(this.operation.status) },
@@ -95,7 +103,7 @@ export default {
   methods: {
     documentationUrl,
     errorText (text) { return text.startsWith('message.') ? this.$t(text === 'message.affinity.operation.failed' ? 'message.affinity.create.failed' : text) : text },
-    ownerChanged ({ owner, ready }) { this.owner = owner; this.ownerReady = ready },
+    ownerChanged ({ owner, ready, labels }) { this.owner = owner; this.ownerReady = ready; this.ownerLabels = labels ? { ...labels, key: JSON.stringify(owner) } : null },
     async loadTypes () {
       const version = ++this.typesVersion; const scope = this.securityScope
       this.typesLoading = true; this.typesError = false; this.types = []

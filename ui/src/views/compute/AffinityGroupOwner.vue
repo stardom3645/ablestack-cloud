@@ -60,7 +60,9 @@ export default {
   methods: {
     emitOwner () {
       const ready = !this.loading && !this.error && !!this.domainid && !!this.selection
-      this.$emit('change', { ready, owner: ready ? { domainid: this.domainid, ...(this.kind === 'project' ? { projectid: this.selection } : { account: this.selection }) } : {} })
+      const option = this.options.find(row => (this.kind === 'project' ? row.id : row.name) === this.selection)
+      const domain = this.domains.find(row => row.id === this.domainid)
+      this.$emit('change', { ready, owner: ready ? { domainid: this.domainid, ...(this.kind === 'project' ? { projectid: this.selection } : { account: this.selection }) } : {}, labels: ready ? { name: option?.name || this.selection, domain: domain?.path || domain?.name || this.domainid } : null })
     },
     async loadDomains () {
       const version = ++this.version

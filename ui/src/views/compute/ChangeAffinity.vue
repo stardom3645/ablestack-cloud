@@ -16,16 +16,18 @@
 // under the License.
 
 <template>
-  <a-form class="form" v-ctrl-enter="handleSubmit">
+  <MoldDialog class="affinity-dialog" size="lg" :title="$t('label.change.affinity')" @cancel="closeAction">
+    <div class="affinity-dialog-summary"><strong>{{ resource.displayname || resource.name }}</strong><span class="affinity-secondary">{{ ownerLabel }}</span></div>
+    <a-form class="affinity-change-form" v-ctrl-enter="handleSubmit">
 
     <p v-html="$t('message.select.affinity.groups')" />
 
-    <a-alert v-if="ownerLabel" type="info" show-icon :message="$t('label.affinity.owner') + ': ' + ownerLabel" style="margin-bottom: 12px" />
-    <a-alert v-if="!vmSupported" type="warning" show-icon :message="$t('message.affinity.vm.stopped')" style="margin-bottom: 12px" />
-    <a-alert v-if="fetchError" type="error" show-icon :message="errorText(fetchError)" style="margin-bottom: 12px">
+    <a-alert v-if="ownerLabel" type="info" show-icon :message="$t('label.affinity.owner') + ': ' + ownerLabel" />
+    <a-alert v-if="!vmSupported" type="warning" show-icon :message="$t('message.affinity.vm.stopped')" />
+    <a-alert v-if="fetchError" type="error" show-icon :message="errorText(fetchError)">
       <template #description><a-button size="small" :loading="fetching" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
-    <a-alert v-if="operation.status !== 'idle'" :type="operationType" show-icon :message="$t('message.affinity.operation.' + operation.status)" style="margin-bottom: 12px">
+    <a-alert v-if="operation.status !== 'idle'" :type="operationType" show-icon :message="$t('message.affinity.operation.' + operation.status)">
       <template #description>
         <div v-if="operation.error" role="alert">{{ errorText(operation.error) }}</div>
         <div v-if="operation.jobId">{{ $t('label.affinity.job') }}: {{ operation.jobId }}</div>
@@ -42,9 +44,8 @@
       :disabled="operationLocked || !vmSupported"
       @change="onSelectChange" />
 
-    <div class="form__item">
+    <div class="affinity-dialog-search">
       <a-input-search
-        style="margin-bottom: 10px;"
         :placeholder="$t('label.search')"
         v-model:value="filter"
         :disabled="operationLocked"
@@ -63,15 +64,17 @@
         :pagination="{current: options.page, pageSize: options.pageSize, showSizeChanger: true, total: total, disabled: operationLocked}"
         :rowSelection="{selectedRowKeys: selectedRowKeys, preserveSelectedRowKeys: true, onChange: onSelectChange, getCheckboxProps: () => ({ disabled: operationLocked || !vmSupported })}"
         @change="handleTableChange"
-        style="overflow-y: auto"/>
+        :scroll="{ x: 640 }">
+        <template #bodyCell="{ column, record, text }"><AffinityGroupPolicy v-if="column.dataIndex === 'type'" :type="record.type" compact /><span v-else>{{ text || '—' }}</span></template>
+      </a-table>
     </div>
 
-    <div :span="24" class="action-button">
+    </a-form>
+    <template #footer>
       <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
       <a-button :loading="busy" :disabled="!canSubmit" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-    </div>
-
-  </a-form>
+    </template>
+  </MoldDialog>
 </template>
 
 <script>
@@ -80,10 +83,12 @@ import { genericCompare } from '@/utils/sort.js'
 import { affinityOwnerParams, affinityOwnerKey, affinitySessionScope, affinityApiError, affinityVmCanChange, getAffinityOperation } from '@/utils/affinityGroupOperations'
 import { affinitySelectionIds } from '@/utils/affinityGroupSelection'
 import AffinitySelectionSummary from './wizard/AffinitySelectionSummary.vue'
+import MoldDialog from '@/components/view/MoldDialog'
+import AffinityGroupPolicy from './AffinityGroupPolicy'
 
 export default {
   name: 'ChangeAffinity',
-  components: { AffinitySelectionSummary },
+  components: { AffinitySelectionSummary, MoldDialog, AffinityGroupPolicy },
   props: {
     resource: {
       type: Object,

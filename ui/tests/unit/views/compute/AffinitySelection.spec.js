@@ -36,7 +36,7 @@ let wrappers
 const store = () => reactive({ state: { user: { token: 'session' } }, getters: { userInfo: { id: 'user' }, project: {} } })
 function render (component, props = {}) {
   const s = store()
-  const w = mount(component, { props, global: { mocks: { $store: s, $t: key => key, $notification: { success: jest.fn() } }, provide: { parentFetchData: jest.fn() } } })
+  const w = mount(component, { props, global: { mocks: { $store: s, $t: key => key, $notification: { success: jest.fn() } }, provide: { parentFetchData: jest.fn() }, stubs: { MoldDialog: { template: '<section><slot/><footer><slot name="footer"/></footer></section>' } } } })
   wrappers.push(w)
   return { w, s }
 }

@@ -7,7 +7,7 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
 <template>
-  <MoldDialog size="md" :title="$t('label.delete.affinity.group')" @cancel="$emit('close-action')">
+  <MoldDialog class="affinity-dialog" size="md" :title="$t('label.delete.affinity.group')" @cancel="$emit('close-action')">
     <p v-if="progress">{{ progress }}</p>
     <a-descriptions :column="1" bordered>
       <a-descriptions-item :label="$t('label.name')">{{ resource.name }}</a-descriptions-item>
@@ -25,7 +25,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
       </template>
     </a-alert>
     <template #footer>
-      <a-button @click="$emit('close-action')">{{ $t('label.close') }}</a-button>
+      <a-button @click="$emit('close-action')">{{ $t('label.cancel') }}</a-button>
       <a-button type="primary" danger :disabled="count === null || !!error || loading || !['idle', 'failed'].includes(operation.status)" :loading="['preparing', 'submitting', 'pending', 'retrying'].includes(operation.status)" @click="submit">{{ $t('label.delete.affinity.group') }}</a-button>
     </template>
   </MoldDialog>

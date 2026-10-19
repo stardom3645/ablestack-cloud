@@ -10,35 +10,38 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
 <template>
   <section class="affinity-members">
     <h3>{{ $t('label.affinity.members') }}</h3>
-    <p>{{ $t('message.affinity.members.help') }}</p>
-    <p role="status">{{ $t('label.affinitymembercount') }}: {{ memberCount }} · {{ $t('label.affinity.members.visible') }}: {{ total }}</p>
-    <div class="affinity-members-toolbar">
+    <p class="affinity-secondary">{{ $t('message.affinity.members.help') }}</p>
+    <p role="status" aria-live="polite">{{ $t('label.affinitymembercount') }}: {{ memberCount }} · {{ $t('label.affinity.members.visible') }}: {{ total }}</p>
+    <div class="detail-tab-toolbar affinity-members-toolbar">
       <a-button type="primary" :disabled="!canChange || busy" @click="openAdd">{{ $t('label.affinity.members.add') }}</a-button>
       <a-button :disabled="!canChange || busy || !selection.length || !!error" @click="confirmRemove">{{ $t('label.affinity.members.remove') }} ({{ selection.length }})</a-button>
       <a-button v-if="batch.targets.length" @click="dialog = 'results'">{{ $t('label.affinity.members.results') }}</a-button>
-      <a-button :loading="loading" :aria-label="$t('label.refresh')" @click="fetchData"><template #icon><reload-outlined /></template></a-button>
-      <a-input-search v-model:value="draftKeyword" :placeholder="$t('label.search')" allow-clear @search="search" />
+      <div class="detail-tab-toolbar-context">
+        <a-input-search v-model:value="draftKeyword" :aria-label="$t('label.affinity.members.search')" :placeholder="$t('label.search')" allow-clear @search="search" />
+        <a-button :loading="loading" :aria-label="$t('label.refresh')" :title="$t('label.refresh')" @click="fetchData"><template #icon><reload-outlined /></template></a-button>
+      </div>
     </div>
-    <a-alert v-if="error" type="error" show-icon :message="text(error)"><template #description><a-button @click="fetchData">{{ $t('label.retry') }}</a-button></template></a-alert>
-    <p v-if="!canRead" role="alert">{{ $t('message.affinity.members.restricted') }}</p>
-    <p v-else-if="!keyword && !error && memberCount > total">{{ $t('message.affinity.members.restricted') }}</p>
-    <p v-if="selection.length">{{ $t('label.selected') }}: {{ selection.length }} <a-button size="small" @click="selection = []; selected = {}">{{ $t('label.clear') }}</a-button></p>
-    <a-table
+    <a-alert v-if="error" type="error" show-icon :message="text(error)"><template #description><a-button :loading="loading" @click="fetchData">{{ $t('label.retry') }}</a-button></template></a-alert>
+    <a-alert v-if="!canRead || (!keyword && memberCount > total)" type="info" show-icon :message="$t('message.affinity.members.restricted')" />
+    <div v-if="selection.length" class="affinity-selection-context"><span>{{ $t('label.selected') }}: {{ selection.length }}</span><a-button size="small" @click="selection = []; selected = {}">{{ $t('label.clear') }}</a-button></div>
+    <div class="affinity-table-region" role="region" tabindex="0" :aria-label="$t('label.affinity.members')">
+      <a-table
+size="small"
 :columns="columns"
 :data-source="rows"
-:loading="loading"
 :row-key="row => row.id"
 :pagination="false"
-:scroll="{ x: 960 }"
-      :locale="{ emptyText: $t(canRead ? 'message.affinity.members.empty' : 'message.affinity.members.restricted') }"
-      :row-selection="canChange ? { selectedRowKeys: selection, preserveSelectedRowKeys: true, onChange: selectMembers, getCheckboxProps: vm => ({ disabled: !eligible(vm) || busy || !!error }) } : undefined">
-      <template #bodyCell="{ column, record, text: value }">
-        <template v-if="column.key === 'displayname'"><router-link :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div>{{ record.instancename || $t('label.affinity.members.unavailable') }}</div></template>
-        <template v-else-if="column.key === 'state'"><Status :text="record.state" /></template>
-        <template v-else-if="column.key === 'reason'">{{ eligible(record) ? '' : $t('message.affinity.vm.stopped') }}</template>
-        <template v-else>{{ value || $t('label.affinity.members.unavailable') }}</template>
-      </template>
-    </a-table>
+:loading="loading"
+:locale="{ emptyText }"
+        :row-selection="canChange ? { selectedRowKeys: selection, preserveSelectedRowKeys: true, onChange: selectMembers, getCheckboxProps: vm => ({ disabled: !eligible(vm) || busy || !!error, 'aria-label': vm.displayname || vm.name }) } : undefined">
+        <template #bodyCell="{ column, record, text: value }">
+          <template v-if="column.key === 'displayname'"><router-link class="affinity-vm-name" :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div class="affinity-vm-internal" :title="record.instancename ? '' : $t('message.affinity.value.unavailable')">{{ record.instancename || '—' }}</div></template>
+          <template v-else-if="column.key === 'state'"><Status :text="record.state" display-text vm-state /></template>
+          <template v-else-if="column.key === 'reason'"><span class="affinity-secondary">{{ eligible(record) ? '—' : $t('message.affinity.vm.stopped') }}</span></template>
+          <template v-else><span :title="value ? '' : $t('message.affinity.value.unavailable')">{{ value || '—' }}</span></template>
+        </template>
+      </a-table>
+    </div>
     <a-pagination
 class="affinity-members-pagination"
 :current="page"
@@ -49,56 +52,57 @@ show-size-changer
 @change="changePage"
 @showSizeChange="changePage" />
 
-    <MoldDialog v-if="dialog" size="lg" :title="$t('label.affinity.members.' + (dialog === 'blocked' ? 'previous' : dialog === 'results' ? 'results' : mode))" @cancel="closeDialog">
-      <p>{{ resource.name }} · {{ resource.project || resource.account }} / {{ resource.domain }}</p>
-      <p>{{ $t('message.affinity.members.help') }}</p>
-      <p v-if="busy" role="status">{{ $t('message.affinity.operation.close') }}</p>
+    <MoldDialog v-if="dialog" class="affinity-dialog" size="lg" :title="$t('label.affinity.members.' + (dialog === 'blocked' ? 'previous' : dialog === 'results' ? 'results' : mode))" @cancel="closeDialog">
+      <div class="affinity-dialog-summary"><strong>{{ resource.name }}</strong><span class="affinity-secondary">{{ resource.project || resource.account }} / {{ resource.domain }}</span></div>
+      <p class="affinity-secondary">{{ $t('message.affinity.members.help') }}</p>
+      <p v-if="busy" role="status" aria-live="polite">{{ $t('message.affinity.operation.close') }}</p>
       <template v-if="dialog === 'choose'">
-        <a-input-search v-model:value="candidateDraft" :placeholder="$t('label.search')" allow-clear @search="candidateSearch" />
-        <a-alert v-if="candidateError" type="error" :message="text(candidateError)"><template #description><a-button @click="fetchCandidates">{{ $t('label.retry') }}</a-button></template></a-alert>
-        <p>{{ $t('label.selected') }}: {{ candidateSelection.length }} · {{ $t('message.affinity.members.page.selection') }}</p>
-        <a-button v-if="candidateSelection.length" size="small" @click="candidateSelection = []; candidatesSelected = {}">{{ $t('label.clear') }}</a-button>
-        <a-table
+        <a-input-search class="affinity-dialog-search" v-model:value="candidateDraft" :aria-label="$t('label.affinity.members.search')" :placeholder="$t('label.search')" allow-clear @search="candidateSearch" />
+        <a-alert v-if="candidateError" type="error" show-icon :message="text(candidateError)"><template #description><a-button :loading="candidateLoading" @click="fetchCandidates">{{ $t('label.retry') }}</a-button></template></a-alert>
+        <div class="affinity-selection-context"><span>{{ $t('label.selected') }}: {{ candidateSelection.length }}</span><a-button v-if="candidateSelection.length" size="small" @click="candidateSelection = []; candidatesSelected = {}">{{ $t('label.clear') }}</a-button></div>
+        <p class="affinity-secondary">{{ $t('message.affinity.members.page.selection') }}</p>
+        <div class="affinity-table-region" role="region" tabindex="0" :aria-label="$t('label.affinity.members.add')">
+          <a-table
+size="small"
 :columns="columns"
 :data-source="candidates"
 :row-key="row => row.id"
 :loading="candidateLoading"
 :pagination="false"
-:scroll="{ x: 900 }"
-          :row-selection="{ selectedRowKeys: candidateSelection, preserveSelectedRowKeys: true, onChange: selectCandidates, getCheckboxProps: vm => ({ disabled: !eligible(vm) || linked(vm) || !!candidateError || candidateLoading }) }">
-          <template #bodyCell="{ column, record, text: value }">
-            <template v-if="column.key === 'displayname'"><router-link :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div>{{ record.instancename || $t('label.affinity.members.unavailable') }}</div></template>
-            <template v-else-if="column.key === 'reason'">{{ linked(record) ? $t('message.affinity.members.already') : (!eligible(record) ? $t('message.affinity.vm.stopped') : '') }}</template>
-            <template v-else>{{ value || $t('label.affinity.members.unavailable') }}</template>
-          </template>
-        </a-table>
-        <a-pagination :current="candidatePage" :page-size="10" :total="candidateTotal" @change="candidatePage = $event; fetchCandidates()" />
+            :row-selection="{ selectedRowKeys: candidateSelection, preserveSelectedRowKeys: true, onChange: selectCandidates, getCheckboxProps: vm => ({ disabled: !eligible(vm) || linked(vm) || !!candidateError || candidateLoading, 'aria-label': vm.displayname || vm.name }) }">
+            <template #bodyCell="{ column, record, text: value }">
+              <template v-if="column.key === 'displayname'"><router-link class="affinity-vm-name" :to="vmLink(record)">{{ record.displayname || record.name }}</router-link><div class="affinity-vm-internal" :title="record.instancename ? '' : $t('message.affinity.value.unavailable')">{{ record.instancename || '—' }}</div></template>
+              <template v-else-if="column.key === 'state'"><Status :text="record.state" display-text vm-state /></template>
+              <template v-else-if="column.key === 'reason'"><span class="affinity-secondary">{{ linked(record) ? $t('message.affinity.members.already') : (!eligible(record) ? $t('message.affinity.vm.stopped') : '—') }}</span></template>
+              <template v-else><span :title="value ? '' : $t('message.affinity.value.unavailable')">{{ value || '—' }}</span></template>
+            </template>
+          </a-table>
+        </div>
+        <a-pagination class="affinity-members-pagination" :current="candidatePage" :page-size="10" :total="candidateTotal" @change="candidatePage = $event; fetchCandidates()" />
       </template>
       <template v-else-if="dialog === 'blocked' && blocked">
-        <p role="alert">{{ $t('message.affinity.members.previous') }}</p>
+        <a-alert type="warning" show-icon :message="$t('message.affinity.members.previous')" />
         <router-link :to="vmLink(blocked.vm)">{{ blocked.vm.displayname || blocked.vm.name }}</router-link>
         <p>{{ $t('label.affinity.members.previous') }}: {{ $t('message.affinity.operation.' + blocked.state.status) }}</p>
-        <p v-if="blocked.state.error">{{ text(blocked.state.error) }}</p>
-        <p v-if="blocked.state.jobId">{{ $t('label.affinity.job') }}: {{ blocked.state.jobId }}</p>
+        <p v-if="blocked.state.error" role="alert">{{ text(blocked.state.error) }}</p>
+        <p v-if="blocked.state.jobId" class="affinity-job">{{ $t('label.affinity.job') }}: <a-typography-text copyable>{{ blocked.state.jobId }}</a-typography-text></p>
         <p v-if="blocked.state.status === 'unknown' && !blocked.state.jobId">{{ $t('message.affinity.operation.no.receipt') }}</p>
-        <a-button v-if="blocked.state.jobId" :loading="blocked.loading" @click="recheckBlocked">{{ $t('label.affinity.recheck') }}</a-button>
+        <a-button v-if="recheckable(blocked.state)" :loading="blocked.loading" @click="recheckBlocked">{{ $t('label.affinity.recheck') }}</a-button>
       </template>
       <template v-else>
         <p v-if="dialog === 'confirm'">{{ $t('message.affinity.members.confirm') }}</p>
-        <ul class="affinity-member-results">
+        <ul class="affinity-member-results" aria-live="polite">
           <li v-for="vm in batch.targets" :key="vm.id">
-            <router-link :to="vmLink(vm)">{{ vm.displayname || vm.name }}</router-link>
-            <span v-if="batch.results[vm.id]"> · {{ $t('message.affinity.operation.' + batch.results[vm.id].status) }}</span>
+            <div class="affinity-result-heading"><router-link :to="vmLink(vm)">{{ vm.displayname || vm.name }}</router-link><a-tag v-if="batch.results[vm.id]" :color="resultTone(batch.results[vm.id].status)">{{ $t('message.affinity.operation.' + batch.results[vm.id].status) }}</a-tag></div>
             <div v-if="batch.results[vm.id]?.error" role="alert">{{ text(batch.results[vm.id].error) }}</div>
-            <div v-if="batch.results[vm.id]?.jobId">{{ $t('label.affinity.job') }}: {{ batch.results[vm.id].jobId }}</div>
+            <p v-if="batch.results[vm.id]?.jobId" class="affinity-job">{{ $t('label.affinity.job') }}: <a-typography-text copyable>{{ batch.results[vm.id].jobId }}</a-typography-text></p>
             <p v-if="batch.results[vm.id]?.status === 'unknown' && !batch.results[vm.id]?.jobId">{{ $t('message.affinity.operation.no.receipt') }}</p>
-            <a-button v-if="recheckable(batch.results[vm.id])" size="small" @click="recheck(vm)">{{ $t('label.affinity.recheck') }}</a-button>
-            <a-button v-if="batch.results[vm.id]?.previous" size="small" @click="showBlocked(vm)">{{ $t('label.affinity.members.previous') }}</a-button>
+            <div class="affinity-result-actions"><a-button v-if="recheckable(batch.results[vm.id])" size="small" @click="recheck(vm)">{{ $t('label.affinity.recheck') }}</a-button><a-button v-if="batch.results[vm.id]?.previous" size="small" @click="showBlocked(vm)">{{ $t('label.affinity.members.previous') }}</a-button></div>
           </li>
         </ul>
       </template>
       <template #footer>
-        <a-button @click="closeDialog">{{ $t('label.close') }}</a-button>
+        <a-button @click="closeDialog">{{ $t(['choose', 'confirm'].includes(dialog) ? 'label.cancel' : 'label.close') }}</a-button>
         <a-button v-if="dialog === 'choose'" type="primary" :disabled="!candidateSelection.length || !!candidateError || candidateLoading" @click="confirmAdd">{{ $t('label.next') }}</a-button>
         <a-button v-if="dialog === 'confirm'" type="primary" :loading="busy" :disabled="!canChange" @click="execute(false)">{{ $t('label.ok') }}</a-button>
         <a-button v-if="dialog === 'results' && hasIdle" type="primary" :loading="busy" :disabled="!canChange" @click="execute(false)">{{ $t('label.affinity.members.continue') }}</a-button>
@@ -115,6 +119,7 @@ import Status from '@/components/widgets/Status'
 import { affinityOwnerKey, affinitySessionScope, affinityVmCanChange, affinityApiError, getAffinityOperation } from '@/utils/affinityGroupOperations'
 import { affinityMemberCount, affinityVmIds, affinityMemberSnapshot, affinityMemberLocked, affinityMemberPage, affinityMemberParams, prepareAffinityMemberChange, affinityMemberBatch, resetAffinityMemberBatch, observeAffinityMemberBatch } from '@/utils/affinityGroupMembers'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
+import { affinityResultTone } from '@/utils/affinityGroupPresentation'
 
 export default {
   name: 'AffinityGroupMembers',
@@ -156,7 +161,8 @@ export default {
     busy () { return this.batch.busy || Object.values(this.batch.results).some(row => ['preparing', 'submitting', 'pending', 'retrying'].includes(row.status)) },
     hasFailed () { return Object.values(this.batch.results).some(row => row.status === 'failed') },
     hasIdle () { return Object.values(this.batch.results).some(row => row.status === 'idle') },
-    columns () { return ['displayname', 'state', 'hostname', 'account', 'project', 'domain', 'reason'].map(key => ({ key, dataIndex: key, title: this.$t('label.' + (key === 'reason' ? 'affinity.members.reason' : key)) })) }
+    emptyText () { return this.$t(!this.canRead ? 'message.affinity.members.restricted' : this.error ? 'message.affinity.members.lookup' : this.keyword || this.memberCount ? 'message.affinity.members.no.results' : 'message.affinity.members.empty') },
+    columns () { return ['displayname', 'state', 'hostname', 'account', 'project', 'domain', 'reason'].map((key, i) => ({ key, dataIndex: key, width: [200, 110, 140, 120, 140, 120, 240][i], title: this.$t('label.' + (key === 'reason' ? 'affinity.members.reason' : key)) })) }
   },
   created () { this.alive = true; this.version = 0; this.candidateVersion = 0; this.memberCount = affinityMemberCount(this.resource); this.bindBatch(); this.fetchData() },
   beforeUnmount () { this.alive = false; this.version++; this.candidateVersion++ },
@@ -165,6 +171,7 @@ export default {
     active (value) { if (value) this.fetchData(); else { this.version++; this.candidateVersion++; this.dialog = ''; this.blocked = null } }
   },
   methods: {
+    resultTone: affinityResultTone,
     text (value) { return value.startsWith('message.') ? this.$t(value) : value },
     eligible: affinityVmCanChange,
     linked (vm) { return affinityVmIds(vm).includes(this.resource.id) },
