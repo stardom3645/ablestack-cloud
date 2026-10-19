@@ -53,6 +53,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.cloud.api.query.dao.AffinityGroupJoinDao;
+import com.cloud.api.query.dao.AffinityGroupJoinDaoImpl;
 import com.cloud.api.query.vo.AffinityGroupJoinVO;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
@@ -122,15 +123,16 @@ public class AffinityGroupQueryTest {
             acl.first(scopeDomain); acl.second(recursive); acl.third(projectCriteria);
             return null;
         }).when(accountManager).buildACLSearchParameters(any(), any(), any(), any(), anyList(), any(), anyBoolean(), anyBoolean());
+        new AffinityGroupJoinDaoImpl() { };
         when(groups.createSearchBuilder()).thenAnswer(invocation -> new SearchBuilder<>(AffinityGroupJoinVO.class));
         when(groups.createSearchCriteria()).thenAnswer(invocation -> new SearchBuilder<>(AffinityGroupJoinVO.class).create());
         DomainVO domain = new DomainVO(); domain.setPath("/ROOT/11/");
         when(domainDao.findById(11L)).thenReturn(domain);
         when(domains.getDomainParentIds(11L)).thenReturn(new HashSet<>(Arrays.asList(9L, 11L)));
-        when(domainMaps.listByDomain(any())).thenReturn(Arrays.asList(map(91, 9, true), map(92, 9, false), map(93, 11, false), map(91, 9, true)));
+        when(domainMaps.listByDomain(any(Object[].class))).thenReturn(Arrays.asList(map(91, 9, true), map(92, 9, false), map(93, 11, false), map(91, 9, true)));
         List<AffinityGroupJoinVO> page = Arrays.asList(row(1), row(2));
         when(groups.searchAndCount(any(), any(Filter.class))).thenReturn(new Pair<>(page, 4));
-        when(groups.searchByIds(any())).thenAnswer(invocation -> new ArrayList<>(Arrays.asList(row(2), row(1), row(1))));
+        when(groups.searchByIds(any(Long[].class))).thenAnswer(invocation -> new ArrayList<>(Arrays.asList(row(2), row(1), row(1))));
     }
 
     @After
@@ -192,7 +194,7 @@ public class AffinityGroupQueryTest {
         when(groups.searchAndCount(any(), any(Filter.class))).thenReturn(new Pair<>(Collections.emptyList(), 4));
         Pair<List<AffinityGroupJoinVO>, Integer> result = manager.searchForAffinityGroupsInternal(cmd);
         assertTrue(result.first().isEmpty()); assertEquals(Integer.valueOf(4), result.second());
-        capturedQuery(); verify(groups, never()).searchByIds(any());
+        capturedQuery(); verify(groups, never()).searchByIds(any(Long[].class));
     }
 
     @Test
@@ -238,7 +240,7 @@ public class AffinityGroupQueryTest {
 
     @Test
     public void noSharedGroupsRetainsTheOriginalOwnerScope() {
-        when(domainMaps.listByDomain(any())).thenReturn(Collections.emptyList());
+        when(domainMaps.listByDomain(any(Object[].class))).thenReturn(Collections.emptyList());
         manager.searchForAffinityGroupsInternal(cmd);
         SearchCriteria<?> sc = capturedQuery();
         assertTrue(values(sc).contains("/ROOT/11/%")); assertFalse(sc.getWhereClause().contains(" OR "));
