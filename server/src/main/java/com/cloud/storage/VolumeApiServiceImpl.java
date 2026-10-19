@@ -3350,7 +3350,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
         Account caller = CallContext.current().getCallingAccount();
         if (!_accountMgr.isRootAdmin(caller.getId())) {
-            if (path != null || state != null || storageId != null || displayVolume != null || customId != null || chainInfo != null) {
+            if (path != null || state != null || storageId != null || displayVolume != null || customId != null || chainInfo != null || volumeType != null) {
                 throw new InvalidParameterValueException("The domain admin and normal user are " +
                         "not allowed to update volume except volume name & delete protection");
             }
@@ -3365,8 +3365,12 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         /* Does the caller have authority to act on this volume? */
         _accountMgr.checkAccess(caller, null, true, volume);
 
-        if (path != null) {
+        validateVolumePathUpdate(volume, path);
+        if (path != null && !Objects.equals(path, volume.getPath())) {
             DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            if (offering == null) {
+                throw new InvalidParameterValueException("Unable to find the volume's disk offering for a path update");
+            }
             if (offering.getShareable()) {
                 VolumeVO sha_vol = _volsDao.findByPath(path);
                 if (sha_vol != null) {
@@ -3375,8 +3379,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                     volume.setState(Volume.State.Ready);
                 }
             }
-            volume.setPath(path);
-        } else {
             volume.setPath(path);
         }
 
@@ -3434,6 +3436,27 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         _volsDao.update(volumeId, volume);
 
         return volume;
+    }
+
+    private void validateVolumePathUpdate(VolumeVO volume, String path) {
+        if (path == null) {
+            return;
+        }
+        if (StringUtils.isBlank(path)) {
+            throw new InvalidParameterValueException("Volume path must not be empty or blank");
+        }
+        if (Objects.equals(path, volume.getPath())) {
+            return;
+        }
+        if (!Arrays.asList(Volume.State.Allocated, Volume.State.Ready, Volume.State.Uploaded).contains(volume.getState())) {
+            throw new InvalidParameterValueException("Volume path can only be changed in Allocated, Ready or Uploaded state");
+        }
+        if (volume.getInstanceId() != null) {
+            UserVmVO vm = _userVmDao.findById(volume.getInstanceId());
+            if (vm == null || vm.getState() != State.Stopped) {
+                throw new InvalidParameterValueException("Stop the attached virtual machine before changing the volume path");
+            }
+        }
     }
 
     @Override
