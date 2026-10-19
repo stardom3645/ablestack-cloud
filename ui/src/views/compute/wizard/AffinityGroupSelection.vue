@@ -194,7 +194,8 @@ export default {
 <style lang="less" scoped>
   .affinity-group-selection { min-width: 0; }
   .affinity-group-selection :deep(.ant-table-cell) { overflow-wrap: anywhere; }
-  .affinity-group-selection :deep(.ant-table-body) { min-width: 0; max-width: 100%; }
+  // Override the common mobile/tablet table minimum only inside this selector.
+  .affinity-group-selection :deep(.ant-table-body) { min-width: 0 !important; max-width: 100%; }
   .affinity-group-selection :deep(.ant-pagination) { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 100%; }
   .ant-table-wrapper {
     margin: 2rem 0;
