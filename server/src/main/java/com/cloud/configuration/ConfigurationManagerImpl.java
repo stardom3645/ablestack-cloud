@@ -286,6 +286,7 @@ import com.cloud.service.dao.ServiceOfferingDetailsDao;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.ProvisioningType;
+import com.cloud.storage.VolumeAllocationPolicy;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePoolTagVO;
 import com.cloud.storage.Volume;
@@ -2805,7 +2806,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new CloudRuntimeException(errorMsg + "there are Secondary storages in this zone");
         }
 
-        // We could check if there are any non-removed VMware datacenters in the zone. EWe don´t care.
+        // We could check if there are any non-removed VMware datacenters in the zone. EWe don쨈t care.
         // These can continu to exist as long as the mapping will be gone (see line deleteZone
     }
 
@@ -3565,6 +3566,10 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
 
         final Long diskOfferingId = cmd.getDiskOfferingId();
+        if (diskOfferingId != null && cmd.getExplicitProvisioningType() != null &&
+                !VolumeAllocationPolicy.validateStored(diskOfferingDetailsDao.listDetailsKeyPairs(diskOfferingId)).isEmpty()) {
+            throw new InvalidParameterValueException("provisioningtype conflicts with the explicit policy on the linked disk offering");
+        }
         if (diskOfferingId != null) {
             DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
             if ((diskOffering == null) || diskOffering.isComputeOnly()) {
@@ -3645,6 +3650,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
 
         final ProvisioningType typedProvisioningType = ProvisioningType.getProvisioningType(provisioningType);
+        VolumeAllocationPolicy.validateStored(details);
 
         tags = com.cloud.utils.StringUtils.cleanupTags(tags);
 
@@ -3703,6 +3709,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         serviceOffering.setGpuCount(gpuCount);
         serviceOffering.setGpuDisplay(gpuDisplay);
 
+        VolumeAllocationPolicy.resolve(
+                VolumeAllocationPolicy.validateStored(details),
+                diskOfferingId == null ? null : diskOfferingDetailsDao.listDetailsKeyPairs(diskOfferingId), diskOfferingId != null);
         DiskOfferingVO diskOffering = null;
         if (diskOfferingId == null) {
             diskOffering = createDiskOfferingInternal(
@@ -3855,6 +3864,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         if ((diskOffering = _diskOfferingDao.persist(diskOffering)) != null) {
             if ((details != null && !details.isEmpty()) || (storagePolicyID != null)) {
                 List<DiskOfferingDetailVO> diskDetailsVO = new ArrayList<>();
+                for (Map.Entry<String, String> entry : VolumeAllocationPolicy.validateStored(details).entrySet()) {
+                    diskDetailsVO.add(new DiskOfferingDetailVO(diskOffering.getId(), entry.getKey(), entry.getValue(), false));
+                }
                 // Support disk offering details for below parameters
                 if (details.containsKey(Volume.BANDWIDTH_LIMIT_IN_MBPS)) {
                     diskDetailsVO.add(new DiskOfferingDetailVO(diskOffering.getId(), Volume.BANDWIDTH_LIMIT_IN_MBPS, details.get(Volume.BANDWIDTH_LIMIT_IN_MBPS), false));
@@ -3953,6 +3965,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final long userId = CallContext.current().getCallingUserId();
         final ServiceOfferingVO sourceOffering = getAndValidateSourceOffering(cmd.getSourceOfferingId());
         final DiskOfferingVO sourceDiskOffering = getSourceDiskOffering(sourceOffering);
+        if (sourceDiskOffering != null) {
+            VolumeAllocationPolicy.requireLegacyExecution(diskOfferingDetailsDao.listDetailsKeyPairs(sourceDiskOffering.getId()));
+        }
         final Map<String, String> requestParams = cmd.getFullUrlParams();
 
         final String name = cmd.getServiceOfferingName();
@@ -4236,6 +4251,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     public DiskOffering cloneDiskOffering(final CloneDiskOfferingCmd cmd) {
         final long userId = CallContext.current().getCallingUserId();
         final DiskOfferingVO sourceOffering = getAndValidateSourceDiskOffering(cmd.getSourceOfferingId());
+        VolumeAllocationPolicy.requireLegacyExecution(diskOfferingDetailsDao.listDetailsKeyPairs(sourceOffering.getId()));
         final Map<String, String> requestParams = cmd.getFullUrlParams();
 
         final String name = cmd.getOfferingName();
@@ -4645,6 +4661,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new InvalidParameterValueException(String.format("The maximum size for a disk is %d GB.", maxVolumeSizeInGb));
         }
         final ProvisioningType typedProvisioningType = ProvisioningType.getProvisioningType(provisioningType);
+        VolumeAllocationPolicy.validateStored(details);
 
         if (numGibibytes != null) {
             diskSize = numGibibytes * 1024 * 1024 * 1024;
@@ -7137,6 +7154,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
     @Override
     public void checkDiskOfferingAccess(final Account caller, final DiskOffering dof, DataCenter zone) {
+        if (dof != null) {
+            VolumeAllocationPolicy.requireLegacyExecution(diskOfferingDetailsDao.listDetailsKeyPairs(dof.getId()));
+        }
         for (final SecurityChecker checker : _secChecker) {
             if (checker.checkAccess(caller, dof, zone)) {
                 if (logger.isDebugEnabled()) {

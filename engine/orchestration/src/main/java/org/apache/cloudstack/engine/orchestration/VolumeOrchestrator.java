@@ -364,6 +364,10 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
     }
 
     public VolumeVO allocateDuplicateVolumeVO(Volume oldVol, DiskOffering diskOffering, Long templateId) {
+        com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(oldVol.getDiskOfferingId()));
+        if (diskOffering != null) {
+            com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(diskOffering.getId()));
+        }
         VolumeVO newVol = new VolumeVO(oldVol.getVolumeType(), oldVol.getName(), oldVol.getDataCenterId(), oldVol.getDomainId(), oldVol.getAccountId(), oldVol.getDiskOfferingId(),
                 oldVol.getProvisioningType(), oldVol.getSize(), oldVol.getMinIops(), oldVol.getMaxIops(), oldVol.get_iScsiName());
         if (templateId != null) {
@@ -1156,6 +1160,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
             minIops = minIops != null ? minIops : offering.getMinIops();
             maxIops = maxIops != null ? maxIops : offering.getMaxIops();
 
+            com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
             VolumeVO vol = new VolumeVO(type, name, vm.getDataCenterId(), owner.getDomainId(), owner.getId(), offering.getId(), offering.getProvisioningType(), size, minIops, maxIops, null);
             if (vm != null) {
                 vol.setInstanceId(vm.getId());
@@ -1221,6 +1226,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         minIops = minIops != null ? minIops : offering.getMinIops();
         maxIops = maxIops != null ? maxIops : offering.getMaxIops();
 
+        com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
         VolumeVO vol = new VolumeVO(type, name, vm.getDataCenterId(), owner.getDomainId(), owner.getId(), offering.getId(), offering.getProvisioningType(), size, minIops, maxIops, null);
         if (vm != null) {
             vol.setInstanceId(vm.getId());
@@ -1271,6 +1277,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
 
     private DiskProfile allocateTemplatedVolume(Type type, String name, DiskOffering offering, Long rootDisksize, Long minIops, Long maxIops, VirtualMachineTemplate template, VirtualMachine vm,
                                                 Account owner, long deviceId, String configurationId, Long kmsKeyId, Volume volume, Snapshot snapshot) {
+        com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
         assert (template.getFormat() != ImageFormat.ISO) : "ISO is not a template.";
 
         if (volume != null) {
@@ -2877,6 +2884,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         minIops = minIops != null ? minIops : offering.getMinIops();
         maxIops = maxIops != null ? maxIops : offering.getMaxIops();
 
+        com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailDao.listDetailsKeyPairs(offering.getId()));
         VolumeVO vol = new VolumeVO(type, name, zoneId, owner.getDomainId(), owner.getId(), offering.getId(), offering.getProvisioningType(), sizeInBytes, minIops, maxIops, null);
         if (vm != null) {
             vol.setInstanceId(vm.getId());
