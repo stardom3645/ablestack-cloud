@@ -16,9 +16,9 @@
 // under the License.
 
 <template>
-  <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup' }">
+  <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup', 'userdata-library': $route.meta?.name === 'userdata' }">
     <a-affix
-      :key="'affix-' + showSearchFilters"
+      :key="'affix-' + showSearchFilters + ($route.meta?.name === 'userdata' ? '-' + device + '-' + selectedRowKeys.length : '')"
       :offsetTop="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 103 : 78"
     >
       <a-card class="breadcrumb-card" style="z-index: 10">
@@ -98,6 +98,7 @@
             </breadcrumb>
           </a-col>
           <a-col
+            class="autogen-toolbar-actions"
             :span="device === 'mobile' ? 24 : 12"
             :style="device === 'mobile' ? { float: 'right', 'margin-top': '12px', 'margin-bottom': '-6px', display: 'table' } : { float: 'right', display: 'table', 'margin-top': '6px' }" >
             <slot name="action" v-if="dataView && $route.path.startsWith('/publicip') && $slots.action"></slot>
@@ -168,10 +169,12 @@
     <div v-show="showAction">
       <component
         v-if="showAction && currentAction.selfManagedDialog"
+        ref="selfManagedAction"
         :is="currentAction.component"
         :resource="resource"
         :current-action="currentAction"
         dialog-only
+        @refresh-data="fetchData"
         @close-action="closeAction"
       />
       <keep-alive v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
@@ -193,7 +196,7 @@
             <a
               v-if="currentAction.docHelp || $route.meta.docHelp"
               style="margin-left: 5px"
-              :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
+              :href="documentationUrl($config.docBase, currentAction.docHelp || $route.meta.docHelp, $i18n.locale)"
               target="_blank"
             >
               <question-circle-outlined />
@@ -237,7 +240,7 @@
           <a
             v-if="currentAction.docHelp || $route.meta.docHelp"
             style="margin-left: 5px"
-            :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
+            :href="documentationUrl($config.docBase, currentAction.docHelp || $route.meta.docHelp, $i18n.locale)"
             target="_blank">
             <question-circle-outlined />
           </a>
@@ -469,7 +472,7 @@
           <a
             v-if="currentAction.docHelp || $route.meta.docHelp"
             style="margin-left: 5px"
-            :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
+            :href="documentationUrl($config.docBase, currentAction.docHelp || $route.meta.docHelp, $i18n.locale)"
             target="_blank"
           >
             <question-circle-outlined />
@@ -810,18 +813,27 @@
         :retained="!!listLoadedScope"
         @retry="fetchData({ irefresh: true })" />
       <div v-if="dataView">
+        <a-spin v-if="isSshKeyPairDetail && !sshKeyPairDetailVisible" :spinning="loading">
+          <a-alert show-icon :type="loading ? 'info' : 'error'" :message="$t('message.ssh.keypair.detail.' + sshKeyPairDetailStatus)">
+            <template #action>
+              <a-button :disabled="loading" @click="fetchData({ irefresh: true })">{{ $t('label.refresh') }}</a-button>
+              <router-link to="/ssh" style="margin-left: 8px">{{ $t('label.ssh.key.pairs') }}</router-link>
+            </template>
+          </a-alert>
+        </a-spin>
         <slot
           name="resource"
           v-if="$route.path.startsWith('/publicip')"
         ></slot>
         <resource-view
-          v-else-if="$route.meta?.name !== 'vmgroup' || resource.id || loading"
-          :key="$route.path"
-          :readyForActions="$route.meta?.name !== 'vmgroup' || vmGroupQueryReady"
+          v-else-if="(!isSshKeyPairDetail || sshKeyPairDetailVisible) && ($route.meta?.name !== 'vmgroup' || resource.id || loading)"
+          :key="isSshKeyPairDetail ? listScope() : $route.path"
+          :readPending="listRequestPending"
+          :readyForActions="isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name === 'cniconfiguration' ? cniDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady))"
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
-          :actions="$route.meta?.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
+          :actions="(isSshKeyPairDetail && !sshKeyPairDetailActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
           @exec-action="handleDataViewAction"
           @change-resource="resource = $event" />
       </div>
@@ -832,7 +844,7 @@
         <advisories-view
           v-if="$route.meta.advisories && !loading"
         />
-        <a-alert v-if="listRefreshError && $route.name === 'vmsnapshot'" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
+        <a-alert v-if="listRefreshError && ($route.name === 'vmsnapshot' || $route.meta?.name === 'cniconfiguration')" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
           <template #action><a-button size="small" @click="fetchData">{{ $t('label.refresh') }}</a-button></template>
         </a-alert>
         <p v-else-if="listRefreshError && $route.meta?.name !== 'vmgroup'" role="status">{{ $t('message.list.refresh.stale') }}</p>
@@ -902,6 +914,7 @@ import store from '@/store'
 import eventBus from '@/config/eventBus'
 
 import Breadcrumb from '@/components/widgets/Breadcrumb'
+import { documentationUrl } from '@/utils/cniFileImport'
 import ListView from '@/components/view/ListView'
 import ResourceView from '@/components/view/ResourceView'
 import ActionButton from '@/components/view/ActionButton'
@@ -911,6 +924,9 @@ import OsLogo from '@/components/widgets/OsLogo'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import BulkActionProgress from '@/components/view/BulkActionProgress'
 import { bulkColumns, updateBulkItem } from '@/utils/bulkAction'
+import { userDataDeleteTargets } from '@/utils/userDataDeletion'
+import { cniDeleteTargets, cniListLocation } from '@/utils/cniDeletion'
+import { cniHistoryRouteKey } from '@/utils/cniHistory'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import DetailsInput from '@/components/widgets/DetailsInput'
 import AdvisoriesView from '@/components/view/AdvisoriesView'
@@ -918,6 +934,8 @@ import InstanceGroupDeleteSummary from '@/components/view/InstanceGroupDeleteSum
 import InstanceGroupQueryStatus from '@/components/view/InstanceGroupQueryStatus'
 import { vmGroupQuery, vmGroupQueryChanged, vmGroupQueryParams, vmGroupQueryScope, vmGroupQueryRows } from '@/utils/vmGroupQuery'
 import { vmGroupLookupStatus } from '@/utils/vmGroupLookup'
+import { sshKeyPairDeleteTargets } from '@/utils/sshKeyPairDeletion'
+import { isSshKeyPairDetailRoute, sshKeyPairDetailScope, sshKeyPairDetailTarget, sshKeyPairDetailParams, sshKeyPairMatchesTarget, sshKeyPairDetailResult, sshKeyPairDetailFailure, sshKeyPairVmParams } from '@/utils/sshKeyPairIdentity'
 import { normalizeVmGroupName, isVmGroupNameAction, isVmGroupAction, vmGroupErrorKey, vmGroupDeleteTargets } from '@/utils/vmGroupNames'
 
 export default {
@@ -1006,6 +1024,8 @@ export default {
       listLastUpdated: null,
       vmGroupContextScope: null,
       vmGroupQueryStatus: 'loading',
+      sshKeyPairDetailStatus: 'loading',
+      sshKeyPairDetailContext: null,
       autoRefreshInterval: 10000
     }
   },
@@ -1129,17 +1149,19 @@ export default {
 
     this.currentPath = this.$route.fullPath
     this.fetchData()
-    if ('projectid' in this.$route.query) {
+    if ('projectid' in this.$route.query && !isSshKeyPairDetailRoute(this.$route)) {
       this.switchProject(this.$route.query.projectid)
     }
     this.setModalWidthByScreen()
     this.scheduleAutoRefresh()
   },
   beforeRouteUpdate (to, from, next) {
+    if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
     this.currentPath = this.$route.fullPath
     next()
   },
   beforeRouteLeave (to, from, next) {
+    if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
     console.log('DEBUG - Due to route change, ignoring results for any on-going API request', this.apiName)
     sourceToken.cancel()
     sourceToken.init()
@@ -1152,11 +1174,13 @@ export default {
   },
   watch: {
     snapshotSecurityScope () {
-      if (this.$route.meta?.name === 'vmgroup') this.fetchData()
+      if (this.$route.meta?.name === 'vmgroup' || this.isSshKeyPairDetail) this.fetchData()
       if (['createVMSnapshot', 'revertToVMSnapshot', 'deleteVMSnapshot', 'createSnapshotFromVMSnapshot'].includes(this.currentAction.api)) this.closeAction()
     },
     '$route' (to, from) {
       if (to.fullPath !== from.fullPath && !to.path.startsWith('/action/') && to?.query?.tab !== 'browser') {
+        if (to.meta?.name === 'cniconfiguration' && from.meta?.name === 'cniconfiguration' && to.params?.id &&
+          cniHistoryRouteKey(to) === cniHistoryRouteKey(from)) return
         if (to.meta?.name === 'vmgroup' && from.meta?.name === 'vmgroup' &&
           vmGroupQueryScope(to, this.$store.getters, this.$store.state?.user?.token) === vmGroupQueryScope(from, this.$store.getters, this.$store.state?.user?.token)) {
           this.fetchData({ irefresh: true })
@@ -1171,7 +1195,7 @@ export default {
         this.clearAutoRefresh()
         this.fetchData()
         this.scheduleAutoRefresh()
-        if ('projectid' in to.query) {
+        if ('projectid' in to.query && !isSshKeyPairDetailRoute(to)) {
           this.switchProject(to.query.projectid)
         }
       }
@@ -1202,6 +1226,14 @@ export default {
     }
   },
   computed: {
+    isSshKeyPairDetail () { return isSshKeyPairDetailRoute(this.$route) },
+    sshKeyPairDetailVisible () {
+      return ['ready', 'refreshing'].includes(this.sshKeyPairDetailStatus) &&
+        this.sshKeyPairDetailContext === this.listScope() &&
+        sshKeyPairMatchesTarget(this.resource, sshKeyPairDetailTarget(this.$route, this.$store.getters.project, this.$store.getters.listAllProjects))
+    },
+    sshKeyPairDetailActionReady () { return this.sshKeyPairDetailVisible && this.sshKeyPairDetailStatus === 'ready' && !this.listRequestPending },
+    cniDetailActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() && !!this.resource.id && String(this.resource.id).toLowerCase() === String(this.$route.params.id || '').toLowerCase() },
     vmGroupQueryReady () { return ['ready', 'empty'].includes(this.vmGroupQueryStatus) && this.listLoadedScope === this.listScope() && !this.listRequestPending },
     vmGroupEmptyText () {
       if (['error', 'forbidden', 'loading'].includes(this.vmGroupQueryStatus)) return this.$t('message.vm.group.query.' + this.vmGroupQueryStatus)
@@ -1288,6 +1320,7 @@ export default {
       return 'self'
     },
     visibleDataViewActions () {
+      if (this.isSshKeyPairDetail && !this.sshKeyPairDetailActionReady) return []
       if (this.$route.meta?.name === 'vmgroup' && !this.vmGroupQueryReady) return []
       if (!this.actions || !this.dataView) {
         return []
@@ -1328,11 +1361,31 @@ export default {
         !(this.currentAction.invokedAsGroupAction && this.selectedRowKeys.length > 0)
     },
     isSubmitDisabled () {
+      if (this.isSshKeyPairDetail && !this.sshKeyPairDetailActionReady) return true
       return this.requiresNameConfirmation &&
         (!this.resource?.name || this.actionConfirmText.trim() !== this.resource.name.trim())
     }
   },
   methods: {
+    documentationUrl,
+    rejectSshKeyPairDetail (status) {
+      this.sshKeyPairDetailStatus = status
+      this.items = []; this.resource = {}; this.itemCount = 0
+      this.listLoadedScope = null; this.listRefreshError = true
+      this.detailActionsVisible = false
+      if (this.showAction) this.closeAction()
+      if (this.showGroupActionModal) this.handleCancel()
+      this.$emit('change-resource', this.resource)
+    },
+    canExecuteSshKeyPairAction (action) {
+      if (!isSshKeyPairDetailRoute(this.$route)) return true
+      if (!this.sshKeyPairDetailActionReady) return false
+      if (action?.resource && (!sshKeyPairMatchesTarget(action.resource, sshKeyPairDetailTarget(this.$route, this.$store.getters.project, this.$store.getters.listAllProjects)) || action.resource.id !== this.resource.id)) {
+        this.rejectSshKeyPairDetail('mismatch')
+        return false
+      }
+      return true
+    },
     isScheduleListRoute () {
       return ['/snapshotpolicy', '/backupschedule'].some(path => this.$route.path.endsWith(path))
     },
@@ -1387,8 +1440,10 @@ export default {
       }
     },
     listScope () {
+      if (isSshKeyPairDetailRoute(this.$route)) return sshKeyPairDetailScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
       if (this.$route.meta?.name === 'vmgroup') return vmGroupQueryScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
-      return JSON.stringify([this.$route.fullPath, this.$store.getters.project?.id,
+      const routeKey = this.$route.meta?.name === 'cniconfiguration' && this.$route.params?.id ? cniHistoryRouteKey(this.$route) : this.$route.fullPath
+      return JSON.stringify([routeKey, this.$store.getters.project?.id,
         this.$store.getters.userInfo?.id, this.$store.getters.metrics, this.$store.getters.listAllProjects])
     },
     getStyle () {
@@ -1468,6 +1523,18 @@ export default {
       })
     },
     fetchData (params = {}) {
+      if (isSshKeyPairDetailRoute(this.$route)) {
+        const context = this.listScope()
+        if (this.sshKeyPairDetailContext !== context) {
+          this.sshKeyPairDetailContext = context
+          this.items = []; this.resource = {}; this.itemCount = 0
+          this.listLoadedScope = null; this.listRefreshQueued = false
+          this.sshKeyPairDetailStatus = 'loading'
+          this.resetSelection()
+          if (this.showAction) this.closeAction()
+          if (this.showGroupActionModal) this.handleCancel()
+        }
+      }
       if (this.$route.meta?.name === 'vmgroup') {
         const clean = vmGroupQuery(this.$route.query)
         if (vmGroupQueryChanged(this.$route.query, clean)) {
@@ -1565,13 +1632,14 @@ export default {
         }
         Object.assign(params, this.$route.query)
       }
-      if ((this.$route.name === 'vmsnapshot' || this.$route.meta?.name === 'vmgroup') && !rebuildSchema) {
+      if ((this.$route.name === 'vmsnapshot' || ['vmgroup', 'cniconfiguration'].includes(this.$route.meta?.name)) && !rebuildSchema) {
         this.columns.forEach(column => { column.sortOrder = (params.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === column.key ? (params.sortorder === 'asc' ? 'ascend' : 'descend') : null })
       }
       delete params.q
       delete params.filter
       delete params.irefresh
       delete params.autoscheduled
+      delete params.cnireturn
 
       this.searchFilters = this.$route && this.$route.meta && this.$route.meta.searchFilters
       this.filters = this.$route && this.$route.meta && this.$route.meta.filters
@@ -1583,7 +1651,7 @@ export default {
       }
 
       this.projectView = Boolean(store.getters.project && store.getters.project.id)
-      this.hasProjectId = ['vm', 'vmgroup', 'ssh', 'affinitygroup', 'userdata', 'volume', 'snapshot', 'buckets', 'vmsnapshot', 'guestnetwork',
+      this.hasProjectId = ['vm', 'vmgroup', 'ssh', 'affinitygroup', 'userdata', 'cniconfiguration', 'volume', 'snapshot', 'buckets', 'vmsnapshot', 'guestnetwork',
         'vpc', 'securitygroups', 'publicip', 'vpncustomergateway', 'template', 'iso', 'event', 'kubernetes', 'sharedfs',
         'autoscalevmgroup', 'vnfapp', 'webhook', 'kmskey', 'hsmprofile'].includes(this.$route.name)
 
@@ -1677,7 +1745,7 @@ export default {
             title: this.$t('label.' + String(title).toLowerCase()),
             dataIndex: key,
             sorter: this.$route.name === 'vmsnapshot' ? ['displayname', 'state', 'type', 'current', 'created'].includes(key) : sorter,
-            ...((this.$route.name === 'vmsnapshot' || this.$route.meta?.name === 'vmgroup') ? { sortOrder: (this.$route.query.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {})
+            ...((this.$route.name === 'vmsnapshot' || ['vmgroup', 'cniconfiguration'].includes(this.$route.meta?.name)) ? { sortOrder: (this.$route.query.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {})
           })
           if (this.$route.name !== 'autoscalevmgroup' || defaultColumnKeys.some(column => (typeof column === 'object' ? column.field : column) === key)) this.selectedColumns.push(key)
         }
@@ -1826,10 +1894,35 @@ export default {
         if (this.dataView) { params.page = 1; params.pagesize = 20 }
         this.vmGroupQueryStatus = sameList ? 'refreshing' : 'loading'
       }
-      const response = vmGroups ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
+      const sshDetail = isSshKeyPairDetailRoute(this.$route)
+      const sshTarget = sshDetail ? sshKeyPairDetailTarget(this.$route, this.$store.getters.project, this.$store.getters.listAllProjects) : null
+      if (sshDetail) {
+        if (sshTarget.invalid) {
+          this.rejectSshKeyPairDetail('mismatch')
+          this.listRequestPending = false; this.loading = false
+          return
+        }
+        params = sshKeyPairDetailParams(params, sshTarget)
+        this.sshKeyPairDetailStatus = sameList ? 'refreshing' : 'loading'
+      }
+      if (['listVirtualMachines', 'listVirtualMachinesMetrics'].includes(requestApi)) {
+        params = sshKeyPairVmParams(params, this.$route.query)
+      }
+      const cniQuery = this.$route.meta?.name === 'cniconfiguration'
+      const response = vmGroups || sshDetail || cniQuery ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
       const request = response.then(async json => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         const groupResult = vmGroups ? vmGroupQueryRows(json) : null
+        if (sshDetail) {
+          const result = sshKeyPairDetailResult(json, sshTarget)
+          if (result.status !== 'ready') { this.rejectSshKeyPairDetail(result.status); return }
+          this.items = result.rows; this.itemCount = 1
+          this.resource = result.rows[0]
+          this.sshKeyPairDetailStatus = 'ready'
+          this.listLastUpdated = Date.now(); this.listLoadedScope = scope; this.listRefreshError = false
+          this.$emit('change-resource', this.resource)
+          return
+        }
         this.listLastUpdated = Date.now()
         this.listLoadedScope = scope
         this.listRefreshError = false
@@ -1857,7 +1950,7 @@ export default {
           this.apiName === 'quotaSummary' && this.$route.params.id === params.accountid ||
           this.apiName === 'quotaEmailTemplateList' && this.$route.params.id === params.templatetype
 
-        if ('id' in this.$route.params && !idFromRouteMatchesApiParameter && !['listSSHKeyPairs'].includes(this.apiName)) {
+        if ('id' in this.$route.params && !idFromRouteMatchesApiParameter) {
           console.log('DEBUG - Discarding API response as its `id` does not match the uuid on the browser path')
           return
         }
@@ -1933,6 +2026,18 @@ export default {
         }
       }).catch(error => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
+        if (sshDetail) { this.rejectSshKeyPairDetail(sshKeyPairDetailFailure(error)); return }
+        if (cniQuery) {
+          this.listRefreshError = true
+          this.resetSelection()
+          if (this.$refs.listview) this.$refs.listview.resetSelection()
+          const code = Number(error?.response?.data?.errorresponse?.errorcode || error?.response?.status)
+          if (!sameList || [401, 403, 431, 432, 531].includes(code)) {
+            this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null
+          }
+          if (isAutoScheduled) throw error
+          return
+        }
         if (vmGroups) {
           this.vmGroupQueryStatus = vmGroupLookupStatus(error)
           this.listRefreshError = true
@@ -1980,7 +2085,7 @@ export default {
           this.$router.push({ path: '/dashboard' })
         }
       }).finally(f => {
-        if (version !== this.listRequestVersion) return
+        if (version !== this.listRequestVersion || scope !== this.listScope()) return
         this.listRequestPending = false
         this.loading = false
         this.searchParams = params
@@ -2006,13 +2111,38 @@ export default {
       }
       return request
     },
-    closeAction () {
+    closeAction (result) {
+      const cniAction = this.currentAction?.api === 'deleteCniConfiguration' && this.currentAction.cniListScope === this.listScope()
+      const cniLocation = this.currentAction?.cniListLocation
+      const deletedCniDetail = cniAction && this.dataView && result?.removed?.includes(this.resource?.id)
+      if (cniAction && result?.removed?.length) {
+        const removed = new Set(result.removed)
+        this.items = this.items.filter(item => !removed.has(item.id))
+        this.selectedItems = this.items.filter(item => (result.retained || []).includes(item.id))
+        this.selectedRowKeys = this.selectedItems.map(item => item.id)
+        // Invalidate old detail/list reads before routing; stale responses cannot revive deleted actions.
+        this.listRequestVersion++; this.listRequestPending = false; this.listLoadedScope = null
+        if (deletedCniDetail) { this.resource = {}; this.items = []; this.itemCount = 0 }
+      }
+      const deletedSshDetail = this.currentAction?.api === 'deleteSSHKeyPair' && isSshKeyPairDetailRoute(this.$route) && result?.removed?.includes(this.resource?.id)
+      if (this.currentAction?.api === 'deleteSSHKeyPair' && result?.clearSelection) { this.selectedRowKeys = []; this.selectedItems = [] }
+      const deletedUserDataDetail = this.currentAction?.api === 'deleteUserData' && this.dataView && result?.removed?.includes(this.resource?.id)
+      if (this.currentAction?.api === 'deleteUserData' && result?.started && this.currentAction.userDataListScope === this.listScope()) {
+        const removed = new Set(result.removed || [])
+        const retained = new Set(result.retained || [])
+        this.items = this.items.filter(item => !removed.has(item.id))
+        this.selectedItems = this.items.filter(item => retained.has(item.id))
+        this.selectedRowKeys = this.selectedItems.map(item => item.id)
+      }
       const trigger = this.actionTrigger
       this.actionTrigger = null
       this.actionLoading = false
       this.showAction = false
       this.currentAction = {}
       this.actionConfirmText = ''
+      if (deletedCniDetail) this.$router.replace(cniLocation || { path: '/cniconfiguration' })
+      if (deletedSshDetail) this.$router.push('/ssh')
+      if (deletedUserDataDetail) this.$router.push('/userdata')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.
       this.$nextTick(() => {
         if (!this.showAction && trigger?.isConnected && trigger !== document.body) {
@@ -2062,7 +2192,32 @@ export default {
       }
     },
     execAction (action, isGroupAction) {
+      if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
+      if (action.api === 'deleteCniConfiguration') {
+        if (!['listCniConfiguration', 'deleteCniConfiguration'].every(api => api in this.$store.getters.apis)) return
+        const request = { ...action, invokedAsGroupAction: !!isGroupAction }
+        this.currentAction = { ...request, cniTargets: cniDeleteTargets(request, this.selectedItems), cniListScope: this.listScope(), cniListLocation: cniListLocation(this.$route) }
+        this.resource = action.resource || {}
+        this.showAction = true
+        return
+      }
+      if (action.api === 'deleteUserData') {
+        if (!('deleteUserData' in this.$store.getters.apis) || !('listUserData' in this.$store.getters.apis)) return
+        const request = { ...action, invokedAsGroupAction: !!isGroupAction }
+        this.currentAction = { ...request, userDataTargets: userDataDeleteTargets(request, this.selectedItems), userDataListScope: this.listScope() }
+        this.resource = action.resource || {}
+        this.showAction = true
+        return
+      }
+      if (action.api === 'deleteSSHKeyPair') {
+        if (this.actionTrigger?.closest('.resource-context-menu')) this.actionTrigger = this.$refs?.detailActionsTrigger?.$el || this.$el?.querySelector('.ant-table-selection-column input') || this.actionTrigger
+        const request = { ...action, invokedAsGroupAction: !!isGroupAction }
+        this.currentAction = { ...request, sshKeyPairTargets: sshKeyPairDeleteTargets(request, this.selectedItems) }
+        this.resource = action.resource || {}
+        this.showAction = true
+        return
+      }
       if (action.api === 'createVMSnapshot') action = { ...action, resource: Object.freeze({ ...action.resource }) }
       if (action.snapshotMode) {
         this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, snapshotTargets: Object.freeze((isGroupAction ? this.selectedItems : [action.resource]).filter(Boolean).map(row => Object.freeze({ ...row }))) }
@@ -2579,8 +2734,12 @@ export default {
       } finally { if (snapshotSubmissions[id] === submission) delete snapshotSubmissions[id] }
     },
     execSubmit (e) {
+      if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(this.currentAction)) return
+      const sshActionScope = isSshKeyPairDetailRoute(this.$route) ? this.listScope() : null
+      const submittedAction = this.currentAction
       e.preventDefault()
       this.formRef.value.validate().then(() => {
+        if (sshActionScope && (sshActionScope !== this.listScope() || !this.canExecuteSshKeyPairAction(submittedAction))) return
         let values = toRaw(this.form)
         const params = {}
         const action = this.currentAction
@@ -2954,15 +3113,15 @@ export default {
     },
     changePage (page, pageSize) {
       const query = Object.assign({}, this.$route.query)
-      query.page = page
+      query.page = this.$route.meta?.name === 'cniconfiguration' && Number(pageSize) !== this.pageSize ? 1 : page
       query.pagesize = pageSize
       this.$router.push({ query })
     },
     handleTableChange (pagination, filters, sorter) {
-      if (this.$route.meta?.name === 'vmgroup') {
+      if (['vmgroup', 'cniconfiguration'].includes(this.$route.meta?.name)) {
         const query = { ...this.$route.query }
         if (sorter?.order) { query.sortkey = sorter.field; query.sortorder = sorter.order === 'ascend' ? 'asc' : 'desc' } else { delete query.sortkey; delete query.sortorder }
-        this.$router.push({ query: vmGroupQuery(query) })
+        this.$router.push({ query: this.$route.meta?.name === 'vmgroup' ? vmGroupQuery(query) : query })
         return
       }
       if (this.$route.name !== 'vmsnapshot') return
@@ -2970,7 +3129,7 @@ export default {
     },
     changePageSize (currentPage, pageSize) {
       const query = Object.assign({}, this.$route.query)
-      query.page = currentPage
+      query.page = this.$route.meta?.name === 'cniconfiguration' ? 1 : currentPage
       query.pagesize = pageSize
       this.$router.push({ query })
     },

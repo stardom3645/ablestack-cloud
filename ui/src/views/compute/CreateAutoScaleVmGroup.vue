@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div class="autoscale-create">
+  <div ref="creationLayout" class="autoscale-create" :class="{ 'autoscale-create--bounded': creationViewportHeight }" :style="{ '--autoscale-viewport-height': creationViewportHeight }">
     <a-alert v-if="!hasRequiredCreationApis" type="error" show-icon :message="$t('message.autoscale.apis.required')" style="margin-bottom: 16px" />
     <a-alert v-if="userDataLookupFailed" type="error" show-icon :message="$t('message.autoscale.userdata.unavailable')" style="margin-bottom: 16px">
       <template #description><a-button size="small" @click="retryUserDataLookup">{{ $t('label.retry') }}</a-button></template>
@@ -25,9 +25,12 @@
       <template #description><a-button @click="processStatusModalVisible = true">{{ $t('label.autoscale.creation.inspect') }}</a-button></template>
     </a-alert>
     <a-row v-if="hasRequiredCreationApis" :gutter="12">
-      <a-col :md="24" :lg="17">
+      <a-col :xs="24" :lg="17" class="autoscale-create-form-column">
         <a-card :bordered="true" :title="$t('label.new.autoscale.vmgroup')">
           <a-form
+            class="autoscale-create-form-scroll"
+            tabindex="0"
+            :aria-label="$t('label.new.autoscale.vmgroup')"
             v-ctrl-enter="handleSubmit"
             :ref="formRef"
             :model="form"
@@ -823,19 +826,17 @@
                                   @tabChange="key => onUserdataTabChange(key, 'userdataTabKey')">
                                   <div v-if="userdataTabKey === 'userdataregistered'">
                                     <a-step
-                                      v-if="isUserAllowedToListUserDatas"
                                       :status="zoneSelected ? 'process' : 'wait'">
                                       <template #description>
                                         <div v-if="zoneSelected">
                                           <user-data-selection
-                                            :items="options.userDatas"
-                                            :row-count="rowCount.userDatas"
+                                            :scope="userDataOwner"
+                                            :value="form.userdataid"
                                             :zoneId="zoneId"
                                             :disabled="template.userdatapolicy === 'DENYOVERRIDE'"
-                                            :loading="loading.userDatas"
                                             :preFillContent="dataPreFill"
-                                            @select-user-data-item="($event) => updateUserData($event)"
-                                            @handle-search-filter="($event) => handleSearchFilter('userData', $event)"
+                                            @select-user-data-item="updateUserData"
+                                            @ready="userDataSelectionReady = $event"
                                           />
                                           <div v-if="userDataParams.length > 0">
                                             <a-input-group>
@@ -963,26 +964,26 @@
                 </template>
               </a-step>
             </a-steps>
-            <div class="card-footer" v-if="isMobile()">
-              <auto-scale-creation-summary :form="form" :loadbalancer="loadbalancer || {}" />
-              <deploy-buttons
-                :loading="loading.deploy || submitting || creationBusy"
-                :disabled="Boolean(hasUnresolvedCreation)"
-                :deployButtonText="$t('label.create')"
-                @handle-cancel="() => $router.back()"
-                @handle-deploy="handleSubmit" />
-            </div>
+            <auto-scale-creation-summary v-if="!showSideSummary" :form="form" :loadbalancer="loadbalancer || {}" />
           </a-form>
+          <div class="card-footer autoscale-create-mobile-footer" v-if="!showSideSummary">
+            <deploy-buttons
+              :loading="loading.deploy || submitting || creationBusy"
+              :disabled="Boolean(hasUnresolvedCreation) || userDataSelectionBlocked"
+              :deployButtonText="$t('label.create')"
+              @handle-cancel="() => $router.back()"
+              @handle-deploy="handleSubmit" />
+          </div>
         </a-card>
       </a-col>
-      <a-col :md="24" :lg="7" v-if="!isMobile()">
+      <a-col :lg="7" v-if="showSideSummary" class="autoscale-create-summary-column">
         <div class="vm-info-card">
-          <info-card :footerVisible="true" :resource="vm" :title="$t('label.your.autoscale.vmgroup')" @change-resource="(data) => resource = data">
+          <info-card :footerVisible="true" scrollable :resource="vm" :title="$t('label.your.autoscale.vmgroup')" @change-resource="(data) => resource = data">
             <template #details><auto-scale-creation-summary :form="form" :loadbalancer="loadbalancer || {}" /></template>
             <template #footer-content>
               <deploy-buttons
                 :loading="loading.deploy || submitting || creationBusy"
-                :disabled="Boolean(hasUnresolvedCreation)"
+                :disabled="Boolean(hasUnresolvedCreation) || userDataSelectionBlocked"
                 :deployButtonText="$t('label.create')"
                 @handle-cancel="() => $router.back()"
                 @handle-deploy="handleSubmit" />
@@ -1038,6 +1039,7 @@ import NetworkConfiguration from '@views/compute/wizard/NetworkConfiguration'
 import LoadBalancerSelection from '@views/compute/wizard/LoadBalancerSelection'
 import SshKeyPairSelection from '@views/compute/wizard/SshKeyPairSelection'
 import UserDataSelection from '@views/compute/wizard/UserDataSelection'
+import { applyUserDataSelection, userDataSelectionConsumer } from '@/utils/userDataSelection'
 import SecurityGroupSelection from '@views/compute/wizard/SecurityGroupSelection'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import InstanceNicsNetworkSelectListView from '@/components/view/InstanceNicsNetworkSelectListView.vue'
@@ -1082,9 +1084,11 @@ export default {
       default: () => {}
     }
   },
-  mixins: [mixin, mixinDevice],
+  mixins: [mixin, mixinDevice, userDataSelectionConsumer],
   data () {
     return {
+      creationViewportHeight: '',
+      showSideSummary: true,
       creationController: null,
       creationOperation: null,
       creationBusy: false,
@@ -1155,7 +1159,6 @@ export default {
         affinityGroups: false,
         networks: false,
         sshKeyPairs: false,
-        userDatas: false,
         loadbalancers: false,
         zones: false
       },
@@ -1360,15 +1363,6 @@ export default {
         },
         sshKeyPairs: {
           list: 'listSSHKeyPairs',
-          options: {
-            page: 1,
-            pageSize: 10,
-            keyword: undefined,
-            listall: false
-          }
-        },
-        userDatas: {
-          list: 'listUserData',
           options: {
             page: 1,
             pageSize: 10,
@@ -1643,9 +1637,13 @@ export default {
     this.dataPreFill = this.preFillContent && Object.keys(this.preFillContent).length > 0 ? this.preFillContent : {}
     this.fetchData()
   },
-  beforeUnmount () { this.stopCreationTracking() },
-  deactivated () { this.stopCreationTracking() },
-  activated () { if (!this.creationController) this.initCreationTracking() },
+  mounted () { this.startLayoutObservation() },
+  beforeUnmount () { this.stopLayoutObservation(); this.stopCreationTracking() },
+  deactivated () { this.stopLayoutObservation(); this.stopCreationTracking() },
+  activated () {
+    if (!this.creationController) this.initCreationTracking()
+    this.$nextTick(this.startLayoutObservation)
+  },
   provide () {
     return {
       vmFetchTemplates: this.fetchAllTemplates,
@@ -1654,6 +1652,33 @@ export default {
     }
   },
   methods: {
+    startLayoutObservation () {
+      this.stopLayoutObservation()
+      const layout = this.$refs.creationLayout
+      const content = layout?.closest('.layout-content')
+      if (layout && content && typeof ResizeObserver !== 'undefined') {
+        this.creationLayoutObserver = new ResizeObserver(this.updateCreationViewportHeight)
+        this.creationLayoutObserver.observe(content)
+        this.creationLayoutObserver.observe(layout)
+      }
+      window.addEventListener('resize', this.updateCreationViewportHeight)
+      this.updateCreationViewportHeight()
+    },
+    stopLayoutObservation () {
+      if (this.creationLayoutObserver) this.creationLayoutObserver.disconnect()
+      window.removeEventListener('resize', this.updateCreationViewportHeight)
+    },
+    updateCreationViewportHeight () {
+      this.showSideSummary = window.innerWidth >= 992
+      const layout = this.$refs.creationLayout
+      const content = layout?.closest('.layout-content')
+      if (!content || !layout.getClientRects().length) return
+      // Follow DeployVM: measure the workspace rather than guessing header heights.
+      const top = layout.getBoundingClientRect().top - content.getBoundingClientRect().top + content.scrollTop - content.clientTop
+      const bottom = parseFloat(getComputedStyle(content).paddingBottom) || 0
+      const height = Math.max(0, Math.floor(content.clientHeight - top - bottom))
+      this.creationViewportHeight = height ? `${height}px` : ''
+    },
     counterLabel (name) {
       return autoScaleCounterLabel(name, this.$t)
     },
@@ -2282,7 +2307,14 @@ export default {
       this.form.keypairs = names
       this.sshKeyPairs = names.map((sshKeyPair) => { return sshKeyPair.name })
     },
-    updateUserData (id) {
+    updateUserData (id, item) {
+      this.userDataValues = {}
+      if (item) {
+        this.userDataLookupVersions.userDataParams++
+        this.userDataLookupErrors.userDataParams = false
+        applyUserDataSelection(this, id, item)
+        return
+      }
       this.form.userdataid = id && id !== '0' ? id : undefined
       return this.loadUserDataParams(this.form.userdataid, 'userDataParams')
     },
@@ -2503,7 +2535,7 @@ export default {
     },
     async handleSubmit (e, recovery = false) {
       if (e && e.preventDefault) e.preventDefault()
-      if (this.submitting || this.creationBusy || (this.hasUnresolvedCreation && !recovery) || this.loading.deploy || this.checkingEligibility) return
+      if (this.userDataSelectionBlocked || this.submitting || this.creationBusy || (this.hasUnresolvedCreation && !recovery) || this.loading.deploy || this.checkingEligibility) return
       this.submitting = true
       return this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
@@ -2794,7 +2826,7 @@ export default {
       }).catch(err => {
         if (err) {
           if (err.errorFields) {
-            this.formRef.value.scrollToField(err.errorFields[0].name)
+            this.formRef.value.scrollToField(err.errorFields[0].name, { block: 'center' })
           }
           if (err.licensesaccepted) {
             this.$notification.error({
@@ -3233,6 +3265,70 @@ export default {
 </script>
 
 <style lang="less" scoped>
+  .autoscale-create--bounded {
+    display: flex;
+    flex-direction: column;
+    height: var(--autoscale-viewport-height);
+    min-height: 0;
+
+    > .ant-alert { flex-shrink: 0; }
+    > .ant-row { flex: 1; min-height: 0; }
+
+    .autoscale-create-form-column,
+    .autoscale-create-summary-column,
+    .vm-info-card,
+    .vm-info-card > :deep(.ant-spin-nested-loading),
+    .vm-info-card > :deep(.ant-spin-nested-loading > .ant-spin-container) {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .autoscale-create-form-column > .ant-card,
+    .vm-info-card :deep(.spin-content) {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .autoscale-create-form-column > .ant-card > :deep(.ant-card-head),
+    .vm-info-card :deep(.spin-content > .ant-card-head) {
+      flex-shrink: 0;
+    }
+
+    .autoscale-create-form-column > .ant-card > :deep(.ant-card-body),
+    .vm-info-card :deep(.spin-content > .ant-card-body) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .vm-info-card :deep(.card-body) {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .autoscale-create-form-scroll,
+    .vm-info-card :deep(.card-content) {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar { display: none; }
+    }
+
+    .vm-info-card :deep(.card-footer),
+    .autoscale-create-mobile-footer {
+      flex-shrink: 0;
+    }
+
+    .autoscale-create-mobile-footer { margin-top: 16px; }
+  }
+
   .card-footer {
     text-align: right;
     margin-top: 2rem;
@@ -3277,24 +3373,6 @@ export default {
   }
 
   .vm-info-card {
-    position: sticky;
-    top: 16px;
-
-    :deep(.card-body) {
-      height: calc(100vh - 180px);
-      min-height: 250px;
-    }
-
-    :deep(.card-content) {
-      min-height: 0;
-      flex: 1 1 auto;
-      scroll-behavior: smooth;
-    }
-
-    :deep(.card-footer) {
-      flex: 0 0 auto;
-    }
-
     .resource-detail-item__label {
       font-weight: normal;
     }

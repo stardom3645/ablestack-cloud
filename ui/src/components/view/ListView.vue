@@ -111,7 +111,15 @@
               size="xl"
             />
           </span>
-          <span v-if="resourcePath && record.id" class="embedded-resource-name"><router-link :to="{ path: resourcePath === '/vm' ? createPathBasedOnVmType(record.vmtype, record.id) : resourcePath + '/' + record.id }">{{ text }}</router-link></span>
+          <span v-if="isSshKeyPairList">
+            <router-link :to="sshKeyPairLink(record)">{{ text }}</router-link>
+            <router-link v-if="record.hasannotations" :to="sshKeyPairLink(record, 'comments')"><message-filled style="padding-left: 10px" size="small" /></router-link>
+          </span>
+          <span v-else-if="$route.meta?.name === 'cniconfiguration' && record.id">
+            <router-link :to="cniDetailLink($route, record)">{{ text }}</router-link>
+            <router-link v-if="record.hasannotations" :to="cniDetailLink($route, record, 'comments')"><message-filled style="padding-left: 10px" size="small" /></router-link>
+          </span>
+          <span v-else-if="resourcePath && record.id" class="embedded-resource-name"><router-link :to="{ path: resourcePath === '/vm' ? createPathBasedOnVmType(record.vmtype, record.id) : resourcePath + '/' + record.id }">{{ text }}</router-link></span>
           <span v-else-if="record.hasannotations">
             <span v-if="record.id">
               <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
@@ -124,9 +132,6 @@
               v-else
               :to="{ path: $route.path + '/' + record.name }"
             >{{ text }}</router-link>
-          </span>
-          <span v-else-if="$route.path.startsWith('/ssh')">
-            <router-link :to="{ path: $route.path + '/' + record.name , query: { account: record.account, domainid: record.domainid }}" >{{ $t(text.toLowerCase()) }}</router-link>
           </span>
           <span v-else-if="$route.path.startsWith('/globalsetting')">{{ text }}</span>
           <span v-else-if="$route.path.startsWith('/alertRules')">
@@ -1189,6 +1194,7 @@
 import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import InstanceGroupSummary from '@/views/compute/InstanceGroupSummary'
 import { listRowKey } from '@/utils/listRefresh'
+import { sshKeyPairLink } from '@/utils/sshKeyPairIdentity'
 import { getAPI, postAPI } from '@/api'
 import OsLogo from '@/components/widgets/OsLogo'
 import Status from '@/components/widgets/Status'
@@ -1197,6 +1203,7 @@ import { getFastClonePhase, getFastClonePhaseLabel, getFastClonePhaseColor } fro
 import ResourceContextMenu from '@/components/view/ResourceContextMenu'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import CopyLabel from '@/components/widgets/CopyLabel'
+import { cniDetailLink } from '@/utils/cniDeletion'
 import GuestNetworkSummary from '@/components/view/GuestNetworkSummary'
 import ResourceLabel from '@/components/widgets/ResourceLabel'
 import TooltipButton from '@/components/widgets/TooltipButton'
@@ -1356,6 +1363,7 @@ export default {
     this.getUsageTypes()
   },
   computed: {
+    isSshKeyPairList () { return this.resourcePath ? this.resourcePath === '/ssh' : /^\/ssh(?:\/|$)/.test(this.$route.path) },
     hasSelected () {
       return this.selectedRowKeys.length > 0
     },
@@ -1413,6 +1421,8 @@ export default {
     }
   },
   methods: {
+    cniDetailLink,
+    sshKeyPairLink,
     canLinkProject (record) {
       if (!record.projectid) return false
       const matched = this.$router.resolve('/project/' + record.projectid).matched
@@ -1532,7 +1542,7 @@ export default {
     },
     enableGroupAction () {
       if (this.resourcePath) return this.explicitlyAllowRowSelection
-      return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
+      return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'cniconfiguration', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
         'vmsnapshot', 'backup', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway', 'vnfapp',
         'project', 'account', 'systemvm', 'router', 'computeoffering', 'systemoffering',
         'diskoffering', 'backupoffering', 'networkoffering', 'vpcoffering', 'ilbvm', 'kubernetes', 'comment', 'buckets',

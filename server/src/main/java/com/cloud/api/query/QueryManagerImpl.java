@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.api.query;
 
-import static com.cloud.vm.VmDetailConstants.SSH_PUBLIC_KEY;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -350,10 +349,8 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountVO;
 import com.cloud.user.DomainManager;
-import com.cloud.user.SSHKeyPairVO;
 import com.cloud.user.User;
 import com.cloud.user.dao.AccountDao;
-import com.cloud.user.dao.SSHKeyPairDao;
 import com.cloud.user.dao.UserDao;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.NumbersUtil;
@@ -610,8 +607,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
     @Inject
     VMInstanceDetailsDao vmInstanceDetailsDao;
 
-    @Inject
-    SSHKeyPairDao sshKeyPairDao;
 
     @Inject
     BackupOfferingDao backupOfferingDao;
@@ -1634,17 +1629,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             userVmSearchBuilder.join("serviceOffering", serviceOfferingSearch, serviceOfferingSearch.entity().getId(), userVmSearchBuilder.entity().getServiceOfferingId(), JoinBuilder.JoinType.INNER);
         }
 
+        List<Long> sshKeyPairVmIds = null;
         if (keyPairName != null) {
-            SearchBuilder<VMInstanceDetailVO> vmDetailSearchKeys = vmInstanceDetailsDao.createSearchBuilder();
-            SearchBuilder<VMInstanceDetailVO> vmDetailSearchVmIds = vmInstanceDetailsDao.createSearchBuilder();
-            vmDetailSearchKeys.and(vmDetailSearchKeys.entity().getName(), Op.EQ).values(SSH_PUBLIC_KEY);
-
-            SearchBuilder<SSHKeyPairVO> sshKeyPairSearch = sshKeyPairDao.createSearchBuilder();
-            sshKeyPairSearch.and("keyPairName", sshKeyPairSearch.entity().getName(), Op.EQ);
-
-            sshKeyPairSearch.join("keyPairToDetailValueJoin", vmDetailSearchKeys, vmDetailSearchKeys.entity().getValue(), sshKeyPairSearch.entity().getPublicKey(), JoinBuilder.JoinType.INNER);
-            userVmSearchBuilder.join("userVmToDetailJoin", vmDetailSearchVmIds, vmDetailSearchVmIds.entity().getResourceId(), userVmSearchBuilder.entity().getId(), JoinBuilder.JoinType.INNER);
-            userVmSearchBuilder.join("userVmToKeyPairJoin", sshKeyPairSearch, sshKeyPairSearch.entity().getAccountId(), userVmSearchBuilder.entity().getAccountId(), JoinBuilder.JoinType.INNER);
+            sshKeyPairVmIds = vmInstanceDetailsDao.listVmIdsBySSHKeyPairName(keyPairName, permittedAccounts);
+            if (CollectionUtils.isEmpty(sshKeyPairVmIds)) {
+                return new Pair<>(new ArrayList<>(), 0);
+            }
+            userVmSearchBuilder.and("sshKeyPairVmIds", userVmSearchBuilder.entity().getId(), Op.IN);
         }
 
         if (keyword != null) {
@@ -1789,7 +1780,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         if (keyPairName != null) {
-            userVmSearchCriteria.setJoinParameters("userVmToKeyPairJoin", "keyPairName", keyPairName);
+            userVmSearchCriteria.setParameters("sshKeyPairVmIds", sshKeyPairVmIds.toArray());
         }
 
         if (networkId != null) {
@@ -5149,7 +5140,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 null, cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), cmd.getStoragePoolId(),
                 cmd.getImageStoreId(), hypervisorType, showDomr, cmd.listInReadyState(), permittedAccounts, caller,
                 listProjectResourcesCriteria, tags, showRemovedTmpl, cmd.getIds(), parentTemplateId, cmd.getShowUnique(),
-                templateType, isVnf, domainId, isRecursive, cmd.getArch(), cmd.getOsCategoryId(), forCks, cmd.getKvdoEnable(), cmd.getExtensionId());
+                templateType, isVnf, domainId, isRecursive, cmd.getArch(), cmd.getOsCategoryId(), forCks, cmd.getKvdoEnable(), cmd.getExtensionId(), cmd.getUserDataId());
     }
 
     private Pair<List<TemplateJoinVO>, Integer> searchForTemplatesInternal(Long templateId, String name, String keyword,
@@ -5158,7 +5149,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             boolean showDomr, boolean onlyReady, List<Account> permittedAccounts, Account caller,
             ListProjectResourcesCriteria listProjectResourcesCriteria, Map<String, String> tags,
             boolean showRemovedTmpl, List<Long> ids, Long parentTemplateId, Boolean showUnique, String templateType,
-            Boolean isVnf, Long domainId, boolean isRecursive, CPU.CPUArch arch, Long osCategoryId, Boolean forCks, Boolean kvdoEnable, Long extensionId) {
+            Boolean isVnf, Long domainId, boolean isRecursive, CPU.CPUArch arch, Long osCategoryId, Boolean forCks, Boolean kvdoEnable, Long extensionId, Long userDataId) {
 
         // check if zone is configured, if not, just return empty list
         List<HypervisorType> hypers = null;
@@ -5196,6 +5187,11 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         SearchCriteria<TemplateJoinVO> sc = sb.create();
+
+        // Keep UUID association filtering inside the ACL-scoped SQL query, before count/pagination.
+        if (userDataId != null) {
+            sc.addAnd("userDataId", SearchCriteria.Op.EQ, userDataId);
+        }
 
         if (imageStoreId != null) {
             sc.addAnd("dataStoreId", SearchCriteria.Op.EQ, imageStoreId);
@@ -5620,7 +5616,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), cmd.getStoragePoolId(), cmd.getImageStoreId(),
                 hypervisorType, true, cmd.listInReadyState(), permittedAccounts, caller, listProjectResourcesCriteria,
                 tags, showRemovedISO, null, null, cmd.getShowUnique(), null, null,
-                domainId, isRecursive, cmd.getArch(), cmd.getOsCategoryId(), null, null, null);
+                domainId, isRecursive, cmd.getArch(), cmd.getOsCategoryId(), null, null, null, cmd.getUserDataId());
     }
 
     @Override
