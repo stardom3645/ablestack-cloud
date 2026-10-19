@@ -117,8 +117,8 @@ public class AffinityGroupQueryTest {
         when(cmd.getStartIndex()).thenReturn(0L);
         when(cmd.getPageSizeVal()).thenReturn(2L);
         doAnswer(invocation -> {
-            ((List<Long>) invocation.getArgument(3)).addAll(permitted);
-            Ternary<Long, Boolean, ListProjectResourcesCriteria> acl = invocation.getArgument(4);
+            ((List<Long>) invocation.getArgument(4)).addAll(permitted);
+            Ternary<Long, Boolean, ListProjectResourcesCriteria> acl = invocation.getArgument(5);
             acl.first(scopeDomain); acl.second(recursive); acl.third(projectCriteria);
             return null;
         }).when(accountManager).buildACLSearchParameters(any(), any(), any(), any(), anyList(), any(), anyBoolean(), anyBoolean());
