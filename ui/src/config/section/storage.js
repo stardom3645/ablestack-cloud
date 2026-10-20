@@ -20,18 +20,12 @@ import store from '@/store'
 import { isZoneCreated } from '@/utils/zone'
 import { isAdmin } from '@/role'
 import { allocationIntent } from '@/utils/volumeAllocation'
+import { canDeleteVolume, volumeDeleteReason } from '@/utils/volumeEdit'
 
 const activeFastCloneFlattenStatuses = ['pending', 'running']
-const runningFastCloneFlattenStatuses = ['running']
 
 const isFastCloneFlattenActive = (record) => {
   return activeFastCloneFlattenStatuses.includes(
-    String(record?.clonefastflattenstatus || record?.details?.['clone.fast.flatten.status'] || '').toLowerCase()
-  )
-}
-
-const isFastCloneFlattenRunning = (record) => {
-  return runningFastCloneFlattenStatuses.includes(
     String(record?.clonefastflattenstatus || record?.details?.['clone.fast.flatten.status'] || '').toLowerCase()
   )
 }
@@ -178,15 +172,7 @@ export default {
           dataView: true,
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/UpdateVolume.vue'))),
-          args: ['name', 'deleteprotection'],
-          mapping: {
-            account: {
-              value: (record) => { return record.account }
-            },
-            domainid: {
-              value: (record) => { return record.domainid }
-            }
-          }
+          args: ['name', 'deleteprotection']
         },
         {
           api: 'updateCompressDedup',
@@ -353,8 +339,8 @@ export default {
             return !['Destroy', 'Destroyed', 'Expunging', 'Expunged', 'Migrating', 'Uploading', 'UploadError', 'Creating', 'Allocated', 'Uploaded'].includes(record.state) &&
               record.type !== 'ROOT' && !record.virtualmachineid
           },
-          disabled: isFastCloneFlattenRunning,
-          tooltip: (record) => isFastCloneFlattenRunning(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.destroy.volume'
+          disabled: (record, store, selection) => !!volumeDeleteReason(selection?.length ? selection : [record], store, 'destroyVolume'),
+          tooltip: (record, store, selection) => volumeDeleteReason(selection?.length ? selection : [record], store, 'destroyVolume') || 'label.action.destroy.volume'
         },
         {
           api: 'deleteVolume',
@@ -362,19 +348,11 @@ export default {
           label: 'label.action.delete.volume',
           message: 'message.action.delete.volume',
           dataView: true,
-          show: (record, store) => {
-            const isDetached = !record.virtualmachineid
-            const isDetachedAllocatedRoot = record.state === 'Allocated' && record.type === 'ROOT' && isDetached
-            return ['Expunging', 'Expunged', 'UploadError'].includes(record.state) ||
-              ['Allocated', 'Uploaded'].includes(record.state) && record.type !== 'ROOT' && isDetached ||
-              (record.state === 'Ready' && record.type !== 'ROOT' && isDetached) ||
-              isDetachedAllocatedRoot ||
-              ((['Admin', 'DomainAdmin'].includes(store.userInfo.roletype) || store.features.allowuserexpungerecovervolume) && record.state === 'Destroy')
-          },
+          show: canDeleteVolume,
           groupAction: true,
           popup: true,
-          disabled: isFastCloneFlattenRunning,
-          tooltip: (record) => isFastCloneFlattenRunning(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.delete.volume',
+          disabled: (record, store, selection) => !!volumeDeleteReason(selection?.length ? selection : [record], store),
+          tooltip: (record, store, selection) => volumeDeleteReason(selection?.length ? selection : [record], store) || 'label.action.delete.volume',
           groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
         }
       ]

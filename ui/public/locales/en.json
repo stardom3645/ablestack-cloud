@@ -9263,5 +9263,21 @@
   "message.allocation.conversion.unsupported": "Offering changes cannot convert policy, legacy provisioning or format. Select the same contract.",
   "message.allocation.lifecycle.unsupported": "Physical resize, restore, migrate and image clone are unsupported for explicit allocation. Only same-policy/same-size metadata changes with verified evidence are allowed.",
   "message.allocation.target.pending": "The backend selects target storage and checks the policy and eligible host. Allocation is unknown until verified execution.",
-  "message.allocation.snapshot.unsupported": "Restore/image clone of an explicitly allocated source or target is unsupported."
+  "message.allocation.snapshot.unsupported": "Restore/image clone of an explicitly allocated source or target is unsupported.",
+  "message.volume.edit.protection": "Delete protection blocks deletion and expunging. Disable protection before deleting the volume.",
+  "message.volume.edit.path.admin": "Volume path changes require an authorized root administrator.",
+  "message.volume.edit.path.unsupported": "Manual path changes are unsupported for explicit allocation or compressed/deduplicated volumes.",
+  "message.volume.edit.path.state": "Paths can only change in Allocated, Ready or Uploaded state.",
+  "message.volume.edit.path.stopped": "Stop the attached virtual machine before changing its volume path.",
+  "message.volume.edit.path.help": "Enable only when changing the path. Name and delete-protection updates do not send a path.",
+  "message.volume.edit.path.warning": "This changes only the stored image reference; it does not move or copy a file. Verify the target image, format and attachment state.",
+  "message.volume.edit.path.required": "The path cannot be empty or whitespace.",
+  "message.volume.edit.name.required": "Enter a name.",
+  "message.volume.edit.changed": "The target values, owner or path/attachment state changed. Your input was preserved. Cancel and reopen with the latest state.",
+  "message.volume.edit.context": "The target, account, project or page changed. Submission stopped.",
+  "message.volume.edit.forbidden": "Your current permissions do not allow this field to change.",
+  "message.volume.edit.unknown": "The outcome could not be confirmed. Your input and target were preserved. Recheck the result if a job ID is available.",
+  "message.volume.edit.check.result": "Recheck result",
+  "message.volume.delete.protected": "The selection includes a protected volume. Disable protection before deleting.",
+  "message.volume.delete.unavailable": "The selection includes a volume that cannot be deleted in its current state, attachment or permission scope."
 }
