@@ -43,6 +43,7 @@ import com.google.gson.JsonParser;
 
 /** Creation-time GFS2 allocation. File blocks are an observation, never a persistent reservation. */
 public class Gfs2VolumeAllocation {
+    private static final int FALLOC_RETRIES = 2;
     static final String RECEIPT = "cloudstack.allocation.v1";
     interface Runner { String run(List<String> arguments, long timeout); }
     private final Runner runner;
@@ -182,41 +183,71 @@ public class Gfs2VolumeAllocation {
         JsonObject measured = json(context.run("qemu-img", "measure", "--output=json", "-O", format, "-o", "preallocation=" + policy,
                 "--size", volume.getSize().toString()));
         long needed = measured.get((source != null || List.of("falloc", "full").contains(policy)) ? "fully-allocated" : "required").getAsLong();
-        if (needed < 0 || Math.min(pool.getAvailable(), available(directory)) < needed) {
-            throw new CloudRuntimeException("GFS2_ALLOCATION_INSUFFICIENT_CAPACITY: image and format overhead exceed usable filesystem space; not a reservation");
-        }
-        Path work = Files.createTempDirectory(directory, volume.getUuid() + ".allocation-", PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
-        Path stage = work.resolve("image");
-        RuntimeException pending = null;
-        try {
-            context.run("qemu-img", "create", "-f", format, "-o", "preallocation=" + policy, stage.toString(), volume.getSize().toString());
-            if (source != null) {
-                // Preserve fully allocated targets. Falloc copy may write zero data; only Full promises eager initialization.
-                context.run("qemu-img", "convert", "-n", "-S", List.of("falloc", "full").contains(policy) ? "0" : "4096",
-                        "-f", sourceFormat, "-O", format, original.toString(), stage.toString());
-            }
-            long used = verify(context, stage, original, sourceFormat, format, policy, volume.getSize());
+        int attempts = "falloc".equals(policy) ? FALLOC_RETRIES + 1 : 1;
+        for (int attempt = 1; attempt <= attempts; attempt++) {
             requireSourceUnchanged(original, sourceBefore);
-            attributes(stage).write(RECEIPT, ByteBuffer.wrap(fingerprint.getBytes(StandardCharsets.UTF_8)));
-            try (FileChannel image = FileChannel.open(stage, StandardOpenOption.WRITE)) { image.force(true); }
-            // link(2) publishes the verified inode atomically and fails EEXIST across hosts; never overwrite.
-            Files.createLink(target, stage);
-            try (FileChannel parent = FileChannel.open(directory, StandardOpenOption.READ)) { parent.force(true); }
-            return result(volume, intent, operation, used);
-        } catch (RuntimeException failure) { pending = failure; throw failure; }
-        finally {
-            try { Files.deleteIfExists(stage); Files.delete(work); }
-            catch (IOException cleanup) {
-                CloudRuntimeException failure = new CloudRuntimeException("GFS2_ALLOCATION_CLEANUP_REQUIRED: owned temporary directory " + work, cleanup);
-                if (pending != null) { failure.addSuppressed(pending); }
-                throw failure;
+            if (needed < 0 || Math.min(pool.getAvailable(), available(directory)) < needed) {
+                throw new CloudRuntimeException("GFS2_ALLOCATION_INSUFFICIENT_CAPACITY: image and format overhead exceed usable filesystem space; not a reservation");
+            }
+            Path work = Files.createTempDirectory(directory, volume.getUuid() + ".allocation-", PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
+            Path stage = work.resolve("image");
+            RuntimeException pending = null;
+            try {
+                context.run("qemu-img", "create", "-f", format, "-o", "preallocation=" + policy, stage.toString(), volume.getSize().toString());
+                if (source != null) {
+                    // Preserve fully allocated targets. Falloc copy may write zero data; only Full promises eager initialization.
+                    context.run("qemu-img", "convert", "-n", "-S", List.of("falloc", "full").contains(policy) ? "0" : "4096",
+                            "-f", sourceFormat, "-O", format, original.toString(), stage.toString());
+                }
+                long used;
+                try {
+                    used = verify(context, stage, original, sourceFormat, format, policy, volume.getSize(), work);
+                } catch (Gfs2AllocationFailureEvidence.ContentMismatch failure) {
+                    String evidence = Gfs2AllocationFailureEvidence.preserve(work, directory, fingerprint,
+                            volume.getUuid(), format, policy, volume.getSize(), sourceFormat, original, failure);
+                    org.apache.logging.log4j.LogManager.getLogger(Gfs2VolumeAllocation.class).warn("GFS2 allocation content mismatch: volume={}, format={}, policy={}, attempt={}/{}, {}",
+                            volume.getUuid(), format, policy, attempt, attempts, evidence);
+                    requireSourceUnchanged(original, sourceBefore);
+                    if (attempt < attempts) {
+                        // The finally block removes only this attempt's remaining files before the next fresh stage.
+                        // The same Context retains the original deadline. Never repair or publish a failed inode.
+                        continue;
+                    }
+                    throw new CloudRuntimeException("GFS2_ALLOCATION_CONTENT_MISMATCH: image was not published after " + attempt +
+                            " attempt(s); " + evidence, failure);
+                }
+                requireSourceUnchanged(original, sourceBefore);
+                attributes(stage).write(RECEIPT, ByteBuffer.wrap(fingerprint.getBytes(StandardCharsets.UTF_8)));
+                try (FileChannel image = FileChannel.open(stage, StandardOpenOption.WRITE)) { image.force(true); }
+                // link(2) publishes the verified inode atomically and fails EEXIST across hosts; never overwrite.
+                Files.createLink(target, stage);
+                try (FileChannel parent = FileChannel.open(directory, StandardOpenOption.READ)) { parent.force(true); }
+                return result(volume, intent, operation, used);
+            } catch (RuntimeException failure) { pending = failure; throw failure; }
+            finally {
+                try {
+                    try (var remaining = Files.list(work)) {
+                        for (Path owned : remaining.toList()) { Files.delete(owned); }
+                    }
+                    Files.delete(work);
+                } catch (IOException cleanup) {
+                    CloudRuntimeException failure = new CloudRuntimeException("GFS2_ALLOCATION_CLEANUP_REQUIRED: owned temporary directory " + work, cleanup);
+                    if (pending != null) { failure.addSuppressed(pending); }
+                    throw failure;
+                }
             }
         }
+        throw new IllegalStateException("Allocation attempts exhausted without a result");
     }
 
     protected long available(Path directory) throws IOException { return Files.getFileStore(directory).getUsableSpace(); }
 
     private long verify(Context context, Path image, Path original, String sourceFormat, String format, String policy, long expected) throws IOException {
+        return verify(context, image, original, sourceFormat, format, policy, expected, null);
+    }
+
+    private long verify(Context context, Path image, Path original, String sourceFormat, String format, String policy, long expected,
+            Path evidenceDirectory) throws IOException {
         if (!Files.isRegularFile(image, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(image)) {
             throw new CloudRuntimeException("GFS2_ALLOCATION_VERIFICATION_FAILED: regular owned image required");
         }
@@ -230,16 +261,32 @@ public class Gfs2VolumeAllocation {
             throw new CloudRuntimeException("GFS2_ALLOCATION_VERIFICATION_FAILED: format, size or preallocated file blocks do not match");
         }
         if (original == null) {
-            Path zero = Files.createTempFile("cloudstack-allocation-zero-", ".raw", PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+            Path zero = evidenceDirectory == null
+                    ? Files.createTempFile("cloudstack-allocation-zero-", ".raw", PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")))
+                    : Files.createTempFile(evidenceDirectory, "zero-", ".raw", PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+            boolean retainReference = false;
             try {
                 try (RandomAccessFile file = new RandomAccessFile(zero.toFile(), "rw")) { file.setLength(expected); }
-                context.run("qemu-img", "compare", "-f", "raw", "-F", format, zero.toString(), image.toString());
-            } finally { Files.deleteIfExists(zero); }
+                compare(context, "raw", format, zero, image);
+            } catch (Gfs2AllocationFailureEvidence.ContentMismatch failure) {
+                retainReference = evidenceDirectory != null;
+                throw failure;
+            } finally { if (!retainReference) { Files.deleteIfExists(zero); } }
         } else {
             // Without -s, a larger destination tail must read as zero as well.
-            context.run("qemu-img", "compare", "-f", sourceFormat, "-F", format, original.toString(), image.toString());
+            compare(context, sourceFormat, format, original, image);
         }
         return used;
+    }
+
+    private void compare(Context context, String sourceFormat, String format, Path original, Path image) {
+        try {
+            context.run("qemu-img", "compare", "-f", sourceFormat, "-F", format, original.toString(), image.toString());
+        } catch (Gfs2AllocationCommandRunner.CommandFailure failure) {
+            // qemu-img compare: 1 means content mismatch; 2+ means command/open/read errors.
+            if (failure.exitCode() != 1) { throw failure; }
+            throw new Gfs2AllocationFailureEvidence.ContentMismatch(failure);
+        }
     }
 
     private static void requireStandalone(JsonObject info, String format) {

@@ -168,6 +168,62 @@ public class Gfs2VolumeAllocationTest {
         reject(() -> new RbdVolumeAllocation((a,t) -> { throw new AssertionError("No CLI call allowed"); }).create(volume, pool, null, 60000), "REQUEST_UNSUPPORTED");
     }
 
+    @Test public void fallocMismatchRetriesFreshInodesAndPreservesFirstFailure() throws Exception {
+        volume.setAllocation(VolumeAllocationPolicy.request("falloc", "raw", null)); runner.mismatches = 2;
+        VolumeObjectTO answer = adapter.create(volume, pool, null, 60000);
+        assertEquals(3, runner.createCount); assertEquals(3, runner.createdPaths.stream().distinct().count());
+        assertEquals("falloc", answer.getAllocation().get(VolumeAllocationPolicy.FIXED_POLICY));
+        assertEquals("qemu-preallocation-falloc", answer.getAllocation().get(VolumeAllocationPolicy.METHOD));
+        Path failed = root.resolve(Gfs2AllocationFailureEvidence.DIRECTORY);
+        assertTrue(Files.isRegularFile(failed.resolve("image")));
+        assertTrue(Files.readString(failed.resolve("manifest.json")).contains("unverified-content-mismatch"));
+        try (var files = Files.list(failed)) { assertEquals(1, files.filter(p -> p.getFileName().toString().startsWith("zero-")).count()); }
+        assertEquals(java.nio.file.attribute.PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(failed));
+        assertFalse(Files.getFileAttributeView(failed.resolve("image"), java.nio.file.attribute.UserDefinedFileAttributeView.class).list().contains(Gfs2VolumeAllocation.RECEIPT));
+        for (int i = 1; i < runner.timeouts.size(); i++) { assertTrue(runner.timeouts.get(i) <= runner.timeouts.get(i - 1)); }
+        cleanStage();
+    }
+    @Test public void threeFallocMismatchesNeverPublishOrFallbackToFull() throws Exception {
+        volume.setAllocation(VolumeAllocationPolicy.request("falloc", "qcow2", null)); runner.mismatches = 100;
+        reject(() -> adapter.create(volume, pool, null, 60000), "after 3 attempt(s)");
+        assertEquals(3, runner.createCount); assertFalse(Files.exists(target()));
+        assertTrue(runner.calls.stream().filter(c -> c.size()>1 && "create".equals(c.get(1))).allMatch(c -> c.contains("preallocation=falloc")));
+        cleanStage();
+    }
+    @Test public void compareReadErrorDoesNotRetryOrKeepImage() throws Exception {
+        volume.setAllocation(VolumeAllocationPolicy.request("falloc", "raw", null)); runner.compareExit = 4;
+        reject(() -> adapter.create(volume, pool, null, 60000), "exit=4"); assertEquals(1, runner.createCount);
+        assertFalse(Files.exists(root.resolve(Gfs2AllocationFailureEvidence.DIRECTORY))); cleanStage();
+    }
+    @Test public void fullMismatchDoesNotRetry() throws Exception {
+        runner.mismatches = 1; reject(() -> adapter.create(volume, pool, null, 60000), "after 1 attempt(s)");
+        assertEquals(1, runner.createCount); assertFalse(Files.exists(target())); cleanStage();
+    }
+    @Test public void copyMismatchRetriesWithoutMutatingSource() throws Exception {
+        KVMPhysicalDisk source = source(); byte[] before = Files.readAllBytes(Path.of(source.getPath()));
+        volume.setAllocation(VolumeAllocationPolicy.request("falloc", "qcow2", null)); runner.mismatches = 1;
+        assertEquals("copy", adapter.create(volume, pool, source, 60000).getAllocation().get(VolumeAllocationPolicy.OPERATION));
+        assertEquals(2, runner.createCount); assertArrayEquals(before, Files.readAllBytes(Path.of(source.getPath()))); cleanStage();
+    }
+    @Test public void changedSourceDoesNotRetryContentMismatch() throws Exception {
+        KVMPhysicalDisk source = source(); runner.changeSource = Path.of(source.getPath()); runner.mismatches = 1;
+        volume.setAllocation(VolumeAllocationPolicy.request("falloc", "qcow2", null));
+        reject(() -> adapter.create(volume, pool, source, 60000), "SOURCE_CHANGED"); assertEquals(1, runner.createCount); cleanStage();
+    }
+    @Test public void preexistingEvidenceSymlinkIsNeverFollowedOrOverwritten() throws Exception {
+        Path outside = temporary.newFolder("outside").toPath(); Files.writeString(outside.resolve("keep"), "unchanged");
+        Files.createSymbolicLink(root.resolve(Gfs2AllocationFailureEvidence.DIRECTORY), outside);
+        volume.setAllocation(VolumeAllocationPolicy.request("falloc", "raw", null)); runner.mismatches = 1;
+        adapter.create(volume, pool, null, 60000); assertEquals("unchanged", Files.readString(outside.resolve("keep")));
+        try (var files = Files.list(outside)) { assertEquals(1, files.count()); } cleanStage();
+    }
+    @Test public void preexistingTargetMismatchNeverRecreatesOrDeletesPublishedInode() throws Exception {
+        volume.setAllocation(VolumeAllocationPolicy.request("falloc", "raw", null)); adapter.create(volume, pool, null, 60000);
+        long inode = ((Number) Files.getAttribute(target(), "unix:ino")).longValue(); runner.mismatches = 1;
+        reject(() -> adapter.create(volume, pool, null, 60000), "CONTENT_MISMATCH"); assertEquals(1, runner.createCount);
+        assertEquals(inode, ((Number) Files.getAttribute(target(), "unix:ino")).longValue()); cleanStage();
+    }
+
     private com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef rawDisk() throws Exception {
         Files.writeString(target(), "raw-test-file"); volume.setFormat(Storage.ImageFormat.RAW);
         org.apache.cloudstack.storage.to.PrimaryDataStoreTO store = mock(org.apache.cloudstack.storage.to.PrimaryDataStoreTO.class);
@@ -250,6 +306,9 @@ public class Gfs2VolumeAllocationTest {
         private final List<List<String>> calls = new ArrayList<>();
         private final Map<Object, Image> images = new ConcurrentHashMap<>();
         boolean failCreate, failCopy, failCompare, falseUsage, wrongFormat, backing, failTimeout;
+        int mismatches, compareExit, createCount;
+        final List<Path> createdPaths = new ArrayList<>();
+        final List<Long> timeouts = new ArrayList<>();
         Path changeSource;
         private static final class Image {
             private final String format; private final long size; private final long used;
@@ -257,7 +316,7 @@ public class Gfs2VolumeAllocationTest {
         }
         void register(Path p, String format, long size, long used) throws Exception { images.put(Files.getAttribute(p, "unix:ino"), new Image(format, size, used)); }
         @Override public String run(List<String> a, long timeout) {
-            calls.add(a);
+            calls.add(a); timeouts.add(timeout);
             try {
                 if (failTimeout) { throw new CloudRuntimeException("GFS2_ALLOCATION_TIMEOUT"); }
                 String op = a.get(0).equals("stat") ? "stat" : a.get(1);
@@ -266,6 +325,7 @@ public class Gfs2VolumeAllocationTest {
                     return "{\"required\":4096,\"fully-allocated\":"+full+"}";
                 }
                 if (op.equals("create")) {
+                    createCount++; createdPaths.add(Path.of(a.get(a.size()-2)));
                     Path p = Path.of(a.get(a.size()-2)); long size = Long.parseLong(a.get(a.size()-1)); String format = a.get(a.indexOf("-f")+1);
                     long length = size + (format.equals("qcow2") ? 4096 : 0);
                     try (RandomAccessFile f = new RandomAccessFile(p.toFile(), "rw")) { f.setLength(length); }
@@ -274,6 +334,8 @@ public class Gfs2VolumeAllocationTest {
                 if (op.equals("convert")) { if (failCopy) { throw new CloudRuntimeException("injected copy failure"); } return ""; }
                 if (op.equals("compare")) {
                     if (changeSource != null) { Files.setLastModifiedTime(changeSource, java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis()+10000)); }
+                    if (mismatches-- > 0) { throw new Gfs2AllocationCommandRunner.CommandFailure(1, "Content mismatch at offset 4096!"); }
+                    if (compareExit > 0) { throw new Gfs2AllocationCommandRunner.CommandFailure(compareExit, "injected compare error"); }
                     if (failCompare) { throw new CloudRuntimeException("compare failed"); } return "";
                 }
                 Path p = Path.of(a.get(a.size()-1)); Image i = images.get(Files.getAttribute(p, "unix:ino")); long used = falseUsage ? 0 : i.used;

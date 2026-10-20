@@ -28,6 +28,15 @@ import com.cloud.utils.exception.CloudRuntimeException;
 final class Gfs2AllocationCommandRunner {
     private Gfs2AllocationCommandRunner() { }
 
+    static final class CommandFailure extends CloudRuntimeException {
+        private final int exitCode;
+        CommandFailure(int exitCode, String output) {
+            super("GFS2_ALLOCATION_COMMAND_FAILED: exit=" + exitCode + " " + output);
+            this.exitCode = exitCode;
+        }
+        int exitCode() { return exitCode; }
+    }
+
     static String run(List<String> arguments, long timeout) {
         Path output = null;
         Process process = null;
@@ -46,7 +55,7 @@ final class Gfs2AllocationCommandRunner {
             }
             String text = Files.readString(output, StandardCharsets.UTF_8);
             if (process.exitValue() != 0) {
-                throw new CloudRuntimeException("GFS2_ALLOCATION_COMMAND_FAILED: exit=" + process.exitValue() + " " + text.trim());
+                throw new CommandFailure(process.exitValue(), text.trim());
             }
             return text;
         } catch (InterruptedException e) {
