@@ -17,166 +17,149 @@
 
 <template>
   <div class="form-layout" v-ctrl-enter="handleSubmit">
-    <a-form
-      :ref="formRef"
-      :model="form"
-      :rules="rules"
-      layout="vertical"
-      @finish="handleSubmit"
-     >
-      <AllocationSummary :resource="resource" volume />
-      <a-alert v-if="explicit" type="info" show-icon :message="$t('message.allocation.lifecycle.unsupported')" />
-      <a-form-item name="size" ref="size" :label="$t('label.sizegb')">
-        <a-input
-          v-model:value="form.size"
-          :disabled="explicit"
-          :placeholder="$t('label.disksize')"/>
+    <a-alert v-if="!current()" type="error" show-icon :message="$t('message.volume.resize.context')" style="margin-bottom: 16px" />
+    <a-alert v-if="errorText" type="error" show-icon :message="errorText" style="margin-bottom: 16px">
+      <template v-if="!contract && !jobId" #action><a-button :loading="loading" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
+    </a-alert>
+    <a-form :ref="formRef" :model="form" layout="vertical" @finish="handleSubmit">
+      <AllocationSummary :resource="target" volume />
+      <p v-if="contract">{{ $t(contract.kind === 'compute' ? 'label.compute.offerings' : 'label.diskoffering') }}: {{ contract.offering.name }}</p>
+      <a-alert v-if="sizeReason" type="info" show-icon :message="$t(sizeReason)" style="margin-bottom: 16px" />
+      <a-alert v-else-if="rootFixed" type="info" show-icon :message="$t('message.volume.resize.root')" style="margin-bottom: 16px" />
+      <a-form-item v-if="apiParams.size" name="size" :label="$t('label.sizegb')">
+        <a-input v-model:value="form.size" :disabled="disabled || !!sizeReason" :placeholder="$t('label.disksize')" />
       </a-form-item>
-      <div v-if="customDiskOfferingIops">
-        <a-form-item name="miniops" ref="miniops" :label="$t('label.miniops')">
-          <a-input
-            v-model:value="form.miniops"
-            :placeholder="$t('label.miniops')"/>
+      <template v-if="customIops">
+        <a-form-item v-if="apiParams.miniops" name="miniops" :label="$t('label.miniops')">
+          <a-input v-model:value="form.miniops" :disabled="disabled" :placeholder="$t('label.miniops')" />
         </a-form-item>
-        <a-form-item name="maxiops" ref="maxiops" :label="$t('label.maxiops')">
-          <a-input
-            v-model:value="form.maxiops"
-            :placeholder="$t('label.maxiops')"/>
+        <a-form-item v-if="apiParams.maxiops" name="maxiops" :label="$t('label.maxiops')">
+          <a-input v-model:value="form.maxiops" :disabled="disabled" :placeholder="$t('label.maxiops')" />
         </a-form-item>
-      </div>
-      <a-form-item name="shrinkOk" ref="shrinkOk" :label="$t('label.shrinkok')" v-if="!['XenServer'].includes(resource.hypervisor)">
-        <a-switch
-          v-model:checked="form.shrinkOk"
-          :checked="shrinkOk"
-          @change="val => { shrinkOk = val }"/>
+        <p class="form-help">{{ $t('message.volume.resize.omitted') }}</p>
+        <p v-if="target.type === 'ROOT'" class="form-help">{{ $t('message.volume.resize.root.iops') }}</p>
+      </template>
+      <p v-else-if="contract">{{ $t('message.volume.resize.fixed.iops') }}: {{ target.miniops ?? '—' }} / {{ target.maxiops ?? '—' }}</p>
+      <a-form-item v-if="apiParams.shrinkok && !sizeReason && target.hypervisor !== 'XenServer'" name="shrinkok" :label="$t('label.shrinkok')">
+        <a-switch v-model:checked="form.shrinkok" :disabled="disabled" />
       </a-form-item>
-      <a-form-item name="autoMigrate" ref="autoMigrate" :label="$t('label.automigrate.volume')">
-        <template #label>
-          <tooltip-label :title="$t('label.automigrate.volume')" :tooltip="apiParams.automigrate.description"/>
-        </template>
-        <a-switch
-          v-model:checked="form.autoMigrate"
-          :checked="autoMigrate"
-          @change="val => { autoMigrate = val }"/>
+      <a-form-item v-if="apiParams.automigrate && !sizeReason" name="automigrate" :label="$t('label.automigrate.volume')">
+        <a-switch v-model:checked="form.automigrate" :disabled="disabled" />
       </a-form-item>
-      <div :span="24" class="action-button">
-        <a-button @click="closeModal">{{ $t('label.cancel') }}</a-button>
-        <a-button :loading="loading" type="primary" ref="submit" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+      <div class="action-button">
+        <a-button :disabled="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
+        <a-button v-if="jobId" :loading="loading" type="primary" @click="resumeJob">{{ $t('message.volume.edit.check.result') }}</a-button>
+        <a-button v-else :loading="loading" :disabled="!contract || !current() || submissionUnknown" type="primary" ref="submit" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
       </div>
     </a-form>
   </div>
 </template>
 <script>
-import { ref, reactive, toRaw } from 'vue'
+import { ref, reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
-import { mixinForm } from '@/utils/mixin'
-import TooltipLabel from '@/components/widgets/TooltipLabel'
 import AllocationSummary from '@/components/view/AllocationSummary'
-import { allocationIntent } from '@/utils/volumeAllocation'
+import { readVolumeResizeContract, volumeResizeSizeReason, volumeResizeIops, volumeResizeParams, validateVolumeResizeSnapshot } from '@/utils/volumeResize'
 
 export default {
   name: 'ResizeVolume',
-  components: {
-    AllocationSummary,
-    TooltipLabel
-  },
-  mixins: [mixinForm],
-  props: {
-    resource: {
-      type: Object,
-      required: true
-    }
-  },
-  data () {
-    return {
-      offerings: [],
-      customDiskOffering: false,
-      loading: false,
-      customDiskOfferingIops: false
-    }
-  },
-  computed: { explicit () { return !!allocationIntent(this.resource) } },
+  components: { AllocationSummary },
+  props: { resource: { type: Object, required: true } },
+  emits: ['refresh-data', 'close-action'],
+  data () { return { loading: false, contract: null, errorText: '', jobId: null, submissionUnknown: false, active: true } },
+  beforeCreate () { this.apiParams = this.$getApiParams('resizeVolume') || {} },
   created () {
-    this.initForm()
+    this.target = Object.freeze({ ...this.resource })
+    this.originalScope = this.scope()
+    this.formRef = ref()
+    this.form = reactive({ size: String(this.target.size / 1073741824), miniops: this.target.miniops == null ? '' : String(this.target.miniops), maxiops: this.target.maxiops == null ? '' : String(this.target.maxiops), shrinkok: false, automigrate: false })
     this.fetchData()
   },
+  beforeUnmount () { this.active = false },
+  computed: {
+    sizeReason () { return volumeResizeSizeReason(this.target, this.contract) },
+    rootFixed () { return this.contract?.kind === 'compute' && Number(this.contract.offering.rootdisksize) > 0 },
+    customIops () { return volumeResizeIops(this.target, this.contract) },
+    disabled () { return this.loading || !!this.jobId || !this.contract || !this.current() }
+  },
   methods: {
-    initForm () {
-      this.formRef = ref()
-      this.form = reactive(this.explicit ? { size: String(this.resource.size / 1073741824) } : {})
-      this.rules = reactive({
-        size: [{ required: true, message: this.$t('message.error.size') }],
-        miniops: [{ required: true, message: this.$t('message.error.number') }],
-        maxiops: [{ required: true, message: this.$t('message.error.number') }]
-      })
+    scope () {
+      const s = this.$store.getters
+      return JSON.stringify([this.resource.id, s.userInfo?.id, s.userInfo?.roletype, s.project?.id, this.$route.path])
     },
-    fetchData () {
-      this.loading = true
-      getAPI('listDiskOfferings', {
-        id: this.resource.diskofferingid,
-        listall: true
-      }).then(json => {
-        this.offerings = json.listdiskofferingsresponse.diskoffering || []
-        this.form.diskofferingid = this.offerings[0]?.id || ''
-        this.customDiskOffering = this.offerings[0]?.iscustomized || false
-        this.customDiskOfferingIops = this.offerings[0]?.iscustomizediops || false
-      }).finally(() => {
-        this.loading = false
-      })
+    current () { return this.active && this.originalScope === this.scope() },
+    failure (error) {
+      const body = error?.response?.data
+      const text = body?.errorresponse?.errortext || Object.values(body || {}).find(value => value?.errortext)?.errortext || error?.errortext || error?.message
+      this.errorText = text?.startsWith('message.') ? this.$t(text) : text || this.$t('message.request.failed')
     },
-    handleSubmit (e) {
+    async fetchData () {
       if (this.loading) return
-      this.formRef.value.validate().then(() => {
-        const formRaw = toRaw(this.form)
-        const values = this.handleRemoveFields(formRaw)
-        this.loading = true
-        values.id = this.resource.id
-        if (this.explicit) delete values.size
-        postAPI('resizeVolume', values).then(response => {
-          this.$pollJob({
-            jobId: response.resizevolumeresponse.jobid,
-            title: this.$t('label.action.resize.volume'),
-            description: values.name,
-            successMessage: this.$t('message.success.resize.volume'),
-            successMethod: () => {},
-            errorMessage: this.$t('message.resize.volume.failed'),
-            errorMethod: () => {
-              this.closeModal()
-            },
-            loadingMessage: this.$t('message.resize.volume.processing'),
-            catchMessage: this.$t('error.fetching.async.job.result'),
-            catchMethod: () => {
-              this.loading = false
-              this.closeModal()
-            }
-          })
-          this.closeModal()
-        }).catch(error => {
-          this.$notification.error({
-            message: `${this.$t('label.error')} ${error.response.status}`,
-            description: error.response.data.errorresponse.errortext,
-            duration: 0
-          })
-        }).finally(() => {
-          this.loading = false
-        })
-      }).catch((error) => {
-        this.formRef.value.scrollToField(error.errorFields[0].name)
-      })
+      this.loading = true
+      this.errorText = ''
+      this.contract = null
+      try {
+        if (!this.current()) throw new Error('message.volume.resize.context')
+        this.contract = await readVolumeResizeContract(getAPI, this.target, () => this.current())
+      } catch (error) { if (this.active) this.failure(error) } finally { this.loading = false }
     },
-    closeModal () {
-      this.$emit('refresh-data')
-      this.$emit('close-action')
-    }
+    async handleSubmit () {
+      if (this.loading || this.jobId || !this.contract || this.submissionUnknown) return
+      this.loading = true
+      this.errorText = ''
+      try {
+        if (!this.current()) throw new Error('message.volume.resize.context')
+        const params = volumeResizeParams(this.target, { ...this.form }, this.contract, this.apiParams)
+        if (Object.keys(params).length === 1) { this.closeModal(); return }
+        const response = await getAPI('listVolumes', { id: this.target.id, listall: true, ...(this.target.projectid ? { projectid: this.target.projectid } : {}) }, { preserveOnFailure: true })
+        if (!this.current()) throw new Error('message.volume.resize.context')
+        const rows = response?.listvolumesresponse?.volume
+        const fresh = Array.isArray(rows) && rows.length === 1 ? rows[0] : null
+        if (!fresh || fresh.id !== this.target.id) throw new Error('message.volume.resize.changed')
+        const contract = await readVolumeResizeContract(getAPI, fresh, () => this.current())
+        validateVolumeResizeSnapshot(this.target, fresh, this.contract, contract)
+        this.submissionUnknown = true
+        const result = (await postAPI('resizeVolume', params, { preserveOnFailure: true }))?.resizevolumeresponse
+        if (!result?.jobid) throw new Error('message.volume.resize.unknown')
+        if (!this.current()) return
+        this.submissionUnknown = false
+        this.jobId = result.jobid
+        await this.poll(false)
+      } catch (error) {
+        if (error?.response?.status >= 400 && error?.response?.data) this.submissionUnknown = false
+        if (this.active) {
+          if (this.submissionUnknown) this.failure(new Error('message.volume.resize.unknown'))
+          else this.failure(error)
+        }
+      } finally { this.loading = false }
+    },
+    async poll (retry) {
+      const result = await this.$pollJob({
+        jobId: this.jobId,
+        batchKey: this.jobId,
+        resourceId: this.target.id,
+        retry,
+        title: this.$t('label.action.resize.volume'),
+        description: this.target.name,
+        successMessage: this.$t('message.success.resize.volume'),
+        errorMessage: this.$t('message.resize.volume.failed')
+      })
+      if (!this.current()) return
+      if (result.jobstatus === 1) { this.jobId = null; this.$emit('refresh-data'); this.$emit('close-action') } else if (result.jobstatus === 2) { this.jobId = null; this.failure(result.jobresult) } else this.errorText = this.$t('message.volume.resize.unknown')
+    },
+    async resumeJob () {
+      if (this.loading || !this.jobId) return
+      if (!this.current()) { this.failure(new Error('message.volume.resize.context')); return }
+      this.loading = true
+      try { await this.poll(true) } catch (error) { if (this.active) this.failure(error) } finally { this.loading = false }
+    },
+    closeModal () { this.$emit('close-action') }
   }
 }
 </script>
 <style lang="scss" scoped>
 .form-layout {
   width: 85vw;
-
-  @media (min-width: 760px) {
-    width: 500px;
-  }
+  @media (min-width: 760px) { width: 500px; }
 }
+.form-help { margin: 8px 0; opacity: .8; }
 </style>

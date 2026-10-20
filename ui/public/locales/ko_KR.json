@@ -9244,5 +9244,20 @@
   "message.volume.edit.unknown": "처리 결과를 확인하지 못했습니다. 입력과 대상은 보존했습니다. 작업 ID가 있으면 결과를 다시 확인하십시오.",
   "message.volume.edit.check.result": "결과 다시 확인",
   "message.volume.delete.protected": "삭제 보호가 설정된 볼륨이 포함되어 있습니다. 보호를 해제한 후 다시 시도하십시오.",
-  "message.volume.delete.unavailable": "현재 상태·연결 또는 권한에서 삭제할 수 없는 볼륨이 포함되어 있습니다."
+  "message.volume.delete.unavailable": "현재 상태·연결 또는 권한에서 삭제할 수 없는 볼륨이 포함되어 있습니다.",
+  "message.volume.resize.offering": "대상 볼륨의 오퍼링을 확인할 수 없습니다. 접근 권한과 오퍼링 상태를 확인한 후 다시 시도하세요.",
+  "message.volume.resize.context": "대상 볼륨, 사용자 또는 프로젝트가 변경되었습니다. 대화상자를 다시 여세요.",
+  "message.volume.resize.changed": "볼륨 또는 오퍼링이 변경되었습니다. 입력값을 확인하고 대화상자를 다시 여세요.",
+  "message.volume.resize.integer": "크기는 양의 정수, IOPS는 0 이상의 정수여야 하며 정확히 표현 가능한 범위여야 합니다.",
+  "message.volume.resize.iops": "현재값과 입력값을 합친 최소·최대 IOPS가 모두 있어야 하며 최소 IOPS는 최대 IOPS 이하여야 합니다.",
+  "message.volume.resize.forbidden": "현재 오퍼링 또는 API 권한에서 이 값의 변경을 지원하지 않습니다.",
+  "message.volume.resize.unavailable": "현재 볼륨 작업 상태에서는 크기·IOPS를 변경할 수 없습니다.",
+  "message.volume.resize.strict": "현재 디스크 오퍼링의 크기가 엄격하게 고정되어 크기를 변경할 수 없습니다.",
+  "message.volume.resize.root": "컴퓨트 오퍼링에 루트 디스크 크기가 설정되어 있습니다. 템플릿 기반 루트 볼륨의 크기 변경은 컴퓨트 오퍼링 변경이 필요합니다. ISO 기반 예외를 포함한 최종 허용 조건은 API가 확인합니다.",
+  "message.volume.resize.shrink": "현재 이미지 형식 또는 하이퍼바이저에서 볼륨 축소를 지원하지 않습니다.",
+  "message.volume.resize.shrink.confirm": "볼륨을 축소하려면 축소 허용을 명시적으로 선택하세요.",
+  "message.volume.resize.omitted": "변경하지 않거나 비운 값은 전송하지 않고 현재값을 유지합니다. IOPS 0은 명시적인 값이며 최소·최대 관계를 만족해야 합니다.",
+  "message.volume.resize.fixed.iops": "고정 IOPS 오퍼링 · 현재 최소 / 최대 IOPS",
+  "message.volume.resize.root.iops": "루트 볼륨은 resizeVolume API가 지원하는 IOPS 재정의 값을 변경합니다.",
+  "message.volume.resize.unknown": "작업 결과를 확인하지 못했습니다. 입력을 유지하며, 결과 확인으로 같은 작업을 다시 조회하세요. 작업 ID를 받지 못했다면 현재 볼륨 상태를 확인한 후 대화상자를 다시 여세요."
 }

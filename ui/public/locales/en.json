@@ -9279,5 +9279,20 @@
   "message.volume.edit.unknown": "The outcome could not be confirmed. Your input and target were preserved. Recheck the result if a job ID is available.",
   "message.volume.edit.check.result": "Recheck result",
   "message.volume.delete.protected": "The selection includes a protected volume. Disable protection before deleting.",
-  "message.volume.delete.unavailable": "The selection includes a volume that cannot be deleted in its current state, attachment or permission scope."
+  "message.volume.delete.unavailable": "The selection includes a volume that cannot be deleted in its current state, attachment or permission scope.",
+  "message.volume.resize.offering": "Cannot verify this volume’s offering. Check access and offering state, then retry.",
+  "message.volume.resize.context": "The volume, user or project changed. Reopen this dialog.",
+  "message.volume.resize.changed": "The volume or offering changed. Review the input and reopen this dialog.",
+  "message.volume.resize.integer": "Size must be a positive integer and IOPS a non-negative integer within the exact numeric range.",
+  "message.volume.resize.iops": "The resulting minimum and maximum IOPS must both exist and minimum must not exceed maximum.",
+  "message.volume.resize.forbidden": "This offering or API permission does not allow this change.",
+  "message.volume.resize.unavailable": "The current volume operation prevents size or IOPS changes.",
+  "message.volume.resize.strict": "This disk offering strictly fixes the volume size.",
+  "message.volume.resize.root": "The compute offering defines a root disk size. Template-based root volumes require a compute offering change to resize. The API validates eligibility, including ISO-based exceptions.",
+  "message.volume.resize.shrink": "This image format or hypervisor does not support volume shrink.",
+  "message.volume.resize.shrink.confirm": "Explicitly allow shrink before reducing the volume size.",
+  "message.volume.resize.omitted": "Unchanged or empty values are omitted to retain current values. Zero IOPS is explicit and must satisfy minimum/maximum constraints.",
+  "message.volume.resize.fixed.iops": "Fixed IOPS offering · current minimum / maximum IOPS",
+  "message.volume.resize.root.iops": "Root volumes use the IOPS overrides supported by the resizeVolume API.",
+  "message.volume.resize.unknown": "The job result is unknown. Input is retained; check the result to resume the same job. If no job ID was received, verify current volume state and reopen the dialog."
 }
