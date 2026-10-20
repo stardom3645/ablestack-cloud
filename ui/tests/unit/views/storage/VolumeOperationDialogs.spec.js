@@ -107,6 +107,15 @@ test('offering read failure retains all fields and retries in the same dialog', 
   getAPI.mockRejectedValueOnce(new Error('offline')); const w = mount(Offering); await flushPromises(); expect(w.vm.offeringError).toBe('offline')
   w.vm.form.miniops = '150'; await w.vm.fetchDiskOfferings(); expect(w.vm.form.miniops).toBe('150'); expect(w.vm.canSubmit).toBe(true); w.unmount()
 })
+test('fixed offering with no IOPS limits clears existing limits and must show a change', async () => {
+  const w = mount(Offering); await flushPromises()
+  w.vm.diskOfferings.push({ ...fixed, id: 'unlimited', miniops: null, maxiops: null })
+  w.vm.form.diskofferingid = 'unlimited'; await w.vm.$nextTick()
+  expect(w.vm.changeSummary).toContain('label.volume.resize.iops.changed')
+  const inputs = w.findAllComponents({ name: 'AInput' }).map(input => input.props('value'))
+  expect(inputs).toContain('label.volume.operation.iops.unlimited')
+  w.unmount()
+})
 test('offering duplicate submit is blocked until the job finishes, with correct boolean default', async () => {
   let complete; poll.mockImplementation(() => new Promise(resolve => { complete = resolve }))
   const w = mount(Offering); await flushPromises(); const pending = w.vm.submitChangeOfferingForVolume(); w.vm.submitChangeOfferingForVolume(); await flushPromises()

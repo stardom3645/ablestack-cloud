@@ -33,7 +33,7 @@
           @change="selectStoragePool">
           <a-select-option v-for="pool in storagePools" :key="pool.id" :value="pool.id" :label="pool.name" :disabled="pool.state !== 'Up'">{{ pool.name }}<template v-if="pool.state !== 'Up'"> · {{ pool.state }}</template></a-select-option>
         </a-select>
-        <a-alert v-if="explicit" class="operation-help" type="warning" show-icon :message="$t('message.allocation.lifecycle.unsupported')" />
+        <a-alert v-if="explicit" id="volume-migration-pool-help" class="operation-help" type="warning" show-icon :message="$t('message.allocation.lifecycle.unsupported')" />
         <p v-else id="volume-migration-pool-help" class="operation-help" :class="{ 'operation-error': poolError }" aria-live="polite">
           <template v-if="poolError">{{ poolError }}</template>
           <template v-else-if="!poolLoading && !storagePools.length">{{ $t('message.volume.operation.no.pools') }}</template>
@@ -99,7 +99,7 @@ export default {
     scope () { const s = this.$store?.getters || {}; return JSON.stringify([this.resource.id, s.userInfo?.id, s.userInfo?.roletype, s.project?.id, this.$route?.path]) },
     current () { return this.active && this.originalScope === this.scope() },
     bytes (value) { return value == null ? '—' : this.$bytesToHumanReadableSize(value) },
-    failureText (error) { return error?.response?.data?.errorresponse?.errortext || error?.errortext || error?.message || this.$t('message.request.failed') },
+    failureText (error) { return Object.values(error?.response?.data || {}).find(v => v?.errortext)?.errortext || error?.errortext || error?.message || this.$t('message.request.failed') },
     offeringReason (offering) { return allocationOfferingReason(this.resource, offering) },
     async fetchStoragePools () {
       if (this.poolLoading || this.disabled || this.explicit) return

@@ -56,12 +56,12 @@
             <a-form-item html-for="volume-offering-min">
               <template #label><span class="operation-label"><span>{{ $t('label.miniops') }}</span><span class="operation-secondary">{{ $t('label.current') }} {{ resource.miniops ?? '—' }}</span></span></template>
               <a-input v-if="selectedOffering.iscustomizediops" id="volume-offering-min" v-model:value="form.miniops" :disabled="disabled || !apiParams.miniops" aria-describedby="volume-offering-iops-help" />
-              <a-input v-else id="volume-offering-min" :value="selectedOffering.miniops ?? '—'" disabled aria-describedby="volume-offering-iops-help" />
+              <a-input v-else id="volume-offering-min" :value="selectedOffering.miniops ?? $t('label.volume.operation.iops.unlimited')" disabled aria-describedby="volume-offering-iops-help" />
             </a-form-item>
             <a-form-item html-for="volume-offering-max">
               <template #label><span class="operation-label"><span>{{ $t('label.maxiops') }}</span><span class="operation-secondary">{{ $t('label.current') }} {{ resource.maxiops ?? '—' }}</span></span></template>
               <a-input v-if="selectedOffering.iscustomizediops" id="volume-offering-max" v-model:value="form.maxiops" :disabled="disabled || !apiParams.maxiops" aria-describedby="volume-offering-iops-help" />
-              <a-input v-else id="volume-offering-max" :value="selectedOffering.maxiops ?? '—'" disabled aria-describedby="volume-offering-iops-help" />
+              <a-input v-else id="volume-offering-max" :value="selectedOffering.maxiops ?? $t('label.volume.operation.iops.unlimited')" disabled aria-describedby="volume-offering-iops-help" />
             </a-form-item>
           </div>
           <p id="volume-offering-iops-help" class="operation-help">{{ $t(selectedOffering.iscustomizediops ? 'message.volume.operation.custom.iops' : 'message.volume.operation.fixed.iops') }}</p>
@@ -123,7 +123,9 @@ export default {
       if (this.validationError) return this.$t('message.volume.resize.check.input')
       const size = this.sizeDelta === 0 ? this.$t('message.volume.resize.size.retained') : this.$t(this.sizeDelta > 0 ? 'message.volume.resize.grow.by' : 'message.volume.resize.shrink.by', { size: Math.abs(this.sizeDelta) })
       const values = this.selectedOffering.iscustomizediops ? this.form : this.selectedOffering
-      const changed = ['miniops', 'maxiops'].some(k => values[k] != null && String(values[k]).trim() !== '' && Number(values[k]) !== (this.resource[k] ?? 0))
+      const changed = ['miniops', 'maxiops'].some(k => this.selectedOffering.iscustomizediops
+        ? values[k] != null && String(values[k]).trim() !== '' && Number(values[k]) !== (this.resource[k] ?? 0)
+        : Number(values[k] ?? 0) !== Number(this.resource[k] ?? 0))
       return size + ' · ' + this.$t(changed ? 'label.volume.resize.iops.changed' : 'label.volume.operation.iops.retained')
     }
   },
@@ -131,7 +133,7 @@ export default {
     offeringAllocationReason: allocationOfferingReason,
     scope () { const s = this.$store?.getters || {}; return JSON.stringify([this.resource.id, s.userInfo?.id, s.userInfo?.roletype, s.project?.id, this.$route?.path]) },
     current () { return this.active && this.originalScope === this.scope() },
-    failureText (error) { return error?.response?.data?.errorresponse?.errortext || error?.errortext || (error?.message?.startsWith('message.') ? this.$t(error.message) : error?.message) || this.$t('message.request.failed') },
+    failureText (error) { const body = error?.response?.data; return Object.values(body || {}).find(v => v?.errortext)?.errortext || error?.errortext || (error?.message?.startsWith('message.') ? this.$t(error.message) : error?.message) || this.$t('message.request.failed') },
     async fetchDiskOfferings () {
       if (this.offeringLoading || this.disabled) return
       this.offeringLoading = true

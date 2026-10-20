@@ -9314,6 +9314,7 @@
   "label.volume.operation.auto.enabled": "Automatic migration allowed",
   "label.volume.operation.auto.disabled": "Automatic migration disabled",
   "label.volume.operation.iops.retained": "IOPS retained",
+  "label.volume.operation.iops.unlimited": "Unlimited",
   "message.volume.operation.no.pools": "No destination storage pools are available. The current location is retained.",
   "message.volume.operation.no.offerings": "No disk offerings are available for this change.",
   "message.volume.operation.detached": "No attached virtual machine",

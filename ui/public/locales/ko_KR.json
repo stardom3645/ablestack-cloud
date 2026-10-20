@@ -9279,6 +9279,7 @@
   "label.volume.operation.auto.enabled": "자동 마이그레이션 허용",
   "label.volume.operation.auto.disabled": "자동 마이그레이션 사용 안 함",
   "label.volume.operation.iops.retained": "IOPS 유지",
+  "label.volume.operation.iops.unlimited": "제한 없음",
   "message.volume.operation.no.pools": "이동 가능한 스토리지 풀이 없습니다. 현재 위치를 유지합니다.",
   "message.volume.operation.no.offerings": "변경 가능한 디스크 오퍼링이 없습니다.",
   "message.volume.operation.detached": "연결된 가상머신 없음",

@@ -18,7 +18,7 @@
 .volume-operation-form { width: 85vw; max-width: 100%; min-width: 0; @media (min-width: 760px) { width: 500px; } }
 .volume-operation-target { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; overflow-wrap: anywhere; }
 .operation-secondary, .operation-help { font-size: 12px; opacity: .8; }
-.operation-label { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; width: 100%; }
+.operation-label { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; width: 100%; overflow-wrap: anywhere; }
 :deep(.ant-form-item-label > label) { width: 100%; }
 .operation-help { margin: 8px 0 0; overflow-wrap: anywhere; }
 .operation-error { color: var(--ant-error-color, #f5222d); }
