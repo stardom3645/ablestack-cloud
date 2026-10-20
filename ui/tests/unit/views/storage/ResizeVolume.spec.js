@@ -101,6 +101,7 @@ test('current values initialize and unchanged confirmation performs no mutation'
 test('read failure and empty response retain input and retry capability', async () => {
   getAPI.mockRejectedValueOnce(new Error('network disconnected'))
   const w = mount(); await flushPromises(); expect(w.vm.errorText).toBe('network disconnected'); expect(w.vm.contract).toBe(null)
+  expect(w.findAll('button').some(button => button.text() === 'label.retry')).toBe(true)
   w.vm.form.maxiops = '400'; await w.vm.fetchData(); expect(w.vm.form.maxiops).toBe('400')
   expect(w.vm.contract).toEqual(contract); w.unmount()
 })

@@ -18,9 +18,8 @@
 <template>
   <div class="form-layout" v-ctrl-enter="handleSubmit">
     <a-alert v-if="!current()" type="error" show-icon :message="$t('message.volume.resize.context')" style="margin-bottom: 16px" />
-    <a-alert v-if="errorText" type="error" show-icon :message="errorText" style="margin-bottom: 16px">
-      <template v-if="!contract && !jobId" #action><a-button :loading="loading" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
-    </a-alert>
+    <a-alert v-if="errorText" type="error" show-icon :message="errorText" style="margin-bottom: 16px" />
+    <a-button v-if="errorText && !contract && !jobId" :loading="loading" style="margin-bottom: 16px" @click="fetchData">{{ $t('label.retry') }}</a-button>
     <a-form :ref="formRef" :model="form" layout="vertical" @finish="handleSubmit">
       <AllocationSummary :resource="target" volume />
       <p v-if="contract">{{ $t(contract.kind === 'compute' ? 'label.compute.offerings' : 'label.diskoffering') }}: {{ contract.offering.name }}</p>
