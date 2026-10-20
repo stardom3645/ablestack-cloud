@@ -17,7 +17,7 @@
 
 compute-only 오퍼링은 새 내부 디스크 오퍼링의 요청을 소유한다. 일반 디스크 오퍼링을 연결하면 그 정책이 루트 디스크에 상속되고 별도의 정책·provisioningtype을 보내지 않는다. 추가 데이터 디스크는 별도 선택한 디스크 오퍼링을 따른다.
 
-오퍼링 정의의 복제는 실제 이미지 clone과 별도 작업이다. 복제 API의 미지원 일괄 차단을 제거하고 원본 요청을 복사하거나 명시적으로 선택한 새 요청을 적용한다. 기존 thin/sparse/fat의 이름만 복제할 때 기본 getter의 thin 값으로 덮지 않는다. 관측/적용 증거는 오퍼링 복제로 복사하지 않는다. 연결된 일반 디스크 오퍼링의 정책 소유권은 유지한다. 저장된 디스크 크기(bytes)를 복제 API의 GiB로 변환하며, 사용자 지정 크기를 생략해도 기존 용량을 정확히 상속한다.
+오퍼링 정의의 복제는 실제 이미지 clone과 별도 작업이다. 복제 API의 미지원 일괄 차단을 제거하고 원본 요청을 복사하거나 명시적으로 선택한 새 요청을 적용한다. 기존 thin/sparse/fat의 이름만 복제할 때 기본 getter의 thin 값으로 덮지 않는다. 관측/적용 증거는 오퍼링 복제로 복사하지 않는다. 할당 계약은 전용 정책 편집기로 관리하며 allocation.* 내부 키를 편집 가능한 하이퍼바이저 세부 정보로 노출하지 않는다. 연결된 일반 디스크 오퍼링의 정책 소유권은 유지한다. 저장된 디스크 크기(bytes)를 복제 API의 GiB로 변환하며, 사용자 지정 크기를 생략해도 기존 용량을 정확히 상속한다.
 
 ## 표시와 수명주기
 
@@ -29,4 +29,4 @@ listVolumesMetrics의 BeanUtils 응답 복사에서도 allocation을 보존하�
 
 ## 검증과 배포
 
-변경 server 모듈만 WSL ext4에서 Maven 빌드하고, UI 관련 테스트·lint·production build를 수행한다. 기존 배포본의 무관 메서드/항목과 운영 VM·자원을 보존한다. 31·32 정적 UI 배포는 WEB-INF/META-INF/config를 보존하고 index/assets/locales 등 정적 파일만 갱신한다. 전용 fixture의 UI→API→DB→실물 정책을 확인하고 정리한다. 전체 Cloud 빌드/CI는 요청 범위가 아니다.
+변경 API/server 모듈과 Metrics 회귀 검증 모듈만 WSL ext4에서 Maven 빌드하고, UI 관련 테스트·lint·production build를 수행한다. 기존 배포본의 무관 메서드/항목과 운영 VM·자원을 보존한다. 31·32 정적 UI 배포는 WEB-INF/META-INF/config를 보존하고 index/assets/locales 등 정적 파일만 갱신한다. 전용 fixture의 UI→API→DB→실물 정책을 확인하고 정리한다. 전체 Cloud 빌드/CI는 요청 범위가 아니다.

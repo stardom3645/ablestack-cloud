@@ -21,6 +21,7 @@ import Editor from '@/components/offering/AllocationPolicyEditor.vue'
 import CreateVolume from '@/views/storage/CreateVolume.vue'
 import DiskForm from '@/components/offering/DiskOfferingForm.vue'
 import MigrateVolume from '@/views/storage/MigrateVolume.vue'
+import CloneCompute from '@/views/offering/CloneComputeOffering.vue'
 import ComputeForm from '@/components/offering/ComputeOfferingForm.vue'
 import { allocationParams } from '@/utils/volumeAllocation'
 import { getAPI } from '@/api'
@@ -94,4 +95,17 @@ test('explicit allocation migration shows the backend limit and cannot query or 
   w.vm.submitForm()
   expect(w.vm.isSubmitted).toBe(false)
   w.unmount()
+})
+
+test('cloned compute allocation metadata stays out of editable hypervisor details', () => {
+  const context = { form: {} }
+  const source = { name: 'Full', allocation: request, serviceofferingdetails: { 'allocation.contract.version': '1', 'allocation.requested.policy': 'full', 'allocation.applied.method': 'rbd-thick-create', custom: 'keep' } }
+  CloneCompute.methods.populateFormFromResource.call(context, source)
+  expect(context.form.externaldetails).toEqual({ custom: 'keep' })
+  expect(context.form.allocationpolicy).toBe('full')
+  expect(context.externalDetailsEnabled).toBe(true)
+  delete source.serviceofferingdetails.custom
+  CloneCompute.methods.populateFormFromResource.call(context, source)
+  expect(context.externalDetailsEnabled).toBe(false)
+  expect(context.form.externaldetails).toBeUndefined()
 })

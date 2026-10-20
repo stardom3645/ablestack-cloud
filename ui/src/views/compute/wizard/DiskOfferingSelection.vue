@@ -33,12 +33,12 @@
       :scroll="{ y: 225 }"
     >
       <template #headerCell="{ column }">
-        <template v-if="column.key === 'name'">{{ record.name }}<AllocationSummary :resource="record.allocationResource" compact /></template>
         <template v-if="column.key === 'diskSize'"><hdd-outlined /> {{ $t('label.disksize') }}</template>
         <template v-if="column.key === 'iops'"><rocket-outlined /> {{ $t('label.minmaxiops') }}</template>
       </template>
 
       <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'name'">{{ record.name }}<AllocationSummary :resource="record.allocationResource" compact /></template>
         <template v-if="column.key === 'diskSize'">
           <div v-if="record.isCustomized">{{ $t('label.iscustomized') }}</div>
           <div v-else-if="record.diskSize">{{ record.diskSize }} GB</div>

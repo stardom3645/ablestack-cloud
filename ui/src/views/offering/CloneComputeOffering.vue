@@ -436,10 +436,10 @@ export default {
         this.handleDeploymentPlannerChange(r.deploymentplanner)
       }
 
-      if (r.serviceofferingdetails && Object.keys(r.serviceofferingdetails).length > 0) {
-        this.externalDetailsEnabled = true
-        this.form.externaldetails = r.serviceofferingdetails
-      }
+      const externalDetails = Object.fromEntries(Object.entries(r.serviceofferingdetails || {})
+        .filter(([key]) => !key.startsWith('allocation.')))
+      this.externalDetailsEnabled = Object.keys(externalDetails).length > 0
+      this.form.externaldetails = this.externalDetailsEnabled ? externalDetails : undefined
     },
     fetchGPUCards () {
       this.gpuCardLoading = true
