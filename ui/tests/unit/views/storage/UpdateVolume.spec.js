@@ -69,11 +69,14 @@ test('missing/foreign target and unsupported fields are rejected', () => {
 })
 test('mixed protected bulk selection is blocked, and valid unprotected selection remains available', () => {
   expect(volumeDeleteReason([volume, { ...volume, id: 'v2', deleteprotection: true }], {})).toBe('message.volume.delete.protected')
-  expect(volumeDeleteReason([volume], {})).toBe('')
+  expect(volumeDeleteReason([volume], { userInfo: { roletype: 'Admin' } })).toBe('')
   expect(volumeDeleteReason([{ ...volume, virtualmachineid: 'vm' }], {})).toContain('unavailable')
   expect(volumeDeleteReason([{ ...volume, clonefastflattenstatus: 'running' }], {})).toContain('flatten')
   expect(canDeleteVolume({ ...volume, state: 'Destroy' }, { userInfo: { roletype: 'User' }, features: {} })).toBe(false)
   expect(canDeleteVolume({ ...volume, state: 'Destroy' }, { userInfo: { roletype: 'DomainAdmin' }, features: {} })).toBe(true)
+  expect(canDeleteVolume(volume, { userInfo: { roletype: 'User' }, features: {} })).toBe(false)
+  expect(canDeleteVolume(volume, { userInfo: { roletype: 'User' }, features: { allowuserexpungerecovervolume: true } })).toBe(true)
+  expect(volumeDeleteReason([volume], { userInfo: { roletype: 'User' }, features: {} }, 'destroyVolume')).toBe('')
 })
 let poll, store, route
 function mount (role = 'Admin', resource = volume) {

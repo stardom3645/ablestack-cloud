@@ -59,6 +59,8 @@ export function validateVolumeEditSnapshot (snapshot, current, params, context) 
 }
 
 export function canDeleteVolume (record = {}, store = {}) {
+  const canExpunge = ['Admin', 'DomainAdmin'].includes(store.userInfo?.roletype) || !!store.features?.allowuserexpungerecovervolume
+  if (!canExpunge) return false
   const detached = !record.virtualmachineid
   return ['Expunging', 'Expunged', 'UploadError'].includes(record.state) ||
     (['Allocated', 'Uploaded', 'Ready'].includes(record.state) && record.type !== 'ROOT' && detached) ||
