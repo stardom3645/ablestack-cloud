@@ -62,6 +62,27 @@ public class Gfs2VolumeAllocation {
     }
     Gfs2VolumeAllocation(Runner runner) { this.runner = runner; }
 
+    /** Use the verified Cloud format even when libvirt cached the pool default QCOW2 format. */
+    public static void configureFileDisk(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef disk,
+            KVMPhysicalDisk physical, com.cloud.agent.api.to.DataTO data) {
+        if (!(data instanceof VolumeObjectTO) || !(data.getDataStore() instanceof org.apache.cloudstack.storage.to.PrimaryDataStoreTO)) { return; }
+        VolumeObjectTO volume = (VolumeObjectTO) data;
+        org.apache.cloudstack.storage.to.PrimaryDataStoreTO store = (org.apache.cloudstack.storage.to.PrimaryDataStoreTO) data.getDataStore();
+        Map<String, String> intent = VolumeAllocationPolicy.validateStored(volume.getAllocation());
+        if (store.getPoolType() != Storage.StoragePoolType.SharedMountPoint || !"raw".equals(intent.get(VolumeAllocationPolicy.FORMAT))) { return; }
+        if (disk == null || physical == null || volume.getFormat() != Storage.ImageFormat.RAW || physical.getPool() == null ||
+                !store.getUuid().equals(physical.getPool().getUuid()) || physical.getPath() == null ||
+                !Path.of(physical.getPath()).isAbsolute() || !Files.isRegularFile(Path.of(physical.getPath()), LinkOption.NOFOLLOW_LINKS) ||
+                Files.isSymbolicLink(Path.of(physical.getPath()))) {
+            throw new CloudRuntimeException("GFS2_RAW_FILE_REQUIRED: explicit RAW must retain its verified file-backed format");
+        }
+        com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskCacheMode cache = disk.getCacheMode();
+        disk.defFileBasedDisk(physical.getPath(), disk.getDiskLabel(), disk.getBusType(),
+                com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.RAW);
+        disk.setCacheMode(cache);
+        physical.setFormat(PhysicalDiskFormat.RAW);
+    }
+
     protected Path root(KVMStoragePool pool) throws IOException {
         if (pool == null || pool.getType() != Storage.StoragePoolType.SharedMountPoint || pool.getLocalPath() == null) {
             throw new CloudRuntimeException("GFS2_ALLOCATION_BACKEND_UNSUPPORTED: SharedMountPoint required");

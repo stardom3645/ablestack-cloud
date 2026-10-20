@@ -4616,6 +4616,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     disk.setLibvirtDiskEncryptDetails(encryptDetails);
                 }
             }
+            com.cloud.hypervisor.kvm.storage.Gfs2VolumeAllocation.configureFileDisk(disk, physicalDisk, data);
             setQcow2FullMetadataCache(disk, physicalDisk);
             if (vm.getDevices() == null) {
                 LOGGER.error("There is no devices for" + vm);

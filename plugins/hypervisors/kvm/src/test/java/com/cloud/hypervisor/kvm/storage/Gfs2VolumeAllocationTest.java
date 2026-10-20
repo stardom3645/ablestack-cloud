@@ -168,6 +168,54 @@ public class Gfs2VolumeAllocationTest {
         reject(() -> new RbdVolumeAllocation((a,t) -> { throw new AssertionError("No CLI call allowed"); }).create(volume, pool, null, 60000), "REQUEST_UNSUPPORTED");
     }
 
+    private com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef rawDisk() throws Exception {
+        Files.writeString(target(), "raw-test-file"); volume.setFormat(Storage.ImageFormat.RAW);
+        org.apache.cloudstack.storage.to.PrimaryDataStoreTO store = mock(org.apache.cloudstack.storage.to.PrimaryDataStoreTO.class);
+        when(store.getPoolType()).thenReturn(Storage.StoragePoolType.SharedMountPoint); when(store.getUuid()).thenReturn("pool"); volume.setDataStore(store);
+        com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef disk = new com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef();
+        disk.defFileBasedDisk(target().toString(), "vda", com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskBus.VIRTIO,
+                com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2);
+        return disk;
+    }
+    private KVMPhysicalDisk cachedDisk() {
+        KVMPhysicalDisk physical = mock(KVMPhysicalDisk.class); when(physical.getPath()).thenReturn(target().toString()); when(physical.getPool()).thenReturn(pool); when(physical.getFormat()).thenReturn(PhysicalDiskFormat.QCOW2); return physical;
+    }
+    @Test public void rawFileOverridesCachedQcow2AndPreservesCacheAndSerial() throws Exception {
+        var disk = rawDisk(); disk.setCacheMode(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskCacheMode.WRITEBACK); disk.setSerial("serial");
+        Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume);
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskType.FILE, disk.getDiskType());
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.RAW, disk.getDiskFormatType());
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskCacheMode.WRITEBACK, disk.getCacheMode());
+        assertEquals("vda", disk.getDiskLabel()); assertTrue(disk.toString().contains("serial")); assertFalse(disk.toString().contains("metadata_cache"));
+    }
+    @Test public void rawFileCannotRemainABlockDevice() throws Exception {
+        var disk = rawDisk(); disk.defBlockBasedDisk(target().toString(), 0, disk.getBusType());
+        Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume);
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskType.FILE, disk.getDiskType()); assertTrue(disk.toString().contains("source file="));
+    }
+    @Test public void gfsQcow2DiskKeepsItsFormatAndMetadataPolicy() throws Exception {
+        var disk = rawDisk(); volume.setAllocation(VolumeAllocationPolicy.request("metadata", "qcow2", null)); volume.setFormat(Storage.ImageFormat.QCOW2);
+        Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume);
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2, disk.getDiskFormatType());
+    }
+    @Test public void legacyDiskDefinitionIsNotReinterpreted() throws Exception {
+        var disk = rawDisk(); volume.setAllocation(Map.of()); Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume);
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2, disk.getDiskFormatType());
+    }
+    @Test public void rbdRawDoesNotUseTheGfsFileDefinition() throws Exception {
+        var disk = rawDisk(); when(((org.apache.cloudstack.storage.to.PrimaryDataStoreTO) volume.getDataStore()).getPoolType()).thenReturn(Storage.StoragePoolType.RBD);
+        Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume); assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2, disk.getDiskFormatType());
+    }
+    @Test public void explicitRawCannotUseMissingPhysicalFile() throws Exception {
+        var disk = rawDisk(); Files.delete(target()); reject(() -> Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume), "RAW_FILE_REQUIRED");
+    }
+    @Test public void explicitRawCannotUseWrongPoolUuid() throws Exception {
+        var disk = rawDisk(); when(pool.getUuid()).thenReturn("foreign"); reject(() -> Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume), "RAW_FILE_REQUIRED");
+    }
+    @Test public void inconsistentCloudRawFormatCannotBeSilentlyCorrected() throws Exception {
+        var disk = rawDisk(); volume.setFormat(Storage.ImageFormat.QCOW2); reject(() -> Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume), "RAW_FILE_REQUIRED");
+    }
+
     private static final class Fake implements Gfs2VolumeAllocation.Runner {
         private final List<List<String>> calls = new ArrayList<>();
         private final Map<Object, Image> images = new ConcurrentHashMap<>();

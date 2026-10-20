@@ -33,3 +33,7 @@ Agent 결과의 풀 UUID·이미지 UUID·크기·실제 형식·요청 계약·
 31번에서 6개 지원 조합의 UI/API·DB·실물 대조, legacy 3종 호환, 작은 Full 전 범위 zero 및 템플릿 데이터 비교를 수행한다. 실제 어댑터의 중간 실패·공간 부족·중복 공개·응답 유실 재시도에서 원본과 미소유 파일 보존을 확인한다. 운영 풀을 가득 채우지 않고 부족 조건을 통제한다. 변경 모듈만 WSL ext4에서 빌드하며 기존 FT worktree·운영 VM/볼륨·WEB-INF·정적 UI를 보존한다. #1240의 별도 파일시스템 포맷 문제나 전체 Cloud CI 성공으로 확대하지 않는다.
 
 기술 근거: [QEMU 이미지 형식](https://www.qemu.org/docs/master/system/images.html), [qemu-img create/convert/measure/compare](https://www.qemu.org/docs/master/tools/qemu-img.html). 구체적인 실제 결과·배포 해시·범위 제한은 검증 보고서에 별도 기록한다.
+
+## RAW 기동 경로 보완
+
+첫 Cloud RAW ROOT 기동에서 libvirt가 풀 기본 형식 QCOW2를 캐시해 RAW 파일에 QCOW2 metadata cache 계산을 시도하는 실패를 확인했다. 명시적 RAW 계약과 검증된 VolumeObjectTO RAW 형식, 풀 UUID, 실제 일반 파일을 확인한 뒤 기존 disk definition을 file/RAW로 정규화한다. 블록 장치로도 잘못 전달하지 않는다. 기존 버스·장치 이름·serial·cache/QoS 설정은 보존하고 QCOW2 metadata cache는 사용하지 않는다. QCOW2·legacy·RBD 정의에는 적용하지 않는다. 수정 후 신규 ROOT 생성부터 전체 경로를 다시 검증하며 최초 실패를 성공으로 재집계하지 않는다.
