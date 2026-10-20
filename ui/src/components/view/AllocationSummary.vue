@@ -23,15 +23,7 @@
     </template>
     <template v-else>
       <a-descriptions :title="$t('label.allocation.title')" size="small" :column="{ xs: 1, sm: 2, lg: 3 }">
-        <a-descriptions-item :label="$t('label.allocation.requested')">{{ allocationLabel(resource, $t) }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.allocation.fixed')">{{ verified ? policy(a.fixedpolicy) : unknown }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.allocation.applied')">{{ verified ? policy(a.effectivepolicy) : unknown }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.allocation.method')">{{ verified ? a.appliedmethod : unknown }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.allocation.actual.format')">{{ a.actualformat && a.actualformat !== 'unknown' ? a.actualformat.toUpperCase() : unknown }}</a-descriptions-item>
-        <a-descriptions-item v-if="volume" :label="$t('label.allocation.logical')">{{ resource.size == null ? unknown : $bytesToHumanReadableSize(resource.size) }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.allocation.observed')">{{ verified && a.observedallocatedbytes != null ? $bytesToHumanReadableSize(Number(a.observedallocatedbytes)) : unknown }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.allocation.observed.at')">{{ verified ? a.observedat || unknown : unknown }}</a-descriptions-item>
-        <a-descriptions-item :label="$t('label.allocation.evidence')">{{ $t('label.allocation.evidence.' + (a.evidence || 'unverified')) }}</a-descriptions-item>
+        <a-descriptions-item v-for="(field, key) in fields" :key="key" :label="$t(field.label)">{{ field.value }}</a-descriptions-item>
       </a-descriptions>
       <p class="allocation-note">{{ $t(volume ? 'message.allocation.observation' : 'message.allocation.offering.conditions') }}</p>
       <p v-if="inheritance" class="allocation-note">{{ $t('message.allocation.inheritance') }}</p>
@@ -39,16 +31,16 @@
   </section>
 </template>
 <script>
-import { allocationLabel } from '@/utils/volumeAllocation'
+import { allocationLabel, allocationDetailFields } from '@/utils/volumeAllocation'
 export default {
   name: 'AllocationSummary',
   props: { resource: { type: Object, default: () => ({}) }, volume: Boolean, compact: Boolean, inheritance: Boolean },
   computed: {
-    a () { return this.resource?.allocation || {} },
-    verified () { return this.a.evidence === 'verified' },
-    unknown () { return this.$t('label.allocation.unknown') }
+    fields () {
+      return allocationDetailFields(this.resource, this.$t, value => this.$bytesToHumanReadableSize(value), { volume: this.volume, inheritance: this.inheritance })
+    }
   },
-  methods: { allocationLabel, policy (p) { return p && p !== 'unknown' ? this.$t('label.allocation.policy.' + p) : this.unknown } }
+  methods: { allocationLabel }
 }
 </script>
 <style scoped>

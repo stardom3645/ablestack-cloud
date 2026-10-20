@@ -38,6 +38,24 @@ export function allocationLabel (resource, t) {
   return i ? t('label.allocation.policy.' + i.policy) + ' · ' + i.format.toUpperCase()
     : t('label.allocation.legacy') + ': ' + (resource?.provisioningtype || t('label.allocation.unknown'))
 }
+export function allocationDetailFields (resource, t, bytes, { volume = false, inheritance = false } = {}) {
+  const a = resource?.allocation || {}
+  const verified = a.evidence === 'verified'
+  const unknown = t('label.allocation.unknown')
+  const policy = value => value && value !== 'unknown' ? t('label.allocation.policy.' + value) : unknown
+  const fields = [
+    ['requested', allocationLabel(resource, t), !volume ? t('message.allocation.offering.conditions') + (inheritance ? ' ' + t('message.allocation.inheritance') : '') : undefined],
+    ['fixed', verified ? policy(a.fixedpolicy) : unknown],
+    ['applied', verified ? policy(a.effectivepolicy) : unknown],
+    ['method', verified ? a.appliedmethod : unknown],
+    ['actual.format', a.actualformat && a.actualformat !== 'unknown' ? a.actualformat.toUpperCase() : unknown],
+    ...(volume ? [['logical', resource.size == null ? unknown : bytes(resource.size)]] : []),
+    ['observed', verified && a.observedallocatedbytes != null ? bytes(Number(a.observedallocatedbytes)) : unknown, volume ? t('message.allocation.observation') : undefined],
+    ['observed.at', verified ? a.observedat || unknown : unknown],
+    ['evidence', t('label.allocation.evidence.' + (a.evidence || 'unverified'))]
+  ]
+  return Object.fromEntries(fields.map(([key, value, help]) => ['allocation.' + key, { label: 'label.allocation.' + key, value, help }]))
+}
 export function allocationOfferingReason (volume, offering) {
   if (!offering) return 'message.allocation.select'
   const a = allocationIntent(volume); const b = allocationIntent(offering)
