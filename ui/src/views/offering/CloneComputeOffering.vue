@@ -59,6 +59,7 @@
 import ComputeOfferingForm from '@/components/offering/ComputeOfferingForm'
 import { ref, reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { allocationParams, allocationForm } from '@/utils/volumeAllocation'
 import AddDiskOffering from '@/views/offering/AddDiskOffering'
 import { isAdmin } from '@/role'
 import { mixinForm } from '@/utils/mixin'
@@ -198,7 +199,7 @@ export default {
         listall: true
       }).then(json => {
         const diskOffering = json?.listdiskofferingsresponse?.diskoffering?.[0]
-        const isComputeOnly = !diskOffering
+        const isComputeOnly = sourceResource.diskofferingcomputeonly === true || !diskOffering
         this.form.computeonly = isComputeOnly
         this.computeonly = isComputeOnly
       })
@@ -311,6 +312,7 @@ export default {
 
       // Pre-fill form with source offering values
       const r = sourceResource
+      Object.assign(this.form, allocationForm(r))
       const isTrueValue = value => value === true || value === 'true' || value === 1 || value === '1'
       const offeringDetails = r.serviceofferingdetails || {}
       this.form.name = r.name + ' - Clone'
@@ -540,7 +542,6 @@ export default {
           name: values.name,
           displaytext: values.displaytext,
           storagetype: values.storagetype,
-          provisioningtype: values.provisioningtype,
           cachemode: values.cachemode,
           customized: values.offeringtype !== 'fixed',
           offerha: values.offerha === true,
@@ -697,6 +698,8 @@ export default {
         }
 
         params.sourceofferingid = this.resource.id
+        Object.assign(params, allocationParams(values, values.computeonly === false))
+        if (values.computeonly !== false) delete params.diskofferingid
         this.loading = true
         postAPI('cloneServiceOffering', params).then(json => {
           const message = this.isSystem

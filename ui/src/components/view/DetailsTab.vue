@@ -45,6 +45,11 @@
       <p v-html="vnfAccessMethods" />
     </template>
   </a-alert>
+  <AllocationSummary
+v-if="['volume', 'diskoffering', 'computeoffering', 'systemoffering'].includes($route.meta.name)"
+    :resource="resource"
+:volume="$route.meta.name === 'volume'"
+:inheritance="['computeoffering', 'systemoffering'].includes($route.meta.name)" />
   <a-list
     class="resource-details-list"
     size="small"
@@ -361,9 +366,12 @@ import { getAPI } from '@/api'
 import CodeHighlight from 'vue-code-highlight/src/CodeHighlight.vue'
 import 'vue-code-highlight/themes/prism-okaidia.css'
 
+import AllocationSummary from '@/components/view/AllocationSummary'
+
 export default {
   name: 'DetailsTab',
   components: {
+    AllocationSummary,
     AffinityGroupPolicy,
     DedicateData,
     HostInfo,

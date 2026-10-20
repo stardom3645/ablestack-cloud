@@ -54,6 +54,7 @@
 import DiskOfferingForm from '@/components/offering/DiskOfferingForm'
 import { reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { allocationParams, allocationForm } from '@/utils/volumeAllocation'
 import { isAdmin } from '@/role'
 
 export default {
@@ -101,6 +102,7 @@ export default {
       if (!sourceResource) return
 
       const r = sourceResource
+      Object.assign(this.form, allocationForm(r))
       const isTrueValue = value => value === true || value === 'true' || value === 1 || value === '1'
       this.form.name = r.name + ' - Clone'
       this.form.displaytext = r.displaytext
@@ -208,9 +210,6 @@ export default {
         if (values.writecachetype) {
           params.cachemode = values.writecachetype
         }
-        if (values.provisioningtype) {
-          params.provisioningtype = values.provisioningtype
-        }
         if (values.customdisksize !== undefined) {
           params.customized = values.customdisksize
         }
@@ -299,6 +298,7 @@ export default {
           params.storagepolicy = values.storagepolicy
         }
 
+        Object.assign(params, allocationParams(values))
         this.loading = true
         postAPI('cloneDiskOffering', params).then(json => {
           this.$message.success(`${this.$t('message.success.clone.disk.offering')} ${values.name}`)

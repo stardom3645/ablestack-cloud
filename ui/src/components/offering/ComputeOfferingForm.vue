@@ -380,16 +380,7 @@
             <a-radio-button value="local">{{ $t('label.local') }}</a-radio-button>
           </a-radio-group>
         </a-form-item>
-        <a-form-item name="provisioningtype" ref="provisioningtype">
-          <template #label>
-            <tooltip-label :title="$t('label.provisioningtype')" :tooltip="apiParams.provisioningtype.description"/>
-          </template>
-          <a-radio-group v-model:value="form.provisioningtype" buttonStyle="solid" @change="selected => { handleProvisioningTypeChange(selected.target.value) }">
-            <a-radio-button value="thin">{{ $t('label.provisioningtype.thin') }}</a-radio-button>
-            <a-radio-button value="sparse">{{ $t('label.provisioningtype.sparse') }}</a-radio-button>
-            <a-radio-button value="fat">{{ $t('label.provisioningtype.fat') }}</a-radio-button>
-          </a-radio-group>
-        </a-form-item>
+    <AllocationPolicyEditor ref="allocationEditor" :form="form" @change="Object.assign(form, $event)" />
         <a-form-item v-if="!form.shareable" name="kvdoenable" ref="kvdoenable">
           <template #label>
             <tooltip-label :title="$t('label.kvdoenable')" :tooltip="apiParams.kvdoenable ? apiParams.kvdoenable.description : ''"/>
@@ -550,6 +541,7 @@
               <a-select-option v-for="(offering, index) in diskOfferings" :value="offering.id" :key="index">{{ offering.displaytext || offering.name }}</a-select-option>
             </a-select>
           </a-form-item>
+          <AllocationSummary :resource="diskOfferings.find(o => o.id === form.diskofferingid) || {}" compact inheritance />
         </a-form-item>
       </span>
       <a-form-item name="diskofferingstrictness" ref="diskofferingstrictness">
@@ -585,11 +577,16 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import DetailsInput from '@/components/widgets/DetailsInput'
 import store from '@/store'
+import AllocationPolicyEditor from '@/components/offering/AllocationPolicyEditor'
+import AllocationSummary from '@/components/view/AllocationSummary'
+import { readAllocationList } from '@/utils/volumeAllocation'
 
 export default {
   name: 'ComputeOfferingForm',
   mixins: [mixinForm],
   components: {
+    AllocationPolicyEditor,
+    AllocationSummary,
     AddDiskOffering,
     ResourceIcon,
     TooltipLabel,
@@ -629,6 +626,7 @@ export default {
         computeonly: true,
         storagetype: 'shared',
         provisioningtype: 'thin',
+        allocationmode: 'legacy',
         cachemode: 'writeback',
         qostype: '',
         iscustomizeddiskiops: false,
@@ -759,8 +757,8 @@ export default {
     addDiskOffering () { this.showDiskOfferingModal = true },
     fetchDiskOfferings () {
       this.diskOfferingLoading = true
-      getAPI('listDiskOfferings', { listall: true }).then(json => {
-        this.diskOfferings = json.listdiskofferingsresponse.diskoffering || []
+      readAllocationList(getAPI, 'listDiskOfferings', 'diskoffering', { listall: true }).then(rows => {
+        this.diskOfferings = rows
         if (!this.form.diskofferingid) {
           this.selectedDiskOfferingId = this.diskOfferings[0]?.id || ''
           this.form.diskofferingid = this.selectedDiskOfferingId
@@ -849,7 +847,7 @@ export default {
     onToggleLeaseData () { if (this.showLeaseOptions === false) { this.leaseduration = undefined; this.leaseexpiryaction = undefined } else { this.leaseduration = this.leaseduration !== undefined ? this.leaseduration : this.defaultLeaseDuration; this.leaseexpiryaction = this.leaseexpiryaction !== undefined ? this.leaseexpiryaction : this.defaultLeaseExpiryAction } this.form.leaseduration = this.leaseduration; this.form.leaseexpiryaction = this.leaseexpiryaction },
 
     validate () {
-      return this.$refs.internalFormRef.validate().then(() => {
+      return (this.$refs.allocationEditor?.validate() || Promise.resolve()).then(() => this.$refs.internalFormRef.validate()).then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
         return values

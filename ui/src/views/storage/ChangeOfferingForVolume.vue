@@ -47,12 +47,16 @@
         <a-select-option
           v-for="(offering, index) in diskOfferings"
           :value="offering.id"
+          :disabled="!!offeringAllocationReason(resource, offering)"
           :key="index"
           :label="offering.displaytext || offering.name">
           {{ offering.displaytext || offering.name }}
         </a-select-option>
       </a-select>
     </a-form-item>
+    <AllocationSummary :resource="resource" volume />
+    <a-alert v-if="allocationReason" type="warning" show-icon :message="$t(allocationReason)" />
+    <p v-if="explicit">{{ $t('message.allocation.lifecycle.unsupported') }}</p>
     <span v-if="customDiskOffering">
       <a-form-item name="size" ref="size">
         <template #label>
@@ -104,7 +108,7 @@
       <a-button @click="closeModal">
         {{ $t('label.cancel') }}
       </a-button>
-      <a-button type="primary" @click="submitChangeOfferingForVolume">
+      <a-button type="primary" :disabled="!!allocationReason" @click="submitChangeOfferingForVolume">
         {{ $t('label.ok') }}
       </a-button>
     </div>
@@ -116,6 +120,8 @@ import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import { mixinForm } from '@/utils/mixin'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
+import AllocationSummary from '@/components/view/AllocationSummary'
+import { allocationOfferingReason, allocationIntent, readAllocationList } from '@/utils/volumeAllocation'
 
 export default {
   name: 'ChangeOfferingForVolume',
@@ -127,6 +133,7 @@ export default {
     }
   },
   components: {
+    AllocationSummary,
     TooltipLabel
   },
   inject: ['parentFetchData'],
@@ -142,6 +149,11 @@ export default {
       isCustomizedDiskIOps: false
     }
   },
+  computed: {
+    selectedOffering () { return this.diskOfferings.find(o => o.id === this.form.diskofferingid) },
+    allocationReason () { return allocationOfferingReason(this.resource, this.selectedOffering) },
+    explicit () { return !!allocationIntent(this.resource) }
+  },
   beforeCreate () {
     this.apiParams = this.$getApiParams('changeOfferingForVolume')
   },
@@ -150,6 +162,7 @@ export default {
     this.fetchDiskOfferings()
   },
   methods: {
+    offeringAllocationReason: allocationOfferingReason,
     initForm () {
       this.formRef = ref()
       this.form = reactive({
@@ -179,11 +192,8 @@ export default {
       })
     },
     fetchDiskOfferings () {
-      getAPI('listDiskOfferings', {
-        volumeid: this.resource.id,
-        listall: true
-      }).then(response => {
-        var ret = response.listdiskofferingsresponse.diskoffering
+      readAllocationList(getAPI, 'listDiskOfferings', 'diskoffering', { volumeid: this.resource.id, listall: true }).then(rows => {
+        var ret = rows
         if (ret && Array.isArray(ret)) {
           ret.forEach((item) => {
             if (item.kvdoenable === this.resource.kvdoenable) {
@@ -192,7 +202,9 @@ export default {
           })
         }
         if (this.diskOfferings.length > 0) {
-          this.selectedDiskOfferingId = this.diskOfferings[0].id
+          const first = this.diskOfferings.find(o => !allocationOfferingReason(this.resource, o))
+          this.selectedDiskOfferingId = first?.id
+          this.form.diskofferingid = first?.id
           this.customDiskOffering = this.diskOfferings[0].iscustomized || false
           this.isCustomizedDiskIOps = this.diskOfferings[0]?.iscustomizediops || false
         }
@@ -205,8 +217,10 @@ export default {
       this.$emit('close-action')
     },
     submitChangeOfferingForVolume () {
-      if (this.loading) return
+      if (this.loading || this.allocationReason) return
       this.formRef.value.validate().then(() => {
+        if (this.allocationReason) throw new Error(this.$t(this.allocationReason))
+        if (this.explicit && this.form.size && Number(this.form.size) * 1073741824 !== this.resource.size) throw new Error(this.$t('message.allocation.lifecycle.unsupported'))
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
         this.loading = true

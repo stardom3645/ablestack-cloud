@@ -39,6 +39,7 @@
 import DiskOfferingForm from '@/components/offering/DiskOfferingForm'
 import { reactive } from 'vue'
 import { postAPI } from '@/api'
+import { allocationParams } from '@/utils/volumeAllocation'
 import { isAdmin } from '@/role'
 
 export default {
@@ -82,7 +83,6 @@ export default {
           displaytext: values.displaytext,
           storagetype: values.storagetype,
           cachemode: values.writecachetype,
-          provisioningtype: values.provisioningtype,
           customized: values.customdisksize,
           disksizestrictness: values.disksizestrictness,
           encrypt: values.encryptdisk,
@@ -164,6 +164,7 @@ export default {
           params.storagepolicy = values.storagepolicy
         }
 
+        Object.assign(params, allocationParams(values))
         this.loading = true
         postAPI('createDiskOffering', params).then(json => {
           this.$emit('publish-disk-offering-id', json?.creatediskofferingresponse?.diskoffering?.id)

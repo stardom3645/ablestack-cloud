@@ -24,9 +24,12 @@
       layout="vertical"
       @finish="handleSubmit"
      >
+      <AllocationSummary :resource="resource" volume />
+      <a-alert v-if="explicit" type="info" show-icon :message="$t('message.allocation.lifecycle.unsupported')" />
       <a-form-item name="size" ref="size" :label="$t('label.sizegb')">
         <a-input
           v-model:value="form.size"
+          :disabled="explicit"
           :placeholder="$t('label.disksize')"/>
       </a-form-item>
       <div v-if="customDiskOfferingIops">
@@ -68,10 +71,13 @@ import { ref, reactive, toRaw } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import { mixinForm } from '@/utils/mixin'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
+import AllocationSummary from '@/components/view/AllocationSummary'
+import { allocationIntent } from '@/utils/volumeAllocation'
 
 export default {
   name: 'ResizeVolume',
   components: {
+    AllocationSummary,
     TooltipLabel
   },
   mixins: [mixinForm],
@@ -89,6 +95,7 @@ export default {
       customDiskOfferingIops: false
     }
   },
+  computed: { explicit () { return !!allocationIntent(this.resource) } },
   created () {
     this.initForm()
     this.fetchData()
@@ -96,7 +103,7 @@ export default {
   methods: {
     initForm () {
       this.formRef = ref()
-      this.form = reactive({})
+      this.form = reactive(this.explicit ? { size: String(this.resource.size / 1073741824) } : {})
       this.rules = reactive({
         size: [{ required: true, message: this.$t('message.error.size') }],
         miniops: [{ required: true, message: this.$t('message.error.number') }],
@@ -106,13 +113,13 @@ export default {
     fetchData () {
       this.loading = true
       getAPI('listDiskOfferings', {
-        zoneid: this.resource.zoneid,
+        id: this.resource.diskofferingid,
         listall: true
       }).then(json => {
         this.offerings = json.listdiskofferingsresponse.diskoffering || []
-        this.form.diskofferingid = this.offerings[0].id || ''
-        this.customDiskOffering = this.offerings[0].iscustomized || false
-        this.customDiskOfferingIops = this.offerings[0].iscustomizediops || false
+        this.form.diskofferingid = this.offerings[0]?.id || ''
+        this.customDiskOffering = this.offerings[0]?.iscustomized || false
+        this.customDiskOfferingIops = this.offerings[0]?.iscustomizediops || false
       }).finally(() => {
         this.loading = false
       })
@@ -124,6 +131,7 @@ export default {
         const values = this.handleRemoveFields(formRaw)
         this.loading = true
         values.id = this.resource.id
+        if (this.explicit) delete values.size
         postAPI('resizeVolume', values).then(response => {
           this.$pollJob({
             jobId: response.resizevolumeresponse.jobid,

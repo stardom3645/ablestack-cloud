@@ -54,24 +54,7 @@
         </a-radio-button>
       </a-radio-group>
     </a-form-item>
-    <a-form-item name="provisioningtype" ref="provisioningtype">
-      <template #label>
-        <tooltip-label :title="$t('label.provisioningtype')" :tooltip="apiParams.provisioningtype.description"/>
-      </template>
-      <a-radio-group
-        v-model:value="form.provisioningtype"
-        buttonStyle="solid">
-        <a-radio-button value="thin">
-          {{ $t('label.provisioningtype.thin') }}
-        </a-radio-button>
-        <a-radio-button value="sparse">
-          {{ $t('label.provisioningtype.sparse') }}
-        </a-radio-button>
-        <a-radio-button value="fat">
-          {{ $t('label.provisioningtype.fat') }}
-        </a-radio-button>
-      </a-radio-group>
-    </a-form-item>
+    <AllocationPolicyEditor ref="allocationEditor" :form="form" @change="Object.assign(form, $event)" />
     <a-form-item name="encryptdisk" ref="encryptdisk">
       <template #label>
         <tooltip-label :title="$t('label.encrypt')" :tooltip="apiParams.encrypt.description" />
@@ -329,12 +312,16 @@ import { mixinForm } from '@/utils/mixin'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import store from '@/store'
+import AllocationPolicyEditor from '@/components/offering/AllocationPolicyEditor'
+import AllocationSummary from '@/components/view/AllocationSummary'
 import { BlockOutlined, GlobalOutlined } from '@ant-design/icons-vue'
 
 export default {
   name: 'DiskOfferingForm',
   mixins: [mixinForm],
   components: {
+    AllocationPolicyEditor,
+    AllocationSummary,
     ResourceIcon,
     TooltipLabel,
     BlockOutlined,
@@ -360,6 +347,7 @@ export default {
       form: reactive(Object.assign({
         storagetype: 'shared',
         provisioningtype: 'thin',
+        allocationmode: 'legacy',
         customdisksize: true,
         writecachetype: 'writeback',
         qostype: '',
@@ -574,7 +562,7 @@ export default {
       }
     },
     validate () {
-      return this.$refs.internalFormRef.validate().then(() => {
+      return (this.$refs.allocationEditor?.validate() || Promise.resolve()).then(() => this.$refs.internalFormRef.validate()).then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
         return values

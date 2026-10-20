@@ -33,6 +33,7 @@
       :scroll="{ y: 225 }"
     >
       <template #headerCell="{ column }">
+        <template v-if="column.key === 'name'">{{ record.name }}<AllocationSummary :resource="record.allocationResource" compact /></template>
         <template v-if="column.key === 'diskSize'"><hdd-outlined /> {{ $t('label.disksize') }}</template>
         <template v-if="column.key === 'iops'"><rocket-outlined /> {{ $t('label.minmaxiops') }}</template>
       </template>
@@ -72,7 +73,9 @@
 </template>
 
 <script>
+import AllocationSummary from '@/components/view/AllocationSummary'
 export default {
+  components: { AllocationSummary },
   name: 'DiskOfferingSelection',
   props: {
     items: {
@@ -145,6 +148,7 @@ export default {
     tableSource () {
       return this.dataItems.map((item) => {
         return {
+          allocationResource: item,
           key: item.id,
           name: item.name,
           diskSize: item.disksize,

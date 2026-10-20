@@ -3967,9 +3967,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final long userId = CallContext.current().getCallingUserId();
         final ServiceOfferingVO sourceOffering = getAndValidateSourceOffering(cmd.getSourceOfferingId());
         final DiskOfferingVO sourceDiskOffering = getSourceDiskOffering(sourceOffering);
-        if (sourceDiskOffering != null) {
-            VolumeAllocationPolicy.requireLegacyExecution(diskOfferingDetailsDao.listDetailsKeyPairs(sourceDiskOffering.getId()));
-        }
         final Map<String, String> requestParams = cmd.getFullUrlParams();
 
         final String name = cmd.getServiceOfferingName();
@@ -4011,17 +4008,32 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
         final Integer finalGpuCount = validateVgpuProfileAndGetGpuCount(vgpuProfileId, gpuCount);
 
-        final Map<String, String> mergedDetails = mergeOfferingDetails(cmd, sourceOffering, customParams);
+        final Long diskOfferingId = cmd.getDiskOfferingId() != null ? cmd.getDiskOfferingId() :
+                (sourceDiskOffering != null && !sourceDiskOffering.isComputeOnly() &&
+                 (requestParams == null || (!requestParams.containsKey("provisioningtype") && !requestParams.containsKey("allocationpolicy")))
+                 ? sourceOffering.getDiskOfferingId() : null);
+        final Map<String, String> mergedDetails = OfferingAllocationClone.details(
+                mergeOfferingDetails(cmd, sourceOffering, customParams),
+                sourceDiskOffering == null ? Map.of() : diskOfferingDetailsDao.listDetailsKeyPairs(sourceDiskOffering.getId()),
+                cmd.getDetails(), requestParams, diskOfferingId != null);
+        if (diskOfferingId != null) {
+            DiskOfferingVO linked = _diskOfferingDao.findById(diskOfferingId);
+            if (linked == null || linked.isComputeOnly()) {
+                throw new InvalidParameterValueException("Please specify a valid general disk offering.");
+            }
+            if (requestParams != null && requestParams.containsKey("provisioningtype") &&
+                    !VolumeAllocationPolicy.validateStored(diskOfferingDetailsDao.listDetailsKeyPairs(diskOfferingId)).isEmpty()) {
+                throw new InvalidParameterValueException("provisioningtype conflicts with linked allocation policy");
+            }
+        }
 
         final boolean localStorageRequired = ServiceOffering.StorageType.local.toString().equalsIgnoreCase(storageType);
 
         final boolean systemUse = sourceOffering.isSystemUse();
         final VirtualMachine.Type vmType = resolveVmType(sourceOffering);
 
-        final Long diskOfferingId = getOrDefault(cmd.getDiskOfferingId(), sourceOffering.getDiskOfferingId());
-
         return createServiceOffering(userId, systemUse, vmType,
-                name, cpuNumber, memory, cpuSpeed, displayText, provisioningType, localStorageRequired,
+                name, cpuNumber, memory, cpuSpeed, displayText, OfferingAllocationClone.provisioning(provisioningType, sourceDiskOffering == null ? "thin" : sourceDiskOffering.getProvisioningType().toString(), mergedDetails, requestParams), localStorageRequired,
                 offerHa, limitCpuUse, isVolatile, tags, domainIds, zoneIds, hostTag, networkRate,
                 deploymentPlanner, mergedDetails, diskParams.rootDiskSize, diskParams.isCustomizedIops,
                 diskParams.minIops, diskParams.maxIops,
@@ -4253,7 +4265,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     public DiskOffering cloneDiskOffering(final CloneDiskOfferingCmd cmd) {
         final long userId = CallContext.current().getCallingUserId();
         final DiskOfferingVO sourceOffering = getAndValidateSourceDiskOffering(cmd.getSourceOfferingId());
-        VolumeAllocationPolicy.requireLegacyExecution(diskOfferingDetailsDao.listDetailsKeyPairs(sourceOffering.getId()));
         final Map<String, String> requestParams = cmd.getFullUrlParams();
 
         final String name = cmd.getOfferingName();
@@ -4281,7 +4292,8 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final String cacheMode = resolveCacheMode(cmd, sourceOffering);
         final Long storagePolicy = resolveStoragePolicyForDiskOffering(cmd, sourceOffering);
 
-        final Map<String, String> mergedDetails = mergeDiskOfferingDetails(cmd, sourceOffering);
+        final Map<String, String> mergedDetails = OfferingAllocationClone.details(mergeDiskOfferingDetails(cmd, sourceOffering),
+                diskOfferingDetailsDao.listDetailsKeyPairs(sourceOffering.getId()), cmd.getDetails(), requestParams, false);
 
         if (cmd.getCacheMode() != null) {
             validateCacheMode(cmd.getCacheMode());
@@ -4294,7 +4306,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         validateMaximumIopsAndBytesLength(iopsParams.iopsReadRateMaxLength, iopsParams.iopsWriteRateMaxLength,
                                           rateParams.bytesReadRateMaxLength, rateParams.bytesWriteRateMaxLength);
 
-        return createDiskOffering(userId, domainIds, zoneIds, name, displayText, provisioningType, diskSize, tags,
+        return createDiskOffering(userId, domainIds, zoneIds, name, displayText, OfferingAllocationClone.provisioning(provisioningType, sourceOffering.getProvisioningType().toString(), mergedDetails, requestParams), diskSize, tags,
                 isCustomized, localStorageRequired, displayOffering, isCustomizedIops, iopsParams.minIops, iopsParams.maxIops,
                 rateParams.bytesReadRate, rateParams.bytesReadRateMax, rateParams.bytesReadRateMaxLength,
                 rateParams.bytesWriteRate, rateParams.bytesWriteRateMax, rateParams.bytesWriteRateMaxLength,

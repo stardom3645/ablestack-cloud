@@ -42,6 +42,7 @@
 import ComputeOfferingForm from '@/components/offering/ComputeOfferingForm'
 import { ref, reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { allocationParams } from '@/utils/volumeAllocation'
 import AddDiskOffering from '@/views/offering/AddDiskOffering'
 import { isAdmin } from '@/role'
 import { mixinForm } from '@/utils/mixin'
@@ -355,7 +356,6 @@ export default {
           name: values.name,
           displaytext: values.displaytext,
           storagetype: values.storagetype,
-          provisioningtype: values.provisioningtype,
           cachemode: values.cachemode,
           customized: values.offeringtype !== 'fixed',
           offerha: values.offerha === true,
@@ -510,6 +510,8 @@ export default {
           })
         }
 
+        Object.assign(params, allocationParams(values, values.computeonly === false))
+        if (values.computeonly !== false) delete params.diskofferingid
         this.loading = true
         postAPI('createServiceOffering', params).then(json => {
           const message = this.isSystem
