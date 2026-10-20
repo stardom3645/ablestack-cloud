@@ -62,22 +62,31 @@ public class Gfs2VolumeAllocation {
     }
     Gfs2VolumeAllocation(Runner runner) { this.runner = runner; }
 
-    /** Keep the verified Cloud RAW file format through the older default disk-definition path. */
+    /** Keep the Cloud RAW file format through the older default disk-definition path. */
     public static void configureFileDisk(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef disk,
             KVMPhysicalDisk physical, com.cloud.agent.api.to.DataTO data) {
-        if (!(data instanceof VolumeObjectTO) || !(data.getDataStore() instanceof org.apache.cloudstack.storage.to.PrimaryDataStoreTO)) { return; }
+        if (prepareRawPhysicalFile(physical, data)) {
+            if (disk == null) { throw new CloudRuntimeException("GFS2_RAW_FILE_REQUIRED: disk definition missing"); }
+            configurePhysicalFileDisk(disk, physical);
+        }
+    }
+
+    /** Attach commands may carry only the actual format; never infer an allocation policy from it. */
+    public static boolean prepareRawPhysicalFile(KVMPhysicalDisk physical, com.cloud.agent.api.to.DataTO data) {
+        if (!(data instanceof VolumeObjectTO) || !(data.getDataStore() instanceof org.apache.cloudstack.storage.to.PrimaryDataStoreTO)) { return false; }
         VolumeObjectTO volume = (VolumeObjectTO) data;
         org.apache.cloudstack.storage.to.PrimaryDataStoreTO store = (org.apache.cloudstack.storage.to.PrimaryDataStoreTO) data.getDataStore();
         Map<String, String> intent = VolumeAllocationPolicy.validateStored(volume.getAllocation());
-        if (store.getPoolType() != Storage.StoragePoolType.SharedMountPoint || !"raw".equals(intent.get(VolumeAllocationPolicy.FORMAT))) { return; }
-        if (disk == null || physical == null || volume.getFormat() != Storage.ImageFormat.RAW || physical.getPool() == null ||
-                !store.getUuid().equals(physical.getPool().getUuid()) || physical.getPath() == null ||
+        if (store.getPoolType() != Storage.StoragePoolType.SharedMountPoint ||
+                (!"raw".equals(intent.get(VolumeAllocationPolicy.FORMAT)) && volume.getFormat() != Storage.ImageFormat.RAW)) { return false; }
+        if (volume.getFormat() != Storage.ImageFormat.RAW || (!intent.isEmpty() && !"raw".equals(intent.get(VolumeAllocationPolicy.FORMAT))) ||
+                physical == null || physical.getPool() == null || !store.getUuid().equals(physical.getPool().getUuid()) || physical.getPath() == null ||
                 !Path.of(physical.getPath()).isAbsolute() || !Files.isRegularFile(Path.of(physical.getPath()), LinkOption.NOFOLLOW_LINKS) ||
                 Files.isSymbolicLink(Path.of(physical.getPath()))) {
-            throw new CloudRuntimeException("GFS2_RAW_FILE_REQUIRED: explicit RAW must retain its verified file-backed format");
+            throw new CloudRuntimeException("GFS2_RAW_FILE_REQUIRED: RAW must retain its actual file-backed format and pool identity");
         }
         physical.setFormat(PhysicalDiskFormat.RAW);
-        configurePhysicalFileDisk(disk, physical);
+        return true;
     }
 
     /** RAW files on SharedMountPoint are files, including hot attach; RBD/LVM remain block/network. */

@@ -1941,6 +1941,7 @@ public class KVMStorageProcessor implements StorageProcessor {
             storagePoolMgr.connectPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath(), disk.getDetails());
 
             final KVMPhysicalDisk phyDisk = storagePoolMgr.getPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath());
+            Gfs2VolumeAllocation.prepareRawPhysicalFile(phyDisk, vol);
             final String volCacheMode = vol.getCacheMode() == null ? null : vol.getCacheMode().toString();
             logger.debug(String.format("Attaching physical disk %s with format %s", phyDisk.getPath(), phyDisk.getFormat()));
 

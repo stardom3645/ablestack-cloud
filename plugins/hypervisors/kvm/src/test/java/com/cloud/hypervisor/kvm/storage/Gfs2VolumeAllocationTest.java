@@ -198,8 +198,8 @@ public class Gfs2VolumeAllocationTest {
         Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume);
         assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2, disk.getDiskFormatType());
     }
-    @Test public void legacyDiskDefinitionIsNotReinterpreted() throws Exception {
-        var disk = rawDisk(); volume.setAllocation(Map.of()); Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume);
+    @Test public void legacyQcow2DiskDefinitionIsNotReinterpreted() throws Exception {
+        var disk = rawDisk(); volume.setAllocation(Map.of()); volume.setFormat(Storage.ImageFormat.QCOW2); Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume);
         assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2, disk.getDiskFormatType());
     }
     @Test public void rbdRawDoesNotUseTheGfsFileDefinition() throws Exception {
@@ -236,6 +236,14 @@ public class Gfs2VolumeAllocationTest {
     @Test public void qcow2FileDefinitionKeepsItsDriver() throws Exception {
         var disk = rawDisk(); Gfs2VolumeAllocation.configurePhysicalFileDisk(disk, cachedDisk());
         assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2, disk.getDiskFormatType());
+    }
+
+    @Test public void rawAttachTransportWithoutIntentKeepsDriverWithoutBackfillingPolicy() throws Exception {
+        var disk = rawDisk(); volume.setAllocation(Map.of()); KVMPhysicalDisk physical = cachedDisk();
+        assertTrue(Gfs2VolumeAllocation.prepareRawPhysicalFile(physical, volume));
+        Gfs2VolumeAllocation.configurePhysicalFileDisk(disk, physical);
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.RAW, disk.getDiskFormatType());
+        assertTrue(volume.getAllocation().isEmpty());
     }
 
     private static final class Fake implements Gfs2VolumeAllocation.Runner {
