@@ -126,7 +126,7 @@ test('known job with unknown result is polled again without another update', asy
   const w = mount(); w.vm.form.name = 'after'; poll.mockResolvedValueOnce({ jobstatus: null, trackingStatus: 'unknown' })
   await w.vm.handleSubmit(); expect(w.vm.jobId).toBe('job-1')
   await w.vm.handleSubmit(); expect(postAPI).toHaveBeenCalledTimes(1)
-  await w.vm.resumeJob(); expect(poll.mock.calls[1][0]).toMatchObject({ jobId: 'job-1', retry: true }); expect(postAPI).toHaveBeenCalledTimes(1); w.unmount()
+  await w.vm.resumeJob(); expect(poll.mock.calls[1][0]).toMatchObject({ jobId: 'job-1', batchKey: 'job-1', retry: true }); expect(postAPI).toHaveBeenCalledTimes(1); w.unmount()
 })
 test('async job failure keeps the form open with the server reason', async () => {
   const w = mount(); w.vm.form.name = 'after'; poll.mockResolvedValueOnce({ jobstatus: 2, jobresult: { errortext: 'stale state rejection' } })

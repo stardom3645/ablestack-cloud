@@ -113,6 +113,7 @@ export default {
     async poll (retry) {
       const result = await this.$pollJob({
         jobId: this.jobId,
+        batchKey: this.jobId,
         resourceId: this.target.id,
         retry,
         title: this.$t('label.action.update.volume'),
