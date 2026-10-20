@@ -34,7 +34,7 @@
         </p>
         <template v-if="isShrinking && apiParams.shrinkok && !sizeReason">
           <p v-if="shrinkBlocked" class="form-help">{{ $t('message.volume.resize.shrink') }}</p>
-          <a-checkbox v-else v-model:checked="form.shrinkok" :disabled="disabled" class="resize-shrink">{{ $t('label.shrinkok') }}</a-checkbox>
+          <a-form-item-rest v-else><a-checkbox v-model:checked="form.shrinkok" :disabled="disabled" class="resize-shrink">{{ $t('label.shrinkok') }}</a-checkbox></a-form-item-rest>
         </template>
       </a-form-item>
       <section v-if="customIops && (apiParams.miniops || apiParams.maxiops)" class="resize-iops" :aria-label="$t('label.volume.resize.iops')">
