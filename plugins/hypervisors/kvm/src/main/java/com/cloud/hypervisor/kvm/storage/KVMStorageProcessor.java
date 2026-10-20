@@ -1874,6 +1874,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                 diskdef.setPhysicalBlockIOSize(attachingPool.getSupportedPhysicalBlockSize());
                 diskdef.setLogicalBlockIOSize(attachingPool.getSupportedLogicalBlockSize());
                 attachingPool.customizeLibvirtDiskDef(diskdef);
+                Gfs2VolumeAllocation.configurePhysicalFileDisk(diskdef, attachingDisk);
                 resource.setQcow2FullMetadataCache(diskdef, attachingDisk);
             }
 

@@ -36,4 +36,4 @@ Agent 결과의 풀 UUID·이미지 UUID·크기·실제 형식·요청 계약·
 
 ## RAW 기동 경로 보완
 
-첫 Cloud RAW ROOT 기동에서 libvirt가 풀 기본 형식 QCOW2를 캐시해 RAW 파일에 QCOW2 metadata cache 계산을 시도하는 실패를 확인했다. 명시적 RAW 계약과 검증된 VolumeObjectTO RAW 형식, 풀 UUID, 실제 일반 파일을 확인한 뒤 기존 disk definition을 file/RAW로 정규화한다. 블록 장치로도 잘못 전달하지 않는다. 기존 버스·장치 이름·serial·cache/QoS 설정은 보존하고 QCOW2 metadata cache는 사용하지 않는다. QCOW2·legacy·RBD 정의에는 적용하지 않는다. 수정 후 신규 ROOT 생성부터 전체 경로를 다시 검증하며 최초 실패를 성공으로 재집계하지 않는다.
+첫 Cloud RAW ROOT 기동에서 기존 디스크 정의가 RAW 파일을 QCOW2로 전달하여 QCOW2 metadata cache 계산을 시도하는 실패를 확인했다. 명시적 RAW 계약과 검증된 VolumeObjectTO RAW 형식, 풀 UUID, 실제 일반 파일을 확인한 뒤 기존 disk definition을 file/RAW로 정규화한다. 블록 장치로도 잘못 전달하지 않는다. 기존 버스·장치 이름·serial·cache/QoS 설정은 보존하고 QCOW2 metadata cache는 사용하지 않는다. 기동 시 QCOW2·legacy·RBD 정의에는 적용하지 않는다. 연결 경로도 SharedMountPoint의 실제 RAW 일반 파일을 파일 기반 RAW로 유지하고 기존 RBD/LVM 블록 장치 정의를 보존한다. 수정 후 신규 ROOT 생성부터 전체 경로를 다시 검증하며 최초 실패를 성공으로 재집계하지 않는다.

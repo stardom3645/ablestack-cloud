@@ -178,7 +178,7 @@ public class Gfs2VolumeAllocationTest {
         return disk;
     }
     private KVMPhysicalDisk cachedDisk() {
-        KVMPhysicalDisk physical = mock(KVMPhysicalDisk.class); when(physical.getPath()).thenReturn(target().toString()); when(physical.getPool()).thenReturn(pool); when(physical.getFormat()).thenReturn(PhysicalDiskFormat.QCOW2); return physical;
+        KVMPhysicalDisk physical = org.mockito.Mockito.spy(new KVMPhysicalDisk(target().toString(), volume.getUuid(), pool)); physical.setFormat(PhysicalDiskFormat.QCOW2); return physical;
     }
     @Test public void rawFileOverridesCachedQcow2AndPreservesCacheAndSerial() throws Exception {
         var disk = rawDisk(); disk.setCacheMode(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskCacheMode.WRITEBACK); disk.setSerial("serial");
@@ -214,6 +214,28 @@ public class Gfs2VolumeAllocationTest {
     }
     @Test public void inconsistentCloudRawFormatCannotBeSilentlyCorrected() throws Exception {
         var disk = rawDisk(); volume.setFormat(Storage.ImageFormat.QCOW2); reject(() -> Gfs2VolumeAllocation.configureFileDisk(disk, cachedDisk(), volume), "RAW_FILE_REQUIRED");
+    }
+
+    @Test public void hotAttachRawFileUsesFileSourceAndPreservesWriteback() throws Exception {
+        var disk = rawDisk(); disk.defBlockBasedDisk(target().toString(), 1, disk.getBusType()); disk.setCacheMode(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskCacheMode.WRITEBACK);
+        KVMPhysicalDisk physical = cachedDisk(); when(physical.getFormat()).thenReturn(PhysicalDiskFormat.RAW);
+        Gfs2VolumeAllocation.configurePhysicalFileDisk(disk, physical);
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskType.FILE, disk.getDiskType());
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskCacheMode.WRITEBACK, disk.getCacheMode());
+    }
+    @Test public void rawBlockDeviceIsNotReclassifiedAsFile() throws Exception {
+        var disk = rawDisk(); disk.defBlockBasedDisk("/dev/block-test", 1, disk.getBusType());
+        KVMPhysicalDisk physical = cachedDisk(); when(physical.getFormat()).thenReturn(PhysicalDiskFormat.RAW); when(physical.getPath()).thenReturn("/dev/block-test");
+        Gfs2VolumeAllocation.configurePhysicalFileDisk(disk, physical); assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskType.BLOCK, disk.getDiskType());
+    }
+    @Test public void rawRbdBlockDefinitionIsPreserved() throws Exception {
+        var disk = rawDisk(); disk.defBlockBasedDisk(target().toString(), 1, disk.getBusType());
+        KVMPhysicalDisk physical = cachedDisk(); when(physical.getFormat()).thenReturn(PhysicalDiskFormat.RAW); when(pool.getType()).thenReturn(Storage.StoragePoolType.RBD);
+        Gfs2VolumeAllocation.configurePhysicalFileDisk(disk, physical); assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskType.BLOCK, disk.getDiskType());
+    }
+    @Test public void qcow2FileDefinitionKeepsItsDriver() throws Exception {
+        var disk = rawDisk(); Gfs2VolumeAllocation.configurePhysicalFileDisk(disk, cachedDisk());
+        assertEquals(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.QCOW2, disk.getDiskFormatType());
     }
 
     private static final class Fake implements Gfs2VolumeAllocation.Runner {

@@ -62,7 +62,7 @@ public class Gfs2VolumeAllocation {
     }
     Gfs2VolumeAllocation(Runner runner) { this.runner = runner; }
 
-    /** Use the verified Cloud format even when libvirt cached the pool default QCOW2 format. */
+    /** Keep the verified Cloud RAW file format through the older default disk-definition path. */
     public static void configureFileDisk(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef disk,
             KVMPhysicalDisk physical, com.cloud.agent.api.to.DataTO data) {
         if (!(data instanceof VolumeObjectTO) || !(data.getDataStore() instanceof org.apache.cloudstack.storage.to.PrimaryDataStoreTO)) { return; }
@@ -76,11 +76,19 @@ public class Gfs2VolumeAllocation {
                 Files.isSymbolicLink(Path.of(physical.getPath()))) {
             throw new CloudRuntimeException("GFS2_RAW_FILE_REQUIRED: explicit RAW must retain its verified file-backed format");
         }
+        physical.setFormat(PhysicalDiskFormat.RAW);
+        configurePhysicalFileDisk(disk, physical);
+    }
+
+    /** RAW files on SharedMountPoint are files, including hot attach; RBD/LVM remain block/network. */
+    public static void configurePhysicalFileDisk(com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef disk, KVMPhysicalDisk physical) {
+        if (disk == null || physical == null || physical.getPool() == null || physical.getFormat() != PhysicalDiskFormat.RAW ||
+                physical.getPool().getType() != Storage.StoragePoolType.SharedMountPoint || physical.getPath() == null ||
+                !Files.isRegularFile(Path.of(physical.getPath()), LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(Path.of(physical.getPath()))) { return; }
         com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskCacheMode cache = disk.getCacheMode();
         disk.defFileBasedDisk(physical.getPath(), disk.getDiskLabel(), disk.getBusType(),
                 com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef.DiskFmtType.RAW);
         disk.setCacheMode(cache);
-        physical.setFormat(PhysicalDiskFormat.RAW);
     }
 
     protected Path root(KVMStoragePool pool) throws IOException {
