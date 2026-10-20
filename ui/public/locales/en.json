@@ -9294,5 +9294,14 @@
   "message.volume.resize.omitted": "Unchanged or empty values are omitted to retain current values. Zero IOPS is explicit and must satisfy minimum/maximum constraints.",
   "message.volume.resize.fixed.iops": "Fixed IOPS offering · current minimum / maximum IOPS",
   "message.volume.resize.root.iops": "Root volumes use the IOPS overrides supported by the resizeVolume API.",
-  "message.volume.resize.unknown": "The job result is unknown. Input is retained; check the result to resume the same job. If no job ID was received, verify current volume state and reopen the dialog."
+  "message.volume.resize.unknown": "The job result is unknown. Input is retained; check the result to resume the same job. If no job ID was received, verify current volume state and reopen the dialog.",
+  "label.volume.resize.new.size": "New size",
+  "label.volume.resize.iops": "IOPS settings",
+  "label.volume.resize.more.options": "Additional options",
+  "label.volume.resize.iops.changed": "IOPS changed",
+  "message.volume.resize.grow.by": "Increase by {size} GiB",
+  "message.volume.resize.shrink.by": "Decrease by {size} GiB",
+  "message.volume.resize.size.retained": "The current size is retained.",
+  "message.volume.resize.no.changes": "No changes",
+  "message.volume.resize.check.input": "Review the input values"
 }

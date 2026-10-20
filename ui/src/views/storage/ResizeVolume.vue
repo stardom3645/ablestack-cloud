@@ -21,34 +21,47 @@
     <a-alert v-if="errorText" type="error" show-icon :message="errorText" style="margin-bottom: 16px" />
     <a-button v-if="errorText && !contract && !jobId" :loading="loading" style="margin-bottom: 16px" @click="fetchData">{{ $t('label.retry') }}</a-button>
     <a-form :ref="formRef" :model="form" layout="vertical" @finish="handleSubmit">
-      <AllocationSummary :resource="target" volume />
-      <p v-if="contract">{{ $t(contract.kind === 'compute' ? 'label.compute.offerings' : 'label.diskoffering') }}: {{ contract.offering.name }}</p>
-      <a-alert v-if="sizeReason" type="info" show-icon :message="$t(sizeReason)" style="margin-bottom: 16px" />
-      <a-alert v-else-if="rootFixed" type="info" show-icon :message="$t('message.volume.resize.root')" style="margin-bottom: 16px" />
-      <a-form-item v-if="apiParams.size" name="size" :label="$t('label.sizegb')">
-        <a-input v-model:value="form.size" :disabled="disabled || !!sizeReason" :placeholder="$t('label.disksize')" />
+      <div class="resize-target"><hdd-outlined aria-hidden="true" /><span>{{ target.name }}</span><span class="resize-secondary">{{ target.type }}</span></div>
+      <a-form-item v-if="apiParams.size" name="size" class="resize-size">
+        <template #label><span class="resize-label"><span>{{ $t('label.volume.resize.new.size') }}</span><span class="resize-secondary">{{ $t('label.current') }} {{ currentSize }} GiB</span></span></template>
+        <a-input v-model:value="form.size" :disabled="disabled || !!sizeReason" :placeholder="$t('label.disksize')" addon-after="GiB" aria-describedby="volume-resize-size-help" />
+        <p id="volume-resize-size-help" class="form-help">
+          <template v-if="sizeReason">{{ $t(sizeReason) }}</template>
+          <template v-else-if="rootFixed">{{ $t('message.volume.resize.root') }}</template>
+          <template v-else-if="sizeDelta === null">{{ $t('message.volume.resize.check.input') }}</template>
+          <template v-else-if="sizeDelta !== null && sizeDelta !== 0">{{ $t(sizeDelta > 0 ? 'message.volume.resize.grow.by' : 'message.volume.resize.shrink.by', { size: Math.abs(sizeDelta) }) }}</template>
+          <template v-else>{{ $t('message.volume.resize.size.retained') }}</template>
+        </p>
+        <template v-if="isShrinking && apiParams.shrinkok && !sizeReason">
+          <p v-if="shrinkBlocked" class="form-help">{{ $t('message.volume.resize.shrink') }}</p>
+          <a-checkbox v-else v-model:checked="form.shrinkok" :disabled="disabled" class="resize-shrink">{{ $t('label.shrinkok') }}</a-checkbox>
+        </template>
       </a-form-item>
-      <template v-if="customIops">
-        <a-form-item v-if="apiParams.miniops" name="miniops" :label="$t('label.miniops')">
-          <a-input v-model:value="form.miniops" :disabled="disabled" :placeholder="$t('label.miniops')" />
-        </a-form-item>
-        <a-form-item v-if="apiParams.maxiops" name="maxiops" :label="$t('label.maxiops')">
-          <a-input v-model:value="form.maxiops" :disabled="disabled" :placeholder="$t('label.maxiops')" />
-        </a-form-item>
-        <p class="form-help">{{ $t('message.volume.resize.omitted') }}</p>
+      <section v-if="customIops && (apiParams.miniops || apiParams.maxiops)" class="resize-iops" :aria-label="$t('label.volume.resize.iops')">
+        <div class="resize-section-title">{{ $t('label.volume.resize.iops') }}</div>
+        <div class="resize-iops-fields">
+          <a-form-item v-if="apiParams.miniops" name="miniops">
+            <template #label><span class="resize-label"><span>{{ $t('label.miniops') }}</span><span class="resize-secondary">{{ $t('label.current') }} {{ target.miniops ?? '—' }}</span></span></template>
+            <a-input v-model:value="form.miniops" :disabled="disabled" :placeholder="$t('label.miniops')" aria-describedby="volume-resize-iops-help" />
+          </a-form-item>
+          <a-form-item v-if="apiParams.maxiops" name="maxiops">
+            <template #label><span class="resize-label"><span>{{ $t('label.maxiops') }}</span><span class="resize-secondary">{{ $t('label.current') }} {{ target.maxiops ?? '—' }}</span></span></template>
+            <a-input v-model:value="form.maxiops" :disabled="disabled" :placeholder="$t('label.maxiops')" aria-describedby="volume-resize-iops-help" />
+          </a-form-item>
+        </div>
+        <p id="volume-resize-iops-help" class="form-help">{{ $t('message.volume.resize.omitted') }}</p>
         <p v-if="target.type === 'ROOT'" class="form-help">{{ $t('message.volume.resize.root.iops') }}</p>
-      </template>
-      <p v-else-if="contract">{{ $t('message.volume.resize.fixed.iops') }}: {{ target.miniops ?? '—' }} / {{ target.maxiops ?? '—' }}</p>
-      <a-form-item v-if="apiParams.shrinkok && !sizeReason && target.hypervisor !== 'XenServer'" name="shrinkok" :label="$t('label.shrinkok')">
-        <a-switch v-model:checked="form.shrinkok" :disabled="disabled" />
-      </a-form-item>
-      <a-form-item v-if="apiParams.automigrate && !sizeReason" name="automigrate" :label="$t('label.automigrate.volume')">
-        <a-switch v-model:checked="form.automigrate" :disabled="disabled" />
-      </a-form-item>
-      <div class="action-button">
+      </section>
+      <p v-else-if="contract" class="form-help resize-fixed-iops">{{ $t('message.volume.resize.fixed.iops') }}: {{ target.miniops ?? '—' }} / {{ target.maxiops ?? '—' }}</p>
+      <details v-if="apiParams.automigrate && sizeChanged && !sizeReason" class="resize-options">
+        <summary>{{ $t('label.volume.resize.more.options') }}</summary>
+        <a-checkbox v-model:checked="form.automigrate" :disabled="disabled">{{ $t('label.automigrate.volume') }}</a-checkbox>
+      </details>
+      <div class="action-button resize-footer">
+        <span class="resize-change-summary resize-secondary" aria-live="polite">{{ changeSummary }}</span>
         <a-button :disabled="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button v-if="jobId" :loading="loading" type="primary" @click="resumeJob">{{ $t('message.volume.edit.check.result') }}</a-button>
-        <a-button v-else :loading="loading" :disabled="!contract || !current() || submissionUnknown" type="primary" ref="submit" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+        <a-button v-else :loading="loading" :disabled="!contract || !current() || submissionUnknown" type="primary" ref="submit" @click="handleSubmit">{{ $t('label.change') }}</a-button>
       </div>
     </a-form>
   </div>
@@ -56,12 +69,10 @@
 <script>
 import { ref, reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
-import AllocationSummary from '@/components/view/AllocationSummary'
 import { readVolumeResizeContract, volumeResizeSizeReason, volumeResizeIops, volumeResizeParams, validateVolumeResizeSnapshot } from '@/utils/volumeResize'
 
 export default {
   name: 'ResizeVolume',
-  components: { AllocationSummary },
   props: { resource: { type: Object, required: true } },
   emits: ['refresh-data', 'close-action'],
   data () { return { loading: false, contract: null, errorText: '', jobId: null, submissionUnknown: false, active: true } },
@@ -78,7 +89,27 @@ export default {
     sizeReason () { return volumeResizeSizeReason(this.target, this.contract) },
     rootFixed () { return this.contract?.kind === 'compute' && Number(this.contract.offering.rootdisksize) > 0 },
     customIops () { return volumeResizeIops(this.target, this.contract) },
-    disabled () { return this.loading || !!this.jobId || !this.contract || !this.current() }
+    disabled () { return this.loading || !!this.jobId || !this.contract || !this.current() },
+    currentSize () { return this.target.size / 1073741824 },
+    sizeDelta () {
+      const size = String(this.form.size).trim()
+      if (!size) return 0
+      const value = Number(size)
+      return /^\d+$/.test(size) && Number.isSafeInteger(value * 1073741824) && value > 0 ? value - this.currentSize : null
+    },
+    sizeChanged () { return !!this.apiParams.size && !this.sizeReason && this.sizeDelta !== null && this.sizeDelta !== 0 },
+    isShrinking () { return this.sizeChanged && this.sizeDelta < 0 },
+    shrinkBlocked () { return this.target.hypervisor === 'XenServer' || (this.target.state !== 'Allocated' && String(this.target.allocation?.actualformat || this.target.format).toLowerCase() === 'qcow2') },
+    changeSummary () {
+      if (!this.contract) return ''
+      try {
+        const params = volumeResizeParams(this.target, { ...this.form }, this.contract, this.apiParams)
+        const changes = []
+        if (params.size !== undefined) changes.push(this.$t(this.sizeDelta > 0 ? 'message.volume.resize.grow.by' : 'message.volume.resize.shrink.by', { size: Math.abs(this.sizeDelta) }))
+        if (params.miniops !== undefined || params.maxiops !== undefined) changes.push(this.$t('label.volume.resize.iops.changed'))
+        return changes.join(' · ') || this.$t('message.volume.resize.no.changes')
+      } catch (error) { return this.$t('message.volume.resize.check.input') }
+    }
   },
   methods: {
     scope () {
@@ -160,5 +191,21 @@ export default {
   width: 85vw;
   @media (min-width: 760px) { width: 500px; }
 }
-.form-help { margin: 8px 0; opacity: .8; }
+.resize-target { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; overflow-wrap: anywhere; }
+.resize-secondary, .form-help { font-size: 12px; opacity: .8; }
+.resize-label { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; width: 100%; }
+:deep(.ant-form-item-label > label) { width: 100%; }
+.form-help { margin: 8px 0 0; }
+.resize-size { margin-bottom: 24px; }
+.resize-section-title { margin-bottom: 12px; font-weight: 500; }
+.resize-iops-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.resize-iops-fields .ant-form-item { min-width: 0; margin-bottom: 0; }
+.resize-shrink { margin-top: 8px; }
+.resize-options { margin-top: 20px; }
+.resize-options summary { cursor: pointer; padding: 4px 0; }
+.resize-options .ant-checkbox-wrapper { margin-top: 12px; }
+.resize-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--ui-border); padding-top: 16px; margin-top: 24px; }
+.resize-footer .ant-btn { margin: 0; }
+.resize-change-summary { flex: 1; min-width: 100px; text-align: left; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .resize-iops-fields { grid-template-columns: minmax(0, 1fr); } }
 </style>

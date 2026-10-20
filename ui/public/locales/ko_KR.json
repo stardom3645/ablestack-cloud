@@ -9259,5 +9259,14 @@
   "message.volume.resize.omitted": "변경하지 않거나 비운 값은 전송하지 않고 현재값을 유지합니다. IOPS 0은 명시적인 값이며 최소·최대 관계를 만족해야 합니다.",
   "message.volume.resize.fixed.iops": "고정 IOPS 오퍼링 · 현재 최소 / 최대 IOPS",
   "message.volume.resize.root.iops": "루트 볼륨은 resizeVolume API가 지원하는 IOPS 재정의 값을 변경합니다.",
-  "message.volume.resize.unknown": "작업 결과를 확인하지 못했습니다. 입력을 유지하며, 결과 확인으로 같은 작업을 다시 조회하세요. 작업 ID를 받지 못했다면 현재 볼륨 상태를 확인한 후 대화상자를 다시 여세요."
+  "message.volume.resize.unknown": "작업 결과를 확인하지 못했습니다. 입력을 유지하며, 결과 확인으로 같은 작업을 다시 조회하세요. 작업 ID를 받지 못했다면 현재 볼륨 상태를 확인한 후 대화상자를 다시 여세요.",
+  "label.volume.resize.new.size": "변경할 크기",
+  "label.volume.resize.iops": "IOPS 설정",
+  "label.volume.resize.more.options": "추가 옵션",
+  "label.volume.resize.iops.changed": "IOPS 변경",
+  "message.volume.resize.grow.by": "현재보다 {size} GiB 확장",
+  "message.volume.resize.shrink.by": "현재보다 {size} GiB 축소",
+  "message.volume.resize.size.retained": "현재 크기를 유지합니다.",
+  "message.volume.resize.no.changes": "변경 사항 없음",
+  "message.volume.resize.check.input": "입력값 확인 필요"
 }
