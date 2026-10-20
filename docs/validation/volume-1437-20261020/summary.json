@@ -7,8 +7,10 @@
     "retry": "initial plus at most two fresh falloc attempts on compare exit 1 only",
     "fullFallback": false,
     "hostKernelStorageChanges": false,
-    "issueRemainsOpen": true,
-    "reason": "user chose Cloud mitigation while preserving host root-cause follow-up"
+    "issueRemainsOpen": false,
+    "reason": "Product remediation completed with verified bounded fresh-image retries and safe failure. Kernel/host/storage root fixes are outside product and issue closure scope.",
+    "issueState": "closed",
+    "stateReason": "completed"
   },
   "sourceBuild": {
     "modules": [
