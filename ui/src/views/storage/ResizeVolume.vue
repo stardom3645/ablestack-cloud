@@ -199,7 +199,8 @@ export default {
 .resize-size { margin-bottom: 24px; }
 .resize-section-title { margin-bottom: 12px; font-weight: 500; }
 .resize-iops-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
-.resize-iops-fields .ant-form-item { min-width: 0; margin-bottom: 0; }
+.resize-iops-fields .ant-form-item { min-width: 0; margin-bottom: 0; flex-direction: column; flex-wrap: nowrap; }
+.resize-iops-fields :deep(.ant-form-item-label), .resize-iops-fields :deep(.ant-form-item-control) { flex: 0 0 auto; width: 100%; max-width: 100%; min-width: 0; }
 .resize-shrink { margin-top: 8px; }
 .resize-options { margin-top: 20px; }
 .resize-options summary { cursor: pointer; padding: 4px 0; }
