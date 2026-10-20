@@ -17,12 +17,14 @@
 
 <template>
   <a-form class="form" layout="vertical" v-ctrl-enter="handleKeyboardSubmit">
-    <a-alert class="top-spaced" type="warning">
+    <AllocationSummary :resource="resource" volume />
+    <a-alert v-if="explicit" type="warning" show-icon :message="$t('message.allocation.lifecycle.unsupported')" />
+    <a-alert v-else class="top-spaced" type="warning">
       <template #message>
         <span v-html="$t('message.migrate.volume', { volume: resource.name, storage: resource.storage })" />
       </template>
     </a-alert>
-    <a-form-item style="margin-top: 10px;">
+    <a-form-item v-if="!explicit" style="margin-top: 10px;">
       <template #label>
         <tooltip-label :title="$t('label.storagepool')" :tooltip="$t('message.migrate.volume.tooltip')"/>
       </template>
@@ -64,7 +66,7 @@
 
     <div class="actions">
       <a-button @click="closeModal">{{ $t('label.cancel') }}</a-button>
-      <a-button type="primary" ref="submit" :disabled="!selectedStoragePool" @click="submitForm">{{ $t('label.ok') }}</a-button>
+      <a-button type="primary" ref="submit" :disabled="explicit || !selectedStoragePool" @click="submitForm">{{ $t('label.ok') }}</a-button>
     </div>
   </a-form>
 </template>
@@ -73,10 +75,13 @@
 import { getAPI, postAPI } from '@/api'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import StoragePoolSelectView from '@/components/view/StoragePoolSelectView'
+import AllocationSummary from '@/components/view/AllocationSummary'
+import { allocationIntent } from '@/utils/volumeAllocation'
 
 export default {
   name: 'MigrateVolume',
   components: {
+    AllocationSummary,
     StoragePoolSelectView,
     TooltipLabel
   },
@@ -105,8 +110,9 @@ export default {
       }
     }
   },
+  computed: { explicit () { return !!allocationIntent(this.resource) } },
   created () {
-    this.fetchStoragePools()
+    if (!this.explicit) this.fetchStoragePools()
   },
   methods: {
     fetchStoragePools () {
@@ -177,7 +183,7 @@ export default {
       this.$emit('close-action')
     },
     submitForm () {
-      if (this.isSubmitted) return
+      if (this.explicit || this.isSubmitted) return
       if (this.storagePools.length === 0) {
         this.closeModal()
         return

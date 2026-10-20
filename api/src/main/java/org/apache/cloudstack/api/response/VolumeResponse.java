@@ -44,6 +44,10 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "Versioned allocation intent and evidence; unknown effective policy is not inferred from legacy provisioning type", since = "4.23.0")
     private java.util.Map<String, String> allocation;
 
+    public java.util.Map<String, String> getAllocation() {
+        return allocation;
+    }
+
     public void setAllocation(java.util.Map<String, String> value) {
         allocation = value;
     }

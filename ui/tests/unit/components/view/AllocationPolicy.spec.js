@@ -20,6 +20,7 @@ import Summary from '@/components/view/AllocationSummary.vue'
 import Editor from '@/components/offering/AllocationPolicyEditor.vue'
 import CreateVolume from '@/views/storage/CreateVolume.vue'
 import DiskForm from '@/components/offering/DiskOfferingForm.vue'
+import MigrateVolume from '@/views/storage/MigrateVolume.vue'
 import ComputeForm from '@/components/offering/ComputeOfferingForm.vue'
 import { allocationParams } from '@/utils/volumeAllocation'
 import { getAPI } from '@/api'
@@ -83,4 +84,14 @@ test.each([DiskForm, ComputeForm])('child policy controls survive parent ref fil
     context.form = { name: 'new', allocationmode: 'explicit', allocationpolicy: 'full', allocationformat: 'raw' }
     expect(allocationParams(await component.methods.validate.call(context))).toEqual({ allocationpolicy: 'full', allocationformat: 'raw' })
   }
+})
+
+test('explicit allocation migration shows the backend limit and cannot query or submit a copy', () => {
+  getAPI.mockClear()
+  const w = shallowMount(MigrateVolume, { props: { resource: { id: 'v', allocation: request } }, global: { ...globals, provide: { parentFetchData: () => {} } } })
+  expect(w.find('a-alert-stub').attributes('message')).toBe('message.allocation.lifecycle.unsupported')
+  expect(getAPI).not.toHaveBeenCalled()
+  w.vm.submitForm()
+  expect(w.vm.isSubmitted).toBe(false)
+  w.unmount()
 })
