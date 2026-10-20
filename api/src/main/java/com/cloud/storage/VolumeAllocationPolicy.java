@@ -123,14 +123,9 @@ public final class VolumeAllocationPolicy {
         }
     }
 
-    /** Only the RBD adapter is implemented here. Pool and Agent qualification is also required. */
+    /** Validate immutable creation intent; backend/format/operation capability is checked separately. */
     public static Map<String, String> requireCreationIntent(Map<String, String> details) {
-        Map<String, String> intent = validateStored(details);
-        if (!intent.isEmpty() && (!"raw".equals(intent.get(FORMAT)) ||
-                !java.util.List.of("off", "full").contains(intent.get(POLICY)))) {
-            throw new InvalidParameterValueException("ALLOCATION_EXECUTION_NOT_IMPLEMENTED: only qualified RBD RAW off/full create and materialized copy are available");
-        }
-        return intent;
+        return validateStored(details);
     }
 
     public static void requireRbdLegacyThin(Storage.ProvisioningType type) {

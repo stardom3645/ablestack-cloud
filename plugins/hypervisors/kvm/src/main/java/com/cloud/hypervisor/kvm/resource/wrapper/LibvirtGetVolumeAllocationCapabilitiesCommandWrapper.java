@@ -23,6 +23,7 @@ import com.cloud.agent.api.GetVolumeAllocationCapabilitiesCommand;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.hypervisor.kvm.storage.KVMStoragePool;
 import com.cloud.hypervisor.kvm.storage.RbdVolumeAllocation;
+import com.cloud.hypervisor.kvm.storage.Gfs2VolumeAllocation;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.storage.Storage;
@@ -32,14 +33,17 @@ public final class LibvirtGetVolumeAllocationCapabilitiesCommandWrapper extends
         CommandWrapper<GetVolumeAllocationCapabilitiesCommand, Answer, LibvirtComputingResource> {
     @Override public Answer execute(GetVolumeAllocationCapabilitiesCommand command, LibvirtComputingResource resource) {
         try {
-            KVMStoragePool pool = resource.getStoragePoolMgr().getStoragePool(Storage.StoragePoolType.RBD, command.getPoolUuid());
-            Map<String, String> methods = new RbdVolumeAllocation().capabilities(pool, command.getFormat(), command.getOperation());
+            KVMStoragePool pool = resource.getStoragePoolMgr().getStoragePoolByUuid(command.getPoolUuid());
+            String backend = pool.getType() == Storage.StoragePoolType.SharedMountPoint ? "GFS2" : "RBD";
+            Map<String, String> methods = "GFS2".equals(backend) ?
+                    new Gfs2VolumeAllocation().capabilities(pool, command.getFormat(), command.getOperation()) :
+                    new RbdVolumeAllocation().capabilities(pool, command.getFormat(), command.getOperation());
             if (command.getContractVersion() != 1 || methods.isEmpty()) {
-                return new Answer(command, false, "RBD_ALLOCATION_CAPABILITY_UNAVAILABLE: RAW create/copy only with installed CLI support");
+                return new Answer(command, false, "ALLOCATION_CAPABILITY_UNAVAILABLE: qualified GFS2/RBD create/copy requires mounted backend and installed tools");
             }
-            return new GetVolumeAllocationCapabilitiesAnswer(command, "RBD", methods);
+            return new GetVolumeAllocationCapabilitiesAnswer(command, backend, methods);
         } catch (Exception e) {
-            return new Answer(command, false, "RBD_ALLOCATION_CAPABILITY_UNAVAILABLE: " + e.getMessage());
+            return new Answer(command, false, "ALLOCATION_CAPABILITY_UNAVAILABLE: " + e.getMessage());
         }
     }
 }

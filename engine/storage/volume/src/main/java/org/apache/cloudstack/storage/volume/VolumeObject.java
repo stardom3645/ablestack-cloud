@@ -688,8 +688,9 @@ public class VolumeObject implements VolumeInfo {
                     com.cloud.storage.VolumeAllocationPolicy.requireRbdLegacyThin(getProvisioningType());
                 }
                 if (!intent.isEmpty()) {
-                    if (store.getPoolType() != Storage.StoragePoolType.RBD || ((VolumeObjectTO) to).requiresEncryption() || getMigrationOptions() != null) {
-                        throw new com.cloud.exception.InvalidParameterValueException("ALLOCATION_BACKEND_UNSUPPORTED: explicit creation requires unencrypted RBD RAW without migration options");
+                    if (!List.of(Storage.StoragePoolType.RBD, Storage.StoragePoolType.SharedMountPoint).contains(store.getPoolType()) ||
+                            ((VolumeObjectTO) to).requiresEncryption() || getMigrationOptions() != null) {
+                        throw new com.cloud.exception.InvalidParameterValueException("ALLOCATION_BACKEND_UNSUPPORTED: explicit creation requires qualified unencrypted GFS2/RBD without migration options");
                     }
                     allocationService.validateCreate(intent, getProvisioningType(), getDataCenterId(), getDataStore().getId(), null);
                 }
@@ -781,7 +782,10 @@ public class VolumeObject implements VolumeInfo {
             return;
         }
         String prefix = "ALLOCATION_EVIDENCE_INVALID: ";
-        if (result == null || result.getFormat() != Storage.ImageFormat.RAW || result.getSize() == null ||
+        Storage.ImageFormat expectedFormat = Storage.ImageFormat.valueOf(intent.get(com.cloud.storage.VolumeAllocationPolicy.FORMAT).toUpperCase(java.util.Locale.ROOT));
+        String backend = getDataStore() instanceof org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStore &&
+                ((org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStore) getDataStore()).getPoolType() == Storage.StoragePoolType.SharedMountPoint ? "GFS2" : "RBD";
+        if (result == null || result.getFormat() != expectedFormat || result.getSize() == null ||
                 !result.getSize().equals(volume.getSize()) || !volume.getUuid().equals(result.getPath()) ||
                 !(result.getDataStore() instanceof org.apache.cloudstack.storage.to.PrimaryDataStoreTO) ||
                 !getDataStore().getUuid().equals(((org.apache.cloudstack.storage.to.PrimaryDataStoreTO) result.getDataStore()).getUuid())) {
@@ -789,7 +793,7 @@ public class VolumeObject implements VolumeInfo {
         }
         Map<String, String> supplied = result.getAllocation();
         if (!intent.equals(com.cloud.storage.VolumeAllocationPolicy.validateStored(supplied)) ||
-                !"RBD".equals(supplied.get(com.cloud.storage.VolumeAllocationPolicy.BACKEND)) ||
+                !backend.equals(supplied.get(com.cloud.storage.VolumeAllocationPolicy.BACKEND)) ||
                 !List.of("create", "copy").contains(supplied.get(com.cloud.storage.VolumeAllocationPolicy.OPERATION))) {
             throw new com.cloud.utils.exception.CloudRuntimeException(prefix + "missing or mismatched request and operation receipt");
         }
@@ -797,11 +801,11 @@ public class VolumeObject implements VolumeInfo {
             long observed = Long.parseLong(supplied.get(com.cloud.storage.VolumeAllocationPolicy.OBSERVED_BYTES));
             java.time.Instant at = java.time.Instant.parse(supplied.get(com.cloud.storage.VolumeAllocationPolicy.OBSERVED_AT));
             String source = supplied.get(com.cloud.storage.VolumeAllocationPolicy.OBSERVED_SOURCE);
-            Map<String, String> verified = com.cloud.storage.VolumeAllocationPolicy.evidence(intent, "RBD",
+            Map<String, String> verified = com.cloud.storage.VolumeAllocationPolicy.evidence(intent, backend,
                     supplied.get(com.cloud.storage.VolumeAllocationPolicy.OPERATION), supplied.get(com.cloud.storage.VolumeAllocationPolicy.METHOD),
                     observed, at, source);
-            if (!verified.equals(supplied) || !"rbd-du-exact-image-used-size".equals(source) ||
-                    ("full".equals(intent.get(com.cloud.storage.VolumeAllocationPolicy.POLICY)) && observed < volume.getSize())) {
+            if (!verified.equals(supplied) || !("GFS2".equals(backend) ? "stat-st-blocks-times-512" : "rbd-du-exact-image-used-size").equals(source) ||
+                    (List.of("full", "falloc").contains(intent.get(com.cloud.storage.VolumeAllocationPolicy.POLICY)) && observed < volume.getSize())) {
                 throw new IllegalArgumentException("Full allocation or receipt is incomplete");
             }
             for (Map.Entry<String, String> entry : verified.entrySet()) {

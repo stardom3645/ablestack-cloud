@@ -541,7 +541,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer cloneVolumeFromBaseTemplate(final CopyCommand cmd) {
-        Answer allocation = copyAllocatedRbdTemplate(cmd);
+        Answer allocation = copyAllocatedTemplate(cmd);
         if (allocation != null) {
             return allocation;
         }
@@ -630,7 +630,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer copyVolumeFromImageCacheToPrimary(final CopyCommand cmd) {
-        Answer allocation = copyAllocatedRbdTemplate(cmd);
+        Answer allocation = copyAllocatedTemplate(cmd);
         if (allocation != null) {
             return allocation;
         }
@@ -2167,7 +2167,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer createVolume(final CreateObjectCommand cmd) {
-        Answer allocation = createAllocatedRbdVolume(cmd);
+        Answer allocation = createAllocatedVolume(cmd);
         if (allocation != null) {
             return allocation;
         }
@@ -2239,7 +2239,7 @@ public class KVMStorageProcessor implements StorageProcessor {
         }
     }
 
-    private Answer createAllocatedRbdVolume(CreateObjectCommand command) {
+    private Answer createAllocatedVolume(CreateObjectCommand command) {
         VolumeObjectTO volume = (VolumeObjectTO) command.getData();
         PrimaryDataStoreTO store = (PrimaryDataStoreTO) volume.getDataStore();
         try {
@@ -2250,7 +2250,9 @@ public class KVMStorageProcessor implements StorageProcessor {
                 return null;
             }
             KVMStoragePool pool = storagePoolMgr.getStoragePool(store.getPoolType(), store.getUuid());
-            return new CreateObjectAnswer(new RbdVolumeAllocation().create(volume, pool, null, (long) command.getWait() * 1000));
+            return new CreateObjectAnswer(pool.getType() == StoragePoolType.SharedMountPoint ?
+                    new Gfs2VolumeAllocation().create(volume, pool, null, (long) command.getWait() * 1000) :
+                    new RbdVolumeAllocation().create(volume, pool, null, (long) command.getWait() * 1000));
         } catch (Exception failure) {
             return new CreateObjectAnswer(failure.getMessage());
         } finally {
@@ -2260,7 +2262,7 @@ public class KVMStorageProcessor implements StorageProcessor {
         }
     }
 
-    private Answer copyAllocatedRbdTemplate(CopyCommand command) {
+    private Answer copyAllocatedTemplate(CopyCommand command) {
         VolumeObjectTO volume = (VolumeObjectTO) command.getDestTO();
         PrimaryDataStoreTO store = (PrimaryDataStoreTO) volume.getDataStore();
         KVMStoragePool secondary = null;
@@ -2271,8 +2273,8 @@ public class KVMStorageProcessor implements StorageProcessor {
                 }
                 return null;
             }
-            if (store.getPoolType() != StoragePoolType.RBD) {
-                throw new CloudRuntimeException("ALLOCATION_BACKEND_UNSUPPORTED: RBD RAW materialized copy only");
+            if (store.getPoolType() != StoragePoolType.RBD && store.getPoolType() != StoragePoolType.SharedMountPoint) {
+                throw new CloudRuntimeException("ALLOCATION_BACKEND_UNSUPPORTED: qualified GFS2/RBD materialized copy only");
             }
             KVMStoragePool pool = storagePoolMgr.getStoragePool(store.getPoolType(), store.getUuid());
             DataTO source = command.getSrcTO();
@@ -2305,7 +2307,9 @@ public class KVMStorageProcessor implements StorageProcessor {
             }
             volume.setPath(volume.getUuid());
             resource.createOrUpdateLogFileForCommand(command, Command.State.PROCESSING_IN_BACKEND);
-            VolumeObjectTO result = new RbdVolumeAllocation().create(volume, pool, disk, command.getWaitInMillSeconds());
+            VolumeObjectTO result = pool.getType() == StoragePoolType.SharedMountPoint ?
+                    new Gfs2VolumeAllocation().create(volume, pool, disk, command.getWaitInMillSeconds()) :
+                    new RbdVolumeAllocation().create(volume, pool, disk, command.getWaitInMillSeconds());
             resource.createOrUpdateLogFileForCommand(command, Command.State.COMPLETED);
             return new CopyCmdAnswer(result);
         } catch (Exception failure) {
@@ -2320,7 +2324,7 @@ public class KVMStorageProcessor implements StorageProcessor {
         }
     }
 
-    private Answer rejectUnqualifiedRbdCopy(CopyCommand command) {
+    private Answer rejectUnqualifiedAllocationCopy(CopyCommand command) {
         if (command.getSrcTO() instanceof VolumeObjectTO && !((VolumeObjectTO) command.getSrcTO()).getAllocation().isEmpty()) {
             return new CopyCmdAnswer("ALLOCATION_OPERATION_UNSUPPORTED: migration is not qualified for explicit allocation");
         }
@@ -3459,7 +3463,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer createVolumeFromSnapshot(final CopyCommand cmd) {
-        Answer allocation = rejectUnqualifiedRbdCopy(cmd);
+        Answer allocation = rejectUnqualifiedAllocationCopy(cmd);
         if (allocation != null) {
             return allocation;
         }
@@ -4646,7 +4650,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer copyVolumeFromPrimaryToPrimary(CopyCommand cmd) {
-        Answer allocation = rejectUnqualifiedRbdCopy(cmd);
+        Answer allocation = rejectUnqualifiedAllocationCopy(cmd);
         if (allocation != null) {
             return allocation;
         }

@@ -54,6 +54,7 @@ public class VolumeAllocationPolicyTest {
                     Map<String, String> intent = VolumeAllocationPolicy.request(policy, format, null);
                     assertEquals(policy, intent.get(VolumeAllocationPolicy.POLICY));
                     assertEquals(format, intent.get(VolumeAllocationPolicy.FORMAT));
+                    assertEquals(intent, VolumeAllocationPolicy.requireCreationIntent(intent));
                     invalid(() -> VolumeAllocationPolicy.requireLegacyExecution(intent));
                 }
             }

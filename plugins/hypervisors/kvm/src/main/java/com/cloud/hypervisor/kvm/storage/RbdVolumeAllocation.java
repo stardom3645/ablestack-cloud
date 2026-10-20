@@ -101,7 +101,8 @@ public class RbdVolumeAllocation {
     /** A temporary image is verified before an atomic, non-overwriting rename publishes the volume. */
     public VolumeObjectTO create(VolumeObjectTO volume, KVMStoragePool pool, KVMPhysicalDisk source, long timeout) {
         Map<String, String> intent = VolumeAllocationPolicy.requireCreationIntent(volume.getAllocation());
-        if (intent.isEmpty() || pool.getType() != Storage.StoragePoolType.RBD || volume.getSize() == null || volume.getSize() <= 0 ||
+        if (intent.isEmpty() || !"raw".equals(intent.get(VolumeAllocationPolicy.FORMAT)) ||
+                !List.of("off", "full").contains(intent.get(VolumeAllocationPolicy.POLICY)) || pool.getType() != Storage.StoragePoolType.RBD || volume.getSize() == null || volume.getSize() <= 0 ||
                 volume.requiresEncryption() || volume.getEncryptFormat() != null || volume.getMigrationOptions() != null ||
                 volume.getUuid() == null || !volume.getUuid().matches("[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")) {
             throw new CloudRuntimeException("RBD_ALLOCATION_REQUEST_UNSUPPORTED: unencrypted RAW creation or materialized template copy only");

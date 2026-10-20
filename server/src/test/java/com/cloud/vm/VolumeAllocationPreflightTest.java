@@ -51,10 +51,13 @@ public class VolumeAllocationPreflightTest {
     private void reject(Map<String, String> details) {
         when(detailsDao.listDetailsKeyPairs(1L)).thenReturn(details);
         try {
-            ReflectionTestUtils.invokeMethod(manager, "verifyAndGetDiskSize", offering, 128L);
+            com.cloud.dc.DataCenter zone = org.mockito.Mockito.mock(com.cloud.dc.DataCenter.class); when(zone.getId()).thenReturn(10L);
+            org.mockito.Mockito.doThrow(new InvalidParameterValueException("ALLOCATION_AGENT_UNAVAILABLE: unqualified host"))
+                    .when(allocationService).validateCreate(org.mockito.ArgumentMatchers.anyMap(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any());
+            ReflectionTestUtils.invokeMethod(manager, "validateAllocationOffering", offering, zone);
             fail("VM must be rejected before allocating VM/NIC/volume records");
         } catch (InvalidParameterValueException expected) {
-            assertTrue(expected.getMessage().contains("ALLOCATION_EXECUTION_NOT_IMPLEMENTED"));
+            assertTrue(expected.getMessage().contains("ALLOCATION_AGENT_UNAVAILABLE"));
         }
         verifyNoInteractions(volumeService);
     }

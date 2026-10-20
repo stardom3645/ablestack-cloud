@@ -70,4 +70,24 @@ public class VolumeAllocationResultTest {
     @Test public void observationSourceIsExplicitAndImageScoped() { Map<String,String> evidence = result.getAllocation(); evidence.put(VolumeAllocationPolicy.OBSERVED_SOURCE, "cluster physical usage"); result.setAllocation(evidence); reject(); }
     @Test public void genericMetadataCannotSmuggleExtraAppliedFields() { Map<String,String> evidence = result.getAllocation(); evidence.put("allocation.fake", "full"); result.setAllocation(evidence); reject(); }
     @Test public void legacyResultsDoNotBackfillAllocation() { when(details.listDetailsKeyPairs(1L)).thenReturn(Map.of()); object.validateAllocationResult(null, volume); verify(details, never()).addDetail(anyLong(), anyString(), anyString(), anyBoolean()); }
+    private void gfs(String policy, String format, long observed) {
+        object.dataStore = mock(org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStore.class);
+        when(object.dataStore.getUuid()).thenReturn("pool");
+        when(((org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStore) object.dataStore).getPoolType()).thenReturn(Storage.StoragePoolType.SharedMountPoint);
+        intent = VolumeAllocationPolicy.request(policy, format, null); when(details.listDetailsKeyPairs(1L)).thenReturn(intent);
+        result.setFormat(Storage.ImageFormat.valueOf(format.toUpperCase(java.util.Locale.ROOT)));
+        result.setAllocation(VolumeAllocationPolicy.evidence(intent, "GFS2", "copy", "qemu-preallocation-"+policy, observed, Instant.now(), "stat-st-blocks-times-512"));
+    }
+    @Test public void gfsMetadataAndRawOffReceiptsPersistWithoutClaimingFull() {
+        gfs("metadata", "qcow2", 1048576); object.validateAllocationResult(result, volume);
+        verify(details).addDetail(1L, VolumeAllocationPolicy.FIXED_POLICY, "metadata", false);
+    }
+    @Test public void gfsFullReceiptPersistsRequestedQcow2Format() {
+        gfs("full", "qcow2", 68157440); object.validateAllocationResult(result, volume);
+        verify(details).addDetail(1L, VolumeAllocationPolicy.FORMAT, "qcow2", false);
+    }
+    @Test public void gfsFallocCannotReportSparseSuccess() { gfs("falloc", "raw", 0); reject(); }
+    @Test public void gfsCannotSupplyRbdReceiptForSamePoolUuid() { gfs("full", "raw", 67108864); result.setAllocation(VolumeAllocationPolicy.evidence(intent, "RBD", "create", "rbd-thick-create", 67108864L, Instant.now(), "rbd-du-exact-image-used-size")); reject(); }
+    @Test public void gfsCannotReturnDifferentActualFormat() { gfs("full", "qcow2", 67108864); result.setFormat(Storage.ImageFormat.RAW); reject(); }
+
 }

@@ -184,4 +184,24 @@ public class VolumeAllocationManagerImplTest {
         reason("ALLOCATION_OPERATION_UNSUPPORTED"); verifyNoInteractions(agentManager);
     }
 
+    @Test public void gfs2CapabilityUsesRequestedFormatAndPolicy() throws Exception {
+        qualifiedPool(); when(pool.getPoolType()).thenReturn(Storage.StoragePoolType.SharedMountPoint);
+        when(agentManager.send(eq(2L), any(GetVolumeAllocationCapabilitiesCommand.class))).thenAnswer(invocation -> {
+            GetVolumeAllocationCapabilitiesCommand c = invocation.getArgument(1);
+            return new GetVolumeAllocationCapabilitiesAnswer(c, "GFS2", Map.of("metadata", "qemu-preallocation-metadata", "full", "qemu-preallocation-full", "falloc", "qemu-preallocation-falloc"));
+        });
+        manager.validateCreate(VolumeAllocationPolicy.request("metadata", "qcow2", null), Storage.ProvisioningType.SPARSE, 10, 1L, null);
+        manager.validateCreate(VolumeAllocationPolicy.request("falloc", "qcow2", null), Storage.ProvisioningType.FAT, 10, 1L, null);
+    }
+    @Test public void gfs2LifecycleIsRejectedWithoutAgentWrites() {
+        when(pool.getPoolType()).thenReturn(Storage.StoragePoolType.SharedMountPoint);
+        when(cmd.getOperation()).thenReturn("resize"); reason("ALLOCATION_OPERATION_UNSUPPORTED"); verifyNoInteractions(agentManager);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void gfs2RequestedPolicyCannotBeInferredFromOtherMethods() throws Exception {
+        qualifiedPool(); when(pool.getPoolType()).thenReturn(Storage.StoragePoolType.SharedMountPoint);
+        when(agentManager.send(eq(2L), any(GetVolumeAllocationCapabilitiesCommand.class))).thenAnswer(i ->
+                new GetVolumeAllocationCapabilitiesAnswer(i.getArgument(1), "GFS2", Map.of("full", "qemu-preallocation-full")));
+        manager.validateCreate(VolumeAllocationPolicy.request("metadata", "qcow2", null), Storage.ProvisioningType.SPARSE, 10, 1L, null);
+    }
+
 }

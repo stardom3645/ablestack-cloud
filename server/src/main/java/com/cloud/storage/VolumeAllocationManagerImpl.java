@@ -78,8 +78,8 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
             response.setReason("HOST_NOT_AVAILABLE");
             return response;
         }
-        if (pool.getPoolType() == Storage.StoragePoolType.RBD &&
-                (!"raw".equals(format) || !List.of("create", "copy").contains(operation))) {
+        if (!List.of("create", "copy").contains(operation) ||
+                (pool.getPoolType() == Storage.StoragePoolType.RBD && !"raw".equals(format))) {
             response.setReason("ALLOCATION_OPERATION_UNSUPPORTED");
             return response;
         }
@@ -110,7 +110,8 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
             }
             VolumeAllocationPolicy.validateCapability(capability.getBackend(), format, operation, capability.getMethods());
             response.setAgentPolicies(capability.getBackend(), capability.getMethods());
-            boolean implemented = "RBD".equals(capability.getBackend()) && "raw".equals(format) &&
+            boolean implemented = ("GFS2".equals(capability.getBackend()) ||
+                    ("RBD".equals(capability.getBackend()) && "raw".equals(format))) &&
                     List.of("create", "copy").contains(operation) &&
                     (requestedPolicy == null || capability.getMethods().containsKey(requestedPolicy.toLowerCase(Locale.ROOT)));
             response.setSupported(implemented);
@@ -147,10 +148,10 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
                 }
                 return;
             }
-            if (pool.getPoolType() != Storage.StoragePoolType.RBD) {
+            if (pool.getPoolType() != Storage.StoragePoolType.RBD && pool.getPoolType() != Storage.StoragePoolType.SharedMountPoint) {
                 // Explicit selection cannot silently fall through to a different backend.
                 if (poolId != null) {
-                    throw new InvalidParameterValueException("ALLOCATION_BACKEND_UNSUPPORTED: only RBD RAW execution is qualified");
+                    throw new InvalidParameterValueException("ALLOCATION_BACKEND_UNSUPPORTED: only qualified GFS2 or RBD execution is available");
                 }
                 continue;
             }
@@ -163,17 +164,17 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
                 }
                 hasUpHost = true;
                 for (String operation : List.of("create", "copy")) {
-                    VolumeAllocationCapabilityResponse capability = capabilities(pool, host, "raw", operation, intent.get(VolumeAllocationPolicy.POLICY));
+                    VolumeAllocationCapabilityResponse capability = capabilities(pool, host, intent.get(VolumeAllocationPolicy.FORMAT), operation, intent.get(VolumeAllocationPolicy.POLICY));
                     allQualified &= capability.isSupported();
                 }
             }
             qualified |= hasUpHost && allQualified;
             if (poolId != null && !qualified) {
-                throw new InvalidParameterValueException("ALLOCATION_AGENT_UNAVAILABLE: all eligible hosts must advertise and verify RBD RAW create/copy capability");
+                throw new InvalidParameterValueException("ALLOCATION_AGENT_UNAVAILABLE: all eligible hosts must advertise and verify the requested backend/format/policy create/copy capability");
             }
         }
         if (!intent.isEmpty() && !qualified) {
-            throw new InvalidParameterValueException("ALLOCATION_AGENT_UNAVAILABLE: no matching qualified RBD pool and Agent; no legacy fallback is allowed");
+            throw new InvalidParameterValueException("ALLOCATION_AGENT_UNAVAILABLE: no matching qualified pool and Agent; no legacy fallback is allowed");
         }
     }
 

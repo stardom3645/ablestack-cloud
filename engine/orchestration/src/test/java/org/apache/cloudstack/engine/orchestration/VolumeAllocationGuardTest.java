@@ -41,6 +41,7 @@ public class VolumeAllocationGuardTest {
     @Mock private DiskOffering offering;
     @Mock private Volume volume;
     @Mock private VirtualMachine vm;
+    @Mock private com.cloud.storage.dao.VolumeDetailsDao volumeDetails;
     @Before public void setUp() {
         when(offering.getId()).thenReturn(1L); when(volume.getDiskOfferingId()).thenReturn(1L);
         when(detailsDao.listDetailsKeyPairs(1L)).thenReturn(VolumeAllocationPolicy.request("falloc", "qcow2", null));
@@ -49,11 +50,17 @@ public class VolumeAllocationGuardTest {
         try { action.run(); fail("Explicit intent must not reach a legacy adapter"); }
         catch (InvalidParameterValueException expected) { assertTrue(expected.getMessage().contains("ALLOCATION_EXECUTION_NOT_IMPLEMENTED")); }
     }
-    @Test public void dataDiskAllocationStopsBeforeWritingAnyVolumeRow() {
-        rejected(() -> orchestrator.allocateRawVolumes(Volume.Type.DATADISK, "owned", offering, 1L, null, null, vm, null, null, 1L, Map.of()));
+    @Test public void gfsQcow2CreationFreezesRequestedPolicyBeforeAgentDispatch() {
+        when(volumeDetails.listDetailsKeyPairs(2L)).thenReturn(Map.of());
+        orchestrator.saveVolumeDetails(1L, 2L);
+        org.mockito.Mockito.verify(volumeDetails).addDetail(2L, VolumeAllocationPolicy.POLICY, "falloc", false);
+        org.mockito.Mockito.verify(volumeDetails).addDetail(2L, VolumeAllocationPolicy.FORMAT, "qcow2", false);
     }
-    @Test public void rootDiskAllocationStopsBeforeWritingAnyVolumeRow() {
-        rejected(() -> orchestrator.allocateRawVolume(Volume.Type.ROOT, "owned", offering, 1L, null, null, vm, null, null, 0L, null, true));
+    @Test public void rawCreationKeepsItsExplicitFormatInsteadOfKvmDefaultQcow2() {
+        when(volumeDetails.listDetailsKeyPairs(2L)).thenReturn(Map.of());
+        when(detailsDao.listDetailsKeyPairs(1L)).thenReturn(VolumeAllocationPolicy.request("full", "raw", null));
+        orchestrator.saveVolumeDetails(1L, 2L);
+        org.mockito.Mockito.verify(volumeDetails).addDetail(2L, VolumeAllocationPolicy.FORMAT, "raw", false);
     }
     @Test public void volumeImportDoesNotAssertNewAllocationWithoutEvidence() {
         rejected(() -> orchestrator.importVolume(Volume.Type.DATADISK, "owned", offering, 1L, null, null, 1L, HypervisorType.KVM, null, null, null, 1L, 1L, null, "owned", null));

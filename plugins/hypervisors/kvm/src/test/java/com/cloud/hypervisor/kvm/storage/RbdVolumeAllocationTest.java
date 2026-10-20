@@ -91,7 +91,7 @@ public class RbdVolumeAllocationTest {
         create(source()); assertTrue(command("convert", "-S", "4096")); assertFalse(command("--thick-provision"));
     }
     @Test public void unsupportedFallocNeverWrites() {
-        request.setAllocation(VolumeAllocationPolicy.request("falloc", "raw", null)); fails("ALLOCATION_EXECUTION_NOT_IMPLEMENTED", null);
+        request.setAllocation(VolumeAllocationPolicy.request("falloc", "raw", null)); fails("REQUEST_UNSUPPORTED", null);
         assertTrue(runner.commands.isEmpty());
     }
     @Test public void otherBackendNeverWrites() { when(pool.getType()).thenReturn(Storage.StoragePoolType.SharedMountPoint); fails("REQUEST_UNSUPPORTED", null); assertTrue(runner.commands.isEmpty()); }
