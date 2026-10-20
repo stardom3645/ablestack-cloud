@@ -55,6 +55,7 @@ import com.cloud.vm.dao.UserVmDao;
 public class VolumeApiServiceImplUpdateTest {
     @Spy @InjectMocks private VolumeApiServiceImpl service = new VolumeApiServiceImpl();
     @Mock private VolumeDao volumeDao;
+    @Mock private com.cloud.storage.dao.VolumeDetailsDao allocationDetails;
     @Mock private DiskOfferingDao diskOfferingDao;
     @Mock private UserVmDao userVmDao;
     @Mock private AccountManager accountManager;

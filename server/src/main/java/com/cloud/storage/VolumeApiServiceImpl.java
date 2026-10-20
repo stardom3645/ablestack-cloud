@@ -603,6 +603,13 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
     }
 
+    private void validateAllocationUploadOffering(Long diskOfferingId) {
+        if (diskOfferingId != null) {
+            com.cloud.storage.VolumeAllocationPolicy.requireUnqualifiedLifecycle(
+                    _diskOfferingDetailsDao.listDetailsKeyPairs(diskOfferingId), "volume upload");
+        }
+    }
+
     private boolean validateVolume(Account caller, long ownerId, Long zoneId, String volumeName, String url, String format, Long diskOfferingId, List<Reserver> reservations) throws ResourceAllocationException {
 
         // permission check
@@ -656,6 +663,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 throw new InvalidParameterValueException("Please specify a custom sized disk offering.");
             }
             _configMgr.checkDiskOfferingAccess(volumeOwner, diskOffering, zone);
+            validateAllocationUploadOffering(diskOfferingId);
         }
 
         return false;
@@ -1294,11 +1302,29 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
     private void validateAllocationMutation(Long volumeId, Long newDiskOfferingId, String operation) {
         VolumeVO volume = _volsDao.findById(volumeId);
-        if (volume != null) {
-            com.cloud.storage.VolumeAllocationPolicy.requireUnqualifiedLifecycle(_volsDetailsDao.listDetailsKeyPairs(volume.getId()), operation);
+        if (volume != null && newDiskOfferingId != null) {
+            DiskOfferingVO target = _diskOfferingDao.findById(newDiskOfferingId);
+            if (target != null) {
+                VolumeAllocationLifecycle.requireCompatibleOffering(_volsDetailsDao.listDetailsKeyPairs(volume.getId()),
+                        _diskOfferingDetailsDao.listDetailsKeyPairs(newDiskOfferingId), volume.getProvisioningType(), target.getProvisioningType());
+            }
         }
-        if (newDiskOfferingId != null) {
-            com.cloud.storage.VolumeAllocationPolicy.requireLegacyExecution(_diskOfferingDetailsDao.listDetailsKeyPairs(newDiskOfferingId));
+    }
+
+    private void validateResolvedAllocation(VolumeVO volume, DiskOfferingVO target, long currentSize, Long newSize) {
+        validateAllocationMutationSize(volume.getId(), target == null ? null : target.getId(), currentSize, newSize);
+    }
+
+    private void validateAllocationMutationSize(long volumeId, Long newDiskOfferingId, long expectedSize, long newSize) {
+        validateAllocationMutation(volumeId, newDiskOfferingId, "metadata-only change");
+        VolumeVO current = _volsDao.findById(volumeId);
+        Map<String, String> details = _volsDetailsDao.listDetailsKeyPairs(volumeId);
+        if (!VolumeAllocationLifecycle.intent(details).isEmpty()) {
+            if (current == null || current.getSize() != expectedSize) {
+                throw new InvalidParameterValueException("ALLOCATION_STALE_VOLUME: volume size changed before execution; retry from current state");
+            }
+            VolumeAllocationLifecycle.requireMetadataOnly(details, current.getSize(), newSize,
+                    current.getFormat() == null ? null : current.getFormat().toString());
         }
     }
 
@@ -1477,6 +1503,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         if (dataStore != null && dataStore.getDriver() instanceof PrimaryDataStoreDriver) {
             newSize = ((PrimaryDataStoreDriver) dataStore.getDriver()).getVolumeSizeRequiredOnPool(newSize, null, isEncryptionRequired);
         }
+
+        validateResolvedAllocation(volume, newDiskOffering, currentSize, newSize);
 
         List<Reserver> reservations = new ArrayList<>();
         try {
@@ -1681,8 +1709,20 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
     }
 
+    private AsyncCallFuture<VolumeApiResult> resizeWithAllocationGuard(VolumeService service, VolumeInfo volume) {
+        if (!VolumeAllocationLifecycle.intent(_volsDetailsDao.listDetailsKeyPairs(volume.getId())).isEmpty()) {
+            ResizeVolumePayload payload = (ResizeVolumePayload) volume.getpayload();
+            validateAllocationMutationSize(volume.getId(), payload.newDiskOfferingId, volume.getSize(), payload.newSize);
+            AsyncCallFuture<VolumeApiResult> future = new AsyncCallFuture<>();
+            future.complete(new VolumeApiResult(volume));
+            return future;
+        }
+        return service.resize(volume);
+    }
+
     private VolumeVO orchestrateResizeVolume(long volumeId, long currentSize, long newSize, Long newMinIops, Long newMaxIops, Integer newHypervisorSnapshotReserve, Long newDiskOfferingId,
                                              boolean shrinkOk) {
+        validateAllocationMutationSize(volumeId, newDiskOfferingId, currentSize, newSize);
         VolumeVO volume = _volsDao.findById(volumeId);
         UserVmVO userVm = _userVmDao.findById(volume.getInstanceId());
         StoragePoolVO storagePool = _storagePoolDao.findById(volume.getPoolId());
@@ -1751,7 +1791,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             // if managed, this is the chance for the plug-in to change the size and/or IOPS values
             // if not managed, this is the chance for the plug-in to talk to the hypervisor layer
             // to change the size of the disk
-            AsyncCallFuture<VolumeApiResult> future = volService.resize(vol);
+            AsyncCallFuture<VolumeApiResult> future = resizeWithAllocationGuard(volService, vol);
             VolumeApiResult result = future.get();
 
             if (result.isFailed()) {
@@ -2339,6 +2379,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         if (dataStore != null && dataStore.getDriver() instanceof PrimaryDataStoreDriver) {
             newSize = ((PrimaryDataStoreDriver) dataStore.getDriver()).getVolumeSizeRequiredOnPool(newSize, null, newDiskOffering.getEncrypt());
         }
+
+        validateResolvedAllocation(volume, newDiskOffering, currentSize, newSize);
 
         List<Reserver> reservations = new ArrayList<>();
         try {
@@ -3376,6 +3418,18 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
     }
 
+    private void validateAllocationIdentityMutation(long volumeId, String path, String state, Long storageId, String chainInfo, String volumeType) {
+        VolumeVO volume = _volsDao.findById(volumeId);
+        if ((path != null && !Objects.equals(path, volume.getPath())) ||
+                (chainInfo != null && !Objects.equals(chainInfo, volume.getChainInfo())) ||
+                (storageId != null && !Objects.equals(storageId, volume.getPoolId())) ||
+                (state != null && !Objects.equals(state, volume.getState().name())) ||
+                (volumeType != null && !Objects.equals(volumeType, volume.getVolumeType().name()))) {
+            com.cloud.storage.VolumeAllocationPolicy.requireUnqualifiedLifecycle(
+                    _volsDetailsDao.listDetailsKeyPairs(volumeId), "manual volume path/pool/chain/state/type change");
+        }
+    }
+
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_VOLUME_UPDATE, eventDescription = "updating volume", async = true)
     public Volume updateVolume(long volumeId, String path, String state, Long storageId,
@@ -3399,6 +3453,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         /* Does the caller have authority to act on this volume? */
         _accountMgr.checkAccess(caller, null, true, volume);
 
+        validateAllocationIdentityMutation(volumeId, path, state, storageId, chainInfo, volumeType);
         validateVolumePathUpdate(volume, path);
         if (path != null && !Objects.equals(path, volume.getPath())) {
             DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());

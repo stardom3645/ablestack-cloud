@@ -42,6 +42,7 @@ public class VolumeAllocationGuardTest {
     @Mock private Volume volume;
     @Mock private VirtualMachine vm;
     @Mock private com.cloud.storage.dao.VolumeDetailsDao volumeDetails;
+    @Mock private com.cloud.storage.dao.VolumeDao _volsDao;
     @Before public void setUp() {
         when(offering.getId()).thenReturn(1L); when(volume.getDiskOfferingId()).thenReturn(1L);
         when(detailsDao.listDetailsKeyPairs(1L)).thenReturn(VolumeAllocationPolicy.request("falloc", "qcow2", null));
@@ -68,4 +69,24 @@ public class VolumeAllocationGuardTest {
     @Test public void duplicationCannotDropTheExplicitContract() {
         rejected(() -> orchestrator.allocateDuplicateVolumeVO(volume, offering, null));
     }
+    @Test(expected = InvalidParameterValueException.class) public void offeringChangeCannotOverwriteFrozenIntent() {
+        when(volumeDetails.listDetailsKeyPairs(2L)).thenReturn(VolumeAllocationPolicy.request("full","qcow2",null));
+        orchestrator.saveVolumeDetails(1L,2L);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void readyLegacyImageCannotAcquireExplicitIntent() {
+        com.cloud.storage.VolumeVO existing=org.mockito.Mockito.mock(com.cloud.storage.VolumeVO.class);
+        when(existing.getState()).thenReturn(Volume.State.Ready);
+        when(_volsDao.findById(2L)).thenReturn(existing);
+        orchestrator.saveVolumeDetails(1L,2L);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void duplicateUsesFrozenSourceEvenWhenOfferingIsLegacy() {
+        when(detailsDao.listDetailsKeyPairs(1L)).thenReturn(Map.of());
+        when(volumeDetails.listDetailsKeyPairs(0L)).thenReturn(VolumeAllocationPolicy.request("full","raw",null));
+        orchestrator.allocateDuplicateVolumeVO(volume,null,null);
+    }
+    @Test(expected = InvalidParameterValueException.class) public void migrationCannotBypassTheApiGuard() throws Exception {
+        when(volumeDetails.listDetailsKeyPairs(0L)).thenReturn(VolumeAllocationPolicy.request("full","raw",null));
+        orchestrator.migrateVolume(volume,null);
+    }
+
 }

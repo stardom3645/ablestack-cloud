@@ -38,8 +38,6 @@ import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import com.cloud.storage.Storage;
 import com.cloud.storage.VolumeAllocationPolicy;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.OutputInterpreter;
-import com.cloud.utils.script.Script;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -50,15 +48,7 @@ public class Gfs2VolumeAllocation {
     private final Runner runner;
 
     public Gfs2VolumeAllocation() {
-        this((arguments, timeout) -> {
-            Script script = new Script(arguments.get(0), timeout);
-            script.setAvoidLoggingCommand(true);
-            for (int i = 1; i < arguments.size(); i++) { script.add(arguments.get(i)); }
-            OutputInterpreter.AllLinesParser output = new OutputInterpreter.AllLinesParser();
-            String error = script.execute(output);
-            if (error != null) { throw new CloudRuntimeException("GFS2_ALLOCATION_COMMAND_FAILED: " + error); }
-            return output.getLines() == null ? "" : output.getLines();
-        });
+        this(Gfs2AllocationCommandRunner::run);
     }
     Gfs2VolumeAllocation(Runner runner) { this.runner = runner; }
 

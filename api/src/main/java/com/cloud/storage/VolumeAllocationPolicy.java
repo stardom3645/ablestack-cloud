@@ -118,14 +118,14 @@ public final class VolumeAllocationPolicy {
     }
 
     public static void requireLegacyExecution(Map<String, String> details) {
-        if (!validateStored(details).isEmpty()) {
+        if (!VolumeAllocationLifecycle.intent(details).isEmpty()) {
             throw new InvalidParameterValueException("ALLOCATION_EXECUTION_NOT_IMPLEMENTED: explicit allocation requires a verified backend execution adapter and Agent capability; no legacy fallback is allowed");
         }
     }
 
     /** Validate immutable creation intent; backend/format/operation capability is checked separately. */
     public static Map<String, String> requireCreationIntent(Map<String, String> details) {
-        return validateStored(details);
+        return VolumeAllocationLifecycle.intent(details);
     }
 
     public static void requireRbdLegacyThin(Storage.ProvisioningType type) {
@@ -135,7 +135,7 @@ public final class VolumeAllocationPolicy {
     }
 
     public static void requireUnqualifiedLifecycle(Map<String, String> details, String operation) {
-        if (!validateStored(details).isEmpty()) {
+        if (!VolumeAllocationLifecycle.intent(details).isEmpty()) {
             throw new InvalidParameterValueException("ALLOCATION_OPERATION_UNSUPPORTED: " + operation +
                     " is not qualified for explicit allocation; source and allocation evidence are preserved");
         }
@@ -228,6 +228,7 @@ public final class VolumeAllocationPolicy {
                 result.put("appliedbackend", details.get(BACKEND));
                 result.put("appliedoperation", details.get(OPERATION));
                 result.put("evidence", "verified");
+                result.put("evidencescope", "creation-or-copy-time");
                 if (bytes != null) {
                     result.put("observedallocatedbytes", bytes.toString());
                     result.put("observedat", at.toString());
