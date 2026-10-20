@@ -23,6 +23,15 @@ import com.cloud.exception.InvalidParameterValueException;
 
 public class OfferingAllocationCloneTest {
     private Map<String, String> intent(String policy, String format) { return VolumeAllocationPolicy.request(policy, format, null); }
+    @Test public void storedBytesAndRequestedGiBRemainDistinct() {
+        Assert.assertEquals(Long.valueOf(1), OfferingAllocationClone.sizeGiB(null, 1073741824L));
+        Assert.assertEquals(Long.valueOf(7), OfferingAllocationClone.sizeGiB(7L, 1073741824L));
+        Assert.assertEquals(Long.valueOf(0), OfferingAllocationClone.sizeGiB(null, 0L));
+        Assert.assertNull(OfferingAllocationClone.sizeGiB(null, null));
+    }
+    @Test(expected=InvalidParameterValueException.class) public void malformedStoredSizeIsNotRoundedDown() {
+        OfferingAllocationClone.sizeGiB(null, 1073741825L);
+    }
     @Test public void nameOnlyExplicitCloneKeepsOnlyRequestContract() {
         Map<String, String> source = new java.util.HashMap<>(intent("falloc", "qcow2"));
         source.put(VolumeAllocationPolicy.FIXED_POLICY, "full"); source.put(VolumeAllocationPolicy.OBSERVED_BYTES, "123");

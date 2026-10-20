@@ -19,6 +19,9 @@ import { shallowMount } from '@vue/test-utils'
 import Summary from '@/components/view/AllocationSummary.vue'
 import Editor from '@/components/offering/AllocationPolicyEditor.vue'
 import CreateVolume from '@/views/storage/CreateVolume.vue'
+import DiskForm from '@/components/offering/DiskOfferingForm.vue'
+import ComputeForm from '@/components/offering/ComputeOfferingForm.vue'
+import { allocationParams } from '@/utils/volumeAllocation'
 import { getAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: { userInfo: { account: 'admin', roletype: 'Admin' }, project: null } }))
@@ -67,4 +70,17 @@ test('old CreateVolume capability cannot clear a later valid result', async () =
   release({ getvolumeallocationcapabilitiesresponse: { volumeallocationcapability: { contractversion: 1, storageid: 'p', hostid: 'h', allocationformat: 'raw', operation: 'create', backend: 'RBD', supported: true, agentpolicies: { full: 'rbd-thick-create' } } } })
   await old
   expect(context.allocationCap).toBe(current)
+})
+
+test.each([DiskForm, ComputeForm])('child policy controls survive parent ref filtering for $name', async component => {
+  for (const provisioningtype of ['thin', 'sparse', 'fat']) {
+    const context = {
+      form: { name: 'clone', provisioningtype, allocationmode: 'legacy' },
+      $refs: { internalFormRef: { validate: () => Promise.resolve() }, allocationEditor: { validate: () => Promise.resolve() } },
+      handleRemoveFields: () => ({ name: 'clone' })
+    }
+    expect(allocationParams(await component.methods.validate.call(context))).toEqual({ provisioningtype })
+    context.form = { name: 'new', allocationmode: 'explicit', allocationpolicy: 'full', allocationformat: 'raw' }
+    expect(allocationParams(await component.methods.validate.call(context))).toEqual({ allocationpolicy: 'full', allocationformat: 'raw' })
+  }
 })

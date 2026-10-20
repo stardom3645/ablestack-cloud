@@ -565,7 +565,14 @@ export default {
       return (this.$refs.allocationEditor?.validate() || Promise.resolve()).then(() => this.$refs.internalFormRef.validate()).then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
-        return values
+        // Allocation controls live in a child component, so they do not have parent form refs.
+        return {
+          ...values,
+          allocationmode: formRaw.allocationmode,
+          allocationpolicy: formRaw.allocationpolicy,
+          allocationformat: formRaw.allocationformat,
+          provisioningtype: formRaw.provisioningtype
+        }
       })
     },
     onInternalSubmit () {

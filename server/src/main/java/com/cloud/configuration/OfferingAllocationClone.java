@@ -46,6 +46,14 @@ public final class OfferingAllocationClone {
         return result;
     }
 
+    public static Long sizeGiB(Long requestedGiB, Long inheritedBytes) {
+        if (requestedGiB != null || inheritedBytes == null) { return requestedGiB; }
+        if (inheritedBytes < 0 || inheritedBytes % 1073741824L != 0) {
+            throw new InvalidParameterValueException("Source offering size is not an exact GiB value");
+        }
+        return inheritedBytes / 1073741824L;
+    }
+
     public static String provisioning(String requested, String inherited, Map<String, String> details, Map<String, String> parameters) {
         Map<String, String> intent = VolumeAllocationLifecycle.intent(details);
         if (!intent.isEmpty()) {

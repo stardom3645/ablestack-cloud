@@ -4035,7 +4035,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         return createServiceOffering(userId, systemUse, vmType,
                 name, cpuNumber, memory, cpuSpeed, displayText, OfferingAllocationClone.provisioning(provisioningType, sourceDiskOffering == null ? "thin" : sourceDiskOffering.getProvisioningType().toString(), mergedDetails, requestParams), localStorageRequired,
                 offerHa, limitCpuUse, isVolatile, tags, domainIds, zoneIds, hostTag, networkRate,
-                deploymentPlanner, mergedDetails, diskParams.rootDiskSize, diskParams.isCustomizedIops,
+                deploymentPlanner, mergedDetails, OfferingAllocationClone.sizeGiB(cmd.getRootDiskSize(), sourceDiskOffering == null ? null : sourceDiskOffering.getDiskSize()), diskParams.isCustomizedIops,
                 diskParams.minIops, diskParams.maxIops,
                 diskParams.bytesReadRate, diskParams.bytesReadRateMax, diskParams.bytesReadRateMaxLength,
                 diskParams.bytesWriteRate, diskParams.bytesWriteRateMax, diskParams.bytesWriteRateMaxLength,
@@ -4270,7 +4270,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final String name = cmd.getOfferingName();
         final String displayText = getOrDefault(cmd.getDisplayText(), sourceOffering.getDisplayText());
         final String provisioningType = getOrDefault(cmd.getProvisioningType(), sourceOffering.getProvisioningType().toString());
-        final Long diskSize = getOrDefault(cmd.getDiskSize(), sourceOffering.getDiskSize());
+        final Long diskSize = OfferingAllocationClone.sizeGiB(cmd.getDiskSize(), sourceOffering.getDiskSize());
         final String tags = getOrDefault(cmd.getTags(), sourceOffering.getTags());
 
         final Boolean isCustomized = resolveBooleanParam(requestParams, ApiConstants.CUSTOMIZED, cmd::isCustomized, sourceOffering.isCustomized());
