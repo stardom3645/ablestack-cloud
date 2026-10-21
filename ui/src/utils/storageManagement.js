@@ -17,6 +17,7 @@ import { trueValue } from '@/utils/offeringQos'
 
 export const scopeIds = value => [...new Set(String(value || '').split(',').filter(Boolean))].sort()
 export const sameIds = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
+export const canManageStorageOffering = (record, role) => role === 'Admin' || (role === 'DomainAdmin' && scopeIds(record?.domainid).length > 0)
 const sortedObject = value => Object.fromEntries(Object.entries(value || {}).sort(([a], [b]) => a.localeCompare(b)))
 export function offeringSnapshot (record) {
   return JSON.stringify({

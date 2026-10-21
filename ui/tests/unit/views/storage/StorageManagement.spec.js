@@ -18,7 +18,7 @@ import Access from '@/views/offering/UpdateStorageOfferingAccess.vue'
 import Assign from '@/views/storage/AssignVolume.vue'
 import Clone from '@/views/offering/CloneComputeOffering.vue'
 import { getAPI, postAPI } from '@/api'
-import { computeEditParams, accessParams, assignmentParams, assignmentReason } from '@/utils/storageManagement'
+import { computeEditParams, accessParams, assignmentParams, assignmentReason, canManageStorageOffering } from '@/utils/storageManagement'
 import { readAllocationList } from '@/utils/volumeAllocation'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 const deferred = () => { let release; const promise = new Promise(resolve => { release = resolve }); return { promise, resolve: release } }
@@ -147,4 +147,10 @@ test('assignment cannot use a disabled account, same owner, same project, or amb
 test('unsupported fields and unconfirmed external removal are never transmitted', () => {
   expect(computeEditParams(compute, { name: 'Original', purgeresources: false, externalMode: 'preserve' }, { name: {} }, false)).toEqual({ id: 'o' })
   expect(() => accessParams(compute, { ispublic: false, domainid: ['injected'], zoneid: [] }, { admin: true, managedDomainIds: ['d1'], supported: { domainid: {} } })).toThrow()
+})
+test('public offering management stays root-only while domain-admin can manage private scopes', () => {
+  expect(canManageStorageOffering({}, 'DomainAdmin')).toBe(false)
+  expect(canManageStorageOffering(compute, 'DomainAdmin')).toBe(true)
+  expect(canManageStorageOffering(compute, 'User')).toBe(false)
+  expect(canManageStorageOffering({}, 'Admin')).toBe(true)
 })

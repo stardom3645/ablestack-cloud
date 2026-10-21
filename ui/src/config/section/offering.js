@@ -16,6 +16,9 @@
 // under the License.
 import { shallowRef, defineAsyncComponent } from 'vue'
 import store from '@/store'
+import { canManageStorageOffering } from '@/utils/storageManagement'
+
+const canManageOffering = record => canManageStorageOffering(record, store.getters.userInfo.roletype)
 
 export default {
   name: 'offering',
@@ -73,7 +76,7 @@ export default {
         {
           name: 'comments',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue'))),
-          show: (record, route, user) => { return ['Admin', 'DomainAdmin'].includes(user.roletype) }
+          show: (record, route, user) => { return ['Admin', 'DomainAdmin'].includes(user.roletype) && 'listAnnotations' in store.getters.apis }
         }
       ],
       related: [{
@@ -96,6 +99,7 @@ export default {
         docHelp: 'adminguide/service_offerings.html#modifying-or-deleting-a-service-offering',
         dataView: true,
         popup: true,
+        show: canManageOffering,
         component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateComputeOffering.vue')))
       }, {
         api: 'updateServiceOffering',
@@ -104,6 +108,7 @@ export default {
         docHelp: 'adminguide/service_offerings.html#modifying-or-deleting-a-service-offering',
         dataView: true,
         popup: true,
+        show: canManageOffering,
         component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateStorageOfferingAccess.vue')))
       },
       {
@@ -120,7 +125,7 @@ export default {
         },
         groupAction: true,
         popup: true,
-        show: (record) => { return record.state !== 'Active' },
+        show: (record) => { return canManageOffering(record) && record.state !== 'Active' },
         groupMap: (selection) => { return selection.map(x => { return { id: x, state: 'Active' } }) }
       }, {
         api: 'updateServiceOffering',
@@ -136,7 +141,7 @@ export default {
             value: (record) => { return 'Inactive' }
           }
         },
-        show: (record) => { return record.state === 'Active' },
+        show: (record) => { return canManageOffering(record) && record.state === 'Active' },
         groupMap: (selection) => { return selection.map(x => { return { id: x, state: 'Inactive' } }) }
       }, {
         api: 'cloneServiceOffering',
@@ -280,7 +285,7 @@ export default {
         {
           name: 'comments',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue'))),
-          show: (record, route, user) => { return ['Admin', 'DomainAdmin'].includes(user.roletype) }
+          show: (record, route, user) => { return ['Admin', 'DomainAdmin'].includes(user.roletype) && 'listAnnotations' in store.getters.apis }
         }
       ],
       related: [{
@@ -303,6 +308,7 @@ export default {
         docHelp: 'adminguide/service_offerings.html#modifying-or-deleting-a-service-offering',
         dataView: true,
         popup: true,
+        show: canManageOffering,
         component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateDiskOffering.vue')))
       }, {
         api: 'updateDiskOffering',
@@ -311,6 +317,7 @@ export default {
         docHelp: 'adminguide/service_offerings.html#modifying-or-deleting-a-service-offering',
         dataView: true,
         popup: true,
+        show: canManageOffering,
         component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateStorageOfferingAccess.vue')))
       }, {
         api: 'updateDiskOffering',
@@ -327,7 +334,7 @@ export default {
         },
         groupAction: true,
         popup: true,
-        show: (record) => { return record.state !== 'Active' },
+        show: (record) => { return canManageOffering(record) && record.state !== 'Active' },
         groupMap: (selection) => { return selection.map(x => { return { id: x, state: 'Active' } }) }
       }, {
         api: 'updateDiskOffering',
@@ -343,7 +350,7 @@ export default {
             value: (record) => { return 'Inactive' }
           }
         },
-        show: (record) => { return record.state === 'Active' },
+        show: (record) => { return canManageOffering(record) && record.state === 'Active' },
         groupMap: (selection) => { return selection.map(x => { return { id: x, state: 'Inactive' } }) }
       }, {
         api: 'cloneDiskOffering',
