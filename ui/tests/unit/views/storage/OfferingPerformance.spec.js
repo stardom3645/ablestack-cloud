@@ -82,7 +82,7 @@ test.each([AddCompute, CloneCompute])('actual compute form accepts zero QoS in $
   }, { global: { mocks: { $t: key => key } } })
   await expect(w.vm.$refs.qos.validate()).resolves.toBeUndefined()
   await expect(w.vm.$refs.form.validate()).resolves.toBeDefined()
-  expect(context.rules.cpunumber).toContain(positive)
+  expect(context.rules.cpunumber).toContainEqual(positive)
   w.unmount()
 })
 test.each([CloneDisk, CloneCompute])('clone $name retains complete bursts and numeric zero', component => {
