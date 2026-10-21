@@ -73,7 +73,7 @@ test('failed later page preserves previous rows/selection, blocks submit, retry 
   })
   await w.vm.fetchData(); expect(w.vm.lookupError).toBe('503'); expect(w.vm.virtualmachines).toHaveLength(2); expect(w.vm.form.virtualmachineid).toBe(vm.id)
   w.vm.handleSubmit(); await flushPromises(); expect(postAPI).not.toHaveBeenCalled()
-  getAPI.mockImplementation(async (cmd, args) => body(args.state === 'Stopped' ? [vm] : [])); await w.vm.fetchData()
+  getAPI.mockImplementation(async (cmd, args) => body(args.state === 'Stopped' ? [vm] : [])); await w.findAll('button').find(b => b.text() === 'label.retry').trigger('click'); await flushPromises()
   expect(w.vm.lookupError).toBe(''); expect(w.vm.virtualmachines).toHaveLength(1); expect(w.vm.canSubmit).toBe(true)
 })
 test('late owner response is ignored and selection is cleared when scope changes', async () => {

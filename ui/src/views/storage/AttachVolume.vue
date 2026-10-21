@@ -51,9 +51,8 @@
                 <div v-if="volumeBackupReason(vm)" class="volume-attach-vm-identity">{{ $t(volumeBackupReason(vm)) }}</div>
               </a-select-option>
             </a-select>
-            <a-alert v-if="lookupError" type="error" show-icon :message="lookupError" style="margin-top: 8px">
-              <template #action><a-button size="small" :loading="loading" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
-            </a-alert>
+            <a-alert v-if="lookupError" type="error" show-icon :message="lookupError" style="margin-top: 8px" />
+            <a-button v-if="lookupError" size="small" :loading="loading" style="margin-top: 8px" @click="fetchData">{{ $t('label.retry') }}</a-button>
           </a-form-item >
           <a-form-item :label="$t('label.deviceid')">
             <div style="margin-bottom: 10px">
@@ -166,7 +165,7 @@ export default {
         this.virtualmachines = [...new Map(states.flat().map(vm => [vm.id, vm])).values()]
         if (!this.virtualmachines.some(vm => vm.id === this.form.virtualmachineid)) this.form.virtualmachineid = undefined
       } catch (error) {
-        if (current()) this.lookupError = error.message || this.$t('message.volume.attach.vm.lookup.failed')
+        if (current()) this.lookupError = error.response?.data?.listvirtualmachinesresponse?.errortext || error.message || this.$t('message.volume.attach.vm.lookup.failed')
       } finally {
         if (current()) this.loading = false
       }
