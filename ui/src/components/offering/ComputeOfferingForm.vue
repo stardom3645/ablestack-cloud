@@ -370,6 +370,7 @@
     </a-form-item>
 
     <a-card style="margin-bottom: 10px;">
+      <p class="form-help">{{ $t(form.computeonly ? 'message.offering.compute.dedicated' : 'message.offering.compute.linked') }}</p>
       <span v-if="form.computeonly">
         <a-form-item name="storagetype" ref="storagetype">
           <template #label>
@@ -414,44 +415,7 @@
           </a-radio-group>
         </a-form-item>
 
-        <a-row :gutter="12" v-if="qosType === 'hypervisor'">
-          <a-col :md="12" :lg="12">
-            <a-form-item name="diskbytesreadrate" ref="diskbytesreadrate">
-              <template #label>
-                <tooltip-label :title="$t('label.diskbytesreadrate')" :tooltip="apiParams.bytesreadrate.description"/>
-              </template>
-              <a-input v-model:value="form.diskbytesreadrate" :placeholder="apiParams.bytesreadrate.description"/>
-            </a-form-item>
-          </a-col>
-          <a-col :md="12" :lg="12">
-            <a-form-item name="diskbyteswriterate" ref="diskbyteswriterate">
-              <template #label>
-                <tooltip-label :title="$t('label.diskbyteswriterate')" :tooltip="apiParams.byteswriterate.description"/>
-              </template>
-              <a-input v-model:value="form.diskbyteswriterate" :placeholder="apiParams.byteswriterate.description"/>
-            </a-form-item>
-          </a-col>
-        </a-row>
-
-        <a-row :gutter="12" v-if="qosType === 'hypervisor'">
-          <a-col :md="12" :lg="12">
-            <a-form-item name="diskiopsreadrate" ref="diskiopsreadrate">
-              <template #label>
-                <tooltip-label :title="$t('label.diskiopsreadrate')" :tooltip="apiParams.iopsreadrate.description"/>
-              </template>
-              <a-input v-model:value="form.diskiopsreadrate" :placeholder="apiParams.iopsreadrate.description"/>
-            </a-form-item>
-          </a-col>
-          <a-col :md="12" :lg="12">
-            <a-form-item name="diskiopswriterate" ref="diskiopswriterate">
-              <template #label>
-                <tooltip-label :title="$t('label.diskiopswriterate')" :tooltip="apiParams.iopswriterate.description"/>
-              </template>
-              <a-input v-model:value="form.diskiopswriterate" :placeholder="apiParams.iopswriterate.description"/>
-            </a-form-item>
-          </a-col>
-        </a-row>
-
+        <DiskQosFields v-if="form.qostype === 'hypervisor'" ref="qosEditor" :form="form" :api-params="apiParams" />
         <a-form-item v-if="!isSystem && qosType === 'storage'" name="iscustomizeddiskiops" ref="iscustomizeddiskiops">
           <template #label>
             <tooltip-label :title="$t('label.iscustomizeddiskiops')" :tooltip="apiParams.customizediops.description"/>
@@ -577,6 +541,8 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import DetailsInput from '@/components/widgets/DetailsInput'
 import store from '@/store'
+import DiskQosFields from '@/components/offering/DiskQosFields'
+import { performanceFormValues } from '@/utils/offeringQos'
 import AllocationPolicyEditor from '@/components/offering/AllocationPolicyEditor'
 import AllocationSummary from '@/components/view/AllocationSummary'
 import { readAllocationList } from '@/utils/volumeAllocation'
@@ -586,6 +552,7 @@ export default {
   mixins: [mixinForm],
   components: {
     AllocationPolicyEditor,
+    DiskQosFields,
     AllocationSummary,
     AddDiskOffering,
     ResourceIcon,
@@ -847,12 +814,13 @@ export default {
     onToggleLeaseData () { if (this.showLeaseOptions === false) { this.leaseduration = undefined; this.leaseexpiryaction = undefined } else { this.leaseduration = this.leaseduration !== undefined ? this.leaseduration : this.defaultLeaseDuration; this.leaseexpiryaction = this.leaseexpiryaction !== undefined ? this.leaseexpiryaction : this.defaultLeaseExpiryAction } this.form.leaseduration = this.leaseduration; this.form.leaseexpiryaction = this.leaseexpiryaction },
 
     validate () {
-      return (this.$refs.allocationEditor?.validate() || Promise.resolve()).then(() => this.$refs.internalFormRef.validate()).then(() => {
+      return (this.$refs.allocationEditor?.validate() || Promise.resolve()).then(() => this.$refs.qosEditor?.validate()).then(() => this.$refs.internalFormRef.validate()).then(() => {
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
         // Allocation controls live in a child component, so they do not have parent form refs.
         return {
           ...values,
+          ...performanceFormValues(formRaw),
           allocationmode: formRaw.allocationmode,
           allocationpolicy: formRaw.allocationpolicy,
           allocationformat: formRaw.allocationformat,

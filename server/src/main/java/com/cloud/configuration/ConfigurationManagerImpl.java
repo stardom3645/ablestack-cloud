@@ -3808,13 +3808,17 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                                                       Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
                                                       final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID, boolean encrypt, boolean shareable, boolean kvdoEnable) {
 
+        validateDiskQos(null, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength,
+                bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength,
+                iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength);
+
         DiskOfferingVO diskOffering = new DiskOfferingVO(name, displayText, typedProvisioningType, false, tags, false, localStorageRequired, false);
 
         if (Boolean.TRUE.equals(isCustomizedIops) || isCustomizedIops == null) {
             minIops = null;
             maxIops = null;
         } else {
-            if (minIops == null && maxIops == null) {
+            if ((minIops == null && maxIops == null) || (Long.valueOf(0).equals(minIops) && Long.valueOf(0).equals(maxIops))) {
                 minIops = 0L;
                 maxIops = 0L;
             } else {
@@ -3892,43 +3896,43 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         return diskOffering;
     }
     private void setIopsRate(DiskOffering offering, Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength, Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength) {
-        if (iopsReadRate != null && iopsReadRate > 0) {
+        if (iopsReadRate != null) {
             offering.setIopsReadRate(iopsReadRate);
         }
-        if (iopsReadRateMax != null && iopsReadRateMax > 0) {
+        if (iopsReadRateMax != null) {
             offering.setIopsReadRateMax(iopsReadRateMax);
         }
-        if (iopsReadRateMaxLength != null && iopsReadRateMaxLength > 0) {
+        if (iopsReadRateMaxLength != null) {
             offering.setIopsReadRateMaxLength(iopsReadRateMaxLength);
         }
-        if (iopsWriteRate != null && iopsWriteRate > 0) {
+        if (iopsWriteRate != null) {
             offering.setIopsWriteRate(iopsWriteRate);
         }
-        if (iopsWriteRateMax != null && iopsWriteRateMax > 0) {
+        if (iopsWriteRateMax != null) {
             offering.setIopsWriteRateMax(iopsWriteRateMax);
         }
-        if (iopsWriteRateMaxLength != null && iopsWriteRateMaxLength > 0) {
+        if (iopsWriteRateMaxLength != null) {
             offering.setIopsWriteRateMaxLength(iopsWriteRateMaxLength);
         }
     }
 
     private void setBytesRate(DiskOffering offering, Long bytesReadRate, Long bytesReadRateMax, Long bytesReadRateMaxLength, Long bytesWriteRate, Long bytesWriteRateMax, Long bytesWriteRateMaxLength) {
-        if (bytesReadRate != null && bytesReadRate > 0) {
+        if (bytesReadRate != null) {
             offering.setBytesReadRate(bytesReadRate);
         }
-        if (bytesReadRateMax != null && bytesReadRateMax > 0) {
+        if (bytesReadRateMax != null) {
             offering.setBytesReadRateMax(bytesReadRateMax);
         }
-        if (bytesReadRateMaxLength != null && bytesReadRateMaxLength > 0) {
+        if (bytesReadRateMaxLength != null) {
             offering.setBytesReadRateMaxLength(bytesReadRateMaxLength);
         }
-        if (bytesWriteRate != null && bytesWriteRate > 0) {
+        if (bytesWriteRate != null) {
             offering.setBytesWriteRate(bytesWriteRate);
         }
-        if (bytesWriteRateMax != null && bytesWriteRateMax > 0) {
+        if (bytesWriteRateMax != null) {
             offering.setBytesWriteRateMax(bytesWriteRateMax);
         }
-        if (bytesWriteRateMaxLength != null && bytesWriteRateMaxLength > 0) {
+        if (bytesWriteRateMaxLength != null) {
             offering.setBytesWriteRateMaxLength(bytesWriteRateMaxLength);
         }
     }
@@ -4667,6 +4671,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                                                 Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
                                                 final Integer hypervisorSnapshotReserve, String cacheMode, final Map<String, String> details, final Long storagePolicyID,
                                                 final boolean diskSizeStrictness, final boolean encrypt, final boolean shareable, final boolean kvdoEnable) {
+        validateDiskQos(null, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength,
+                bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength,
+                iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength);
         long diskSize = 0;// special case for custom disk offerings
         long maxVolumeSizeInGb = VolumeOrchestrationService.MaxVolumeSize.value();
         if (numGibibytes != null && numGibibytes <= 0) {
@@ -4689,7 +4696,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             minIops = null;
             maxIops = null;
         } else {
-            if (minIops == null && maxIops == null) {
+            if ((minIops == null && maxIops == null) || (Long.valueOf(0).equals(minIops) && Long.valueOf(0).equals(maxIops))) {
                 minIops = 0L;
                 maxIops = 0L;
             } else {
@@ -4888,9 +4895,40 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
      * It throws InvalidParameterValueException if normal rate is greater than maximum rate
      */
     protected void validateMaxRateEqualsOrGreater(Long normalRate, Long maxRate, String rateType) {
-        if (normalRate != null && maxRate != null && maxRate < normalRate) {
+        if (normalRate != null && maxRate != null && maxRate > 0 && maxRate < normalRate) {
             throw new InvalidParameterValueException(
                     String.format("%s rate (%d) cannot be greater than %s maximum rate (%d)", rateType, normalRate, rateType, maxRate));
+        }
+    }
+
+    /** Validate the effective values, including fields omitted by a partial update. Zero clears an override. */
+    protected void validateDiskQos(DiskOffering existing, Long... requested) {
+        Long[] current = existing == null ? new Long[12] : new Long[] {
+                existing.getBytesReadRate(), existing.getBytesReadRateMax(), existing.getBytesReadRateMaxLength(),
+                existing.getBytesWriteRate(), existing.getBytesWriteRateMax(), existing.getBytesWriteRateMaxLength(),
+                existing.getIopsReadRate(), existing.getIopsReadRateMax(), existing.getIopsReadRateMaxLength(),
+                existing.getIopsWriteRate(), existing.getIopsWriteRateMax(), existing.getIopsWriteRateMaxLength() };
+        String[] groups = { BYTES_READ_RATE, BYTES_WRITE_RATE, IOPS_READ_RATE, IOPS_WRITE_RATE };
+        for (int index = 0; index < current.length; index++) {
+            if (requested[index] != null) {
+                if (requested[index] < 0) {
+                    throw new InvalidParameterValueException("Disk QoS rates and burst lengths must be non-negative integers");
+                }
+                current[index] = requested[index];
+            }
+        }
+        for (int group = 0; group < groups.length; group++) {
+            int offset = group * 3;
+            long rate = current[offset] == null ? 0 : current[offset];
+            long max = current[offset + 1] == null ? 0 : current[offset + 1];
+            long length = current[offset + 2] == null ? 0 : current[offset + 2];
+            validateMaxRateEqualsOrGreater(rate, max, groups[group]);
+            if (max > 0 && rate == 0) {
+                throw new InvalidParameterValueException(groups[group] + " burst requires a positive base rate");
+            }
+            if (length > 0 && max == 0) {
+                throw new InvalidParameterValueException(groups[group] + " burst length requires a positive maximum rate");
+            }
         }
     }
 
@@ -5025,6 +5063,13 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final DiskOfferingVO diskOffering = _diskOfferingDao.createForUpdate(diskOfferingId);
         updateDiskOfferingIfCmdAttributeNotNull(diskOffering, cmd);
 
+        if (shouldUpdateIopsRateParameters(iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength)
+                || shouldUpdateBytesRateParameters(bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength, bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength)) {
+            validateDiskQos(diskOfferingHandle, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength,
+                    bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength,
+                    iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength);
+        }
+
         updateOfferingTagsIfIsNotNull(tags, diskOffering);
 
         validateMaxRateEqualsOrGreater(iopsReadRate, iopsReadRateMax, IOPS_READ_RATE);
@@ -5038,6 +5083,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
         if (cacheMode != null) {
             validateCacheMode(cacheMode);
+            if (diskOfferingHandle.getShareable() && !"none".equalsIgnoreCase(cacheMode)) {
+                throw new InvalidParameterValueException("Shareable disks require cache mode none");
+            }
             diskOffering.setCacheMode(DiskOffering.DiskCacheMode.valueOf(cacheMode.toUpperCase()));
         }
 

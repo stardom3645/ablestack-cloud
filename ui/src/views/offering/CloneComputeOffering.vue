@@ -59,6 +59,7 @@
 import ComputeOfferingForm from '@/components/offering/ComputeOfferingForm'
 import { ref, reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { performanceParams, qosForm } from '@/utils/offeringQos'
 import { allocationParams, allocationForm } from '@/utils/volumeAllocation'
 import AddDiskOffering from '@/views/offering/AddDiskOffering'
 import { isAdmin } from '@/role'
@@ -383,24 +384,15 @@ export default {
         this.form.shareable = isTrueValue(r.shareable)
       }
 
-      if (r.diskBytesReadRate || r.diskBytesWriteRate || r.diskIopsReadRate || r.diskIopsWriteRate) {
-        this.qosType = 'hypervisor'
-        this.form.qostype = 'hypervisor'
-        if (r.diskBytesReadRate) this.form.diskbytesreadrate = r.diskBytesReadRate
-        if (r.diskBytesWriteRate) this.form.diskbyteswriterate = r.diskBytesWriteRate
-        if (r.diskIopsReadRate) this.form.diskiopsreadrate = r.diskIopsReadRate
-        if (r.diskIopsWriteRate) this.form.diskiopswriterate = r.diskIopsWriteRate
-      } else if (r.miniops || r.maxiops) {
-        this.qosType = 'storage'
-        this.form.qostype = 'storage'
-        if (r.miniops) this.form.diskiopsmin = r.miniops
-        if (r.maxiops) this.form.diskiopsmax = r.maxiops
-        if (r.hypervisorsnapshotreserve) this.form.hypervisorsnapshotreserve = r.hypervisorsnapshotreserve
-      }
-      if (r.iscustomizediops !== undefined) {
-        this.form.iscustomizeddiskiops = r.iscustomizediops
-        this.isCustomizedDiskIops = r.iscustomizediops
-      }
+      Object.assign(this.form, qosForm(r))
+      const hasHypervisorQos = Object.values(qosForm(r)).some(value => value !== '' && Number(value) > 0)
+      this.qosType = hasHypervisorQos ? 'hypervisor' : (r.iscustomizediops || r.miniops || r.maxiops ? 'storage' : '')
+      this.form.qostype = this.qosType
+      this.form.iscustomizeddiskiops = isTrueValue(r.iscustomizediops)
+      this.isCustomizedDiskIops = this.form.iscustomizeddiskiops
+      if (r.miniops !== undefined) this.form.diskiopsmin = String(r.miniops)
+      if (r.maxiops !== undefined) this.form.diskiopsmax = String(r.maxiops)
+      if (r.hypervisorsnapshotreserve !== undefined) this.form.hypervisorsnapshotreserve = String(r.hypervisorsnapshotreserve)
 
       if (r.rootdisksize) this.form.rootdisksize = r.rootdisksize
 
@@ -598,35 +590,9 @@ export default {
         if (values.rootdisksize != null && values.rootdisksize.length > 0) {
           params.rootdisksize = values.rootdisksize
         }
-        if (values.qostype === 'storage') {
-          var customIops = values.iscustomizeddiskiops === true
-          params.customizediops = customIops
-          if (!customIops) {
-            if (values.diskiopsmin != null && values.diskiopsmin.length > 0) {
-              params.miniops = values.diskiopsmin
-            }
-            if (values.diskiopsmax != null && values.diskiopsmax.length > 0) {
-              params.maxiops = values.diskiopsmax
-            }
-            if (values.hypervisorsnapshotreserve !== undefined &&
-               values.hypervisorsnapshotreserve != null && values.hypervisorsnapshotreserve.length > 0) {
-              params.hypervisorsnapshotreserve = values.hypervisorsnapshotreserve
-            }
-          }
-        } else if (values.qostype === 'hypervisor') {
-          if (values.diskbytesreadrate != null && values.diskbytesreadrate.length > 0) {
-            params.bytesreadrate = values.diskbytesreadrate
-          }
-          if (values.diskbyteswriterate != null && values.diskbyteswriterate.length > 0) {
-            params.byteswriterate = values.diskbyteswriterate
-          }
-          if (values.diskiopsreadrate != null && values.diskiopsreadrate.length > 0) {
-            params.iopsreadrate = values.diskiopsreadrate
-          }
-          if (values.diskiopswriterate != null && values.diskiopswriterate.length > 0) {
-            params.iopswriterate = values.diskiopswriterate
-          }
-        }
+        delete params.cachemode
+        delete params.cacheMode
+        Object.assign(params, performanceParams(values, values.computeonly === false, true))
         if (values.storagetags != null && values.storagetags.length > 0) {
           var tags = values.storagetags.join(',')
           params.tags = tags

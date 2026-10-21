@@ -54,6 +54,7 @@
 import DiskOfferingForm from '@/components/offering/DiskOfferingForm'
 import { reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
+import { performanceParams, qosForm } from '@/utils/offeringQos'
 import { allocationParams, allocationForm } from '@/utils/volumeAllocation'
 import { isAdmin } from '@/role'
 
@@ -137,37 +138,13 @@ export default {
         this.form.shareable = isTrueValue(r.shareable)
       }
 
-      const hasHypervisorQos = [
-        r.diskBytesReadRate,
-        r.diskBytesReadRateMax,
-        r.diskBytesWriteRate,
-        r.diskBytesWriteRateMax,
-        r.diskIopsReadRate,
-        r.diskIopsWriteRate
-      ].some(value => value !== undefined && value !== null)
-      const hasStorageQos = [
-        r.miniops,
-        r.maxiops,
-        r.hypervisorsnapshotreserve
-      ].some(value => value !== undefined && value !== null) || isTrueValue(r.iscustomizediops)
-
-      if (hasHypervisorQos) {
-        this.form.qostype = 'hypervisor'
-        if (r.diskBytesReadRate) this.form.diskbytesreadrate = r.diskBytesReadRate
-        if (r.diskBytesReadRateMax) this.form.diskbytesreadratemax = r.diskBytesReadRateMax
-        if (r.diskBytesWriteRate) this.form.diskbyteswriterate = r.diskBytesWriteRate
-        if (r.diskBytesWriteRateMax) this.form.diskbyteswriteratemax = r.diskBytesWriteRateMax
-        if (r.diskIopsReadRate) this.form.diskiopsreadrate = r.diskIopsReadRate
-        if (r.diskIopsWriteRate) this.form.diskiopswriterate = r.diskIopsWriteRate
-      } else if (hasStorageQos) {
-        this.form.qostype = 'storage'
-        if (r.miniops) this.form.diskiopsmin = r.miniops
-        if (r.maxiops) this.form.diskiopsmax = r.maxiops
-        if (r.hypervisorsnapshotreserve) this.form.hypervisorsnapshotreserve = r.hypervisorsnapshotreserve
-      }
-      if (r.iscustomizediops !== undefined) {
-        this.form.iscustomizeddiskiops = isTrueValue(r.iscustomizediops)
-      }
+      Object.assign(this.form, qosForm(r))
+      const hasHypervisorQos = Object.values(qosForm(r)).some(value => value !== '' && Number(value) > 0)
+      this.form.qostype = hasHypervisorQos ? 'hypervisor' : (r.iscustomizediops || r.miniops || r.maxiops ? 'storage' : '')
+      this.form.iscustomizeddiskiops = isTrueValue(r.iscustomizediops)
+      if (r.miniops !== undefined) this.form.diskiopsmin = String(r.miniops)
+      if (r.maxiops !== undefined) this.form.diskiopsmax = String(r.maxiops)
+      if (r.hypervisorsnapshotreserve !== undefined) this.form.hypervisorsnapshotreserve = String(r.hypervisorsnapshotreserve)
 
       if (r.tags) {
         this.form.tags = r.tags.split(',')
@@ -224,41 +201,7 @@ export default {
           params.disksize = values.disksize
         }
 
-        if (values.qostype === 'storage') {
-          const customIops = values.iscustomizeddiskiops === true
-          params.customizediops = customIops
-          if (!customIops) {
-            if (values.diskiopsmin != null && values.diskiopsmin.length > 0) {
-              params.miniops = values.diskiopsmin
-            }
-            if (values.diskiopsmax != null && values.diskiopsmax.length > 0) {
-              params.maxiops = values.diskiopsmax
-            }
-            if (values.hypervisorsnapshotreserve != null && values.hypervisorsnapshotreserve.length > 0) {
-              params.hypervisorsnapshotreserve = values.hypervisorsnapshotreserve
-            }
-          }
-        } else if (values.qostype === 'hypervisor') {
-          if (values.diskbytesreadrate != null && values.diskbytesreadrate.length > 0) {
-            params.bytesreadrate = values.diskbytesreadrate
-          }
-          if (values.diskbytesreadratemax != null && values.diskbytesreadratemax.length > 0) {
-            params.bytesreadratemax = values.diskbytesreadratemax
-          }
-          if (values.diskbyteswriterate != null && values.diskbyteswriterate.length > 0) {
-            params.byteswriterate = values.diskbyteswriterate
-          }
-          if (values.diskbyteswriteratemax != null && values.diskbyteswriteratemax.length > 0) {
-            params.byteswriteratemax = values.diskbyteswriteratemax
-          }
-          if (values.diskiopsreadrate != null && values.diskiopsreadrate.length > 0) {
-            params.iopsreadrate = values.diskiopsreadrate
-          }
-          if (values.diskiopswriterate != null && values.diskiopswriterate.length > 0) {
-            params.iopswriterate = values.diskiopswriterate
-          }
-        }
-
+        Object.assign(params, performanceParams(values, false, true))
         if (values.tags != null && values.tags.length > 0) {
           const tags = values.tags.join(',')
           params.tags = tags

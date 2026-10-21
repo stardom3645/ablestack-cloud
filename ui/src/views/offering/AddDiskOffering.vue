@@ -39,6 +39,7 @@
 import DiskOfferingForm from '@/components/offering/DiskOfferingForm'
 import { reactive } from 'vue'
 import { postAPI } from '@/api'
+import { performanceParams } from '@/utils/offeringQos'
 import { allocationParams } from '@/utils/volumeAllocation'
 import { isAdmin } from '@/role'
 
@@ -95,40 +96,7 @@ export default {
         if (values.customdisksize !== true) {
           params.disksize = values.disksize
         }
-        if (values.qostype === 'storage') {
-          const customIops = values.iscustomizeddiskiops === true
-          params.customizediops = customIops
-          if (!customIops) {
-            if (values.diskiopsmin != null && values.diskiopsmin.length > 0) {
-              params.miniops = values.diskiopsmin
-            }
-            if (values.diskiopsmax != null && values.diskiopsmax.length > 0) {
-              params.maxiops = values.diskiopsmax
-            }
-            if (values.hypervisorsnapshotreserve != null && values.hypervisorsnapshotreserve.length > 0) {
-              params.hypervisorsnapshotreserve = values.hypervisorsnapshotreserve
-            }
-          }
-        } else if (values.qostype === 'hypervisor') {
-          if (values.diskbytesreadrate != null && values.diskbytesreadrate.length > 0) {
-            params.bytesreadrate = values.diskbytesreadrate
-          }
-          if (values.diskbytesreadratemax != null && values.diskbytesreadratemax.length > 0) {
-            params.bytesreadratemax = values.diskbytesreadratemax
-          }
-          if (values.diskbyteswriterate != null && values.diskbyteswriterate.length > 0) {
-            params.byteswriterate = values.diskbyteswriterate
-          }
-          if (values.diskbyteswriteratemax != null && values.diskbyteswriteratemax.length > 0) {
-            params.byteswriteratemax = values.diskbyteswriteratemax
-          }
-          if (values.diskiopsreadrate != null && values.diskiopsreadrate.length > 0) {
-            params.iopsreadrate = values.diskiopsreadrate
-          }
-          if (values.diskiopswriterate != null && values.diskiopswriterate.length > 0) {
-            params.iopswriterate = values.diskiopswriterate
-          }
-        }
+        Object.assign(params, performanceParams(values))
         if (values.tags != null && values.tags.length > 0) {
           params.tags = values.tags.join(',')
         }

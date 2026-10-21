@@ -119,6 +119,7 @@
           </div>
           <div v-else-if="$route.meta.name === 'computeoffering' && item === 'diskofferingcomputeonly'">
             {{ dataResource.diskofferingcomputeonly ? $t('label.compute.offering.dedicated.auto.created') : $t('label.general.disk.offering.link') }}
+            <p style="margin: 4px 0 0; font-size: 12px; opacity: .8;">{{ $t(dataResource.diskofferingcomputeonly ? 'message.offering.compute.dedicated' : 'message.offering.compute.linked') }}</p>
           </div>
           <div v-else-if="$route.meta.name === 'buckets' && item === 'size'">
             <div>
