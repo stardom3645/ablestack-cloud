@@ -50,7 +50,7 @@
     size="small"
     :dataSource="(fetchDetails() || []).concat(Object.keys(allocationDetails))">
     <template #renderItem="{item}">
-      <a-list-item v-if="allocationDetails[item] || (item in dataResource && !customDisplayItems.includes(item)) || (offeringDetails.includes(item) && dataResource.serviceofferingdetails)|| ($route.path.includes('/alertRules') && ['summary', 'description'].includes(item))">
+      <a-list-item v-if="allocationDetails[item] || (item in dataResource && !customDisplayItems.includes(item)) || ($route.meta.name === 'computeoffering' && item === 'diskofferingcomputeonly' && dataResource.diskofferingid) || (offeringDetails.includes(item) && dataResource.serviceofferingdetails)|| ($route.path.includes('/alertRules') && ['summary', 'description'].includes(item))">
         <div style="width: 100%">
           <strong>{{ allocationDetails[item] ? $t(allocationDetails[item].label) : item === 'service' ? $t('label.supportedservices') :
            $route.meta.name === 'cniconfiguration' && item === 'userdata' ? $t('label.' + String($route.meta.name).toLowerCase()) :
@@ -117,10 +117,8 @@
               {{ dataResource.rootdisksize }} GB
             </div>
           </div>
-          <div v-else-if="$route.meta.name === 'computeoffering' && item === 'diskofferingcomputeonly'">
-            {{ dataResource.diskofferingcomputeonly ? $t('label.compute.offering.dedicated.auto.created') : $t('label.general.disk.offering.link') }}
-            <p style="margin: 4px 0 0; font-size: 12px; opacity: .8;">{{ $t(dataResource.diskofferingcomputeonly ? 'message.offering.compute.dedicated' : 'message.offering.compute.linked') }}</p>
-          </div>
+          <LinkedDiskOffering v-else-if="$route.meta.name === 'computeoffering' && item === 'diskofferingname'" :resource="dataResource" />
+          <LinkedDiskOffering v-else-if="$route.meta.name === 'computeoffering' && item === 'diskofferingcomputeonly'" :resource="dataResource" connection />
           <div v-else-if="$route.meta.name === 'buckets' && item === 'size'">
             <div>
               {{ convertKB(dataResource.size) }}
@@ -353,6 +351,7 @@
 <script>
 import { creationVmDetails } from '@/utils/creationVmPresentation'
 import AffinityGroupPolicy from '@/views/compute/AffinityGroupPolicy'
+import LinkedDiskOffering from '@/components/offering/LinkedDiskOffering'
 import DedicateData from './DedicateData'
 import HostInfo from '@/views/infra/HostInfo'
 import VmwareData from './VmwareData'
@@ -369,6 +368,7 @@ import { allocationDetailFields } from '@/utils/volumeAllocation'
 export default {
   name: 'DetailsTab',
   components: {
+    LinkedDiskOffering,
     AffinityGroupPolicy,
     DedicateData,
     HostInfo,

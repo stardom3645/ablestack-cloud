@@ -697,8 +697,7 @@
         <span v-else>{{ text }}</span>
       </template>
       <template v-if="column.key === 'diskofferingname'">
-        <router-link v-if="record.diskofferingname && record.diskofferingcomputeonly !== true" :to="{ path: '/diskoffering/' + record.diskofferingid }">{{ text }}</router-link>
-        <span v-else>{{ text }}</span>
+        <LinkedDiskOffering :resource="record" />
       </template>
       <template v-for="(value, name) in thresholdMapping" :key="name">
         <template v-if="column.key === name">
@@ -1207,6 +1206,7 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import CopyLabel from '@/components/widgets/CopyLabel'
 import { cniDetailLink } from '@/utils/cniDeletion'
 import AffinityGroupPolicy from '@/views/compute/AffinityGroupPolicy'
+import LinkedDiskOffering from '@/components/offering/LinkedDiskOffering'
 import GuestNetworkSummary from '@/components/view/GuestNetworkSummary'
 import ResourceLabel from '@/components/widgets/ResourceLabel'
 import TooltipButton from '@/components/widgets/TooltipButton'
@@ -1220,6 +1220,7 @@ import { FileTextOutlined } from '@ant-design/icons-vue'
 export default {
   name: 'ListView',
   components: {
+    LinkedDiskOffering,
     AffinityGroupPolicy,
     AutoScaleListCell,
     InstanceGroupSummary,
