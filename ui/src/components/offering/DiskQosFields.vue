@@ -64,7 +64,8 @@ export default {
 .qos-group { margin-top: 16px; }
 .qos-title { font-weight: 500; margin-bottom: 8px; }
 .qos-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.qos-grid .ant-form-item { min-width: 0; margin-bottom: 8px; }
+.qos-grid .ant-form-item { display: block; min-width: 0; margin-bottom: 8px; }
+.qos-grid :deep(.ant-form-item-label), .qos-grid :deep(.ant-form-item-control) { width: 100%; max-width: 100%; min-width: 0; }
 .qos-label { display: flex; flex-direction: column; gap: 2px; white-space: normal; }
 @media (max-width: 480px) { .qos-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
