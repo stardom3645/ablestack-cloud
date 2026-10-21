@@ -23,7 +23,14 @@ under the License. -->
         </a-form-item>
         <a-form-item v-if="managementAdmin && managementFields.zoneid" :label="$t('label.zoneid')">
           <a-select
-            v-model:value="form.zoneid" mode="multiple" show-search option-filter-prop="label" :disabled="managementDisabled" :options="zones.map(z => ({ value: z.id, label: z.name }))" :placeholder="$t('label.all.zone')" :aria-label="$t('label.zoneid')" />
+            v-model:value="form.zoneid"
+            mode="multiple"
+            show-search
+            option-filter-prop="label"
+            :disabled="managementDisabled"
+            :options="zones.map(z => ({ value: z.id, label: z.name }))"
+            :placeholder="$t('label.all.zone')"
+            :aria-label="$t('label.zoneid')" />
           <p class="operation-help">{{ $t('message.storage.management.zones') }}</p>
         </a-form-item>
         <p v-else class="operation-help">{{ $t('message.storage.management.zones.admin') }}</p>
