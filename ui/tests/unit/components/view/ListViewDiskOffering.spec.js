@@ -74,5 +74,4 @@ describe('Linked disk offering navigation', () => {
     expect(wrapper.text()).toContain('missing-id')
     wrapper.unmount()
   })
-
 })
