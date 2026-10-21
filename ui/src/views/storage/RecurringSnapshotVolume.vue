@@ -17,6 +17,9 @@
 
 <template>
   <div class="snapshot-layout">
+    <a-alert v-if="volumesError || policyError" type="error" :message="volumesError || policyError" show-icon />
+    <a-button v-if="volumesError" @click="fetchVolumes">{{ $t('label.retry') }}</a-button>
+    <a-button v-if="policyError" @click="fetchData">{{ $t('label.retry') }}</a-button>
     <div v-if="!isVolumeResource" class="volume-selection">
       <a-form layout="vertical">
         <a-form-item :label="$t('label.volume')" required>
@@ -68,6 +71,7 @@
 
 <script>
 import { getAPI } from '@/api'
+import { readAllocationList } from '@/utils/volumeAllocation'
 import FormSchedule from '@/views/storage/FormSchedule'
 import ScheduledSnapshots from '@/views/storage/ScheduledSnapshots'
 
@@ -92,10 +96,16 @@ export default {
       volumes: [],
       volumesLoading: false,
       selectedVolumeId: null,
-      selectedVolume: null
+      selectedVolume: null,
+      volumesError: '',
+      policyError: '',
+      volumeVersion: 0,
+      policyVersion: 0,
+      disposed: false
     }
   },
   computed: {
+    ownerContext () { return JSON.stringify([this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id]) },
     resourceType () {
       if (!this.resource) return 'none'
       if (this.resource.type === 'ROOT' || this.resource.type === 'DATADISK' ||
@@ -129,12 +139,24 @@ export default {
       this.fetchVolumes()
     }
   },
+  watch: {
+    ownerContext () {
+      this.volumeVersion++; this.policyVersion++; this.dataSource = []; this.volumes = []; this.selectedVolumeId = null; this.selectedVolume = null
+      this.loading = false; this.volumesLoading = false; this.policyError = ''; this.volumesError = ''
+      if (this.isVolumeResource) this.fetchData(); else this.fetchVolumes()
+    },
+    'resource.id' () { this.policyVersion++; this.dataSource = []; this.policyError = ''; this.loading = false; this.fetchData() }
+  },
+  beforeUnmount () { this.disposed = true; this.volumeVersion++; this.policyVersion++ },
   methods: {
     async fetchVolumes () {
+      const version = ++this.volumeVersion; const context = this.ownerContext
+      const current = () => !this.disposed && version === this.volumeVersion && context === this.ownerContext
       this.volumesLoading = true
+      this.volumesError = ''
       try {
-        const response = await getAPI('listVolumes', { listAll: true })
-        const volumes = response.listvolumesresponse.volume || []
+        const volumes = await readAllocationList(getAPI, 'listVolumes', 'volume', { listall: true }, current)
+        if (!current()) return
         this.volumes = volumes.filter(volume => {
           return volume.state === 'Ready' &&
                 (volume.hypervisor !== 'KVM' ||
@@ -142,10 +164,9 @@ export default {
                   (this.$store.getters.features.kvmsnapshotenabled))
         })
       } catch (error) {
-        this.$message.error(this.$t('message.error.fetch.volumes'))
-        console.error('Error fetching volumes:', error)
+        if (current()) this.volumesError = this.failureText(error)
       } finally {
-        this.volumesLoading = false
+        if (current()) this.volumesLoading = false
       }
     },
     onVolumeChange (volumeId) {
@@ -157,31 +178,26 @@ export default {
         this.fetchData()
       }
     },
-    fetchData () {
+    failureText (error) { return Object.values(error?.response?.data || {}).find(value => value?.errortext)?.errortext || error?.message || this.$t('message.request.failed') },
+    async fetchData () {
       const volumeResource = this.currentVolumeResource
       if (!volumeResource || !volumeResource.id) {
         return
       }
 
+      const version = ++this.policyVersion; const context = this.ownerContext
+      const current = () => !this.disposed && version === this.policyVersion && context === this.ownerContext && this.currentVolumeResource?.id === volumeResource.id
       const params = {
         volumeid: volumeResource.id,
-        listAll: true
+        listall: true
       }
 
-      this.dataSource = []
       this.loading = true
-
-      getAPI('listSnapshotPolicies', params).then(json => {
-        this.loading = false
-        const listSnapshotPolicies = json.listsnapshotpoliciesresponse.snapshotpolicy
-        if (listSnapshotPolicies && listSnapshotPolicies.length > 0) {
-          this.dataSource = listSnapshotPolicies
-        }
-      }).catch(error => {
-        this.loading = false
-        this.$message.error(this.$t('message.error.fetch.snapshot.policies'))
-        console.error('Error fetching snapshot policies:', error)
-      })
+      this.policyError = ''
+      try {
+        const rows = await readAllocationList(getAPI, 'listSnapshotPolicies', 'snapshotpolicy', params, current)
+        if (current()) this.dataSource = rows
+      } catch (error) { if (current()) this.policyError = this.failureText(error) } finally { if (current()) this.loading = false }
     },
     handleRefresh () {
       this.fetchData()
