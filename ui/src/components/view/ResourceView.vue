@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <resource-layout :wide="wideLayout" :class="{ 'autoscale-resource': $route.meta?.name === 'autoscalevmgroup' }">
+  <resource-layout :wide="wideLayout" :class="{ 'autoscale-resource': $route.meta?.name === 'autoscalevmgroup', 'affinity-resource': $route.meta?.name === 'affinitygroup' }">
     <template #left>
       <slot name="info-card">
         <info-card
@@ -24,7 +24,7 @@
           :loading="loading"
           :actions="actions"
           @exec-action="$emit('exec-action', $event)">
-          <template #details><auto-scale-info-summary v-if="$route.meta?.name === 'autoscalevmgroup'" :resource="resource" /></template>
+          <template #details><auto-scale-info-summary v-if="$route.meta?.name === 'autoscalevmgroup'" :resource="resource" /><AffinityGroupSummary v-if="$route.meta?.name === 'affinitygroup'" :resource="resource" /></template>
         </info-card>
       </slot>
     </template>
@@ -78,6 +78,7 @@
 import DetailsTab from '@/components/view/DetailsTab'
 import InfoCard from '@/components/view/InfoCard'
 import AutoScaleInfoSummary from '@/views/compute/AutoScaleInfoSummary'
+import AffinityGroupSummary from '@/views/compute/AffinityGroupSummary'
 import ResourceLayout from '@/layouts/ResourceLayout'
 import { getAPI } from '@/api'
 import { mixinDevice } from '@/utils/mixin.js'
@@ -87,6 +88,7 @@ export default {
   components: {
     InfoCard,
     AutoScaleInfoSummary,
+    AffinityGroupSummary,
     ResourceLayout
   },
   mixins: [mixinDevice],
@@ -174,7 +176,7 @@ export default {
       this.wideLayout = false
       const query = Object.assign({}, this.$route.query)
       query.tab = key
-      if (['ssh', 'userdata', 'cniconfiguration'].includes(this.$route.meta?.name)) {
+      if (['ssh', 'userdata', 'cniconfiguration', 'affinitygroup'].includes(this.$route.meta?.name)) {
         this.$router.push({ path: this.$route.path, query })
         this.$emit('onTabChange', key)
         return
@@ -211,7 +213,7 @@ export default {
     },
     setActiveTab () {
       const requestedTab = this.$route.query.tab || this.historyTab
-      const available = ['ssh', 'userdata', 'cniconfiguration'].includes(this.$route.meta?.name) ? this.tabs.filter(tab => this.showTab(tab)) : this.tabs
+      const available = ['ssh', 'userdata', 'cniconfiguration', 'affinitygroup'].includes(this.$route.meta?.name) ? this.tabs.filter(tab => this.showTab(tab)) : this.tabs
       const selected = available.find(tab => tab.name === requestedTab) || available[0]
       this.activeTab = selected ? selected.name : ''
       // Invalid library deep links use the visible fallback tab in the URL too.
