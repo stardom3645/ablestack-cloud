@@ -174,7 +174,7 @@ export default {
       this.sourceReady = false
       this.sourceError = ''
       try {
-        const response = await getAPI('listServiceOfferings', { id: this.resource.id, listall: true, details: 'all', issystem: this.isSystem })
+        const response = await getAPI('listServiceOfferings', { id: this.resource.id, listall: true, state: 'all', details: 'all', issystem: this.isSystem })
         const source = response.listserviceofferingsresponse?.serviceoffering?.find(row => row.id === this.resource.id)
         if (!source) throw new Error(this.$t('message.offering.not.found'))
         this.populateFormFromResource(source)

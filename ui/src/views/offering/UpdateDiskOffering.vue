@@ -97,7 +97,7 @@ export default {
       this.loaded = false
       this.readError = ''
       try {
-        const response = await getAPI('listDiskOfferings', { id: this.resource.id, listall: true })
+        const response = await getAPI('listDiskOfferings', { id: this.resource.id, listall: true, state: 'all' })
         if (request !== this.requestId) return
         const record = response.listdiskofferingsresponse?.diskoffering?.find(offering => offering.id === this.resource.id)
         if (!record) throw new Error(this.$t('message.offering.not.found'))

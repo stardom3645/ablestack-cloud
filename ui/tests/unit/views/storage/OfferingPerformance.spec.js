@@ -77,6 +77,7 @@ test.each([CloneDisk, CloneCompute])('clone $name cannot submit using an unread 
 })
 test('edit loads fresh data and sends changed supported values only, retaining scope and Inactive state', async () => {
   const w = mount(); await flushPromises()
+  expect(getAPI).toHaveBeenCalledWith('listDiskOfferings', { id: 'o', listall: true, state: 'all' })
   expect(w.vm.form.name).toBe('Offering')
   w.vm.form.diskbytesreadrate = '150'; w.vm.form.cachemode = 'writeback'
   await w.vm.handleSubmit()

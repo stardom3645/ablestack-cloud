@@ -92,7 +92,7 @@ export default {
       this.sourceReady = false
       this.sourceError = ''
       try {
-        const response = await getAPI('listDiskOfferings', { id: this.resource.id, listall: true, details: 'all' })
+        const response = await getAPI('listDiskOfferings', { id: this.resource.id, listall: true, state: 'all', details: 'all' })
         const source = response.listdiskofferingsresponse?.diskoffering?.find(row => row.id === this.resource.id)
         if (!source) throw new Error(this.$t('message.offering.not.found'))
         this.populateFormFromResource(source)
