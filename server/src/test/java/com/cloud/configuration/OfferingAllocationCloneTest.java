@@ -26,7 +26,8 @@ public class OfferingAllocationCloneTest {
     @Test public void storedBytesAndRequestedGiBRemainDistinct() {
         Assert.assertEquals(Long.valueOf(1), OfferingAllocationClone.sizeGiB(null, 1073741824L));
         Assert.assertEquals(Long.valueOf(7), OfferingAllocationClone.sizeGiB(7L, 1073741824L));
-        Assert.assertEquals(Long.valueOf(0), OfferingAllocationClone.sizeGiB(null, 0L));
+        Assert.assertNull(OfferingAllocationClone.sizeGiB(null, 0L));
+        Assert.assertEquals(Long.valueOf(0), OfferingAllocationClone.sizeGiB(0L, 0L));
         Assert.assertNull(OfferingAllocationClone.sizeGiB(null, null));
     }
     @Test(expected=InvalidParameterValueException.class) public void malformedStoredSizeIsNotRoundedDown() {

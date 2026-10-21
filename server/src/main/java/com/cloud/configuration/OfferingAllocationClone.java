@@ -48,6 +48,8 @@ public final class OfferingAllocationClone {
 
     public static Long sizeGiB(Long requestedGiB, Long inheritedBytes) {
         if (requestedGiB != null || inheritedBytes == null) { return requestedGiB; }
+        // Zero is the stored sentinel for a custom disk or a template-sized ROOT disk.
+        if (inheritedBytes == 0) { return null; }
         if (inheritedBytes < 0 || inheritedBytes % 1073741824L != 0) {
             throw new InvalidParameterValueException("Source offering size is not an exact GiB value");
         }
