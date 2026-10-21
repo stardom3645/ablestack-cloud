@@ -65,8 +65,17 @@ export default {
   emits: ['close-action', 'refresh-data'],
   data () {
     return {
-      form: {}, original: {}, record: {}, loading: false, loaded: false, saving: false, unknownResult: false,
-      readError: '', submitError: '', requestId: 0, canEditTags: isAdmin(),
+      form: {},
+      original: {},
+      record: {},
+      loading: false,
+      loaded: false,
+      saving: false,
+      unknownResult: false,
+      readError: '',
+      submitError: '',
+      requestId: 0,
+      canEditTags: isAdmin(),
       cacheModes: [
         { value: 'none', label: 'label.nodiskcache' }, { value: 'writeback', label: 'label.writeback' },
         { value: 'writethrough', label: 'label.writethrough' }, { value: 'hypervisor_default', label: 'label.hypervisor.default' }

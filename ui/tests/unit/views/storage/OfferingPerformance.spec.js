@@ -26,8 +26,8 @@ jest.mock('@/role', () => ({ isAdmin: () => true }))
 const record = { id: 'o', name: 'Offering', displaytext: 'Keep', cachemode: 'none', state: 'Inactive', iscustomizediops: true, tags: 'one,two', diskBytesReadRate: 100, diskBytesReadRateMax: 200, diskBytesReadRateMaxLength: 2 }
 const params = Object.fromEntries(['name', 'displaytext', 'tags', 'cachemode', ...qosFields.map(field => field.api)].map(name => [name, { name }]))
 const response = value => ({ listdiskofferingsresponse: { diskoffering: [value] } })
-const global = { directives: { focus: {}, 'ctrl-enter': {} }, mocks: { $t: key => key, $message: { success: jest.fn() }, $store: { getters: { apis: { updateDiskOffering: { params: Object.values(params) } }, userInfo: { roletype: 'Admin' } } } }, stubs: { 'a-spin': { template: '<div><slot/></div>' }, 'a-form': { template: '<form><slot/></form>', methods: { validate: () => Promise.resolve() } }, 'a-form-item': { template: '<div><slot name="label"/><slot/></div>' }, DiskQosFields: { template: '<div/>', methods: { validate: () => Promise.resolve() } } } }
-const mount = () => shallowMount(Update, { props: { resource: { id: 'o', name: 'stale' } }, global })
+const globals = { directives: { focus: {}, 'ctrl-enter': {} }, mocks: { $t: key => key, $message: { success: jest.fn() }, $store: { getters: { apis: { updateDiskOffering: { params: Object.values(params) } }, userInfo: { roletype: 'Admin' } } } }, stubs: { 'a-spin': { template: '<div><slot/></div>' }, 'a-form': { template: '<form><slot/></form>', methods: { validate: () => Promise.resolve() } }, 'a-form-item': { template: '<div><slot name="label"/><slot/></div>' }, DiskQosFields: { template: '<div/>', methods: { validate: () => Promise.resolve() } } } }
+const mount = () => shallowMount(Update, { props: { resource: { id: 'o', name: 'stale' } }, global: globals })
 beforeEach(() => { getAPI.mockReset(); postAPI.mockReset(); getAPI.mockResolvedValue(response({ ...record })); postAPI.mockResolvedValue({ updatediskofferingresponse: { diskoffering: record } }) })
 
 test('all twelve response values, including numeric zero, survive form conversion', () => {
@@ -113,7 +113,7 @@ test('old read cannot overwrite a different offering', async () => {
   expect(w.vm.form.name).toBe('Latest'); w.unmount()
 })
 test('QoS field rendering uses API-supported fields and validates safe values', async () => {
-  const w = shallowMount(Qos, { props: { form: { diskbytesreadrate: '-1' }, apiParams: { bytesreadrate: {} } }, global: { ...global, stubs: { 'a-form-item': { template: '<div><slot name="label"/><slot/></div>' } } } })
+  const w = shallowMount(Qos, { props: { form: { diskbytesreadrate: '-1' }, apiParams: { bytesreadrate: {} } }, global: { ...globals, stubs: { 'a-form-item': { template: '<div><slot name="label"/><slot/></div>' } } } })
   expect(w.findAll('a-input-stub')).toHaveLength(1)
   await expect(w.vm.validate()).rejects.toThrow('message.offering.qos.integer'); w.unmount()
 })

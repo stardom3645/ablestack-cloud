@@ -22,7 +22,7 @@ under the License. -->
               <small v-if="current">{{ $t('label.current') }}: {{ current[field.form] === '' ? $t('label.offering.qos.default') : current[field.form] }}</small>
             </span>
           </template>
-          <a-input v-model:value="form[field.form]" :aria-label="$t(group.label) + ' ' + $t(field.label)" :data-qos="field.api" inputmode="numeric" :placeholder="current ? $t('label.offering.qos.preserve') : '0'" :disabled="disabled" />
+          <a-input v-model:value="values[field.form]" :aria-label="$t(group.label) + ' ' + $t(field.label)" :data-qos="field.api" inputmode="numeric" :placeholder="current ? $t('label.offering.qos.preserve') : '0'" :disabled="disabled" />
         </a-form-item>
       </div>
     </div>
@@ -40,6 +40,7 @@ export default {
     disabled: Boolean
   },
   computed: {
+    values () { return this.form },
     groups () { return qosGroups.filter(group => group.api in this.apiParams) },
     error () { return qosError(this.form) }
   },
