@@ -58,6 +58,12 @@ test('clone none clears source throttles and storage IOPS instead of inheriting 
   qosFields.forEach(field => expect(values[field.api]).toBe('0'))
   expect(values).toMatchObject({ customizediops: false, miniops: '0', maxiops: '0' })
 })
+test('storage maximum IOPS cannot be mistaken for a hypervisor burst maximum', () => {
+  const context = { form: { qostype: '', diskiopsmin: '100', diskiopsmax: '200' } }
+  DiskForm.methods.normalizeQosType.call(context)
+  expect(context.form.qostype).toBe('storage')
+  expect(performanceParams(context.form, false, true)).toMatchObject({ miniops: '100', maxiops: '200', customizediops: false })
+})
 test.each([DiskForm, ComputeForm])('child QoS values survive parent ref filtering for $name', async component => {
   const context = { form: { name: 'New', qostype: 'hypervisor', diskbytesreadrate: 0, diskiopsreadratemax: '200', computeonly: false }, $refs: { internalFormRef: { validate: () => Promise.resolve() }, qosEditor: { validate: () => Promise.resolve() } }, handleRemoveFields: () => ({ name: 'New' }) }
   const values = await component.methods.validate.call(context)

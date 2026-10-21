@@ -266,7 +266,7 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import store from '@/store'
 import DiskQosFields from '@/components/offering/DiskQosFields'
-import { performanceFormValues } from '@/utils/offeringQos'
+import { performanceFormValues, qosFields } from '@/utils/offeringQos'
 import AllocationPolicyEditor from '@/components/offering/AllocationPolicyEditor'
 import AllocationSummary from '@/components/view/AllocationSummary'
 import { BlockOutlined, GlobalOutlined } from '@ant-design/icons-vue'
@@ -381,15 +381,7 @@ export default {
       this.syncUiStateFromForm()
     },
     normalizeQosType () {
-      const hasHypervisorQos = [
-        this.form.diskbytesreadrate,
-        this.form.diskbytesreadratemax,
-        this.form.diskbyteswriterate,
-        this.form.diskbyteswriteratemax,
-        this.form.diskiopsreadrate,
-        this.form.diskiopswriterate,
-        ...Object.keys(this.form).filter(key => key.startsWith('disk') && key.endsWith('max') || key.startsWith('disk') && key.endsWith('maxlength')).map(key => this.form[key])
-      ].some(value => value !== undefined && value !== null && value !== '' && Number(value) > 0)
+      const hasHypervisorQos = qosFields.some(field => Number(this.form[field.form]) > 0)
       const hasStorageQos = [
         this.form.diskiopsmin,
         this.form.diskiopsmax,
