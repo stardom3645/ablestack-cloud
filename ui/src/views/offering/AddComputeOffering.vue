@@ -203,10 +203,6 @@ export default {
           this.naturalNumberRule
         ],
         rootdisksize: [this.naturalNumberRule],
-        diskbytesreadrate: [this.naturalNumberRule],
-        diskbyteswriterate: [this.naturalNumberRule],
-        diskiopsreadrate: [this.naturalNumberRule],
-        diskiopswriterate: [this.naturalNumberRule],
         diskiopsmin: [this.naturalNumberRule],
         diskiopsmax: [this.naturalNumberRule],
         hypervisorsnapshotreserve: [this.naturalNumberRule],

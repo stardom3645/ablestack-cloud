@@ -12,13 +12,14 @@
 // KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { shallowMount, flushPromises } from '@vue/test-utils'
+import { shallowMount, mount as mountFull, flushPromises } from '@vue/test-utils'
 import Update from '@/views/offering/UpdateDiskOffering.vue'
 import Qos from '@/components/offering/DiskQosFields.vue'
 import DiskForm from '@/components/offering/DiskOfferingForm.vue'
 import ComputeForm from '@/components/offering/ComputeOfferingForm.vue'
 import CloneDisk from '@/views/offering/CloneDiskOffering.vue'
 import CloneCompute from '@/views/offering/CloneComputeOffering.vue'
+import AddCompute from '@/views/offering/AddComputeOffering.vue'
 import { qosFields, qosGroups, qosForm, qosError, qosParams, performanceParams } from '@/utils/offeringQos'
 import { getAPI, postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
@@ -68,6 +69,21 @@ test.each([DiskForm, ComputeForm])('child QoS values survive parent ref filterin
   const context = { form: { name: 'New', qostype: 'hypervisor', diskbytesreadrate: 0, diskiopsreadratemax: '200', computeonly: false }, $refs: { internalFormRef: { validate: () => Promise.resolve() }, qosEditor: { validate: () => Promise.resolve() } }, handleRemoveFields: () => ({ name: 'New' }) }
   const values = await component.methods.validate.call(context)
   expect(values).toMatchObject(context.form)
+})
+test.each([AddCompute, CloneCompute])('actual compute form accepts zero QoS in $name while CPU rules stay positive', async component => {
+  const positive = { validator: (rule, value) => Number(value) > 0 ? Promise.resolve() : Promise.reject(new Error('positive required')) }
+  const context = { $t: key => key, naturalNumberRule: positive }
+  component.methods.initForm.call(context)
+  const zero = Object.fromEntries(qosFields.map(field => [field.form, '0']))
+  const w = mountFull({
+    components: { Qos },
+    data: () => ({ zero, params, rules: context.rules }),
+    template: '<a-form ref="form" :model="zero" :rules="rules"><Qos ref="qos" :form="zero" :api-params="params" /></a-form>'
+  }, { global: { mocks: { $t: key => key } } })
+  await expect(w.vm.$refs.qos.validate()).resolves.toBeUndefined()
+  await expect(w.vm.$refs.form.validate()).resolves.toBeDefined()
+  expect(context.rules.cpunumber).toContain(positive)
+  w.unmount()
 })
 test.each([CloneDisk, CloneCompute])('clone $name retains complete bursts and numeric zero', component => {
   const context = { form: {} }
