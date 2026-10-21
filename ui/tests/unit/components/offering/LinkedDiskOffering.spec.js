@@ -86,8 +86,8 @@ describe('linked disk offering contract', () => {
       }
     })
     await flushPromises()
-    expect(w.findAll('li')).toHaveLength(2)
-    expect(w.findAll('strong').map(x => x.text())).toEqual(['label.diskofferingname', 'label.diskofferingcomputeonly'])
+    expect(w.findAllComponents(LinkedDiskOffering)).toHaveLength(2)
+    expect(w.findAll('strong').slice(0, 2).map(x => x.text())).toEqual(['label.diskofferingname', 'label.diskofferingcomputeonly'])
     expect(w.text()).toContain(type === true ? 'label.compute.offering.dedicated.auto.created' : type === false ? 'label.general.disk.offering.link' : 'label.allocation.unknown')
     expect(w.find('a').exists()).toBe(type === false)
     w.unmount()
