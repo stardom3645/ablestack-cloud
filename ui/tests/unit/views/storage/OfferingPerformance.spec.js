@@ -112,6 +112,21 @@ test('clearing a burst sends both explicit zeros', async () => {
   await w.vm.handleSubmit()
   expect(postAPI).toHaveBeenCalledWith('updateDiskOffering', { id: 'o', bytesreadratemax: '0', bytesreadratemaxlength: '0' }, { preserveOnFailure: true }); w.unmount()
 })
+
+test('blank edit fields preserve current burst values while explicit zero still validates the resulting combination', async () => {
+  const w = mount(); await flushPromises()
+  w.vm.form.diskbytesreadrate = ''; w.vm.form.diskbytesreadratemax = ''
+  w.vm.form.name = 'Preserve limits'
+  expect(w.vm.qosValidation).toBe('')
+  expect(qosError(w.vm.form, w.vm.original)).toBe('')
+  await w.vm.handleSubmit()
+  expect(postAPI).toHaveBeenCalledWith('updateDiskOffering', { id: 'o', name: 'Preserve limits' }, { preserveOnFailure: true })
+  w.vm.form.diskbytesreadrate = '0'
+  expect(w.vm.qosValidation).toBe('message.offering.qos.burst')
+  w.vm.form.diskbytesreadrate = ''; w.vm.form.diskbytesreadratemax = '0'
+  expect(w.vm.qosValidation).toBe('message.offering.qos.length')
+  w.unmount()
+})
 test('duplicate clicks are locked before validation resolves', async () => {
   let finish
   postAPI.mockImplementation(() => new Promise(resolve => { finish = resolve }))

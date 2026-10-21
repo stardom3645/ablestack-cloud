@@ -42,7 +42,7 @@ export default {
   computed: {
     values () { return this.form },
     groups () { return qosGroups.filter(group => group.api in this.apiParams) },
-    error () { return qosError(this.form) }
+    error () { return qosError(this.form, this.current) }
   },
   methods: {
     fieldsFor (group) {

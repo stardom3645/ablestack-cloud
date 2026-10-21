@@ -31,15 +31,16 @@ export function qosForm (resource) {
   const lower = Object.fromEntries(Object.entries(resource || {}).map(([key, value]) => [key.toLowerCase(), value]))
   return Object.fromEntries(qosFields.map(field => [field.form, present(lower[field.response.toLowerCase()]) ? String(lower[field.response.toLowerCase()]) : '']))
 }
-export function qosError (form) {
+export function qosError (form, current = {}) {
   for (const field of qosFields) {
     const value = form[field.form]
     if (present(value) && (!/^\d+$/.test(String(value)) || !Number.isSafeInteger(Number(value)))) return 'message.offering.qos.integer'
   }
+  const effective = field => Number((present(form[field]) ? form[field] : current?.[field]) || 0)
   for (const group of qosGroups) {
-    const rate = Number(form[group.form] || 0)
-    const max = Number(form[group.form + 'max'] || 0)
-    const length = Number(form[group.form + 'maxlength'] || 0)
+    const rate = effective(group.form)
+    const max = effective(group.form + 'max')
+    const length = effective(group.form + 'maxlength')
     if (max > 0 && (rate === 0 || max < rate)) return 'message.offering.qos.burst'
     if (length > 0 && max === 0) return 'message.offering.qos.length'
   }

@@ -85,7 +85,7 @@ export default {
   computed: {
     apiParams () { return Object.fromEntries((this.$store.getters.apis.updateDiskOffering?.params || []).map(param => [param.name, param])) },
     shareable () { return trueValue(this.record.shareable) },
-    qosValidation () { return qosError(this.form) }
+    qosValidation () { return qosError(this.form, this.original) }
   },
   watch: { 'resource.id': { immediate: true, handler () { this.load() } } },
   beforeUnmount () { this.requestId++ },
