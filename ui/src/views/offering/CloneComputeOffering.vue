@@ -17,7 +17,8 @@
 
 <template>
   <div class="form-layout" v-ctrl-enter="handleSubmit">
-    <a-spin :spinning="loading">
+    <a-spin :spinning="loading || sourceLoading">
+      <a-alert v-if="sourceError" type="error" :message="sourceError" show-icon><template #description><a-button @click="fetchSourceOffering">{{ $t('label.retry') }}</a-button></template></a-alert>
       <a-alert
          v-if="resource"
          type="info"
@@ -47,7 +48,7 @@
           <br/>
           <div :span="24" class="action-button">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-            <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+            <a-button :loading="loading" :disabled="sourceLoading || !sourceReady" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
           </div>
         </template>
       </ComputeOfferingForm>
@@ -142,6 +143,9 @@ export default {
       leaseexpiryaction: undefined,
       vgpuProfiles: [],
       vgpuProfileLoading: false,
+      sourceLoading: false,
+      sourceReady: false,
+      sourceError: '',
       externalDetailsEnabled: false
     }
   },
@@ -165,45 +169,26 @@ export default {
     this.fetchSourceOffering()
   },
   methods: {
-    fetchSourceOffering () {
-      if (!this.resource?.id) {
-        this.populateFormFromResource()
-        return
-      }
-
-      const params = {
-        id: this.resource.id,
-        listall: true,
-        details: 'all'
-      }
-      if (this.isSystem) {
-        params.issystem = true
-      }
-
-      getAPI('listServiceOfferings', params).then(json => {
-        const offering = json?.listserviceofferingsresponse?.serviceoffering?.[0]
-        const sourceOffering = offering || this.resource
-        this.populateFormFromResource(sourceOffering)
-        this.resolveComputeOnlyState(sourceOffering)
-      }).catch(() => {
-        this.populateFormFromResource()
-        this.resolveComputeOnlyState(this.resource)
-      })
+    async fetchSourceOffering () {
+      this.sourceLoading = true
+      this.sourceReady = false
+      this.sourceError = ''
+      try {
+        const response = await getAPI('listServiceOfferings', { id: this.resource.id, listall: true, details: 'all', issystem: this.isSystem })
+        const source = response.listserviceofferingsresponse?.serviceoffering?.find(row => row.id === this.resource.id)
+        if (!source) throw new Error(this.$t('message.offering.not.found'))
+        this.populateFormFromResource(source)
+        this.resolveComputeOnlyState(source)
+        this.sourceReady = true
+      } catch (error) {
+        this.sourceError = error?.response?.data?.errortext || error?.message || this.$t('message.offering.not.found')
+      } finally { this.sourceLoading = false }
     },
     resolveComputeOnlyState (sourceResource) {
-      if (!sourceResource?.diskofferingid) {
-        return
-      }
-
-      getAPI('listDiskOfferings', {
-        id: sourceResource.diskofferingid,
-        listall: true
-      }).then(json => {
-        const diskOffering = json?.listdiskofferingsresponse?.diskoffering?.[0]
-        const isComputeOnly = sourceResource.diskofferingcomputeonly === true || !diskOffering
-        this.form.computeonly = isComputeOnly
-        this.computeonly = isComputeOnly
-      })
+      if (sourceResource.diskofferingcomputeonly === undefined) throw new Error(this.$t('message.offering.not.found'))
+      const dedicated = sourceResource.diskofferingcomputeonly === true || sourceResource.diskofferingcomputeonly === 'true'
+      this.form.computeonly = dedicated
+      this.computeonly = dedicated
     },
     initForm () {
       this.formRef = ref()
@@ -386,7 +371,7 @@ export default {
 
       Object.assign(this.form, qosForm(r))
       const hasHypervisorQos = Object.values(qosForm(r)).some(value => value !== '' && Number(value) > 0)
-      this.qosType = hasHypervisorQos ? 'hypervisor' : (r.iscustomizediops || r.miniops || r.maxiops ? 'storage' : '')
+      this.qosType = hasHypervisorQos ? 'hypervisor' : (isTrueValue(r.iscustomizediops) || Number(r.miniops) > 0 || Number(r.maxiops) > 0 ? 'storage' : '')
       this.form.qostype = this.qosType
       this.form.iscustomizeddiskiops = isTrueValue(r.iscustomizediops)
       this.isCustomizedDiskIops = this.form.iscustomizeddiskiops
@@ -526,7 +511,7 @@ export default {
       if (e && e.preventDefault) {
         e.preventDefault()
       }
-      if (this.loading) return
+      if (this.loading || this.sourceLoading || !this.sourceReady) return
 
       this.formRef.value.validate().then((values) => {
         var params = {

@@ -68,6 +68,13 @@ test.each([CloneDisk, CloneCompute])('clone $name retains complete bursts and nu
   component.methods.populateFormFromResource.call(context, { ...record, diskIopsReadRate: 0, diskIopsWriteRate: 10, diskIopsWriteRateMax: 20, diskIopsWriteRateMaxLength: 3 })
   expect(context.form).toMatchObject({ diskbytesreadrate: '100', diskbytesreadratemax: '200', diskbytesreadratemaxlength: '2', diskiopsreadrate: '0', diskiopswriterate: '10', diskiopswriteratemax: '20', diskiopswriteratemaxlength: '3' })
 })
+test.each([CloneDisk, CloneCompute])('clone $name cannot submit using an unread or stale source', async component => {
+  const context = { resource: { id: 'o' }, form: { name: 'Preserve' }, $t: key => key, populateFormFromResource: jest.fn(), resolveComputeOnlyState: jest.fn() }
+  getAPI.mockRejectedValueOnce(new Error('source unavailable'))
+  await component.methods.fetchSourceOffering.call(context)
+  expect(context.sourceReady).toBe(false); expect(context.form.name).toBe('Preserve'); expect(context.sourceError).toBe('source unavailable')
+  expect(context.populateFormFromResource).not.toHaveBeenCalled()
+})
 test('edit loads fresh data and sends changed supported values only, retaining scope and Inactive state', async () => {
   const w = mount(); await flushPromises()
   expect(w.vm.form.name).toBe('Offering')

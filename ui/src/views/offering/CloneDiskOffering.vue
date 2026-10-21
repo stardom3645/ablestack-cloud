@@ -17,7 +17,8 @@
 
 <template>
   <div class="form-layout" v-ctrl-enter="handleSubmit">
-    <a-spin :spinning="loading">
+    <a-spin :spinning="loading || sourceLoading">
+      <a-alert v-if="sourceError" type="error" :message="sourceError" show-icon><template #description><a-button @click="fetchSourceOffering">{{ $t('label.retry') }}</a-button></template></a-alert>
       <a-alert
         v-if="resource"
         type="info"
@@ -42,7 +43,7 @@
         <template #form-actions>
           <div :span="24" class="action-button">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-            <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+            <a-button :loading="loading" :disabled="sourceLoading || !sourceReady" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
           </div>
         </template>
       </DiskOfferingForm>
@@ -73,6 +74,9 @@ export default {
     return {
       formRef: null,
       form: reactive({}),
+      sourceLoading: false,
+      sourceReady: false,
+      sourceError: '',
       loading: false
     }
   },
@@ -83,21 +87,19 @@ export default {
     this.fetchSourceOffering()
   },
   methods: {
-    fetchSourceOffering () {
-      if (!this.resource?.id) {
-        this.populateFormFromResource()
-        return
-      }
-
-      getAPI('listDiskOfferings', {
-        id: this.resource.id,
-        listall: true
-      }).then(json => {
-        const offering = json?.listdiskofferingsresponse?.diskoffering?.[0]
-        this.populateFormFromResource(offering || this.resource)
-      }).catch(() => {
-        this.populateFormFromResource()
-      })
+    async fetchSourceOffering () {
+      this.sourceLoading = true
+      this.sourceReady = false
+      this.sourceError = ''
+      try {
+        const response = await getAPI('listDiskOfferings', { id: this.resource.id, listall: true, details: 'all' })
+        const source = response.listdiskofferingsresponse?.diskoffering?.find(row => row.id === this.resource.id)
+        if (!source) throw new Error(this.$t('message.offering.not.found'))
+        this.populateFormFromResource(source)
+        this.sourceReady = true
+      } catch (error) {
+        this.sourceError = error?.response?.data?.errortext || error?.message || this.$t('message.offering.not.found')
+      } finally { this.sourceLoading = false }
     },
     populateFormFromResource (sourceResource = this.resource) {
       if (!sourceResource) return
@@ -140,7 +142,7 @@ export default {
 
       Object.assign(this.form, qosForm(r))
       const hasHypervisorQos = Object.values(qosForm(r)).some(value => value !== '' && Number(value) > 0)
-      this.form.qostype = hasHypervisorQos ? 'hypervisor' : (r.iscustomizediops || r.miniops || r.maxiops ? 'storage' : '')
+      this.form.qostype = hasHypervisorQos ? 'hypervisor' : (isTrueValue(r.iscustomizediops) || Number(r.miniops) > 0 || Number(r.maxiops) > 0 ? 'storage' : '')
       this.form.iscustomizeddiskiops = isTrueValue(r.iscustomizediops)
       if (r.miniops !== undefined) this.form.diskiopsmin = String(r.miniops)
       if (r.maxiops !== undefined) this.form.diskiopsmax = String(r.maxiops)
@@ -170,7 +172,7 @@ export default {
       if (e && e.preventDefault) {
         e.preventDefault()
       }
-      if (this.loading) return
+      if (this.loading || this.sourceLoading || !this.sourceReady) return
 
       this.$refs.formRef.validate().then((values) => {
         const params = {
