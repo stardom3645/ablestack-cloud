@@ -61,6 +61,7 @@ public class ConfigurationManagerServiceOfferingUpdateTest {
     private final ServiceOfferingVO offering = mock(ServiceOfferingVO.class);
     private final DiskOfferingVO disk = mock(DiskOfferingVO.class);
     private SearchCriteria<ServiceOfferingDetailsVO> criteria;
+    private SearchBuilder<ServiceOfferingDetailsVO> builder;
 
     @Before
     @SuppressWarnings("unchecked")
@@ -98,7 +99,7 @@ public class ConfigurationManagerServiceOfferingUpdateTest {
         when(details.findDomainIds(7L)).thenReturn(new ArrayList<>());
         when(details.findZoneIds(7L)).thenReturn(new ArrayList<>());
         when(domains.filterChildSubDomains(anyList())).thenAnswer(invocation -> new ArrayList<>());
-        SearchBuilder<ServiceOfferingDetailsVO> builder = mock(SearchBuilder.class);
+        builder = mock(SearchBuilder.class);
         criteria = mock(SearchCriteria.class);
         when(builder.entity()).thenReturn(new ServiceOfferingDetailsVO(7L, "detail", "value", false));
         when(builder.create()).thenReturn(criteria);
@@ -160,5 +161,33 @@ public class ConfigurationManagerServiceOfferingUpdateTest {
         assertTrue(manager.resolvePurgeResources(cmd, true));
         assertFalse(manager.resolvePurgeResources(cmd, false));
         verify(cmd, never()).isPurgeResources();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void externalReplacementIsRestrictedToTheSelectedOffering() {
+        when(details.listDetailsKeyPairs(7L)).thenReturn(Map.of("External:note", "old"));
+        when(cmd.getExternalDetails()).thenReturn(Map.of("External:note", "new"));
+        SearchCriteria<ServiceOfferingDetailsVO> externalCriteria = mock(SearchCriteria.class);
+        when(builder.create()).thenReturn(criteria, externalCriteria);
+        manager.updateServiceOffering(cmd);
+        verify(externalCriteria).setParameters("offeringId", "7");
+        verify(externalCriteria).setParameters("detailNameLike", "External:%");
+        verify(details).remove(externalCriteria);
+        verify(details).persist(argThat(row -> row.getResourceId() == 7L && "External:note".equals(row.getName()) && "new".equals(row.getValue())));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void externalCleanupIsRestrictedToTheSelectedOffering() {
+        when(details.listDetailsKeyPairs(7L)).thenReturn(Map.of("External:note", "old"));
+        when(cmd.isCleanupExternalDetails()).thenReturn(true);
+        SearchCriteria<ServiceOfferingDetailsVO> externalCriteria = mock(SearchCriteria.class);
+        when(builder.create()).thenReturn(criteria, externalCriteria);
+        manager.updateServiceOffering(cmd);
+        verify(externalCriteria).setParameters("offeringId", "7");
+        verify(externalCriteria).setParameters("detailNameLike", "External:%");
+        verify(details).remove(externalCriteria);
+        verify(details, never()).persist(any(ServiceOfferingDetailsVO.class));
     }
 }

@@ -4625,6 +4625,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             }
             if (serviceOfferingExternalDetailsNeedUpdate) {
                 SearchCriteria<ServiceOfferingDetailsVO> externalDetailsRemoveSC = sb.create();
+                externalDetailsRemoveSC.setParameters("offeringId", String.valueOf(id));
                 externalDetailsRemoveSC.setParameters("detailNameLike", VmDetailConstants.EXTERNAL_DETAIL_PREFIX + "%");
                 _serviceOfferingDetailsDao.remove(externalDetailsRemoveSC);
                 if (!cleanupExternalDetails) {
