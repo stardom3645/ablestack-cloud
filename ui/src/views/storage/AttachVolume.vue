@@ -244,7 +244,8 @@ export default {
 }
 .volume-attach-vm-identity {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.55);
+  color: inherit;
+  opacity: 0.7;
   white-space: normal;
   overflow-wrap: anywhere;
 }
