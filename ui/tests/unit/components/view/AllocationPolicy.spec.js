@@ -99,12 +99,12 @@ test('explicit allocation migration shows the backend limit and cannot query or 
 
 test('cloned compute allocation metadata stays out of editable hypervisor details', () => {
   const context = { form: {} }
-  const source = { name: 'Full', allocation: request, serviceofferingdetails: { 'allocation.contract.version': '1', 'allocation.requested.policy': 'full', 'allocation.applied.method': 'rbd-thick-create', custom: 'keep' } }
+  const source = { name: 'Full', allocation: request, serviceofferingdetails: { 'allocation.contract.version': '1', 'allocation.requested.policy': 'full', 'allocation.applied.method': 'rbd-thick-create', 'purge.db.entities': 'true', 'External:custom': 'keep' } }
   CloneCompute.methods.populateFormFromResource.call(context, source)
   expect(context.form.externaldetails).toEqual({ custom: 'keep' })
   expect(context.form.allocationpolicy).toBe('full')
   expect(context.externalDetailsEnabled).toBe(true)
-  delete source.serviceofferingdetails.custom
+  delete source.serviceofferingdetails['External:custom']
   CloneCompute.methods.populateFormFromResource.call(context, source)
   expect(context.externalDetailsEnabled).toBe(false)
   expect(context.form.externaldetails).toBeUndefined()

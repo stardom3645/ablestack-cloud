@@ -137,7 +137,7 @@ describe('shared detail refresh behavior', () => {
     expect(vm.loadingAnnotations).toBe(false)
     expect(vm.notes[0].id).toBe('old')
     expect(vm.annotation).toBe('unsent draft')
-    expect(getAPI).toHaveBeenCalledWith('listAnnotations', expect.objectContaining({ entitytype: 'VOLUME', page: 2 }))
+    expect(getAPI).toHaveBeenCalledWith('listAnnotations', expect.objectContaining({ entitytype: 'VOLUME', page: 2 }), { preserveOnFailure: true })
     complete({ listannotationsresponse: {} }); await pending
     expect(vm.itemCount).toBe(0)
     expect(vm.notes).toEqual([])
