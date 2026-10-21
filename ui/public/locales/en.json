@@ -9377,5 +9377,7 @@
   "message.volume.assign.confirm": "I understand that the previous owner access changes after transfer.",
   "message.volume.assign.snapshots": "Volumes with snapshots cannot be transferred. Review the snapshots.",
   "message.volume.assign.saved": "Volume ownership transferred.",
-  "message.disk.offering.lookup.failed": "Unable to load all available disk offerings. Your last selection is retained. Retry before creating the virtual machine."
+  "message.disk.offering.lookup.failed": "Unable to load all available disk offerings. Your last selection is retained. Retry before creating the virtual machine.",
+  "message.volume.attach.vm.search": "Search by display name, VM name, instance name or UUID",
+  "message.volume.attach.vm.lookup.failed": "Unable to load virtual machines. Retry to load the complete list."
 }

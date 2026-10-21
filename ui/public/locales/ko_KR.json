@@ -9342,5 +9342,7 @@
   "message.volume.assign.confirm": "이전 후 기존 소유자의 접근 권한이 바뀌는 것을 확인했습니다.",
   "message.volume.assign.snapshots": "스냅샷이 있는 볼륨은 이전할 수 없습니다. 스냅샷을 확인하세요.",
   "message.volume.assign.saved": "볼륨 소유권을 이전했습니다.",
-  "message.disk.offering.lookup.failed": "사용 가능한 디스크 오퍼링 전체를 조회하지 못했습니다. 마지막 선택을 유지했습니다. 가상머신을 생성하기 전에 재시도하세요."
+  "message.disk.offering.lookup.failed": "사용 가능한 디스크 오퍼링 전체를 조회하지 못했습니다. 마지막 선택을 유지했습니다. 가상머신을 생성하기 전에 재시도하세요.",
+  "message.volume.attach.vm.search": "표시이름, VM 이름, 인스턴스 이름 또는 UUID 검색",
+  "message.volume.attach.vm.lookup.failed": "가상머신을 조회하지 못했습니다. 전체 목록을 다시 조회해 주세요."
 }
