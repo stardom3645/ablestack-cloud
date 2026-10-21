@@ -21,11 +21,11 @@ Browserslist: caniuse-lite is outdated. Please run:
 Theme generated successfully
  WARNING  Compiled with 2 warnings4:07:07 AM
 
- warning  
+ warning
 
 asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
 This can impact web performance.
-Assets: 
+Assets:
   css/app.5afa90b4.css (285 KiB)
   js/app.26f890ca.js (1.37 MiB)
   js/chunk-0213282d.4b084f27.js (445 KiB)
@@ -57,7 +57,7 @@ Assets:
   locales/nl_NL.json (351 KiB)
   locales/te.json (547 KiB)
 
- warning  
+ warning
 
 entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
 Entrypoints:
@@ -630,7 +630,7 @@ Entrypoints:
 
  DONE  Build complete. The dist directory is ready to be deployed.
  INFO  Check out deployment instructions at https://cli.vuejs.org/guide/deployment.html
-      
+
 
 > cloudstack-ui@4.22.0 postbuild /home/ablecloud/work/dhslove/cloud-epic-1422/ui
 > ./postbuild.sh
