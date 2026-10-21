@@ -16,7 +16,6 @@
 // under the License.
 import { shallowRef, defineAsyncComponent } from 'vue'
 import store from '@/store'
-import { getFilteredExternalDetails } from '@/utils/extension'
 
 export default {
   name: 'offering',
@@ -96,12 +95,8 @@ export default {
         label: 'label.edit',
         docHelp: 'adminguide/service_offerings.html#modifying-or-deleting-a-service-offering',
         dataView: true,
-        args: ['name', 'displaytext', 'storagetags', 'hosttags', 'externaldetails'],
-        mapping: {
-          externaldetails: {
-            transformedvalue: (record) => { return getFilteredExternalDetails(record.serviceofferingdetails) }
-          }
-        }
+        popup: true,
+        component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateComputeOffering.vue')))
       }, {
         api: 'updateServiceOffering',
         icon: 'lock-outlined',
@@ -109,7 +104,7 @@ export default {
         docHelp: 'adminguide/service_offerings.html#modifying-or-deleting-a-service-offering',
         dataView: true,
         popup: true,
-        component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateOfferingAccess.vue')))
+        component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateStorageOfferingAccess.vue')))
       },
       {
         api: 'updateServiceOffering',
@@ -316,7 +311,7 @@ export default {
         docHelp: 'adminguide/service_offerings.html#modifying-or-deleting-a-service-offering',
         dataView: true,
         popup: true,
-        component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateOfferingAccess.vue')))
+        component: shallowRef(defineAsyncComponent(() => import('@/views/offering/UpdateStorageOfferingAccess.vue')))
       }, {
         api: 'updateDiskOffering',
         icon: 'play-circle-outlined',

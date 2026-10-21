@@ -21,6 +21,7 @@ import { isZoneCreated } from '@/utils/zone'
 import { isAdmin } from '@/role'
 import { allocationIntent } from '@/utils/volumeAllocation'
 import { canDeleteVolume, volumeDeleteReason } from '@/utils/volumeEdit'
+import { assignmentReason } from '@/utils/storageManagement'
 
 const activeFastCloneFlattenStatuses = ['pending', 'running']
 
@@ -91,7 +92,7 @@ export default {
           name: 'metrics',
           resourceType: 'Volume',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/StatsTab.vue'))),
-          show: (record) => { return store.getters.features.instancesdisksstatsretentionenabled }
+          show: (record) => { return store.getters.features.instancesdisksstatsretentionenabled && 'listVolumesUsageHistory' in store.getters.apis }
         },
         {
           name: 'events',
@@ -101,7 +102,8 @@ export default {
         },
         {
           name: 'comments',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue'))),
+          show: () => 'listAnnotations' in store.getters.apis
         }
       ],
       searchFilters: () => {
@@ -164,6 +166,17 @@ export default {
               ['Running', 'Stopped', 'Destroyed'].includes(record.vmstate) &&
               !isFastCloneFlattenActive(record)
           }
+        },
+        {
+          api: 'assignVolume',
+          icon: 'swap-outlined',
+          label: 'label.volume.assign',
+          dataView: true,
+          popup: true,
+          show: () => ['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype),
+          disabled: record => !!assignmentReason(record, store.getters.userInfo.roletype),
+          tooltip: record => assignmentReason(record, store.getters.userInfo.roletype) || 'label.volume.assign',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/AssignVolume.vue')))
         },
         {
           api: 'updateVolume',

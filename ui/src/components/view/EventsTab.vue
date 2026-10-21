@@ -171,7 +171,7 @@ export default {
         listall: true
       }
       this.tabLoading = !listRequest.loaded
-      return getAPI('listEvents', params).then(json => {
+      return getAPI('listEvents', params, { preserveOnFailure: true }).then(json => {
         if (!this.isListRequestCurrent('fetchEvents', listRequest)) return
         this.totalCount = json?.listeventsresponse?.count || 0
         this.events = json?.listeventsresponse?.event || []

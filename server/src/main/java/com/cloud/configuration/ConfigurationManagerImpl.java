@@ -4450,7 +4450,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         String storageTags = cmd.getStorageTags();
         String hostTags = cmd.getHostTags();
         ServiceOffering.State state = cmd.getState();
-        boolean purgeResources = cmd.isPurgeResources();
         final Map<String, String> externalDetails = cmd.getExternalDetails();
         final boolean cleanupExternalDetails = cmd.isCleanupExternalDetails();
 
@@ -4476,6 +4475,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         if (StringUtils.isNotBlank(purgeResourceStr)) {
             existingPurgeResources = Boolean.parseBoolean(purgeResourceStr);
         }
+        final boolean purgeResources = resolvePurgeResources(cmd, existingPurgeResources);
 
         // check if valid domain
         if (CollectionUtils.isNotEmpty(domainIds)) {
@@ -4642,6 +4642,11 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         offering = _serviceOfferingDao.findById(id);
         CallContext.current().setEventDetails("Service offering ID:" + offering.getUuid());
         return offering;
+    }
+
+    protected boolean resolvePurgeResources(UpdateServiceOfferingCmd cmd, boolean existing) {
+        final Map<String, String> params = cmd.getFullUrlParams();
+        return params != null && params.containsKey(ApiConstants.PURGE_RESOURCES) ? cmd.isPurgeResources() : existing;
     }
 
     @Override

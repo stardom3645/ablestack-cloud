@@ -62,6 +62,7 @@ import { ref, reactive } from 'vue'
 import { getAPI, postAPI } from '@/api'
 import { performanceParams, qosForm } from '@/utils/offeringQos'
 import { allocationParams, allocationForm } from '@/utils/volumeAllocation'
+import { getFilteredExternalDetails } from '@/utils/extension'
 import AddDiskOffering from '@/views/offering/AddDiskOffering'
 import { isAdmin } from '@/role'
 import { mixinForm } from '@/utils/mixin'
@@ -409,8 +410,7 @@ export default {
         this.handleDeploymentPlannerChange(r.deploymentplanner)
       }
 
-      const externalDetails = Object.fromEntries(Object.entries(r.serviceofferingdetails || {})
-        .filter(([key]) => !key.startsWith('allocation.')))
+      const externalDetails = getFilteredExternalDetails(r.serviceofferingdetails) || {}
       this.externalDetailsEnabled = Object.keys(externalDetails).length > 0
       this.form.externaldetails = this.externalDetailsEnabled ? externalDetails : undefined
     },
