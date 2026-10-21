@@ -19,8 +19,13 @@ export const scopeIds = value => [...new Set(String(value || '').split(',').filt
 export const sameIds = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
 const sortedObject = value => Object.fromEntries(Object.entries(value || {}).sort(([a], [b]) => a.localeCompare(b)))
 export function offeringSnapshot (record) {
-  return JSON.stringify({ ...Object.fromEntries(['id', 'name', 'displaytext', 'state', 'tags', 'storagetags', 'hosttags', 'diskofferingid'].map(k => [k, record?.[k] ?? ''])),
-    domains: scopeIds(record?.domainid), zones: scopeIds(record?.zoneid), purge: trueValue(record?.purgeresources), external: sortedObject(getFilteredExternalDetails(record?.serviceofferingdetails)) })
+  return JSON.stringify({
+    ...Object.fromEntries(['id', 'name', 'displaytext', 'state', 'tags', 'storagetags', 'hosttags', 'diskofferingid'].map(k => [k, record?.[k] ?? ''])),
+    domains: scopeIds(record?.domainid),
+    zones: scopeIds(record?.zoneid),
+    purge: trueValue(record?.purgeresources),
+    external: sortedObject(getFilteredExternalDetails(record?.serviceofferingdetails))
+  })
 }
 export function computeEditParams (record, form, supported, tagsAllowed) {
   const params = { id: record.id }

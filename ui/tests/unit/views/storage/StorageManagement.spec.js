@@ -21,7 +21,7 @@ import { getAPI, postAPI } from '@/api'
 import { computeEditParams, accessParams, assignmentParams, assignmentReason } from '@/utils/storageManagement'
 import { readAllocationList } from '@/utils/volumeAllocation'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
-const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done }); return { promise, resolve } }
+const deferred = () => { let release; const promise = new Promise(resolve => { release = resolve }); return { promise, resolve: release } }
 const compute = { id: 'o', name: 'Original', displaytext: 'Keep', state: 'Inactive', domainid: 'd1', zoneid: 'z1', purgeresources: true, diskofferingcomputeonly: true, serviceofferingdetails: { 'External:note': 'keep', 'purge.db.entities': 'true', 'allocation.policy': 'metadata' } }
 const volume = { id: 'v', name: 'Volume', type: 'DATADISK', state: 'Ready', account: 'old', domainid: 'd1', size: 1073741824, path: 'keep', storageid: 'pool', volumemutationblockedreason: '' }
 const owner = { id: 'account', name: 'New owner', domainid: 'd1', state: 'enabled', accounttype: 0 }
@@ -30,10 +30,14 @@ const fields = ['name', 'displaytext', 'hosttags', 'storagetags', 'purgeresource
 let store, record, domainRows, accounts, snapshotCount
 const mounts = []
 function mount (component, route = 'computeoffering') {
-  const w = shallowMount(component, { props: { resource: { id: component === Assign ? 'v' : 'o', name: 'Stale title' } }, global: {
-    directives: { focus: {}, 'ctrl-enter': {} }, mocks: { $t: key => key, $store: store, $route: { meta: { name: route } }, $message: { success: jest.fn() }, $router: { push: jest.fn() } },
-    stubs: { 'a-spin': { template: '<div><slot/></div>' }, 'a-form': { template: '<form><slot/></form>', methods: { validate: () => Promise.resolve() } }, 'a-form-item': { template: '<div><slot name="label"/><slot/></div>' } }
-  } }); mounts.push(w); return w
+  const w = shallowMount(component, {
+    props: { resource: { id: component === Assign ? 'v' : 'o', name: 'Stale title' } },
+    global: {
+      directives: { focus: {}, 'ctrl-enter': {} },
+      mocks: { $t: key => key, $store: store, $route: { meta: { name: route } }, $message: { success: jest.fn() }, $router: { push: jest.fn() } },
+      stubs: { 'a-spin': { template: '<div><slot/></div>' }, 'a-form': { template: '<form><slot/></form>', methods: { validate: () => Promise.resolve() } }, 'a-form-item': { template: '<div><slot name="label"/><slot/></div>' } }
+    }
+  }); mounts.push(w); return w
 }
 beforeEach(() => {
   record = { ...compute }; domainRows = [{ id: 'd1', name: 'A' }, { id: 'd2', name: 'B' }]; accounts = [owner]; snapshotCount = 0

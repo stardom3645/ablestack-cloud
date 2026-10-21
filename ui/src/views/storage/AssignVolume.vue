@@ -46,9 +46,11 @@ export default {
   data: () => ({ record: {}, accounts: [], projects: [], form: { type: 'account', target: null, confirm: false }, postStarted: false }),
   computed: {
     managementApi: () => 'assignVolume',
-    candidates () { return (this.form.type === 'account' ? this.accounts : this.projects).filter(row => {
-      try { assignmentParams(this.record, this.form.type, row); return true } catch (error) { return false }
-    }) },
+    candidates () {
+      return (this.form.type === 'account' ? this.accounts : this.projects).filter(row => {
+        try { assignmentParams(this.record, this.form.type, row); return true } catch (error) { return false }
+      })
+    },
     selectedTarget () { return this.candidates.find(row => row.id === this.form.target) }
   },
   methods: {
@@ -86,6 +88,7 @@ export default {
         const record = await this.readRecord(); const lists = await this.choices(current)
         const snapshots = await getAPI('listSnapshots', { volumeid: this.resource.id, listall: true, ignoreproject: true, page: 1, pagesize: 1 }, { preserveOnFailure: true })
         if (!current()) return
+        if (!snapshots?.listsnapshotsresponse) throw new Error('message.storage.management.selection.changed')
         if (assignmentSnapshot(record) !== assignmentSnapshot(this.record)) throw new Error('message.storage.management.changed')
         if ((snapshots?.listsnapshotsresponse?.count || snapshots?.listsnapshotsresponse?.snapshot?.length || 0) > 0) throw new Error('message.volume.assign.snapshots')
         const target = (this.form.type === 'account' ? lists.accounts : lists.projects).find(row => row.id === this.form.target)

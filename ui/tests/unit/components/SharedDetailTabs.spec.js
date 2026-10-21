@@ -73,7 +73,7 @@ describe('shared detail refresh behavior', () => {
     expect(vm.loaded).toBe(true)
     expect(vm.chartLabels).toEqual(['previous'])
     expect(vm.showResourceInfoModal).toBe(true)
-    expect(getAPI).toHaveBeenCalledWith(vm.resourceStatsApi, { id: 'resource-1' })
+    expect(getAPI).toHaveBeenCalledWith(vm.resourceStatsApi, { id: 'resource-1' }, { preserveOnFailure: true })
     complete({ response: 'current' })
     await pending
     expect(vm.handleStatsResponse).toHaveBeenCalledWith({ response: 'current' })
