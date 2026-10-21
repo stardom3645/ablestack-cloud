@@ -97,7 +97,7 @@ export default {
       this.loaded = false
       this.readError = ''
       try {
-        const response = await getAPI('listDiskOfferings', { id: this.resource.id, listall: true, state: 'all' })
+        const response = await getAPI('listDiskOfferings', { id: this.resource.id, listall: true, state: 'all' }, { preserveOnFailure: true })
         if (request !== this.requestId) return
         const record = response.listdiskofferingsresponse?.diskoffering?.find(offering => offering.id === this.resource.id)
         if (!record) throw new Error(this.$t('message.offering.not.found'))
@@ -108,7 +108,7 @@ export default {
         this.unknownResult = false
         this.submitError = ''
         if (!isAdmin() && this.$store.getters.apis.isAccountAllowedToCreateOfferingsWithTags) {
-          const result = await getAPI('isAccountAllowedToCreateOfferingsWithTags', { id: this.$store.getters.userInfo.accountid })
+          const result = await getAPI('isAccountAllowedToCreateOfferingsWithTags', { id: this.$store.getters.userInfo.accountid }, { preserveOnFailure: true })
           if (request === this.requestId) this.canEditTags = trueValue(result.isaccountallowedtocreateofferingswithtagsresponse?.isallowed?.isallowed)
         }
       } catch (error) {
@@ -131,7 +131,7 @@ export default {
         const original = qosParams(this.original, this.apiParams)
         for (const [key, value] of Object.entries(current)) { if (value !== original[key]) params[key] = value }
         if (Object.keys(params).length === 1) { this.$emit('close-action'); return }
-        try { await postAPI('updateDiskOffering', params) } catch (error) {
+        try { await postAPI('updateDiskOffering', params, { preserveOnFailure: true }) } catch (error) {
           if (!error.response) this.unknownResult = true
           throw error
         }

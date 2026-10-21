@@ -99,18 +99,18 @@ test.each([CloneDisk, CloneCompute])('clone $name cannot submit using an unread 
 })
 test('edit loads fresh data and sends changed supported values only, retaining scope and Inactive state', async () => {
   const w = mount(); await flushPromises()
-  expect(getAPI).toHaveBeenCalledWith('listDiskOfferings', { id: 'o', listall: true, state: 'all' })
+  expect(getAPI).toHaveBeenCalledWith('listDiskOfferings', { id: 'o', listall: true, state: 'all' }, { preserveOnFailure: true })
   expect(w.vm.form.name).toBe('Offering')
   w.vm.form.diskbytesreadrate = '150'; w.vm.form.cachemode = 'writeback'
   await w.vm.handleSubmit()
-  expect(postAPI).toHaveBeenCalledWith('updateDiskOffering', { id: 'o', bytesreadrate: '150', cachemode: 'writeback' })
+  expect(postAPI).toHaveBeenCalledWith('updateDiskOffering', { id: 'o', bytesreadrate: '150', cachemode: 'writeback' }, { preserveOnFailure: true })
   expect(w.emitted('refresh-data')).toHaveLength(1); w.unmount()
 })
 test('clearing a burst sends both explicit zeros', async () => {
   const w = mount(); await flushPromises()
   w.vm.form.diskbytesreadratemax = '0'; w.vm.form.diskbytesreadratemaxlength = '0'
   await w.vm.handleSubmit()
-  expect(postAPI).toHaveBeenCalledWith('updateDiskOffering', { id: 'o', bytesreadratemax: '0', bytesreadratemaxlength: '0' }); w.unmount()
+  expect(postAPI).toHaveBeenCalledWith('updateDiskOffering', { id: 'o', bytesreadratemax: '0', bytesreadratemaxlength: '0' }, { preserveOnFailure: true }); w.unmount()
 })
 test('duplicate clicks are locked before validation resolves', async () => {
   let finish
