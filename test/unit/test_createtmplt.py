@@ -74,7 +74,7 @@ class CreateTemplateTest(unittest.TestCase):
             args.append("-u")
         if snapshot:
             args += ["-s", "-c", "snapshot"]
-        return subprocess.run(args, env=env, capture_output=True)
+        return subprocess.run(args, env=env, cwd=self.root, capture_output=True)
 
     def assert_failure(self, result):
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
