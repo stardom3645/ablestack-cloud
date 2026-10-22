@@ -66,7 +66,7 @@ export default {
 .offering-form-sections :deep(.ant-input), .offering-form-sections :deep(.ant-select) { width: 100%; min-width: 0; }
 .offering-form-sections :deep(.offering-help) { color: var(--ui-text-secondary, #666); font-size: 12px; margin: 6px 0 16px; overflow-wrap: anywhere; }
 .offering-form-sections :deep(.offering-placement) { border: 0; border-top: 1px solid var(--ui-border, #d9d9d9); padding: 16px 0 0; margin: 20px 0 0; min-width: 0; }
-.offering-form-sections :deep(.offering-placement legend) { width: auto; font-size: 14px; border: 0; padding: 0 8px 0 0; }
+.offering-form-sections :deep(.offering-placement legend) { width: auto; font-size: 14px; color: var(--ui-text-secondary, #595959); border: 0; padding: 0 8px 0 0; }
 .offering-form-sections :deep(.offering-placement-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
 .offering-form-sections :deep(.offering-root-summary) { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 12px; margin: 12px 0; }
 .offering-form-sections :deep(.offering-root-summary dt) { color: var(--ui-text-secondary, #666); }
