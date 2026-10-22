@@ -48,6 +48,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
+import com.cloud.org.Grouping;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.HostPodDao;
@@ -251,5 +252,62 @@ public class VolumeAttachStoragePlacementTest {
                 () -> service.createVolumeOnPrimaryForAttachIfNeeded(volume, vm, null));
         assertTrue(error.getMessage().contains("Failed to create volume on primary storage"));
         assertTrue(error.getCause() instanceof NoTransitionException);
+    }
+
+    private HostPodVO pod(long zoneId, Grouping.AllocationState state) {
+        HostPodVO pod = mock(HostPodVO.class);
+        when(pod.getDataCenterId()).thenReturn(zoneId);
+        lenient().when(pod.getAllocationState()).thenReturn(state);
+        return pod;
+    }
+
+    @Test
+    public void clusterStorageUsesRealEnabledPodsWhenZoneWideLookupIsEmpty() {
+        HostPodVO first = pod(1L, Grouping.AllocationState.Enabled);
+        HostPodVO second = pod(1L, Grouping.AllocationState.Enabled);
+        when(podDao.listByDataCenterId(1L)).thenReturn(java.util.Arrays.asList(first, second));
+        when(volumeManager.findStoragePool(any(DiskProfile.class), eq(zone), eq(second), isNull(), isNull(), eq(vm),
+                eq(Collections.emptySet()))).thenReturn(pool);
+        assertSame(pool, service.getPoolForAllocatedOrUploadedVolumeForAttach(volume, vm));
+        ArgumentCaptor<DiskProfile> disk = ArgumentCaptor.forClass(DiskProfile.class);
+        verify(volumeManager).findStoragePool(disk.capture(), eq(zone), isNull(), isNull(), isNull(), eq(vm), eq(Collections.emptySet()));
+        verify(volumeManager).findStoragePool(eq(disk.getValue()), eq(zone), eq(first), isNull(), isNull(), eq(vm), eq(Collections.emptySet()));
+        verify(volumeManager).findStoragePool(eq(disk.getValue()), eq(zone), eq(second), isNull(), isNull(), eq(vm), eq(Collections.emptySet()));
+        verify(podDao, never()).findById(null);
+    }
+
+    @Test
+    public void fallbackSkipsDisabledAndForeignPods() {
+        HostPodVO disabled = pod(1L, Grouping.AllocationState.Disabled);
+        HostPodVO foreign = pod(9L, Grouping.AllocationState.Enabled);
+        when(podDao.listByDataCenterId(1L)).thenReturn(java.util.Arrays.asList(disabled, foreign));
+        assertSame(null, service.getSuitablePoolForAllocatedOrUploadedVolumeForAttach(volume, vm));
+        verify(volumeManager, never()).findStoragePool(any(), any(), eq(disabled), any(), any(), any(), any());
+        verify(volumeManager, never()).findStoragePool(any(), any(), eq(foreign), any(), any(), any(), any());
+    }
+
+    @Test
+    public void exhaustedRealPodsStillFailWithoutCreatingVolume() {
+        HostPodVO pod = pod(1L, Grouping.AllocationState.Enabled);
+        when(podDao.listByDataCenterId(1L)).thenReturn(Collections.singletonList(pod));
+        assertThrows(CloudRuntimeException.class, () -> service.createVolumeOnPrimaryForAttachIfNeeded(volume, vm, null));
+        verify(volumeManager).findStoragePool(any(), eq(zone), eq(pod), isNull(), isNull(), eq(vm), eq(Collections.emptySet()));
+        verifyNoInteractions(primaryStoreDao);
+    }
+
+    @Test
+    public void failedKnownPodDoesNotSearchOtherPods() {
+        when(vm.getPodIdToDeployIn()).thenReturn(2L);
+        HostPodVO pod = mock(HostPodVO.class);
+        when(podDao.findById(2L)).thenReturn(pod);
+        assertThrows(CloudRuntimeException.class, () -> service.getPoolForAllocatedOrUploadedVolumeForAttach(volume, vm));
+        verify(podDao, never()).listByDataCenterId(1L);
+    }
+
+    @Test
+    public void failedHostConstraintDoesNotBroadenToOtherPods() {
+        when(vmManager.findClusterAndHostIdForVm(vm, false)).thenReturn(new Pair<>(null, 4L));
+        assertThrows(CloudRuntimeException.class, () -> service.getPoolForAllocatedOrUploadedVolumeForAttach(volume, vm));
+        verifyNoInteractions(podDao);
     }
 }

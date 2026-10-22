@@ -2862,7 +2862,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
             podId = cluster.getPodId();
         }
-        // A VM that has never started can have no pod, cluster or host. The allocator supports a zone-only plan.
+        // A VM that has never started can have no pod, cluster or host. Try zone storage before evaluating real pods.
         Pod pod = podId == null ? null : podDao.findById(podId);
         if (podId != null && pod == null) {
             throw new CloudRuntimeException(String.format("Cannot find pod [%s] for volume attachment", podId));
@@ -2873,8 +2873,22 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 offering.isUseLocalStorage(), offering.isRecreatable(),
                 volumeToAttach.getTemplateId());
         diskProfile.setHyperType(vm.getHypervisorType());
-        return _volumeMgr.findStoragePool(diskProfile, zone, pod, clusterHostId.first(),
+        StoragePool pool = _volumeMgr.findStoragePool(diskProfile, zone, pod, clusterHostId.first(),
                 clusterHostId.second(), vm, Collections.emptySet());
+        if (pool == null && podId == null && clusterHostId.first() == null && clusterHostId.second() == null) {
+            // Cluster/local allocators require a real pod; try enabled pods without persisting VM placement.
+            for (Pod candidatePod : podDao.listByDataCenterId(vm.getDataCenterId())) {
+                if (candidatePod.getDataCenterId() != vm.getDataCenterId()
+                        || candidatePod.getAllocationState() != Grouping.AllocationState.Enabled) {
+                    continue;
+                }
+                pool = _volumeMgr.findStoragePool(diskProfile, zone, candidatePod, null, null, vm, Collections.emptySet());
+                if (pool != null) {
+                    break;
+                }
+            }
+        }
+        return pool;
     }
 
     private Volume orchestrateAttachVolumeToVM(Long vmId, Long volumeId, Long deviceId) {
