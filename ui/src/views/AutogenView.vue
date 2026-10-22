@@ -18,7 +18,7 @@
 <template>
   <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup', 'userdata-library': $route.meta?.name === 'userdata', 'affinity-library': $route.meta?.name === 'affinitygroup' }">
     <a-affix
-      :key="'affix-' + showSearchFilters + ($route.meta?.name === 'userdata' ? '-' + device + '-' + selectedRowKeys.length : '')"
+      :key="'affix-' + showSearchFilters + (isStorageUi ? '-' + storageHeaderWidth + '-' + device : ($route.meta?.name === 'userdata' ? '-' + device + '-' + selectedRowKeys.length : ''))"
       :offsetTop="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 103 : 78"
     >
       <a-card class="breadcrumb-card" style="z-index: 10">
@@ -1039,6 +1039,7 @@ export default {
       listCustomRender: {},
       listRefreshError: false,
       listLastUpdated: null,
+      storageHeaderWidth: 0,
       vmGroupContextScope: null,
       vmGroupQueryStatus: 'loading',
       sshKeyPairDetailStatus: 'loading',
@@ -1047,11 +1048,13 @@ export default {
     }
   },
   beforeUnmount () {
+    if (this.storageHeaderObserver) this.storageHeaderObserver.disconnect()
     for (const [name, handler] of this.listEventHandlers || []) eventBus.off(name, handler)
     this.clearAutoRefresh()
     this.listRequestVersion += 1
   },
   mounted () {
+    this.observeStorageHeader()
     this.onListEvent('exec-action', (args) => {
       const { action, isGroupAction } = args
       this.execAction(action, isGroupAction)
@@ -1190,6 +1193,7 @@ export default {
     next()
   },
   watch: {
+    isStorageUi () { this.observeStorageHeader() },
     snapshotSecurityScope () {
       if (this.$route.meta?.name === 'vmgroup' || this.isSshKeyPairDetail) this.fetchData()
       if (['createVMSnapshot', 'revertToVMSnapshot', 'deleteVMSnapshot', 'createSnapshotFromVMSnapshot'].includes(this.currentAction.api)) this.closeAction()
@@ -1392,6 +1396,17 @@ export default {
     }
   },
   methods: {
+    observeStorageHeader () {
+      if (this.storageHeaderObserver) this.storageHeaderObserver.disconnect()
+      if (!this.isStorageUi || !this.$el || typeof ResizeObserver === 'undefined') return
+      // The sidebar and embedded browser can resize the container without
+      // scrolling the window. Recreate Affix's cached placeholder width.
+      this.storageHeaderObserver = new ResizeObserver(entries => {
+        const width = Math.round(entries[0]?.contentRect.width || 0)
+        if (width > 0) this.storageHeaderWidth = width
+      })
+      this.storageHeaderObserver.observe(this.$el)
+    },
     storageDialogSize,
     documentationUrl,
     rejectSshKeyPairDetail (status) {
@@ -2174,6 +2189,8 @@ export default {
         this.selectedRowKeys = this.selectedItems.map(item => item.id)
       }
       const trigger = this.actionTrigger
+      const triggerLabel = this.actionTriggerLabel
+      const originPath = this.actionOriginPath
       this.actionTrigger = null
       this.actionLoading = false
       this.showAction = false
@@ -2184,8 +2201,12 @@ export default {
       if (deletedUserDataDetail) this.$router.push('/userdata')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.
       this.$nextTick(() => {
-        if (!this.showAction && trigger?.isConnected && trigger !== document.body) {
-          trigger.focus({ preventScroll: true })
+        const replacement = this.isStorageUi && originPath === this.$route?.path
+          ? (this.$refs?.detailActionsTrigger?.$el || (triggerLabel && Array.from(this.$el?.querySelectorAll('.autogen-toolbar-actions button') || []).find(button => button.getAttribute('aria-label') === triggerLabel)))
+          : null
+        const target = trigger?.isConnected ? trigger : replacement
+        if (!this.showAction && target?.isConnected && target !== document.body) {
+          target.focus({ preventScroll: true })
         }
       })
     },
@@ -2234,6 +2255,8 @@ export default {
       if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
+      this.actionTriggerLabel = this.actionTrigger?.getAttribute('aria-label')
+      this.actionOriginPath = this.$route?.path
       if (action.api === 'deleteAffinityGroup') {
         if (!['listAffinityGroups', 'deleteAffinityGroup'].every(api => api in this.$store.getters.apis)) return
         this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, affinityTargets: Object.freeze((isGroupAction ? this.selectedItems : [action.resource]).filter(Boolean).map(row => Object.freeze({ ...row }))) }
