@@ -19,6 +19,7 @@
   <div class="form-layout" v-ctrl-enter="handleSubmit">
     <a-spin :spinning="loading">
       <ComputeOfferingForm
+        :organized="!isSystem"
         :initialValues="form"
         :rules="rules"
         :apiParams="apiParams"
@@ -30,7 +31,7 @@
           <br/>
           <MoldDialogActions :span="24" :busy="loading">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-            <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+            <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.add') }}</a-button>
           </MoldDialogActions>
         </template>
       </ComputeOfferingForm>
@@ -46,7 +47,7 @@ import { ref, reactive } from 'vue'
 import { postAPI } from '@/api'
 import { getAPI } from '@/utils/storageApi'
 import { performanceParams } from '@/utils/offeringQos'
-import { allocationParams } from '@/utils/volumeAllocation'
+import { allocationParams, newOfferingAllocation } from '@/utils/volumeAllocation'
 import AddDiskOffering from '@/views/offering/AddDiskOffering'
 import { isAdmin } from '@/role'
 import { mixinForm } from '@/utils/mixin'
@@ -160,6 +161,7 @@ export default {
         computeonly: this.computeonly,
         storagetype: this.storageType,
         provisioningtype: this.provisioningType,
+        ...newOfferingAllocation(this.isSystem ? {} : this.apiParams),
         cachemode: this.cacheMode,
         qostype: this.qosType,
         iscustomizeddiskiops: this.isCustomizedDiskIops,
@@ -489,7 +491,7 @@ export default {
         Object.assign(params, allocationParams(values, values.computeonly === false))
         if (values.computeonly !== false) delete params.diskofferingid
         this.loading = true
-        postAPI('createServiceOffering', params).then(json => {
+        postAPI('createServiceOffering', params, { preserveOnFailure: true }).then(json => {
           const message = this.isSystem
             ? `${this.$t('message.create.service.offering')}: `
             : `${this.$t('message.create.compute.offering')}: `
@@ -501,6 +503,8 @@ export default {
         }).finally(() => {
           this.loading = false
         })
+      }).catch(error => {
+        if (!error?.errorFields) this.$message.error(error.message || this.$t('message.error.select'))
       })
     },
     closeAction () {
@@ -518,9 +522,7 @@ export default {
 
 <style scoped lang="scss">
   .form-layout {
-    width: 80vw;
-    @media (min-width: 800px) {
-      width: 700px;
-    }
+    width: 650px;
+    max-width: calc(100vw - 64px);
   }
 </style>

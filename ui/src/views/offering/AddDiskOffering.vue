@@ -19,6 +19,7 @@
   <div class="form-layout" v-ctrl-enter="handleSubmit">
     <a-spin :spinning="loading">
       <DiskOfferingForm
+        organized
         ref="formRef"
         :initialValues="form"
         :apiParams="apiParams"
@@ -27,7 +28,7 @@
         <template #form-actions>
           <MoldDialogActions :span="24" :busy="loading">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-            <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+            <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.add') }}</a-button>
           </MoldDialogActions>
         </template>
       </DiskOfferingForm>
@@ -42,7 +43,7 @@ import DiskOfferingForm from '@/components/offering/DiskOfferingForm'
 import { reactive } from 'vue'
 import { postAPI } from '@/api'
 import { performanceParams } from '@/utils/offeringQos'
-import { allocationParams } from '@/utils/volumeAllocation'
+import { allocationParams, newOfferingAllocation } from '@/utils/volumeAllocation'
 import { isAdmin } from '@/role'
 
 export default {
@@ -57,6 +58,7 @@ export default {
       form: reactive({
         storagetype: 'shared',
         provisioningtype: 'thin',
+        ...newOfferingAllocation(this.apiParams),
         customdisksize: true,
         writecachetype: 'none',
         qostype: '',
@@ -139,7 +141,7 @@ export default {
 
         Object.assign(params, allocationParams(values))
         this.loading = true
-        postAPI('createDiskOffering', params).then(json => {
+        postAPI('createDiskOffering', params, { preserveOnFailure: true }).then(json => {
           this.$emit('publish-disk-offering-id', json?.creatediskofferingresponse?.diskoffering?.id)
           this.$message.success(`${this.$t('message.disk.offering.created')} ${values.name}`)
           this.$emit('refresh-data')
@@ -149,6 +151,8 @@ export default {
         }).finally(() => {
           this.loading = false
         })
+      }).catch(error => {
+        if (!error?.errorFields) this.$message.error(error.message || this.$t('message.error.select'))
       })
     },
     closeAction () {
@@ -160,10 +164,7 @@ export default {
 
 <style scoped lang="scss">
   .form-layout {
-    width: 80vw;
-
-    @media (min-width: 700px) {
-      width: 550px;
-    }
+    width: 650px;
+    max-width: calc(100vw - 64px);
   }
 </style>

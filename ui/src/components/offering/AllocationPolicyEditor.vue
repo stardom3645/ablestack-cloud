@@ -18,9 +18,9 @@
 <template>
   <section class="allocation-editor">
     <a-form-item :label="$t('label.allocation.mode')">
-      <a-radio-group :value="form.allocationmode || 'legacy'" @change="change({ allocationmode: $event.target.value })">
-        <a-radio-button value="legacy">{{ $t('label.allocation.legacy') }}</a-radio-button>
-        <a-radio-button value="explicit" :disabled="!canQuery && !form.allocationoriginal">{{ $t('label.allocation.explicit') }}</a-radio-button>
+      <a-radio-group :value="form.allocationmode || 'legacy'" @change="changeMode($event.target.value)">
+        <a-radio-button value="explicit" :disabled="!canDefine">{{ $t('label.offering.allocation.europa') }}</a-radio-button>
+        <a-radio-button value="legacy">{{ $t('label.offering.allocation.legacy') }}</a-radio-button>
       </a-radio-group>
     </a-form-item>
     <a-form-item v-if="form.allocationmode !== 'explicit'" :label="$t('label.provisioningtype')">
@@ -30,73 +30,64 @@
       <p class="allocation-note">{{ $t('message.allocation.legacy') }}</p>
     </a-form-item>
     <template v-else>
-      <a-form-item :label="$t('label.allocation.reference.pool')">
-        <a-select v-model:value="poolId" :loading="poolLoading" allow-clear @change="onPoolChange" :placeholder="$t('message.allocation.reference.pool')">
-          <a-select-option v-for="pool in pools" :key="pool.id" :value="pool.id">{{ pool.name }} · {{ pool.type }}</a-select-option>
-        </a-select>
-        <a-button v-if="poolError" size="small" @click="fetchPools">{{ $t('label.retry') }}</a-button>
-      </a-form-item>
-      <a-form-item :label="$t('label.allocation.format')">
-        <a-select :value="form.allocationformat" @change="changeFormat" :disabled="!pool">
-          <a-select-option value="raw">RAW</a-select-option>
-          <a-select-option v-if="pool?.type !== 'RBD'" value="qcow2">QCOW2</a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item :label="$t('label.allocation.requested')">
-        <a-select :value="form.allocationpolicy" :loading="loading" :disabled="loading || !Object.keys(policies).length" @change="change({ allocationpolicy: $event })">
-          <a-select-option v-for="(method, policy) in policies" :key="policy" :value="policy">{{ $t('label.allocation.policy.' + policy) }}</a-select-option>
-          <a-select-option v-if="!Object.keys(policies).length && form.allocationpolicy" :value="form.allocationpolicy">{{ $t('label.allocation.policy.' + form.allocationpolicy) }}</a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-alert v-if="error || poolError" type="error" show-icon :message="$t('message.allocation.capability.failed')" />
-      <a-button v-if="error && pool" size="small" @click="query">{{ $t('label.retry') }}</a-button>
-      <p class="allocation-note">{{ $t('message.allocation.offering.conditions') }}</p>
+      <div class="allocation-fields">
+        <a-form-item :label="$t('label.offering.allocation.format')" name="allocationformat">
+          <a-select :value="form.allocationformat" @change="changeFormat" :aria-label="$t('label.offering.allocation.format')">
+            <a-select-option value="raw">RAW</a-select-option>
+            <a-select-option value="qcow2">QCOW2</a-select-option>
+          </a-select>
+          <p class="allocation-note">{{ form.allocationformat === 'qcow2' ? $t('label.offering.allocation.gfs2.only') : 'GFS2 · RBD' }}</p>
+        </a-form-item>
+        <a-form-item :label="$t('label.offering.allocation.policy')" name="allocationpolicy">
+          <a-select :value="form.allocationpolicy" @change="change({ allocationpolicy: $event })" :aria-label="$t('label.offering.allocation.policy')">
+            <a-select-option v-for="policy in policies" :key="policy" :value="policy">{{ $t('label.allocation.policy.' + policy) }}{{ policy === 'falloc' ? ' · ' + $t('label.offering.allocation.gfs2.only') : '' }}</a-select-option>
+          </a-select>
+        </a-form-item>
+      </div>
       <p v-if="form.allocationpolicy" class="allocation-note">{{ $t('message.allocation.cost.' + form.allocationpolicy) }}</p>
+      <details class="allocation-support">
+        <summary>{{ $t('label.offering.allocation.support') }}</summary>
+        <dl>
+          <dt>GFS2 · RAW</dt>
+          <dd>off · falloc · full</dd>
+          <dt>GFS2 · QCOW2</dt>
+          <dd>metadata · falloc · full</dd>
+          <dt>RBD · RAW</dt>
+          <dd>off · full</dd>
+        </dl>
+        <p class="allocation-note">{{ $t('message.offering.allocation.rbd') }}</p>
+      </details>
     </template>
+    <p v-if="!canDefine" class="allocation-note">{{ $t('message.offering.allocation.old.api') }}</p>
   </section>
 </template>
 <script>
-import { getAPI } from '@/api'
-import { readAllocationList, readAllocationCapability } from '@/utils/volumeAllocation'
+import { offeringAllocationPolicies } from '@/utils/volumeAllocation'
 export default {
   name: 'AllocationPolicyEditor',
-  props: { form: { type: Object, required: true } },
+  props: { form: { type: Object, required: true }, apiParams: { type: Object, default: () => ({}) } },
   emits: ['change'],
-  data: () => ({ pools: [], poolId: undefined, poolLoading: false, poolError: false, policies: {}, loading: false, error: false, sequence: 0 }),
   computed: {
-    pool () { return this.pools.find(p => p.id === this.poolId) },
-    canQuery () { return !!this.$store.getters.apis?.getVolumeAllocationCapabilities }
+    policies () { return offeringAllocationPolicies(this.form.allocationformat) },
+    canDefine () { return !!(this.apiParams.allocationpolicy && this.apiParams.allocationformat) || !!this.form.allocationoriginal }
   },
-  created () { if (this.canQuery) this.fetchPools() },
-  beforeUnmount () { this.sequence++ },
   methods: {
     change (value) { this.$emit('change', value) },
-    async fetchPools () {
-      this.poolLoading = true; this.poolError = false
-      try { this.pools = (await readAllocationList(getAPI, 'listStoragePools', 'storagepool')).filter(p => p.state === 'Up' && ['RBD', 'SharedMountPoint'].includes(p.type)) } catch (e) { this.poolError = true } finally { this.poolLoading = false }
+    changeMode (mode) {
+      if (mode === 'explicit') {
+        if (!this.canDefine) return
+        const format = ['raw', 'qcow2'].includes(this.form.allocationformat) ? this.form.allocationformat : 'raw'
+        const policies = offeringAllocationPolicies(format)
+        this.change({ allocationmode: mode, allocationformat: format, allocationpolicy: policies.includes(this.form.allocationpolicy) ? this.form.allocationpolicy : policies[0], storagetype: 'shared', encryptdisk: false })
+      } else this.change({ allocationmode: 'legacy' })
     },
-    onPoolChange () {
-      this.policies = {}; this.error = false; this.sequence++
-      this.change({ allocationformat: this.pool?.type === 'RBD' ? 'raw' : this.form.allocationformat || 'qcow2', allocationpolicy: undefined })
-      this.$nextTick(() => this.query())
-    },
-    changeFormat (format) { this.change({ allocationformat: format, allocationpolicy: undefined }); this.$nextTick(() => this.query()) },
-    async query () {
-      const id = ++this.sequence
-      this.policies = {}; this.error = false; this.loading = !!this.pool
-      if (!this.pool) return
-      try {
-        const cap = await readAllocationCapability(getAPI, this.pool, this.form.allocationformat, 'create', () => id === this.sequence)
-        if (!cap) return
-        this.policies = cap.policies
-        if (!this.policies[this.form.allocationpolicy]) this.change({ allocationpolicy: undefined })
-      } catch (e) { if (id === this.sequence) this.error = true } finally { if (id === this.sequence) this.loading = false }
+    changeFormat (format) {
+      const policies = offeringAllocationPolicies(format)
+      this.change({ allocationformat: format, allocationpolicy: policies.includes(this.form.allocationpolicy) ? this.form.allocationpolicy : policies[0] })
     },
     validate () {
       if (this.form.allocationmode !== 'explicit') return Promise.resolve()
-      const unchanged = this.form.allocationoriginal === JSON.stringify({ policy: this.form.allocationpolicy, format: this.form.allocationformat })
-      if (!this.poolId && unchanged) return Promise.resolve()
-      if (this.loading || this.error || this.poolError || !this.policies[this.form.allocationpolicy]) return Promise.reject(new Error(this.$t('message.allocation.capability.failed')))
+      if (!this.canDefine || !this.policies.includes(this.form.allocationpolicy) || this.form.storagetype === 'local' || this.form.encryptdisk) return Promise.reject(new Error(this.$t('message.offering.allocation.invalid')))
       return Promise.resolve()
     }
   }
@@ -104,4 +95,13 @@ export default {
 </script>
 <style scoped>
 .allocation-note { margin: 6px 0 12px; color: var(--ui-text-secondary, #666); font-size: 12px; overflow-wrap: anywhere; }
+.allocation-editor :deep(.ant-radio-group) { display: flex; flex-wrap: wrap; gap: 8px; }
+.allocation-editor :deep(.ant-radio-button-wrapper) { border-left-width: 1px; border-radius: 3px; height: auto; white-space: normal; }
+.allocation-editor :deep(.ant-radio-button-wrapper::before) { display: none; }
+.allocation-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.allocation-support { margin: 6px 0 18px; }
+.allocation-support summary { color: var(--ui-link-color, #1677ff); cursor: pointer; font-size: 12px; }
+.allocation-support dl { display: grid; grid-template-columns: 135px minmax(0, 1fr); gap: 8px; font-size: 12px; margin: 12px 0; }
+.allocation-support dd { margin: 0; }
+@media (max-width: 600px) { .allocation-fields, .allocation-support dl { grid-template-columns: minmax(0, 1fr); } }
 </style>

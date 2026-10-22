@@ -15,6 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// Offering definitions describe administrator intent. Runtime pool/host capabilities
+// are validated when a volume is deployed, never by binding an offering to a pool.
+export function newOfferingAllocation (apiParams = {}) {
+  return apiParams.allocationpolicy && apiParams.allocationformat
+    ? { allocationmode: 'explicit', allocationformat: 'raw', allocationpolicy: 'off' }
+    : { allocationmode: 'legacy', provisioningtype: 'thin' }
+}
+export function offeringAllocationPolicies (format) {
+  return format === 'raw' ? ['off', 'falloc', 'full'] : format === 'qcow2' ? ['metadata', 'falloc', 'full'] : []
+}
 export function allocationIntent (resource) {
   const a = resource?.allocation
   return a?.contractversion === '1' && ['raw', 'qcow2'].includes(a.requestedformat)

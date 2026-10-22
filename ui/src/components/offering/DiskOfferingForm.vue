@@ -22,243 +22,269 @@
     :rules="rules"
     @finish="onInternalSubmit"
     layout="vertical">
-    <a-form-item name="name" ref="name">
-      <template #label>
-        <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
+    <OfferingFormSections ref="sections" :enabled="organized">
+      <template #basic>
+        <a-form-item name="name" ref="name">
+          <template #label>
+            <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
+          </template>
+          <a-input
+            v-focus="true"
+            v-model:value="form.name"
+            :placeholder="apiParams.name.description"/>
+        </a-form-item>
+        <a-form-item name="displaytext" ref="displaytext">
+          <template #label>
+            <tooltip-label :title="$t('label.displaytext')" :tooltip="apiParams.displaytext.description"/>
+          </template>
+          <a-input
+            v-model:value="form.displaytext"
+            :placeholder="organized ? $t('label.displaytext') : apiParams.displaytext.description"/>
+        </a-form-item>
+        <a-form-item name="customdisksize" ref="customdisksize">
+          <template #label>
+            <tooltip-label :title="$t(organized ? 'label.offering.size.mode' : 'label.customdisksize')" :tooltip="apiParams.customized.description"/>
+          </template>
+          <a-select v-if="organized" :value="form.customdisksize ? 'custom' : 'fixed'" @change="form.customdisksize = $event === 'custom'" :aria-label="$t('label.offering.size.mode')">
+            <a-select-option value="custom">{{ $t('label.offering.size.custom') }}</a-select-option>
+            <a-select-option value="fixed">{{ $t('label.offering.size.fixed') }}</a-select-option>
+          </a-select>
+          <a-switch v-else v-model:checked="form.customdisksize" />
+        </a-form-item>
+        <a-form-item v-if="!form.customdisksize" name="disksize" ref="disksize">
+          <template #label>
+            <tooltip-label :title="$t(organized ? 'label.offering.disk.size' : 'label.disksize')" :tooltip="apiParams.disksize.description"/>
+          </template>
+          <a-input
+            v-model:value="form.disksize"
+            :placeholder="organized ? '' : apiParams.disksize.description"/>
+        </a-form-item>
+        <a-form-item name="disksizestrictness" ref="disksizestrictness">
+          <template #label>
+            <tooltip-label :title="$t(organized ? 'label.offering.size.lock' : 'label.disksizestrictness')" :tooltip="apiParams.disksizestrictness.description" />
+          </template>
+          <a-switch v-model:checked="form.disksizestrictness" />
+        </a-form-item>
       </template>
-      <a-input
-        v-focus="true"
-        v-model:value="form.name"
-        :placeholder="apiParams.name.description"/>
-    </a-form-item>
-    <a-form-item name="displaytext" ref="displaytext">
-      <template #label>
-        <tooltip-label :title="$t('label.displaytext')" :tooltip="apiParams.displaytext.description"/>
+      <template #volume>
+        <AllocationPolicyEditor ref="allocationEditor" :form="form" :api-params="apiParams" @change="Object.assign(form, $event)" />
+        <fieldset class="offering-placement">
+          <legend>{{ $t('label.offering.placement') }}</legend>
+          <div class="offering-placement-grid">
+            <a-form-item name="storagetype" ref="storagetype">
+              <template #label>
+                <tooltip-label :title="$t('label.storagetype')" :tooltip="apiParams.storagetype.description"/>
+              </template>
+              <a-radio-group
+                v-model:value="form.storagetype"
+                buttonStyle="solid">
+                <a-radio-button value="shared">
+                  {{ $t(organized ? 'label.offering.storage.shared' : 'label.shared') }}
+                </a-radio-button>
+                <a-radio-button value="local" :disabled="form.allocationmode === 'explicit'">
+                  {{ $t('label.local') }}
+                </a-radio-button>
+              </a-radio-group>
+            </a-form-item>
+            <a-form-item v-if="isAdmin() || isDomainAdminAllowedToInformTags" name="tags" ref="tags">
+              <template #label>
+                <tooltip-label :title="$t('label.storagetags')" :tooltip="apiParams.tags.description"/>
+              </template>
+              <a-select
+                :getPopupContainer="(trigger) => trigger.parentNode"
+                mode="tags"
+                v-model:value="form.tags"
+                showSearch
+                optionFilterProp="value"
+                :filterOption="(input, option) => {
+                  return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }"
+                :loading="storageTagLoading"
+                :placeholder="organized ? $t('message.offering.tags.placeholder') : apiParams.tags.description"
+                v-if="isAdmin() || isDomainAdminAllowedToInformTags">
+                <a-select-option v-for="(opt) in storageTags" :key="opt">
+                  {{ opt }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </div>
+          <p class="offering-help">{{ $t('message.offering.allocation.deployment') }}</p>
+        </fieldset>
       </template>
-      <a-input
-        v-model:value="form.displaytext"
-        :placeholder="apiParams.displaytext.description"/>
-    </a-form-item>
-    <a-form-item name="storagetype" ref="storagetype">
-      <template #label>
-        <tooltip-label :title="$t('label.storagetype')" :tooltip="apiParams.storagetype.description"/>
+      <template #advanced>
+        <OfferingAdvancedGroup :enabled="organized" title="label.offering.group.performance" hint="label.offering.group.performance.hint">
+          <a-form-item v-if="!form.shareable" name="writecachetype" ref="writecachetype">
+            <template #label>
+              <tooltip-label :title="$t('label.writecachetype')" :tooltip="apiParams.cachemode.description"/>
+            </template>
+            <a-radio-group
+              v-model:value="form.writecachetype"
+              buttonStyle="solid"
+              @change="selected => { handleWriteCacheTypeChange(selected.target.value) }">
+              <a-radio-button value="writeback">
+                {{ $t('label.writeback') }}
+              </a-radio-button>
+              <a-radio-button value="writethrough">
+                {{ $t('label.writethrough') }}
+              </a-radio-button>
+              <a-radio-button value="none">
+                {{ $t('label.nodiskcache') }}
+              </a-radio-button>
+              <a-radio-button value="hypervisor_default">
+                {{ $t('label.hypervisor.default') }}
+              </a-radio-button>
+            </a-radio-group>
+          </a-form-item>
+          <a-form-item name="qostype" ref="qostype" :label="$t('label.qostype')">
+            <a-radio-group
+              v-model:value="form.qostype"
+              buttonStyle="solid">
+              <a-radio-button value="">
+                {{ $t('label.none') }}
+              </a-radio-button>
+              <a-radio-button value="hypervisor">
+                {{ $t('label.hypervisor') }}
+              </a-radio-button>
+              <a-radio-button value="storage">
+                {{ $t('label.storage') }}
+              </a-radio-button>
+            </a-radio-group>
+          </a-form-item>
+          <DiskQosFields v-if="form.qostype === 'hypervisor'" ref="qosEditor" :form="form" :api-params="apiParams" />
+          <a-form-item v-if="form.qostype === 'storage'" name="iscustomizeddiskiops" ref="iscustomizeddiskiops">
+            <template #label>
+              <tooltip-label :title="$t('label.iscustomizeddiskiops')" :tooltip="apiParams.customizediops.description"/>
+            </template>
+            <a-switch v-model:checked="form.iscustomizeddiskiops" />
+          </a-form-item>
+          <a-form-item v-if="form.qostype === 'storage' && !form.iscustomizeddiskiops" name="diskiopsmin" ref="diskiopsmin">
+            <template #label>
+              <tooltip-label :title="$t('label.diskiopsmin')" :tooltip="apiParams.miniops.description"/>
+            </template>
+            <a-input
+              v-model:value="form.diskiopsmin"
+              :placeholder="apiParams.miniops.description"/>
+          </a-form-item>
+          <a-form-item v-if="form.qostype === 'storage' && !form.iscustomizeddiskiops" name="diskiopsmax" ref="diskiopsmax">
+            <template #label>
+              <tooltip-label :title="$t('label.diskiopsmax')" :tooltip="apiParams.maxiops.description"/>
+            </template>
+            <a-input
+              v-model:value="form.diskiopsmax"
+              :placeholder="apiParams.maxiops.description"/>
+          </a-form-item>
+          <a-form-item v-if="form.qostype === 'storage'" name="hypervisorsnapshotreserve" ref="hypervisorsnapshotreserve">
+            <template #label>
+              <tooltip-label :title="$t('label.hypervisorsnapshotreserve')" :tooltip="apiParams.hypervisorsnapshotreserve.description"/>
+            </template>
+            <a-input
+              v-model:value="form.hypervisorsnapshotreserve"
+              :placeholder="apiParams.hypervisorsnapshotreserve.description"/>
+          </a-form-item>
+          <a-form-item name="encryptdisk" ref="encryptdisk">
+            <template #label>
+              <tooltip-label :title="$t('label.encrypt')" :tooltip="apiParams.encrypt.description" />
+            </template>
+            <a-switch :disabled="form.allocationmode === 'explicit'" v-model:checked="form.encryptdisk" />
+            <p v-if="organized && form.allocationmode === 'explicit'" class="offering-help">{{ $t('message.offering.encryption.unsupported') }}</p>
+          </a-form-item>
+          <a-form-item v-if="!form.shareable" name="kvdoenable" ref="kvdoenable">
+            <template #label>
+              <tooltip-label :title="$t('label.kvdoenable')" :tooltip="apiParams.kvdoenable ? apiParams.kvdoenable.description : ''"/>
+            </template>
+            <a-switch v-model:checked="form.kvdoenable" />
+          </a-form-item>
+          <a-form-item v-if="!form.kvdoenable" name="shareable" ref="shareable">
+            <template #label>
+              <tooltip-label :title="$t('label.shareable')" :tooltip="apiParams.shareable ? apiParams.shareable.description : ''"/>
+            </template>
+            <a-switch v-model:checked="form.shareable" />
+          </a-form-item>
+        </OfferingAdvancedGroup>
+        <OfferingAdvancedGroup :enabled="organized" title="label.offering.group.scope" hint="label.offering.group.scope.hint">
+          <a-form-item :label="$t('label.ispublic')" v-show="isAdmin()" name="ispublic" ref="ispublic">
+            <a-switch v-model:checked="form.ispublic" />
+          </a-form-item>
+          <a-form-item v-if="!form.ispublic" name="domainid" ref="domainid">
+            <template #label>
+              <tooltip-label :title="$t('label.domainid')" :tooltip="apiParams.domainid.description"/>
+            </template>
+            <a-select
+              mode="multiple"
+              :getPopupContainer="(trigger) => trigger.parentNode"
+              v-model:value="form.domainid"
+              showSearch
+              optionFilterProp="label"
+              :filterOption="(input, option) => {
+                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }"
+              :loading="domainLoading"
+              :placeholder="apiParams.domainid.description">
+              <a-select-option v-for="(opt, optIndex) in domains" :key="optIndex" :label="opt.path || opt.name || opt.description">
+                <span>
+                  <resource-icon v-if="opt && opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                  <block-outlined v-else style="margin-right: 5px" />
+                  {{ opt.path || opt.name || opt.description }}
+                </span>
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item name="zoneid" ref="zoneid">
+            <template #label>
+              <tooltip-label :title="$t('label.zoneid')" :tooltip="apiParams.zoneid.description"/>
+            </template>
+            <a-select
+              id="zone-selection"
+              mode="multiple"
+              :getPopupContainer="(trigger) => trigger.parentNode"
+              v-model:value="form.zoneid"
+              showSearch
+              optionFilterProp="label"
+              :filterOption="(input, option) => {
+                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }"
+              @select="val => fetchvSphereStoragePolicies(val)"
+              :loading="zoneLoading"
+              :placeholder="apiParams.zoneid.description">
+              <a-select-option v-for="(opt, optIndex) in zones" :key="optIndex" :label="opt.name || opt.description">
+                <span>
+                  <resource-icon v-if="opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
+                  <global-outlined v-else style="margin-right: 5px"/>
+                  {{ opt.name || opt.description }}
+                </span>
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item v-if="'listVsphereStoragePolicies' in $store.getters.apis && storagePolicies !== null" name="storagepolicy" ref="storagepolicy">
+            <template #label>
+              <tooltip-label :title="$t('label.vmware.storage.policy')" :tooltip="apiParams.storagepolicy.description"/>
+            </template>
+            <a-select
+              :getPopupContainer="(trigger) => trigger.parentNode"
+              v-model:value="form.storagepolicy"
+              :placeholder="apiParams.storagepolicy.description"
+              showSearch
+              optionFilterProp="label"
+              :filterOption="(input, option) => {
+                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }">
+              <a-select-option v-for="policy in storagePolicies" :key="policy.id" :label="policy.name || policy.id || ''">
+                {{ policy.name || policy.id }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </OfferingAdvancedGroup>
       </template>
-      <a-radio-group
-        v-model:value="form.storagetype"
-        buttonStyle="solid">
-        <a-radio-button value="shared">
-          {{ $t('label.shared') }}
-        </a-radio-button>
-        <a-radio-button value="local">
-          {{ $t('label.local') }}
-        </a-radio-button>
-      </a-radio-group>
-    </a-form-item>
-    <AllocationPolicyEditor ref="allocationEditor" :form="form" @change="Object.assign(form, $event)" />
-    <a-form-item name="encryptdisk" ref="encryptdisk">
-      <template #label>
-        <tooltip-label :title="$t('label.encrypt')" :tooltip="apiParams.encrypt.description" />
-      </template>
-      <a-switch v-model:checked="form.encryptdisk" />
-    </a-form-item>
-    <a-form-item name="disksizestrictness" ref="disksizestrictness">
-      <template #label>
-        <tooltip-label :title="$t('label.disksizestrictness')" :tooltip="apiParams.disksizestrictness.description" />
-      </template>
-      <a-switch v-model:checked="form.disksizestrictness" />
-    </a-form-item>
-    <a-form-item name="customdisksize" ref="customdisksize">
-      <template #label>
-        <tooltip-label :title="$t('label.customdisksize')" :tooltip="apiParams.customized.description"/>
-      </template>
-      <a-switch v-model:checked="form.customdisksize" />
-    </a-form-item>
-    <a-form-item v-if="!form.customdisksize" name="disksize" ref="disksize">
-      <template #label>
-        <tooltip-label :title="$t('label.disksize')" :tooltip="apiParams.disksize.description"/>
-      </template>
-      <a-input
-        v-model:value="form.disksize"
-        :placeholder="apiParams.disksize.description"/>
-    </a-form-item>
-    <a-form-item name="qostype" ref="qostype" :label="$t('label.qostype')">
-      <a-radio-group
-        v-model:value="form.qostype"
-        buttonStyle="solid">
-        <a-radio-button value="">
-          {{ $t('label.none') }}
-        </a-radio-button>
-        <a-radio-button value="hypervisor">
-          {{ $t('label.hypervisor') }}
-        </a-radio-button>
-        <a-radio-button value="storage">
-          {{ $t('label.storage') }}
-        </a-radio-button>
-      </a-radio-group>
-    </a-form-item>
-    <DiskQosFields v-if="form.qostype === 'hypervisor'" ref="qosEditor" :form="form" :api-params="apiParams" />
-    <a-form-item v-if="form.qostype === 'storage'" name="iscustomizeddiskiops" ref="iscustomizeddiskiops">
-      <template #label>
-        <tooltip-label :title="$t('label.iscustomizeddiskiops')" :tooltip="apiParams.customizediops.description"/>
-      </template>
-      <a-switch v-model:checked="form.iscustomizeddiskiops" />
-    </a-form-item>
-    <a-form-item v-if="form.qostype === 'storage' && !form.iscustomizeddiskiops" name="diskiopsmin" ref="diskiopsmin">
-      <template #label>
-        <tooltip-label :title="$t('label.diskiopsmin')" :tooltip="apiParams.miniops.description"/>
-      </template>
-      <a-input
-        v-model:value="form.diskiopsmin"
-        :placeholder="apiParams.miniops.description"/>
-    </a-form-item>
-    <a-form-item v-if="form.qostype === 'storage' && !form.iscustomizeddiskiops" name="diskiopsmax" ref="diskiopsmax">
-      <template #label>
-        <tooltip-label :title="$t('label.diskiopsmax')" :tooltip="apiParams.maxiops.description"/>
-      </template>
-      <a-input
-        v-model:value="form.diskiopsmax"
-        :placeholder="apiParams.maxiops.description"/>
-    </a-form-item>
-    <a-form-item v-if="form.qostype === 'storage'" name="hypervisorsnapshotreserve" ref="hypervisorsnapshotreserve">
-      <template #label>
-        <tooltip-label :title="$t('label.hypervisorsnapshotreserve')" :tooltip="apiParams.hypervisorsnapshotreserve.description"/>
-      </template>
-      <a-input
-        v-model:value="form.hypervisorsnapshotreserve"
-        :placeholder="apiParams.hypervisorsnapshotreserve.description"/>
-    </a-form-item>
-    <a-form-item v-if="!form.shareable" name="kvdoenable" ref="kvdoenable">
-      <template #label>
-        <tooltip-label :title="$t('label.kvdoenable')" :tooltip="apiParams.kvdoenable ? apiParams.kvdoenable.description : ''"/>
-      </template>
-      <a-switch v-model:checked="form.kvdoenable" />
-    </a-form-item>
-    <a-form-item v-if="!form.kvdoenable" name="shareable" ref="shareable">
-      <template #label>
-        <tooltip-label :title="$t('label.shareable')" :tooltip="apiParams.shareable ? apiParams.shareable.description : ''"/>
-      </template>
-      <a-switch v-model:checked="form.shareable" />
-    </a-form-item>
-    <a-form-item v-if="!form.shareable" name="writecachetype" ref="writecachetype">
-      <template #label>
-        <tooltip-label :title="$t('label.writecachetype')" :tooltip="apiParams.cachemode.description"/>
-      </template>
-      <a-radio-group
-        v-model:value="form.writecachetype"
-        buttonStyle="solid"
-        @change="selected => { handleWriteCacheTypeChange(selected.target.value) }">
-        <a-radio-button value="writeback">
-          {{ $t('label.writeback') }}
-        </a-radio-button>
-        <a-radio-button value="writethrough">
-          {{ $t('label.writethrough') }}
-        </a-radio-button>
-        <a-radio-button value="none">
-          {{ $t('label.nodiskcache') }}
-        </a-radio-button>
-        <a-radio-button value="hypervisor_default">
-          {{ $t('label.hypervisor.default') }}
-        </a-radio-button>
-      </a-radio-group>
-    </a-form-item>
-    <a-form-item v-if="isAdmin() || isDomainAdminAllowedToInformTags" name="tags" ref="tags">
-      <template #label>
-        <tooltip-label :title="$t('label.storagetags')" :tooltip="apiParams.tags.description"/>
-      </template>
-      <a-select
-        :getPopupContainer="(trigger) => trigger.parentNode"
-        mode="tags"
-        v-model:value="form.tags"
-        showSearch
-        optionFilterProp="value"
-        :filterOption="(input, option) => {
-          return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
-        }"
-        :loading="storageTagLoading"
-        :placeholder="apiParams.tags.description"
-        v-if="isAdmin() || isDomainAdminAllowedToInformTags">
-        <a-select-option v-for="(opt) in storageTags" :key="opt">
-          {{ opt }}
-        </a-select-option>
-      </a-select>
-    </a-form-item>
-    <a-form-item :label="$t('label.ispublic')" v-show="isAdmin()" name="ispublic" ref="ispublic">
-      <a-switch v-model:checked="form.ispublic" />
-    </a-form-item>
-    <a-form-item v-if="!form.ispublic" name="domainid" ref="domainid">
-      <template #label>
-        <tooltip-label :title="$t('label.domainid')" :tooltip="apiParams.domainid.description"/>
-      </template>
-      <a-select
-        mode="multiple"
-        :getPopupContainer="(trigger) => trigger.parentNode"
-        v-model:value="form.domainid"
-        showSearch
-        optionFilterProp="label"
-        :filterOption="(input, option) => {
-          return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-        }"
-        :loading="domainLoading"
-        :placeholder="apiParams.domainid.description">
-        <a-select-option v-for="(opt, optIndex) in domains" :key="optIndex" :label="opt.path || opt.name || opt.description">
-          <span>
-            <resource-icon v-if="opt && opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-            <block-outlined v-else style="margin-right: 5px" />
-            {{ opt.path || opt.name || opt.description }}
-          </span>
-        </a-select-option>
-      </a-select>
-    </a-form-item>
-    <a-form-item name="zoneid" ref="zoneid">
-      <template #label>
-        <tooltip-label :title="$t('label.zoneid')" :tooltip="apiParams.zoneid.description"/>
-      </template>
-      <a-select
-        id="zone-selection"
-        mode="multiple"
-        :getPopupContainer="(trigger) => trigger.parentNode"
-        v-model:value="form.zoneid"
-        showSearch
-        optionFilterProp="label"
-        :filterOption="(input, option) => {
-          return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-        }"
-        @select="val => fetchvSphereStoragePolicies(val)"
-        :loading="zoneLoading"
-        :placeholder="apiParams.zoneid.description">
-        <a-select-option v-for="(opt, optIndex) in zones" :key="optIndex" :label="opt.name || opt.description">
-          <span>
-            <resource-icon v-if="opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-            <global-outlined v-else style="margin-right: 5px"/>
-            {{ opt.name || opt.description }}
-          </span>
-        </a-select-option>
-      </a-select>
-    </a-form-item>
-    <a-form-item v-if="'listVsphereStoragePolicies' in $store.getters.apis && storagePolicies !== null" name="storagepolicy" ref="storagepolicy">
-      <template #label>
-        <tooltip-label :title="$t('label.vmware.storage.policy')" :tooltip="apiParams.storagepolicy.description"/>
-      </template>
-      <a-select
-        :getPopupContainer="(trigger) => trigger.parentNode"
-        v-model:value="form.storagepolicy"
-        :placeholder="apiParams.storagepolicy.description"
-        showSearch
-        optionFilterProp="label"
-        :filterOption="(input, option) => {
-          return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-        }">
-        <a-select-option v-for="policy in storagePolicies" :key="policy.id" :label="policy.name || policy.id || ''">
-          {{ policy.name || policy.id }}
-        </a-select-option>
-      </a-select>
-    </a-form-item>
-    <slot name="form-actions"></slot>
+    </OfferingFormSections>
+    <slot name="form-actions">
+    </slot>
   </a-form>
 </template>
 
 <script>
 import { reactive, toRaw } from 'vue'
+import OfferingFormSections from '@/components/offering/OfferingFormSections'
+import OfferingAdvancedGroup from '@/components/offering/OfferingAdvancedGroup'
 import { getAPI } from '@/utils/storageApi'
 import { isAdmin } from '@/role'
 import { mixinForm } from '@/utils/mixin'
@@ -275,6 +301,8 @@ export default {
   name: 'DiskOfferingForm',
   mixins: [mixinForm],
   components: {
+    OfferingFormSections,
+    OfferingAdvancedGroup,
     AllocationPolicyEditor,
     DiskQosFields,
     AllocationSummary,
@@ -284,6 +312,7 @@ export default {
     GlobalOutlined
   },
   props: {
+    organized: Boolean,
     initialValues: {
       type: Object,
       default: () => ({})
@@ -510,20 +539,29 @@ export default {
         this.fetchvSphereStoragePolicies(zoneIndexes[0])
       }
     },
-    validate () {
-      return (this.$refs.allocationEditor?.validate() || Promise.resolve()).then(() => this.$refs.qosEditor?.validate()).then(() => this.$refs.internalFormRef.validate()).then(() => {
-        const formRaw = toRaw(this.form)
-        const values = this.handleRemoveFields(formRaw)
-        // Allocation controls live in a child component, so they do not have parent form refs.
-        return {
-          ...values,
-          ...performanceFormValues(formRaw),
-          allocationmode: formRaw.allocationmode,
-          allocationpolicy: formRaw.allocationpolicy,
-          allocationformat: formRaw.allocationformat,
-          provisioningtype: formRaw.provisioningtype
-        }
-      })
+    async validate () {
+      try { await this.$refs.allocationEditor?.validate() } catch (error) {
+        await this.$refs.sections?.reveal('volume')
+        throw error
+      }
+      try { await this.$refs.qosEditor?.validate() } catch (error) {
+        await this.$refs.sections?.reveal('advanced')
+        throw error
+      }
+      try { await this.$refs.internalFormRef.validate() } catch (error) {
+        await this.$refs.sections?.revealField(error.errorFields?.[0]?.name?.[0])
+        throw error
+      }
+      const formRaw = toRaw(this.form)
+      const values = this.handleRemoveFields(formRaw)
+      return {
+        ...values,
+        ...performanceFormValues(formRaw),
+        allocationmode: formRaw.allocationmode,
+        allocationpolicy: formRaw.allocationpolicy,
+        allocationformat: formRaw.allocationformat,
+        provisioningtype: formRaw.provisioningtype
+      }
     },
     onInternalSubmit () {
       this.$emit('submit')

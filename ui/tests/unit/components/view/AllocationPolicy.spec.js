@@ -45,20 +45,24 @@ test('legacy clone validation remains unchanged with no capability permission', 
   const w = shallowMount(Editor, { props: { form: { provisioningtype: 'fat' } }, global: globals })
   await expect(w.vm.validate()).resolves.toBeUndefined(); expect(getAPI).not.toHaveBeenCalled(); w.unmount()
 })
-test('unchanged explicit offering definition can be cloned without a pool binding', async () => {
+test('explicit offering definitions can be changed without a pool binding', async () => {
+  getAPI.mockClear()
   const form = { allocationmode: 'explicit', allocationpolicy: 'full', allocationformat: 'raw', allocationoriginal: JSON.stringify({ policy: 'full', format: 'raw' }) }
   const w = shallowMount(Editor, { props: { form }, global: globals })
   await expect(w.vm.validate()).resolves.toBeUndefined()
   await w.setProps({ form: { ...form, allocationpolicy: 'falloc' } })
-  await expect(w.vm.validate()).rejects.toThrow('failed'); w.unmount()
+  await expect(w.vm.validate()).resolves.toBeUndefined()
+  expect(getAPI).not.toHaveBeenCalled(); w.unmount()
 })
-test('a failed capability refresh preserves fields and blocks submission', async () => {
-  const form = { allocationmode: 'explicit', allocationpolicy: 'full', allocationformat: 'raw' }
-  const w = shallowMount(Editor, { props: { form }, global: globals }); await w.setData({ pools: [{ id: 'p', type: 'RBD' }], poolId: 'p' })
-  getAPI.mockRejectedValue(new Error('offline'))
-  await w.vm.query(); expect(form.allocationpolicy).toBe('full'); expect(w.vm.error).toBe(true)
-  await expect(w.vm.validate()).rejects.toThrow('failed'); w.unmount()
+
+test('offering validation rejects invalid combinations without consulting a pool', async () => {
+  getAPI.mockClear()
+  const form = { allocationmode: 'explicit', allocationpolicy: 'metadata', allocationformat: 'raw' }
+  const w = shallowMount(Editor, { props: { form, apiParams: { allocationformat: {}, allocationpolicy: {} } }, global: globals })
+  await expect(w.vm.validate()).rejects.toThrow('invalid')
+  expect(getAPI).not.toHaveBeenCalled(); w.unmount()
 })
+
 test('old CreateVolume capability cannot clear a later valid result', async () => {
   let release
   const method = CreateVolume.methods.queryAllocation
