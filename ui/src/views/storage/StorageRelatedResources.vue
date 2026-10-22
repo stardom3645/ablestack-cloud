@@ -32,9 +32,9 @@ import ListView from '@/components/view/ListView'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 const definitions = {
-  computeoffering: { tab: 'instances', api: 'listVirtualMachines', response: 'listvirtualmachinesresponse', rows: 'virtualmachine', param: 'serviceofferingid', path: '/vm', fields: ['name', 'state', 'account', 'project', 'zonename'] },
+  computeoffering: { tab: 'instances', api: 'listVirtualMachines', response: 'listvirtualmachinesresponse', rows: 'virtualmachine', param: 'serviceofferingid', path: '/vm', fields: ['name', 'instancename', 'state', 'account', 'project', 'zonename'] },
   diskoffering: { tab: 'volumes', api: 'listVolumes', response: 'listvolumesresponse', rows: 'volume', param: 'diskofferingid', path: '/volume', fields: ['name', 'state', 'size', 'type', 'vmname', 'zonename'] },
-  volume: { tab: 'snapshots', api: 'listSnapshots', response: 'listsnapshotsresponse', rows: 'snapshot', param: 'volumeid', path: '/snapshot', fields: ['name', 'state', 'snapshottype', 'created'] }
+  volume: { tab: 'snapshots', api: 'listSnapshots', response: 'listsnapshotsresponse', rows: 'snapshot', param: 'volumeid', path: '/snapshot', fields: ['name', 'state', 'intervaltype', 'physicalsize', 'created'] }
 }
 export default {
   name: 'StorageRelatedResources',
