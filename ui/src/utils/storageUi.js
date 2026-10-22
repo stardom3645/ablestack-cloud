@@ -19,7 +19,7 @@ export function storageDetailRouteKey (route) {
 }
 
 export function storageDialogSize (api) {
-  return ['createServiceOffering', 'cloneServiceOffering', 'createDiskOffering', 'cloneDiskOffering', 'updateServiceOffering', 'updateDiskOffering', 'migrateVolume', 'changeOfferingForVolume', 'assignVolume', 'createSnapshotPolicy'].includes(api) ? 'lg' : 'md'
+  return ['cloneServiceOffering', 'cloneDiskOffering', 'updateServiceOffering', 'updateDiskOffering', 'migrateVolume', 'changeOfferingForVolume', 'assignVolume', 'createSnapshotPolicy'].includes(api) ? 'lg' : 'md'
 }
 
 export function volumeVmPath (record, router) {

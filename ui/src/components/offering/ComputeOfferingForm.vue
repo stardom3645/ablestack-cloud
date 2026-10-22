@@ -190,16 +190,17 @@
         </div>
         <span v-if="!form.computeonly">
           <a-form-item>
-            <a-modal
+            <MoldDialog
               :visible="showDiskOfferingModal"
               :title="$t('label.add.disk.offering')"
-              :footer="null"
-              centered
+              class="storage-standard-dialog"
+              size="md"
+              form-actions
               :closable="true"
               @cancel="closeDiskOfferingModal"
-              width="auto">
+              >
               <add-disk-offering @close-action="closeDiskOfferingModal()" @publish-disk-offering-id="($event) => updateSelectedDiskOffering($event)"/>
-            </a-modal>
+            </MoldDialog>
             <a-form-item :label="$t('label.disk.offerings')" name="diskofferingid" ref="diskofferingid">
               <a-select :getPopupContainer="(trigger) => trigger.parentNode" v-model:value="form.diskofferingid" :loading="diskOfferingLoading" :placeholder="$t('label.diskoffering')">
                 <a-select-option v-for="(offering, index) in diskOfferings" :value="offering.id" :key="index">{{ offering.displaytext || offering.name }}</a-select-option>
@@ -546,6 +547,7 @@ import { performanceFormValues } from '@/utils/offeringQos'
 import AllocationPolicyEditor from '@/components/offering/AllocationPolicyEditor'
 import AllocationSummary from '@/components/view/AllocationSummary'
 import OfferingDiskDefinition from '@/components/offering/OfferingDiskDefinition'
+import MoldDialog from '@/components/view/MoldDialog'
 import { readAllocationList } from '@/utils/volumeAllocation'
 
 export default {
@@ -558,6 +560,7 @@ export default {
     DiskQosFields,
     AllocationSummary,
     OfferingDiskDefinition,
+    MoldDialog,
     AddDiskOffering,
     ResourceIcon,
     TooltipLabel,

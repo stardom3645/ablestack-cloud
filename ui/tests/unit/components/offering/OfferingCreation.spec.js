@@ -18,11 +18,19 @@ import ComputeForm from '@/components/offering/ComputeOfferingForm'
 import AddDisk from '@/views/offering/AddDiskOffering'
 import AddCompute from '@/views/offering/AddComputeOffering'
 import { newOfferingAllocation, allocationParams } from '@/utils/volumeAllocation'
+import { storageDialogSize } from '@/utils/storageUi'
 import { getAPI, postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 const apiParams = { allocationformat: {}, allocationpolicy: {} }
 const testGlobals = { mocks: { $t: key => key } }
 beforeEach(() => { getAPI.mockReset(); postAPI.mockReset() })
+
+test('new offering dialogs use the compact standard shell while other operation sizes remain unchanged', () => {
+  expect(storageDialogSize('createServiceOffering')).toBe('md')
+  expect(storageDialogSize('createDiskOffering')).toBe('md')
+  expect(storageDialogSize('migrateVolume')).toBe('lg')
+  expect(storageDialogSize('cloneDiskOffering')).toBe('lg')
+})
 
 test('new supported offerings default to Europa while older API schemas keep legacy values', () => {
   expect(allocationParams(newOfferingAllocation(apiParams))).toEqual({ allocationpolicy: 'off', allocationformat: 'raw' })
