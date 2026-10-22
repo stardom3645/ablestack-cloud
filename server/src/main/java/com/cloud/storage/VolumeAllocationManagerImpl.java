@@ -148,6 +148,13 @@ public class VolumeAllocationManagerImpl extends ManagerBase implements VolumeAl
                 }
                 return;
             }
+            if (pool.getPoolType() == Storage.StoragePoolType.RBD &&
+                    !"raw".equals(intent.get(VolumeAllocationPolicy.FORMAT))) {
+                if (poolId != null) {
+                    throw new InvalidParameterValueException("ALLOCATION_RBD_FORMAT_UNSUPPORTED: RBD allocation requires RAW; the requested image format is preserved");
+                }
+                continue;
+            }
             if (pool.getPoolType() != Storage.StoragePoolType.RBD && pool.getPoolType() != Storage.StoragePoolType.SharedMountPoint) {
                 // Explicit selection cannot silently fall through to a different backend.
                 if (poolId != null) {

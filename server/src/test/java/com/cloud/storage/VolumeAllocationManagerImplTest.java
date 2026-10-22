@@ -153,6 +153,26 @@ public class VolumeAllocationManagerImplTest {
     @Test public void matchingPoolRequiresBothCreateAndCopy() throws Exception {
         qualifiedPool(); manager.validateCreate(VolumeAllocationPolicy.request("full", "raw", null), Storage.ProvisioningType.FAT, 10, 1L, new String[]{"rbd"});
     }
+    @Test public void selectedRbdQcow2NeverQueriesRawCapability() throws Exception {
+        qualifiedPool();
+        try {
+            manager.validateCreate(VolumeAllocationPolicy.request("full", "qcow2", null), Storage.ProvisioningType.FAT, 10, 1L, null);
+            org.junit.Assert.fail("RBD must reject QCOW2 before allocating a volume");
+        } catch (InvalidParameterValueException e) {
+            org.junit.Assert.assertTrue(e.getMessage().contains("ALLOCATION_RBD_FORMAT_UNSUPPORTED"));
+        }
+        verifyNoInteractions(agentManager);
+    }
+    @Test public void automaticRbdSelectionNeverSubstitutesRawForQcow2() throws Exception {
+        qualifiedPool();
+        try {
+            manager.validateCreate(VolumeAllocationPolicy.request("full", "qcow2", null), Storage.ProvisioningType.FAT, 10, null, null);
+            org.junit.Assert.fail("RBD cannot satisfy a QCOW2 request");
+        } catch (InvalidParameterValueException e) {
+            org.junit.Assert.assertTrue(e.getMessage().contains("ALLOCATION_AGENT_UNAVAILABLE"));
+        }
+        verifyNoInteractions(agentManager);
+    }
     @Test(expected = InvalidParameterValueException.class) public void oldAgentCannotExecuteNewPolicy() throws Exception {
         qualifiedPool(); when(host.getDetail(VolumeAllocationPolicy.AGENT_VERSION)).thenReturn(null);
         manager.validateCreate(VolumeAllocationPolicy.request("off", "raw", null), Storage.ProvisioningType.THIN, 10, 1L, null);
