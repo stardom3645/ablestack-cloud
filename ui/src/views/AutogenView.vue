@@ -845,7 +845,7 @@
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
-          :actions="(isStorageUi && !storageActionReady) || (isSshKeyPairDetail && !sshKeyPairDetailActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
+          :actions="(isSshKeyPairDetail && !sshKeyPairDetailActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
           @exec-action="handleDataViewAction"
           @change-resource="resource = $event" />
       </div>
@@ -865,7 +865,7 @@
           :emptyText="$route.meta?.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
           :columns="columns"
           :items="items"
-          :actions="(isStorageUi && !storageActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
+          :actions="$route.meta?.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
           :currentPage="page"
           :pageSize="pageSize"
           :columnKeys="columnKeys"
@@ -977,6 +977,7 @@ export default {
   provide: function () {
     return {
       parentFetchData: this.fetchData,
+      resourceActionReady: () => !this.isStorageUi || this.storageActionReady,
       parentExecuteAction: this.handleDataViewAction,
       parentToggleLoading: this.toggleLoading,
       parentStartLoading: this.startLoading,
@@ -1343,7 +1344,7 @@ export default {
       return 'self'
     },
     visibleDataViewActions () {
-      if (this.isStorageUi && !this.storageActionReady) return []
+      if (this.isStorageUi && !this.resource?.id) return []
       if (this.isSshKeyPairDetail && !this.sshKeyPairDetailActionReady) return []
       if (this.$route.meta?.name === 'vmgroup' && !this.vmGroupQueryReady) return []
       if (!this.actions || !this.dataView) {
@@ -2063,11 +2064,15 @@ export default {
         if (sshDetail) { this.rejectSshKeyPairDetail(sshKeyPairDetailFailure(error)); return }
         if (cniQuery || storageUiRoute(this.$route)) {
           this.listRefreshError = true
-          this.resetSelection()
-          if (this.$refs.listview) this.$refs.listview.resetSelection()
+          if (cniQuery) {
+            this.resetSelection()
+            if (this.$refs.listview) this.$refs.listview.resetSelection()
+          }
           const code = Number(error?.response?.data?.errorresponse?.errorcode || error?.response?.status)
           if (!sameList || [401, 403, 431, 432, 531].includes(code)) {
             this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null
+            this.resetSelection()
+            if (this.$refs.listview) this.$refs.listview.resetSelection()
           }
           if (isAutoScheduled) throw error
           return
@@ -2226,6 +2231,7 @@ export default {
       }
     },
     execAction (action, isGroupAction) {
+      if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement
       if (action.api === 'deleteAffinityGroup') {

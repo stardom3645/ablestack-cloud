@@ -19,6 +19,7 @@ import context from '@/utils/storageDialogContext'
 import { volumeVmPath } from '@/utils/storageUi'
 import Related from '@/views/storage/StorageRelatedResources'
 import { getAPI } from '@/api'
+import ActionButton from '@/components/view/ActionButton'
 
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn(), callAPI: jest.fn() }))
 
@@ -113,4 +114,16 @@ test('out of range related page returns to the last page without publishing an e
   const vm = related(); vm.page = 3; vm.changePage = jest.fn()
   getAPI.mockResolvedValueOnce({ listvolumesresponse: { count: 12, volume: [] } }); await vm.fetchData()
   expect(vm.changePage).toHaveBeenCalledWith(2, 10); expect(vm.rows).toEqual([{ id: 'existing' }])
+})
+
+test('refresh retains action entries and bulk selection while disabling mutations until data is current', () => {
+  const action = { api: 'resizeVolume', dataView: true }
+  const vm = { isStorageUi: true, storageActionReady: false, resource: { id: 'volume' }, actions: [action], dataView: true, $route: { meta: { name: 'volume' } }, $store: { getters: { apis: { resizeVolume: {} } } } }
+  expect(AutogenView.computed.visibleDataViewActions.call(vm)).toEqual([action])
+  expect(ActionButton.methods.isActionDisabled.call({ ...vm, resourceActionReady: () => false }, action)).toBe(true)
+  expect(ActionButton.methods.isActionDisabled.call({ ...vm, dataView: false, resourceActionReady: () => false }, { api: 'deleteVolume', groupAction: true })).toBe(true)
+  expect(ActionButton.methods.isActionDisabled.call({ ...vm, dataView: false, resourceActionReady: () => false }, { api: 'createVolume', listView: true })).toBe(false)
+  expect(ActionButton.methods.isActionDisabled.call({ ...vm, resourceActionReady: () => true }, action)).toBe(false)
+  vm.actionTrigger = 'kept'; AutogenView.methods.execAction.call(vm, action, false)
+  expect(vm.actionTrigger).toBe('kept')
 })
