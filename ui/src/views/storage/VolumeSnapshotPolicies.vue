@@ -18,12 +18,12 @@
 <template>
   <section class="volume-policy-tab">
     <div class="detail-tab-toolbar">
-      <a-button :loading="pending" :disabled="!canRead || loading" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+      <a-button :loading="pending" :disabled="!canRead || parentPending" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
     </div>
     <a-alert v-if="error" type="error" show-icon :message="$t(loaded ? 'message.list.refresh.stale' : 'error.fetching.data')">
       <template #description><a-button :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template>
     </a-alert>
-    <ScheduledSnapshots :resource="resource" :dataSource="rows" :loading="pending && !loaded" :disabled="pending || loading || !!error || !active" @refresh="fetchData" />
+    <ScheduledSnapshots :resource="resource" :dataSource="rows" :loading="pending && !loaded" :disabled="pending || parentPending || !!error || !active" @refresh="fetchData" />
   </section>
 </template>
 <script>
@@ -37,9 +37,11 @@ export default {
   components: { ScheduledSnapshots },
   mixins: [listRefreshMixin(['fetchData'], { active: vm => vm.active })],
   props: { resource: { type: Object, required: true }, loading: Boolean, tab: { type: String, default: '' } },
+  inject: { resourceReadPending: { default: () => () => false } },
   data () { return { rows: [], error: false, pending: false, loaded: false, version: 0, disposed: false } },
   computed: {
     active () { return this.tab === 'recurringsnapshots' },
+    parentPending () { return this.loading || this.resourceReadPending() },
     canRead () { return 'listSnapshotPolicies' in this.$store.getters.apis },
     ownerScope () { return JSON.stringify([this.$route.path, this.resource.id, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id, this.canRead]) }
   },
@@ -47,14 +49,14 @@ export default {
     resource () { this.fetchData() },
     ownerScope () { this.reset(); this.fetchData() },
     active (value) { this.version++; this.pending = false; if (value) this.fetchData() },
-    loading (value) { if (!value) this.fetchData() }
+    parentPending (value) { if (!value) this.fetchData() }
   },
   created () { this.fetchData() },
   beforeUnmount () { this.disposed = true; this.version++ },
   methods: {
     reset () { this.version++; this.rows = []; this.error = false; this.pending = false; this.loaded = false },
     async fetchData () {
-      if (this.disposed || !this.active || this.loading || this.pending) return
+      if (this.disposed || !this.active || this.loading || this.parentPending || this.pending) return
       if (!this.canRead || !this.resource.id) { this.reset(); return }
       const version = ++this.version; const scope = this.ownerScope; const id = this.resource.id
       const current = () => !this.disposed && this.active && version === this.version && scope === this.ownerScope

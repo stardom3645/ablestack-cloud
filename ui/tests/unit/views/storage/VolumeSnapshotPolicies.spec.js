@@ -13,6 +13,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { shallowMount, flushPromises } from '@vue/test-utils'
+import { ref } from 'vue'
 import Policies from '@/views/storage/VolumeSnapshotPolicies'
 import Recurring from '@/views/storage/RecurringSnapshotVolume'
 import Schedule from '@/views/storage/FormSchedule'
@@ -55,12 +56,15 @@ test('a failed refresh retains policies; retry replaces them and authentication 
 })
 
 test('a background parent refresh after policy creation refreshes the active tab even when loading stays false', async () => {
+  const parentPending = ref(false)
   getAPI.mockResolvedValueOnce({ listsnapshotpoliciesresponse: { snapshotpolicy: [{ id: 'existing' }] } })
     .mockResolvedValueOnce({ listsnapshotpoliciesresponse: { snapshotpolicy: [{ id: 'existing' }, { id: 'created' }] } })
-  const wrapper = shallowMount(Policies, { props: { resource: { id: 'first' }, tab: 'recurringsnapshots' }, global: { mocks: { $t: k => k, $route: { path: '/volume/first', fullPath: '/volume/first?tab=recurringsnapshots' }, $store: { getters: { apis: { listSnapshotPolicies: {} }, userInfo: {} }, state: { user: {} } } } } })
+  const wrapper = shallowMount(Policies, { props: { resource: { id: 'first' }, tab: 'recurringsnapshots' }, global: { provide: { resourceReadPending: () => parentPending.value }, mocks: { $t: k => k, $route: { path: '/volume/first', fullPath: '/volume/first?tab=recurringsnapshots' }, $store: { getters: { apis: { listSnapshotPolicies: {} }, userInfo: {} }, state: { user: {} } } } } })
   await flushPromises()
   expect(wrapper.vm.rows.map(row => row.id)).toEqual(['existing'])
-  await wrapper.setProps({ resource: { id: 'first', name: 'refreshed' } }); await flushPromises()
+  parentPending.value = true; await flushPromises()
+  expect(getAPI).toHaveBeenCalledTimes(1)
+  parentPending.value = false; await flushPromises()
   expect(wrapper.vm.rows.map(row => row.id)).toEqual(['existing', 'created'])
   expect(getAPI).toHaveBeenCalledTimes(2)
   wrapper.unmount()
