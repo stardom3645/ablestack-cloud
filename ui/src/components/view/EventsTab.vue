@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import { listRefreshMixin } from '@/utils/listRefreshMixin'
+import { listRefreshMixin, detailTabRouteKey } from '@/utils/listRefreshMixin'
 
 import { getAPI } from '@/api'
 import { genericCompare } from '@/utils/sort.js'
@@ -84,7 +84,7 @@ import ListView from '@/components/view/ListView'
 const EVENTS_TAB_COLUMNS_KEY = 'events_tab_columns'
 
 export default {
-  mixins: [listRefreshMixin(['fetchEvents'])],
+  mixins: [listRefreshMixin(['fetchEvents'], { routeKey: vm => detailTabRouteKey(vm.$route) })],
   name: 'EventsTab',
   components: {
     ListView

@@ -130,12 +130,12 @@
 </template>
 
 <script>
-import { listRefreshMixin } from '@/utils/listRefreshMixin'
+import { listRefreshMixin, detailTabRouteKey } from '@/utils/listRefreshMixin'
 
 import { getAPI, postAPI } from '@/api'
 
 export default {
-  mixins: [listRefreshMixin(['getAnnotations'])],
+  mixins: [listRefreshMixin(['getAnnotations'], { routeKey: vm => detailTabRouteKey(vm.$route) })],
   name: 'AnnotationsTab',
   props: {
     resource: {
