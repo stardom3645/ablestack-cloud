@@ -219,7 +219,7 @@
             </a-select-option>
           </a-select>
         </a-form-item >
-        <a-form-item :label="$t('label.deviceid')">
+        <a-form-item ref="deviceid" name="deviceid" :label="$t('label.deviceid')" :extra="$t('message.vmvolume.device.auto')" :rules="[{ validator: validateDeviceId }]">
           <div style="margin-bottom: 10px">
             <a-collapse>
               <a-collapse-panel header="More information about deviceID">
@@ -234,8 +234,9 @@
           <a-input-number
             v-model:value="form.deviceid"
             style="width: 100%;"
-            :min="0"
-            :placeholder="$t('label.deviceid')"
+            :min="1"
+            :precision="0"
+            :placeholder="$t('label.vmvolume.device.auto')"
           />
         </a-form-item>
       </span>
@@ -648,6 +649,7 @@ export default {
             ...(!this.createVolumeFromVM ? { deviceid: values.deviceid } : {})
           }
           : null
+        delete values.deviceid
         this.loading = true
         postAPI('createVolume', values).then(response => {
           this.$pollJob({

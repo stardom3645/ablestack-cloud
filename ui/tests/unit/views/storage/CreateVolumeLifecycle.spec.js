@@ -15,6 +15,7 @@
 
 import CreateVolume from '@/views/storage/CreateVolume.vue'
 import { postAPI } from '@/api'
+import { mixinForm } from '@/utils/mixin'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: { userInfo: { account: 'admin', roletype: 'Admin' }, project: null } }))
 jest.mock('@/role', () => ({ isAdmin: () => true }))
@@ -72,6 +73,18 @@ test('an attachment option in a later form cannot attach a previously standalone
   ctx.attachVolume = true; ctx.vmidtoattach = 'later-vm'
   ctx.$pollJob.mock.calls[0][0].successMethod({ jobresult: { volume: { id: 'created-volume' } } })
   expect(postAPI).toHaveBeenCalledTimes(1)
+})
+
+test('a registered attachment device survives form filtering and is sent only to attachVolume', async () => {
+  const ctx = context(); ctx.attachVolume = true
+  ctx.$refs = Object.fromEntries(Object.keys(ctx.form).map(key => [key, {}]))
+  ctx.handleRemoveFields = values => mixinForm.methods.handleRemoveFields.call(ctx, values)
+  CreateVolume.methods.handleSubmit.call(ctx)
+  await flush()
+  expect(postAPI.mock.calls[0][0]).toBe('createVolume')
+  expect(postAPI.mock.calls[0][1]).not.toHaveProperty('deviceid')
+  ctx.$pollJob.mock.calls[0][0].successMethod({ jobresult: { volume: { id: 'created-volume' } } })
+  expect(postAPI).toHaveBeenLastCalledWith('attachVolume', { id: 'created-volume', virtualmachineid: 'original-vm', deviceid: 4, projectid: '-1' })
 })
 
 test('a close from an obsolete dialog scope cannot close the currently active dialog', () => {
