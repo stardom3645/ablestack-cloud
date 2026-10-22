@@ -70,4 +70,3 @@ GFS2 Full 관측량에는 파일시스템 할당 오버헤드가 포함된다. R
 ![디스크 볼륨 배포](disk-volume-dark.png)
 
 ![밝은 테마 컴퓨트 볼륨 배포](compute-volume-light.png)
-
