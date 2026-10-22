@@ -242,17 +242,20 @@
       <a-form-item v-if="submitHandler" class="volume-device-hint" ref="deviceid" name="deviceid" :label="$t('label.vmvolume.deviceid')" :extra="$t('message.vmvolume.device.auto')" :rules="[{ validator: validateDeviceId }]">
         <a-input-number v-model:value="form.deviceid" :min="1" :precision="0" :placeholder="$t('label.vmvolume.device.auto')" style="width: 100%" />
       </a-form-item>
-      <div v-if="!hideActions" :span="24" class="action-button">
+      <MoldDialogActions v-if="!hideActions" :span="24" class="" :busy="loading">
         <a-button @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button type="primary" ref="submit" :disabled="allocationBlocked || (createOnStorage && (storageLoading || storageFetchError || !selectedStoragePool))" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-form>
   </a-spin>
 </template>
 
 <script>
+import storageDialogContext from '@/utils/storageDialogContext'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { ref, reactive, toRaw } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { volumeDeviceIdReason } from '@/utils/vmVolumeActions'
 import { offeringStoragePools, readStoragePools, storageTags } from '@/utils/volumeStoragePools'
 import { mixinForm } from '@/utils/mixin'
@@ -267,8 +270,9 @@ import { allocationIntent, poolAcceptsIntent, readAllocationCapability, readAllo
 
 export default {
   name: 'CreateVolume',
-  mixins: [mixinForm],
+  mixins: [storageDialogContext, mixinForm],
   components: {
+    MoldDialogActions,
     AllocationSummary,
     OwnershipSelection,
     ResourceIcon,
@@ -602,6 +606,7 @@ export default {
     handleSubmit (e) {
       if (this.loading || this.allocationBlocked || (this.createOnStorage && this.storageLoading)) return
       this.formRef.value.validate().then(() => {
+        if (this.loading || (this.dialogCurrent && !this.dialogCurrent())) return
         if (this.createOnStorage && (this.storageFetchError || this.storageLoading || !this.selectedStoragePool)) {
           throw new Error(this.$t(this.storageFetchError ? 'message.volume.storage.failed' : 'message.volume.storage.select.matching'))
         }

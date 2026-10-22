@@ -25,10 +25,10 @@
         :isAdmin="isAdmin"
         @submit="handleSubmit">
         <template #form-actions>
-          <div :span="24" class="action-button">
+          <MoldDialogActions :span="24" :busy="loading">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
             <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-          </div>
+          </MoldDialogActions>
         </template>
       </DiskOfferingForm>
     </a-spin>
@@ -36,6 +36,8 @@
 </template>
 
 <script>
+import storageDialogContext from '@/utils/storageDialogContext'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import DiskOfferingForm from '@/components/offering/DiskOfferingForm'
 import { reactive } from 'vue'
 import { postAPI } from '@/api'
@@ -44,8 +46,10 @@ import { allocationParams } from '@/utils/volumeAllocation'
 import { isAdmin } from '@/role'
 
 export default {
+  mixins: [storageDialogContext],
   name: 'AddDiskOffering',
   components: {
+    MoldDialogActions,
     DiskOfferingForm
   },
   data () {
@@ -79,6 +83,7 @@ export default {
       if (this.loading) return
 
       this.$refs.formRef.validate().then((values) => {
+        if (this.loading || (this.dialogCurrent && !this.dialogCurrent())) return
         const params = {
           name: values.name,
           displaytext: values.displaytext,

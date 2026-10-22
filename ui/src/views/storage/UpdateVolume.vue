@@ -38,20 +38,23 @@
         </a-form-item>
         <a-alert type="warning" show-icon :message="$t('message.volume.edit.path.warning')" style="margin-bottom: 16px" />
       </template>
-      <div class="action-button">
+      <MoldDialogActions :busy="loading">
         <a-button :disabled="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button v-if="jobId" :loading="loading" type="primary" @click="resumeJob">{{ $t('message.volume.edit.check.result') }}</a-button>
         <a-button v-else :loading="loading" type="primary" ref="submit" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-form>
   </div>
 </template>
 <script>
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { ref, reactive } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { volumeEditParams, volumePathEditReason, validateVolumeEditSnapshot } from '@/utils/volumeEdit'
 
 export default {
+  components: { MoldDialogActions },
   name: 'UpdateVolume',
   props: { resource: { type: Object, required: true } },
   emits: ['refresh-data', 'close-action'],

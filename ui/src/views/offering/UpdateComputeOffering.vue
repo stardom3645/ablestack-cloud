@@ -44,15 +44,17 @@ under the License. -->
       <a-alert v-if="submitError" class="operation-retry" type="error" :message="submitError" show-icon />
       <a-alert v-if="unknownResult" class="operation-retry" type="warning" :message="$t('message.offering.update.unknown')" show-icon />
       <a-button v-if="unknownResult || submitError" class="operation-retry" :disabled="saving" @click="load">{{ $t('label.refresh') }}</a-button>
-      <div class="operation-footer">
+      <MoldDialogActions class="operation-footer" :busy="loading || saving">
         <a-button :disabled="saving" @click="$emit('close-action')">{{ $t('label.cancel') }}</a-button>
         <a-button type="primary" :loading="saving" :disabled="managementDisabled" @click="submit">{{ $t('label.ok') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-spin>
   </div>
 </template>
 <script>
-import { getAPI, postAPI } from '@/api'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import management from '@/utils/storageManagementMixin'
 import { offeringSnapshot, computeEditParams } from '@/utils/storageManagement'
 import { trueValue } from '@/utils/offeringQos'
@@ -61,7 +63,7 @@ import DetailsInput from '@/components/widgets/DetailsInput'
 import ObjectListTable from '@/components/view/ObjectListTable'
 export default {
   name: 'UpdateComputeOffering',
-  components: { DetailsInput, ObjectListTable },
+  components: { MoldDialogActions, DetailsInput, ObjectListTable },
   mixins: [management],
   props: { resource: { type: Object, required: true } },
   emits: ['close-action', 'refresh-data'],

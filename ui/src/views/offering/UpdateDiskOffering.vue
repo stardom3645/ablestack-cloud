@@ -46,21 +46,23 @@ under the License. -->
           <template #description><a-button @click="load">{{ $t('label.refresh') }}</a-button></template>
         </a-alert>
       </a-form>
-      <div class="action-button">
+      <MoldDialogActions :busy="loading || saving">
         <a-button :disabled="saving" @click="$emit('close-action')">{{ $t('label.cancel') }}</a-button>
         <a-button type="primary" :loading="saving" :disabled="!loaded || loading || unknownResult || saving || !!qosValidation" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-spin>
   </div>
 </template>
 <script>
-import { getAPI, postAPI } from '@/api'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { isAdmin } from '@/role'
 import DiskQosFields from '@/components/offering/DiskQosFields'
 import { qosForm, qosParams, qosError, trueValue } from '@/utils/offeringQos'
 export default {
   name: 'UpdateDiskOffering',
-  components: { DiskQosFields },
+  components: { MoldDialogActions, DiskQosFields },
   props: { resource: { type: Object, required: true } },
   emits: ['close-action', 'refresh-data'],
   data () {

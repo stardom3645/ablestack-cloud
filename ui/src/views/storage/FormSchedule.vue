@@ -236,7 +236,7 @@
               <plus-outlined /> {{ $t('label.new.tag') }}
             </a-tag>
           </div>
-          <div :span="24" class="action-button">
+          <MoldDialogActions v-if="actionsVisible" :span="24" :busy="actionLoading">
             <a-button
               :loading="actionLoading"
               @click="closeAction">
@@ -250,7 +250,7 @@
               @click="handleSubmit">
               {{ $t('label.ok') }}
             </a-button>
-          </div>
+          </MoldDialogActions>
         </a-form>
       </div>
     </div>
@@ -258,8 +258,10 @@
 </template>
 
 <script>
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { ref, reactive, toRaw } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { isAdmin } from '@/role'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
@@ -271,10 +273,12 @@ export default {
   name: 'FormSchedule',
   mixins: [mixinForm],
   components: {
+    MoldDialogActions,
     TooltipButton,
     TooltipLabel
   },
   props: {
+    actionsVisible: { type: Boolean, default: true },
     loading: {
       type: Boolean,
       default: false

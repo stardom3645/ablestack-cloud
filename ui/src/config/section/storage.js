@@ -89,6 +89,11 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
         },
         {
+          name: 'snapshots',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageRelatedResources.vue'))),
+          show: () => 'listSnapshots' in store.getters.apis
+        },
+        {
           name: 'metrics',
           resourceType: 'Volume',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/StatsTab.vue'))),

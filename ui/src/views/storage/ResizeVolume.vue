@@ -57,21 +57,24 @@
         <summary>{{ $t('label.volume.resize.more.options') }}</summary>
         <a-checkbox v-model:checked="form.automigrate" :disabled="disabled">{{ $t('label.automigrate.volume') }}</a-checkbox>
       </details>
-      <div class="action-button resize-footer">
+      <MoldDialogActions class="resize-footer" :busy="loading">
         <span class="resize-change-summary resize-secondary" aria-live="polite">{{ changeSummary }}</span>
         <a-button :disabled="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button v-if="jobId" :loading="loading" type="primary" @click="resumeJob">{{ $t('message.volume.edit.check.result') }}</a-button>
         <a-button v-else :loading="loading" :disabled="!contract || !current() || submissionUnknown" type="primary" ref="submit" @click="handleSubmit">{{ $t('label.change') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-form>
   </div>
 </template>
 <script>
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { ref, reactive } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { readVolumeResizeContract, volumeResizeSizeReason, volumeResizeIops, volumeResizeParams, validateVolumeResizeSnapshot } from '@/utils/volumeResize'
 
 export default {
+  components: { MoldDialogActions },
   name: 'ResizeVolume',
   props: { resource: { type: Object, required: true } },
   emits: ['refresh-data', 'close-action'],

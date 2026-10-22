@@ -42,9 +42,10 @@
         </a-form-item>
       </a-form>
     </div>
-    <a-tabs v-if="currentVolumeResource && currentVolumeResource.id" defaultActiveKey="1" :animated="false">
+    <a-tabs v-if="currentVolumeResource && currentVolumeResource.id" v-model:activeKey="scheduleTab" :animated="false">
       <a-tab-pane :tab="$t('label.schedule')" key="1">
         <FormSchedule
+          :actions-visible="scheduleTab === '1'"
           :loading="loading"
           :resource="currentVolumeResource"
           :dataSource="dataSource"
@@ -61,6 +62,7 @@
           @close-action="closeAction"/>
       </a-tab-pane>
     </a-tabs>
+    <MoldDialogActions v-if="scheduleTab === '2' || !currentVolumeResource?.id"><a-button @click="closeAction">{{ $t('label.close') }}</a-button></MoldDialogActions>
     <div v-if="!currentVolumeResource || !currentVolumeResource.id" class="no-volume-selected">
       <div class="empty-state">
         <p>{{ $t('message.select.volume.to.continue') }}</p>
@@ -70,7 +72,8 @@
 </template>
 
 <script>
-import { getAPI } from '@/api'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
+import { getAPI } from '@/utils/storageApi'
 import { readAllocationList } from '@/utils/volumeAllocation'
 import FormSchedule from '@/views/storage/FormSchedule'
 import ScheduledSnapshots from '@/views/storage/ScheduledSnapshots'
@@ -78,6 +81,7 @@ import ScheduledSnapshots from '@/views/storage/ScheduledSnapshots'
 export default {
   name: 'RecurringSnapshotVolume',
   components: {
+    MoldDialogActions,
     FormSchedule,
     ScheduledSnapshots
   },
@@ -91,6 +95,7 @@ export default {
   inject: ['parentFetchData'],
   data () {
     return {
+      scheduleTab: '1',
       loading: false,
       dataSource: [],
       volumes: [],

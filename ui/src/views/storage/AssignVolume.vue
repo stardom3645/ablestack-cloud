@@ -29,16 +29,19 @@ under the License. -->
       <a-alert v-if="submitError" class="operation-retry" type="error" :message="submitError" show-icon />
       <a-alert v-if="unknownResult" class="operation-retry" type="warning" :message="$t('message.storage.management.unknown')" show-icon />
       <a-button v-if="unknownResult || submitError" class="operation-retry" :disabled="saving" @click="load">{{ $t('label.refresh') }}</a-button>
-      <div class="operation-footer"><div class="operation-summary">{{ selectedTarget?.name || $t('message.error.select') }}</div><a-button :disabled="saving" @click="$emit('close-action')">{{ $t('label.cancel') }}</a-button><a-button type="primary" :loading="saving" :disabled="managementDisabled || !selectedTarget || !form.confirm" @click="submit">{{ $t('label.volume.assign') }}</a-button></div>
+      <MoldDialogActions class="operation-footer" :busy="loading || saving"><div class="operation-summary">{{ selectedTarget?.name || $t('message.error.select') }}</div><a-button :disabled="saving" @click="$emit('close-action')">{{ $t('label.cancel') }}</a-button><a-button type="primary" :loading="saving" :disabled="managementDisabled || !selectedTarget || !form.confirm" @click="submit">{{ $t('label.volume.assign') }}</a-button></MoldDialogActions>
     </a-spin>
   </div>
 </template>
 <script>
-import { getAPI, postAPI } from '@/api'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import management from '@/utils/storageManagementMixin'
 import { readAllocationList } from '@/utils/volumeAllocation'
 import { assignmentReason, assignmentSnapshot, assignmentParams } from '@/utils/storageManagement'
 export default {
+  components: { MoldDialogActions },
   name: 'AssignVolume',
   mixins: [management],
   props: { resource: { type: Object, required: true } },

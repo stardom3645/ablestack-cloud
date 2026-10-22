@@ -46,10 +46,10 @@
         <!-- form content is provided by ComputeOfferingForm component -->
         <template #form-actions>
           <br/>
-          <div :span="24" class="action-button">
+          <MoldDialogActions :span="24" :busy="loading || sourceLoading">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
             <a-button :loading="loading" :disabled="sourceLoading || !sourceReady" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-          </div>
+          </MoldDialogActions>
         </template>
       </ComputeOfferingForm>
      </a-spin>
@@ -57,9 +57,12 @@
  </template>
 
 <script>
+import storageDialogContext from '@/utils/storageDialogContext'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import ComputeOfferingForm from '@/components/offering/ComputeOfferingForm'
 import { ref, reactive } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { performanceParams, qosForm } from '@/utils/offeringQos'
 import { allocationParams, allocationForm } from '@/utils/volumeAllocation'
 import { getFilteredExternalDetails } from '@/utils/extension'
@@ -73,8 +76,9 @@ import store from '@/store'
 
 export default {
   name: 'CloneComputeOffering',
-  mixins: [mixinForm],
+  mixins: [storageDialogContext, mixinForm],
   components: {
+    MoldDialogActions,
     ComputeOfferingForm,
     AddDiskOffering,
     ResourceIcon,
@@ -510,6 +514,7 @@ export default {
       if (this.loading || this.sourceLoading || !this.sourceReady) return
 
       this.formRef.value.validate().then((values) => {
+        if (this.loading || (this.dialogCurrent && !this.dialogCurrent())) return
         var params = {
           issystem: this.isSystem,
           name: values.name,

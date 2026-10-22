@@ -68,6 +68,11 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
         },
         {
+          name: 'instances',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageRelatedResources.vue'))),
+          show: () => 'listVirtualMachines' in store.getters.apis
+        },
+        {
           name: 'events',
           resourceType: 'ServiceOffering',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/EventsTab.vue'))),
@@ -275,6 +280,11 @@ export default {
         {
           name: 'details',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+        },
+        {
+          name: 'volumes',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageRelatedResources.vue'))),
+          show: () => 'listVolumes' in store.getters.apis
         },
         {
           name: 'events',

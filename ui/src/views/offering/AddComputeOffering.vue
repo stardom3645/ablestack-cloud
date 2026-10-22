@@ -28,10 +28,10 @@
         @submit="handleSubmit">
         <template #form-actions>
           <br/>
-          <div :span="24" class="action-button">
+          <MoldDialogActions :span="24" :busy="loading">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
             <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-          </div>
+          </MoldDialogActions>
         </template>
       </ComputeOfferingForm>
     </a-spin>
@@ -39,9 +39,12 @@
 </template>
 
 <script>
+import storageDialogContext from '@/utils/storageDialogContext'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import ComputeOfferingForm from '@/components/offering/ComputeOfferingForm'
 import { ref, reactive } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { performanceParams } from '@/utils/offeringQos'
 import { allocationParams } from '@/utils/volumeAllocation'
 import AddDiskOffering from '@/views/offering/AddDiskOffering'
@@ -54,8 +57,9 @@ import store from '@/store'
 
 export default {
   name: 'AddServiceOffering',
-  mixins: [mixinForm],
+  mixins: [storageDialogContext, mixinForm],
   components: {
+    MoldDialogActions,
     ComputeOfferingForm,
     AddDiskOffering,
     ResourceIcon,
@@ -348,6 +352,7 @@ export default {
       if (this.loading) return
 
       this.formRef.value.validate().then((values) => {
+        if (this.loading || (this.dialogCurrent && !this.dialogCurrent())) return
         const params = {
           issystem: this.isSystem,
           name: values.name,

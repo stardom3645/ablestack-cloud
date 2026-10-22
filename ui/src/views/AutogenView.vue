@@ -178,9 +178,11 @@
         @close-action="closeAction"
       />
       <keep-alive v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
-        <a-modal
+        <component
+          :is="isStorageUi ? 'MoldDialog' : 'a-modal'"
+          :size="isStorageUi ? storageDialogSize(currentAction.api) : undefined"
           class="mold-dialog"
-          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup', 'storage-standard-dialog': isStorageUi }"
           centered
           :visible="showAction"
           :closable="true"
@@ -188,7 +190,8 @@
           :cancelText="$t('label.cancel')"
           @cancel="cancelAction"
           :confirmLoading="actionLoading"
-          :footer="null"
+          :footer="isStorageUi ? undefined : null"
+          :form-actions="isStorageUi"
           :width="currentAction.dialogWidth || 'auto'"
         >
           <template #title>
@@ -198,6 +201,8 @@
               style="margin-left: 5px"
               :href="documentationUrl($config.docBase, currentAction.docHelp || $route.meta.docHelp, $i18n.locale)"
               target="_blank"
+              :aria-label="$t('label.help')"
+              rel="noopener noreferrer"
             >
               <question-circle-outlined />
             </a>
@@ -218,11 +223,13 @@
               @cancel-bulk-action="handleCancel"
             />
           </keep-alive>
-        </a-modal>
+        </component>
       </keep-alive>
-      <a-modal
-          class="mold-dialog"
-          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
+      <component
+        :is="isStorageUi ? 'MoldDialog' : 'a-modal'"
+        :size="isStorageUi ? 'md' : undefined"
+        class="mold-dialog"
+        :class="{ 'storage-standard-dialog': isStorageUi, 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           v-else-if="currentAction.label === 'label.download.events'"
         :visible="showAction"
         :closable="true"
@@ -451,10 +458,12 @@
           </a-form>
         </a-spin>
         <br />
-      </a-modal>
-      <a-modal
-          class="mold-dialog"
-          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
+      </component>
+      <component
+        :is="isStorageUi ? 'MoldDialog' : 'a-modal'"
+        :size="isStorageUi ? 'md' : undefined"
+        class="mold-dialog"
+        :class="{ 'storage-standard-dialog': isStorageUi, 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup' }"
           v-else
         :visible="showAction"
         :closable="true"
@@ -800,7 +809,7 @@
           <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
           <a-button type="primary" @click="handleSubmit" :disabled="isSubmitDisabled" :loading="actionLoading" ref="submit">{{ $t('label.ok') }}</a-button>
         </template>
-      </a-modal>
+      </component>
     </div>
 
     <div
@@ -812,6 +821,9 @@
         :updated="listLastUpdated"
         :retained="!!listLoadedScope"
         @retry="fetchData({ irefresh: true })" />
+      <a-alert v-if="isStorageUi && listRefreshError" class="storage-query-error" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
+        <template #action><a-button size="small" :disabled="listRequestPending" @click="fetchData({ irefresh: true })">{{ $t('label.retry') }}</a-button></template>
+      </a-alert>
       <div v-if="dataView">
         <a-spin v-if="isSshKeyPairDetail && !sshKeyPairDetailVisible" :spinning="loading">
           <a-alert show-icon :type="loading ? 'info' : 'error'" :message="$t('message.ssh.keypair.detail.' + sshKeyPairDetailStatus)">
@@ -829,11 +841,11 @@
           v-else-if="(!isSshKeyPairDetail || sshKeyPairDetailVisible) && ($route.meta?.name !== 'vmgroup' || resource.id || loading)"
           :key="isSshKeyPairDetail ? listScope() : $route.path"
           :readPending="listRequestPending"
-          :readyForActions="isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name === 'cniconfiguration' ? cniDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady))"
+          :readyForActions="isStorageUi ? storageActionReady : isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name === 'cniconfiguration' ? cniDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady))"
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
-          :actions="(isSshKeyPairDetail && !sshKeyPairDetailActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
+          :actions="(isStorageUi && !storageActionReady) || (isSshKeyPairDetail && !sshKeyPairDetailActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
           @exec-action="handleDataViewAction"
           @change-resource="resource = $event" />
       </div>
@@ -847,13 +859,13 @@
         <a-alert v-if="listRefreshError && ($route.name === 'vmsnapshot' || $route.meta?.name === 'cniconfiguration')" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
           <template #action><a-button size="small" @click="fetchData">{{ $t('label.refresh') }}</a-button></template>
         </a-alert>
-        <p v-else-if="listRefreshError && $route.meta?.name !== 'vmgroup'" role="status">{{ $t('message.list.refresh.stale') }}</p>
+        <p v-else-if="listRefreshError && !isStorageUi && $route.meta?.name !== 'vmgroup'" role="status">{{ $t('message.list.refresh.stale') }}</p>
         <list-view
           :loading="loading"
           :emptyText="$route.meta?.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
           :columns="columns"
           :items="items"
-          :actions="$route.meta?.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
+          :actions="(isStorageUi && !storageActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
           :currentPage="page"
           :pageSize="pageSize"
           :columnKeys="columnKeys"
@@ -917,6 +929,8 @@ import Breadcrumb from '@/components/widgets/Breadcrumb'
 import { documentationUrl } from '@/utils/cniFileImport'
 import ListView from '@/components/view/ListView'
 import ResourceView from '@/components/view/ResourceView'
+import MoldDialog from '@/components/view/MoldDialog'
+import { storageUiRoute, storageDialogSize, storageDetailRouteKey } from '@/utils/storageUi'
 import ActionButton from '@/components/view/ActionButton'
 import { affinityGroupQuery } from '@/utils/affinityGroupCreation'
 import SearchView from '@/components/view/SearchView'
@@ -943,6 +957,7 @@ export default {
   name: 'Resource',
   components: {
     Breadcrumb,
+    MoldDialog,
     ResourceView,
     ListView,
     ActionButton,
@@ -1180,6 +1195,8 @@ export default {
     },
     '$route' (to, from) {
       if (to.fullPath !== from.fullPath && !to.path.startsWith('/action/') && to?.query?.tab !== 'browser') {
+        if (storageUiRoute(to) && to.params?.id && to.path === from.path &&
+          storageDetailRouteKey(to) === storageDetailRouteKey(from)) return
         if (to.meta?.name === 'affinitygroup' && from.meta?.name === 'affinitygroup' && to.params?.id && to.path === from.path &&
           JSON.stringify({ ...to.query, tab: undefined }) === JSON.stringify({ ...from.query, tab: undefined })) return
         if (to.meta?.name === 'cniconfiguration' && from.meta?.name === 'cniconfiguration' && to.params?.id &&
@@ -1189,6 +1206,7 @@ export default {
           this.fetchData({ irefresh: true })
           return
         }
+        if (storageUiRoute(from) && this.showAction) this.closeAction()
         this.resetSelection()
         const page = Number(to.query.page)
         const pageSize = Number(to.query.pagesize)
@@ -1229,6 +1247,8 @@ export default {
     }
   },
   computed: {
+    isStorageUi () { return storageUiRoute(this.$route) },
+    storageActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() },
     isSshKeyPairDetail () { return isSshKeyPairDetailRoute(this.$route) },
     sshKeyPairDetailVisible () {
       return ['ready', 'refreshing'].includes(this.sshKeyPairDetailStatus) &&
@@ -1323,6 +1343,7 @@ export default {
       return 'self'
     },
     visibleDataViewActions () {
+      if (this.isStorageUi && !this.storageActionReady) return []
       if (this.isSshKeyPairDetail && !this.sshKeyPairDetailActionReady) return []
       if (this.$route.meta?.name === 'vmgroup' && !this.vmGroupQueryReady) return []
       if (!this.actions || !this.dataView) {
@@ -1370,6 +1391,7 @@ export default {
     }
   },
   methods: {
+    storageDialogSize,
     documentationUrl,
     rejectSshKeyPairDetail (status) {
       this.sshKeyPairDetailStatus = status
@@ -1445,7 +1467,9 @@ export default {
     listScope () {
       if (isSshKeyPairDetailRoute(this.$route)) return sshKeyPairDetailScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
       if (this.$route.meta?.name === 'vmgroup') return vmGroupQueryScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
-      const routeKey = this.$route.meta?.name === 'cniconfiguration' && this.$route.params?.id ? cniHistoryRouteKey(this.$route) : this.$route.fullPath
+      const routeKey = storageUiRoute(this.$route) && this.$route.params?.id
+        ? storageDetailRouteKey(this.$route)
+        : this.$route.meta?.name === 'cniconfiguration' && this.$route.params?.id ? cniHistoryRouteKey(this.$route) : this.$route.fullPath
       return JSON.stringify([routeKey, this.$store.getters.project?.id,
         this.$store.getters.userInfo?.id, this.$store.getters.metrics, this.$store.getters.listAllProjects])
     },
@@ -1649,6 +1673,7 @@ export default {
       delete params.irefresh
       delete params.autoscheduled
       delete params.cnireturn
+      if (storageUiRoute(this.$route)) ['relatedkeyword', 'relatedpage', 'relatedpagesize'].forEach(key => delete params[key])
 
       this.searchFilters = this.$route && this.$route.meta && this.$route.meta.searchFilters
       this.filters = this.$route && this.$route.meta && this.$route.meta.filters
@@ -1918,7 +1943,7 @@ export default {
         params = sshKeyPairVmParams(params, this.$route.query)
       }
       const cniQuery = ['cniconfiguration', 'affinitygroup'].includes(this.$route.meta?.name)
-      const response = vmGroups || sshDetail || cniQuery ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
+      const response = vmGroups || sshDetail || cniQuery || storageUiRoute(this.$route) ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
       const request = response.then(async json => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         const groupResult = vmGroups ? vmGroupQueryRows(json) : null
@@ -2036,7 +2061,7 @@ export default {
       }).catch(error => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         if (sshDetail) { this.rejectSshKeyPairDetail(sshKeyPairDetailFailure(error)); return }
-        if (cniQuery) {
+        if (cniQuery || storageUiRoute(this.$route)) {
           this.listRefreshError = true
           this.resetSelection()
           if (this.$refs.listview) this.$refs.listview.resetSelection()

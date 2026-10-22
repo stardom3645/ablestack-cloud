@@ -41,10 +41,10 @@
         :isAdmin="isAdmin"
         @submit="handleSubmit">
         <template #form-actions>
-          <div :span="24" class="action-button">
+          <MoldDialogActions :span="24" :busy="loading || sourceLoading">
             <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
             <a-button :loading="loading" :disabled="sourceLoading || !sourceReady" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-          </div>
+          </MoldDialogActions>
         </template>
       </DiskOfferingForm>
     </a-spin>
@@ -52,16 +52,21 @@
 </template>
 
 <script>
+import storageDialogContext from '@/utils/storageDialogContext'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import DiskOfferingForm from '@/components/offering/DiskOfferingForm'
 import { reactive } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { performanceParams, qosForm } from '@/utils/offeringQos'
 import { allocationParams, allocationForm } from '@/utils/volumeAllocation'
 import { isAdmin } from '@/role'
 
 export default {
+  mixins: [storageDialogContext],
   name: 'CloneDiskOffering',
   components: {
+    MoldDialogActions,
     DiskOfferingForm
   },
   props: {
@@ -175,6 +180,7 @@ export default {
       if (this.loading || this.sourceLoading || !this.sourceReady) return
 
       this.$refs.formRef.validate().then((values) => {
+        if (this.loading || (this.dialogCurrent && !this.dialogCurrent())) return
         const params = {
           sourceofferingid: this.resource.id,
           name: values.name

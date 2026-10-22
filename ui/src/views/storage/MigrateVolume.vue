@@ -59,21 +59,24 @@
         </a-form-item>
       </details>
       <p v-if="errorText" class="operation-error operation-help" role="alert">{{ errorText }}</p>
-      <div class="action-button operation-footer">
+      <MoldDialogActions class="operation-footer" :busy="loading">
         <span class="operation-summary operation-secondary" aria-live="polite">{{ resource.storage || '—' }} → {{ selectedStoragePool?.name || '—' }}<template v-if="replaceDiskOffering"> · {{ selectedOffering?.displaytext || selectedOffering?.name || $t('label.volume.operation.replace.offering') }}</template></span>
         <a-button :disabled="isSubmitted" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button v-if="jobId" :loading="isSubmitted" type="primary" @click="resumeJob">{{ $t('message.volume.edit.check.result') }}</a-button>
         <a-button v-else type="primary" :loading="isSubmitted" :disabled="!canSubmit" @click="submitForm">{{ $t('label.volume.operation.move') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-form>
   </div>
 </template>
 
 <script>
-import { getAPI, postAPI } from '@/api'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { allocationIntent, allocationOfferingReason, readAllocationList } from '@/utils/volumeAllocation'
 
 export default {
+  components: { MoldDialogActions },
   name: 'MigrateVolume',
   props: { resource: { type: Object, required: true } },
   emits: ['close-action', 'refresh-data'],

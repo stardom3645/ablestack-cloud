@@ -74,23 +74,26 @@
       </template>
       <p v-if="validationError" class="operation-error operation-help" role="alert">{{ $t(validationError) }}</p>
       <p v-if="errorText" class="operation-error operation-help" role="alert">{{ errorText }}</p>
-      <div class="action-button operation-footer">
+      <MoldDialogActions class="operation-footer" :busy="loading">
         <span class="operation-summary operation-secondary" aria-live="polite"><span>{{ resource.diskofferingname || '—' }} → {{ selectedOffering?.displaytext || selectedOffering?.name || '—' }}</span><span v-if="selectedOffering">{{ changeSummary }}</span></span>
         <a-button :disabled="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button v-if="jobId" :loading="loading" type="primary" @click="resumeJob">{{ $t('message.volume.edit.check.result') }}</a-button>
         <a-button v-else type="primary" :loading="loading" :disabled="!canSubmit" @click="submitChangeOfferingForVolume">{{ $t('label.change') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-form>
   </div>
 </template>
 
 <script>
-import { getAPI, postAPI } from '@/api'
+import MoldDialogActions from '@/components/view/MoldDialogActions'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { allocationOfferingReason, allocationIntent, readAllocationList } from '@/utils/volumeAllocation'
 import { offeringVolumeSize, offeringShrinkBlocked, volumeOfferingChangeParams } from '@/utils/volumeOfferingChange'
 import { validateVolumeResizeSnapshot } from '@/utils/volumeResize'
 
 export default {
+  components: { MoldDialogActions },
   name: 'ChangeOfferingForVolume',
   props: { resource: { type: Object, required: true } },
   emits: ['close-action', 'refresh-data'],

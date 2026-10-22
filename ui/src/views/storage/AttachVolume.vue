@@ -75,21 +75,24 @@
           </a-form-item>
         </a-form>
       </div>
-      <div class="actions">
+      <MoldDialogActions class="actions" :busy="loading">
         <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
         <a-button type="primary" ref="submit" :disabled="!canSubmit" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
-      </div>
+      </MoldDialogActions>
     </a-spin>
   </div>
 </template>
 <script>
+import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { ref, reactive, toRaw } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { postAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { volumeActionReason, volumeBackupReason } from '@/utils/vmVolumeActions'
 import { readAllocationList } from '@/utils/volumeAllocation'
 import { vmDisplayName, vmIdentity, vmLabel, vmMatchesSearch } from '@/utils/volumeAttachVm'
 
 export default {
+  components: { MoldDialogActions },
   name: 'AttachVolume',
   props: {
     resource: {
@@ -248,7 +251,7 @@ export default {
   white-space: normal;
   overflow-wrap: anywhere;
 }
-.ant-modal-wrap:has(.volume-attach-dialog) {
+.ant-modal-wrap:not(.mold-dialog-standard-wrap):has(.volume-attach-dialog) {
   display: flex;
   align-items: center;
   justify-content: center;

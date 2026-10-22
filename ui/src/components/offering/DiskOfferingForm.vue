@@ -259,7 +259,7 @@
 
 <script>
 import { reactive, toRaw } from 'vue'
-import { getAPI } from '@/api'
+import { getAPI } from '@/utils/storageApi'
 import { isAdmin } from '@/role'
 import { mixinForm } from '@/utils/mixin'
 import ResourceIcon from '@/components/view/ResourceIcon'
