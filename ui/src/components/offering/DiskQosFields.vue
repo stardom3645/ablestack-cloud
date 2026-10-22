@@ -89,7 +89,7 @@ export default {
 .compact .qos-base-groups .qos-grid { grid-template-columns: minmax(0, 1fr); }
 .compact .qos-group { margin-top: 8px; }
 .compact .qos-burst .qos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.qos-burst summary { color: var(--ui-link-color, #1677ff); cursor: pointer; margin: 8px 0 14px; }
+.qos-burst summary { color: var(--ui-link, #1677ff); cursor: pointer; margin: 8px 0 14px; }
 @media (max-width: 600px) { .compact .qos-base-groups, .compact .qos-burst .qos-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .qos-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

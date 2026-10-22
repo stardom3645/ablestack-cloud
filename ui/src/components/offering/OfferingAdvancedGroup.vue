@@ -26,7 +26,7 @@ License for the specific language governing permissions and limitations. -->
 export default { name: 'OfferingAdvancedGroup', props: { enabled: Boolean, title: String, hint: String } }
 </script>
 <style scoped>
-.offering-advanced-group { border-bottom: 1px solid var(--ui-border-color, #d9d9d9); }
+.offering-advanced-group { border-bottom: 1px solid var(--ui-border, #d9d9d9); }
 summary { padding: 14px 0; cursor: pointer; }
 summary small { color: var(--ui-text-secondary, #666); font-size: 12px; margin-left: 8px; }
 .offering-advanced-body { padding: 6px 0 10px; }

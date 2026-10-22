@@ -100,7 +100,7 @@ export default {
 .allocation-editor :deep(.ant-radio-button-wrapper::before) { display: none; }
 .allocation-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .allocation-support { margin: 6px 0 18px; }
-.allocation-support summary { color: var(--ui-link-color, #1677ff); cursor: pointer; font-size: 12px; }
+.allocation-support summary { color: var(--ui-link, #1677ff); cursor: pointer; font-size: 12px; }
 .allocation-support dl { display: grid; grid-template-columns: 135px minmax(0, 1fr); gap: 8px; font-size: 12px; margin: 12px 0; }
 .allocation-support dd { margin: 0; }
 @media (max-width: 600px) { .allocation-fields, .allocation-support dl { grid-template-columns: minmax(0, 1fr); } }
