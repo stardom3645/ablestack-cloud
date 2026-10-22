@@ -641,6 +641,13 @@ export default {
           values.account = this.owner.account
         }
         if (this.submitHandler) return this.submitHandler(values)
+        const attachment = (this.createVolumeFromVM || this.attachVolume)
+          ? {
+            virtualmachineid: this.createVolumeFromVM ? this.resource.id : this.vmidtoattach,
+            projectid: values.projectid || '-1',
+            ...(!this.createVolumeFromVM ? { deviceid: values.deviceid } : {})
+          }
+          : null
         this.loading = true
         postAPI('createVolume', values).then(response => {
           this.$pollJob({
@@ -649,17 +656,8 @@ export default {
             description: values.name,
             successMessage: this.$t('message.success.create.volume'),
             successMethod: (result) => {
-              this.closeModal()
-              if (this.createVolumeFromVM || this.attachVolume) {
-                const params = {}
-                params.id = result.jobresult.volume.id
-                if (this.createVolumeFromVM) {
-                  params.virtualmachineid = this.resource.id
-                } else {
-                  params.virtualmachineid = this.vmidtoattach
-                  params.deviceid = values.deviceid
-                }
-                postAPI('attachVolume', params).then(response => {
+              if (attachment) {
+                postAPI('attachVolume', { ...attachment, id: result.jobresult.volume.id }).then(response => {
                   this.$pollJob({
                     jobId: response.attachvolumeresponse.jobid,
                     title: this.$t('message.attach.volume.success'),
@@ -688,6 +686,7 @@ export default {
       })
     },
     closeModal () {
+      if (this.dialogCurrent && !this.dialogCurrent()) return
       this.$emit('close-action')
     },
     onChangeDiskOffering (id) {
