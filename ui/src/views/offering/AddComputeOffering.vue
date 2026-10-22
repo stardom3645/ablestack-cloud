@@ -410,10 +410,10 @@ export default {
           }
         }
 
-        if (values.networkrate != null && values.networkrate.length > 0) {
+        if (values.networkrate != null && String(values.networkrate).length > 0) {
           params.networkrate = values.networkrate
         }
-        if (values.rootdisksize != null && values.rootdisksize.length > 0) {
+        if (values.rootdisksize != null && String(values.rootdisksize).length > 0) {
           params.rootdisksize = values.rootdisksize
         }
         delete params.cachemode

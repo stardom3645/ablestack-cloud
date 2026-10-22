@@ -110,7 +110,7 @@ test.each([DiskForm, ComputeForm])('validation in $name opens the policy or QoS 
 })
 
 test.each([AddDisk, AddCompute])('$name sends the Europa definition once with session-preserving error handling', async component => {
-  const values = { name: 'New', ispublic: true, computeonly: true, offeringtype: 'fixed', cpunumber: '1', cpuspeed: '1000', memory: '256', ...newOfferingAllocation(apiParams) }
+  const values = { name: 'New', ispublic: true, computeonly: true, offeringtype: 'fixed', cpunumber: '1', cpuspeed: '1000', memory: '256', networkrate: 10000, rootdisksize: 1, ...newOfferingAllocation(apiParams) }
   let complete
   postAPI.mockImplementation(() => new Promise(resolve => { complete = resolve }))
   const form = { validate: () => Promise.resolve(values) }
@@ -122,6 +122,7 @@ test.each([AddDisk, AddCompute])('$name sends the Europa definition once with se
   const [command, params, options] = postAPI.mock.calls[0]
   expect(command).toBe(component === AddDisk ? 'createDiskOffering' : 'createServiceOffering')
   expect(params).toMatchObject({ name: 'New', allocationformat: 'raw', allocationpolicy: 'off' })
+  if (component === AddCompute) expect(params).toMatchObject({ networkrate: 10000, rootdisksize: 1 })
   expect(params).not.toHaveProperty('provisioningtype')
   expect(params).not.toHaveProperty('storageid')
   expect(options).toEqual({ preserveOnFailure: true })
