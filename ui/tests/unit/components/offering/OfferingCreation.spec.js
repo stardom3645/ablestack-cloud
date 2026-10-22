@@ -82,7 +82,7 @@ test('tab changes keep every field mounted, retain input and reveal an invalid a
   const w = mount({
     components: { Sections, Group },
     data: () => ({ name: 'Initial', tags: 'gfs2', rate: '1000' }),
-    template: '<Sections ref="sections" enabled><template #basic><input id="form_item_name" v-model="name" /></template><template #volume><input id="form_item_tags" v-model="tags" /></template><template #advanced><Group enabled title="Advanced"><input id="form_item_networkrate" v-model="rate" /></Group></template></Sections>'
+    template: '<Sections ref="sections" enabled><template #basic><input id="form_item_name" v-model="name" /></template><template #volume><input id="form_item_tags" v-model="tags" /></template><template #advanced><Group enabled title="Advanced"><input id="form_item_networkrate" v-model="rate" /><div class="ant-form-item"><label for="form_item_zoneid">Zone</label><input id="custom-zone" /></div></Group></template></Sections>'
   }, { global: testGlobals })
   await flushPromises()
   await w.get('#form_item_name').setValue('Keep this name')
@@ -95,6 +95,11 @@ test('tab changes keep every field mounted, retain input and reveal an invalid a
   expect(w.vm.$refs.sections.active).toBe('advanced')
   expect(w.get('details').element.open).toBe(true)
   expect(w.get('#form_item_tags').element.value).toBe('gfs2,ssd')
+  await w.vm.$refs.sections.reveal('basic')
+  w.get('details').element.open = false
+  await w.vm.$refs.sections.revealField('zoneid')
+  expect(w.vm.$refs.sections.active).toBe('advanced')
+  expect(w.get('details').element.open).toBe(true)
   w.unmount()
 })
 

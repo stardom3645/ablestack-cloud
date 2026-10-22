@@ -32,6 +32,15 @@ export default {
   props: { enabled: Boolean },
   data: () => ({ active: 'basic', sections: ['basic', 'volume', 'advanced'] }),
   methods: {
+    fieldElement (root, field) {
+      if (!root || !field) return
+      const input = [...root.querySelectorAll('[id]')].find(el => el.id === field || el.id.endsWith('_' + field))
+      if (input) return input
+      // A control can supply its own id (for example zone-selection), while
+      // FormItem keeps the model field in the label's for attribute.
+      const label = [...root.querySelectorAll('label[for]')].find(el => el.htmlFor.endsWith('_' + field))
+      return label?.closest('.ant-form-item')?.querySelector('input, textarea, select, button') || label
+    },
     async reveal (section, field) {
       if (!this.enabled) return
       this.active = this.sections.includes(section) ? section : 'basic'
@@ -39,11 +48,11 @@ export default {
       const pane = this.$refs.root.querySelector('[data-offering-section="' + this.active + '"]')
       if (!pane) return
       pane.querySelectorAll('details').forEach(details => { details.open = true })
-      const input = field && [...pane.querySelectorAll('[id]')].find(el => el.id === field || el.id.endsWith('_' + field))
+      const input = this.fieldElement(pane, field)
       if (input) input.focus()
     },
     revealField (field) {
-      const input = field && [...this.$refs.root.querySelectorAll('[id]')].find(el => el.id === field || el.id.endsWith('_' + field))
+      const input = this.fieldElement(this.$refs.root, field)
       return this.reveal(input?.closest('[data-offering-section]')?.dataset.offeringSection || 'basic', field)
     }
   }
