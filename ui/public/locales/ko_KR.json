@@ -6444,6 +6444,7 @@
   "label.site": "Netris 사이트",
   "label.snapshotpolicy": "스냅샷 정책",
   "label.recurringsnapshots": "정기스냅샷",
+  "label.snapshot.policy.month.day": "매월 {day}일",
   "label.snapshotpolicies": "스냅샷 정책",
   "label.source.endpoint": "소스 엔드포인트",
   "label.source.location": "소스 위치",

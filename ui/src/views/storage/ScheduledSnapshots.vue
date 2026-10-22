@@ -23,7 +23,7 @@
         <template v-if="column.key === 'time'">
           <div>{{ scheduleTime(record) }}</div>
           <div v-if="Number(record.intervaltype) === 2">{{ $t('label.every') }} {{ $t('label.' + listDayOfWeek[Number(record.schedule.split(':')[2]) - 1]) }}</div>
-          <div v-else-if="Number(record.intervaltype) === 3">{{ $t('label.day') }} {{ record.schedule.split(':')[2] }} {{ $t('label.of.month') }}</div>
+          <div v-else-if="Number(record.intervaltype) === 3">{{ $t('label.snapshot.policy.month.day', { day: record.schedule.split(':')[2] }) }}</div>
         </template>
         <template v-if="column.key === 'timezone'">{{ getTimeZone(record.timezone) }}</template>
         <template v-if="column.key === 'tags'"><a-tag v-for="(tag, index) in record.tags" :key="index">{{ tag.key + '=' + tag.value }}</a-tag></template>

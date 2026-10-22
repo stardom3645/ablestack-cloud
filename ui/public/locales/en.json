@@ -5863,6 +5863,7 @@
   "label.site": "Netris Site",
   "label.snapshotpolicy": "Snapshot policy",
   "label.recurringsnapshots": "Recurring snapshots",
+  "label.snapshot.policy.month.day": "Day {day} of each month",
   "label.snapshotpolicies": "Snapshot policies",
   "label.source.endpoint": "Source endpoint",
   "label.source.location": "Source location",

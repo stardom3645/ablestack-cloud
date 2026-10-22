@@ -54,6 +54,18 @@ test('a failed refresh retains policies; retry replaces them and authentication 
   expect(vm.rows).toEqual([]); expect(vm.loaded).toBe(false)
 })
 
+test('a background parent refresh after policy creation refreshes the active tab even when loading stays false', async () => {
+  getAPI.mockResolvedValueOnce({ listsnapshotpoliciesresponse: { snapshotpolicy: [{ id: 'existing' }] } })
+    .mockResolvedValueOnce({ listsnapshotpoliciesresponse: { snapshotpolicy: [{ id: 'existing' }, { id: 'created' }] } })
+  const wrapper = shallowMount(Policies, { props: { resource: { id: 'first' }, tab: 'recurringsnapshots' }, global: { mocks: { $t: k => k, $route: { path: '/volume/first', fullPath: '/volume/first?tab=recurringsnapshots' }, $store: { getters: { apis: { listSnapshotPolicies: {} }, userInfo: {} }, state: { user: {} } } } } })
+  await flushPromises()
+  expect(wrapper.vm.rows.map(row => row.id)).toEqual(['existing'])
+  await wrapper.setProps({ resource: { id: 'first', name: 'refreshed' } }); await flushPromises()
+  expect(wrapper.vm.rows.map(row => row.id)).toEqual(['existing', 'created'])
+  expect(getAPI).toHaveBeenCalledTimes(2)
+  wrapper.unmount()
+})
+
 test('late replies cannot refill a different volume or project', async () => {
   const vm = reader(); let release
   getAPI.mockReturnValueOnce(new Promise(resolve => { release = resolve }))

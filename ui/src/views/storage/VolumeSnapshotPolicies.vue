@@ -44,6 +44,7 @@ export default {
     ownerScope () { return JSON.stringify([this.$route.path, this.resource.id, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id, this.canRead]) }
   },
   watch: {
+    resource () { this.fetchData() },
     ownerScope () { this.reset(); this.fetchData() },
     active (value) { this.version++; this.pending = false; if (value) this.fetchData() },
     loading (value) { if (!value) this.fetchData() }
