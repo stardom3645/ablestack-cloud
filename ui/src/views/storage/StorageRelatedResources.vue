@@ -13,7 +13,7 @@ for the specific language governing permissions and limitations. -->
       <a-button :loading="pending" :disabled="!canRead || loading" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-input-search class="storage-related-search" v-model:value="draftKeyword" :placeholder="$t('label.search')" :aria-label="$t('label.search')" :disabled="!canRead" allow-clear @search="search" />
     </div>
-    <a-alert v-if="error" type="error" show-icon :message="$t(loadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')"><template #action><a-button :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template></a-alert>
+    <a-alert v-if="error" type="error" show-icon :message="$t(loadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')"><template #description><a-button :loading="pending" @click="fetchData">{{ $t('label.retry') }}</a-button></template></a-alert>
     <ListView :resource-path="definition.path" :items="rows" :columns="columns" :actions="[]" :loading="pending && !loadedScope" />
     <a-pagination
       class="detail-tab-pagination"

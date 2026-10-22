@@ -20,6 +20,7 @@ import { volumeVmPath } from '@/utils/storageUi'
 import Related from '@/views/storage/StorageRelatedResources'
 import { getAPI } from '@/api'
 import ActionButton from '@/components/view/ActionButton'
+import { Alert, Button } from 'ant-design-vue'
 
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn(), callAPI: jest.fn() }))
 
@@ -126,4 +127,17 @@ test('refresh retains action entries and bulk selection while disabling mutation
   expect(ActionButton.methods.isActionDisabled.call({ ...vm, resourceActionReady: () => true }, action)).toBe(false)
   vm.actionTrigger = 'kept'; AutogenView.methods.execAction.call(vm, action, false)
   expect(vm.actionTrigger).toBe('kept')
+})
+
+test('the installed Ant Design Alert renders a retry button that recovers a failed related read', async () => {
+  getAPI.mockRejectedValueOnce(new Error('Network Error'))
+  const wrapper = mount(Related, { props: { resource: { id: 'volume' }, tab: 'snapshots' }, global: { components: { 'a-alert': Alert, 'a-button': Button }, stubs: { ListView: true, AInputSearch: true, APagination: true }, mocks: { $t: key => key, $route: { path: '/volume/volume', meta: { name: 'volume' }, query: {} }, $store: { getters: { apis: { listSnapshots: {} }, userInfo: { id: 'user' } }, state: { user: { token: 'same-session' } } } } } })
+  await flushPromises()
+  expect(wrapper.find('.ant-alert').exists()).toBe(true)
+  expect(wrapper.find('.ant-alert button').text()).toBe('label.retry')
+  getAPI.mockResolvedValueOnce({ listsnapshotsresponse: { count: 1, snapshot: [{ id: 'snapshot', name: 'manual', intervaltype: 'MANUAL' }] } })
+  await wrapper.find('.ant-alert button').trigger('click'); await flushPromises()
+  expect(wrapper.vm.rows.map(row => row.id)).toEqual(['snapshot'])
+  expect(wrapper.find('.ant-alert').exists()).toBe(false)
+  wrapper.unmount()
 })
