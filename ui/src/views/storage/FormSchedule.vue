@@ -244,6 +244,7 @@
             </a-button>
             <a-button
               v-if="handleShowButton()"
+              :disabled="disabled"
               :loading="actionLoading"
               type="primary"
               ref="submit"
@@ -267,11 +268,12 @@ import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import { timeZone } from '@/utils/timezone'
 import { mixinForm } from '@/utils/mixin'
+import storageDialogContext from '@/utils/storageDialogContext'
 import debounce from 'lodash/debounce'
 
 export default {
   name: 'FormSchedule',
-  mixins: [mixinForm],
+  mixins: [mixinForm, storageDialogContext],
   components: {
     MoldDialogActions,
     TooltipButton,
@@ -279,6 +281,7 @@ export default {
   },
   props: {
     actionsVisible: { type: Boolean, default: true },
+    disabled: { type: Boolean, default: false },
     loading: {
       type: Boolean,
       default: false
@@ -446,7 +449,7 @@ export default {
       } else if (this.form.intervaltype === 'monthly') {
         this.fetchDayOfMonth()
       }
-      this.intervalValue = this.getIntervalValue(this.formintervaltype)
+      this.intervalValue = this.getIntervalValue(this.form.intervaltype)
     },
     getIntervalValue (intervalType) {
       switch (intervalType) {
@@ -514,8 +517,9 @@ export default {
     handleDeleteTag (tag) {
     },
     handleSubmit (e) {
-      if (this.actionLoading) return
+      if (this.actionLoading || this.disabled || !this.dialogCurrent()) return
       this.formRef.value.validate().then(() => {
+        if (this.actionLoading || this.disabled || !this.dialogCurrent()) return
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
 
@@ -553,7 +557,8 @@ export default {
           params = Object.assign({}, params, formattedTagData)
         }
         this.actionLoading = true
-        postAPI('createSnapshotPolicy', params).then(json => {
+        postAPI('createSnapshotPolicy', params, { preserveOnFailure: true }).then(json => {
+          if (!this.dialogCurrent()) return
           this.$emit('refresh')
           this.$notification.success({
             message: this.$t('label.action.recurring.snapshot'),
@@ -561,7 +566,7 @@ export default {
           })
           this.resetForm()
         }).catch(error => {
-          this.$notifyError(error)
+          if (this.dialogCurrent()) this.$notifyError(error)
         }).finally(() => {
           this.actionLoading = false
         })

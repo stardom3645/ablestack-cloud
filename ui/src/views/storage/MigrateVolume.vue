@@ -59,7 +59,7 @@
         </a-form-item>
       </details>
       <p v-if="errorText" class="operation-error operation-help" role="alert">{{ errorText }}</p>
-      <MoldDialogActions class="operation-footer" :busy="loading">
+      <MoldDialogActions class="operation-footer" :busy="isSubmitted">
         <span class="operation-summary operation-secondary" aria-live="polite">{{ resource.storage || '—' }} → {{ selectedStoragePool?.name || '—' }}<template v-if="replaceDiskOffering"> · {{ selectedOffering?.displaytext || selectedOffering?.name || $t('label.volume.operation.replace.offering') }}</template></span>
         <a-button :disabled="isSubmitted" @click="closeModal">{{ $t('label.cancel') }}</a-button>
         <a-button v-if="jobId" :loading="isSubmitted" type="primary" @click="resumeJob">{{ $t('message.volume.edit.check.result') }}</a-button>

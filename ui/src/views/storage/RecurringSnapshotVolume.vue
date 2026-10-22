@@ -42,27 +42,20 @@
         </a-form-item>
       </a-form>
     </div>
-    <a-tabs v-if="currentVolumeResource && currentVolumeResource.id" v-model:activeKey="scheduleTab" :animated="false">
-      <a-tab-pane :tab="$t('label.schedule')" key="1">
-        <FormSchedule
-          :actions-visible="scheduleTab === '1'"
-          :loading="loading"
-          :resource="currentVolumeResource"
-          :dataSource="dataSource"
-          :resourceType="'Volume'"
-          @close-action="closeAction"
-          @refresh="handleRefresh"/>
-      </a-tab-pane>
-      <a-tab-pane :tab="$t('label.action.recurring.snapshot')" key="2">
-        <ScheduledSnapshots
-          :loading="loading"
-          :resource="currentVolumeResource"
-          :dataSource="dataSource"
-          @refresh="handleRefresh"
-          @close-action="closeAction"/>
-      </a-tab-pane>
-    </a-tabs>
-    <MoldDialogActions v-if="scheduleTab === '2' || !currentVolumeResource?.id"><a-button @click="closeAction">{{ $t('label.close') }}</a-button></MoldDialogActions>
+    <div v-if="currentVolumeResource?.id" class="volume-operation-target">
+      <hdd-outlined aria-hidden="true" /><span>{{ currentVolumeResource.name }}</span><span class="operation-secondary">{{ currentVolumeResource.type }}</span>
+    </div>
+    <FormSchedule
+      v-if="currentVolumeResource?.id"
+      :key="currentVolumeResource.id"
+      :loading="loading"
+      :disabled="loading || !!policyError"
+      :resource="currentVolumeResource"
+      :dataSource="dataSource"
+      resourceType="Volume"
+      @close-action="closeAction"
+      @refresh="handleRefresh" />
+    <MoldDialogActions v-else><a-button @click="closeAction">{{ $t('label.close') }}</a-button></MoldDialogActions>
     <div v-if="!currentVolumeResource || !currentVolumeResource.id" class="no-volume-selected">
       <div class="empty-state">
         <p>{{ $t('message.select.volume.to.continue') }}</p>
@@ -76,14 +69,12 @@ import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { getAPI } from '@/utils/storageApi'
 import { readAllocationList } from '@/utils/volumeAllocation'
 import FormSchedule from '@/views/storage/FormSchedule'
-import ScheduledSnapshots from '@/views/storage/ScheduledSnapshots'
 
 export default {
   name: 'RecurringSnapshotVolume',
   components: {
     MoldDialogActions,
-    FormSchedule,
-    ScheduledSnapshots
+    FormSchedule
   },
   props: {
     resource: {
@@ -95,7 +86,6 @@ export default {
   inject: ['parentFetchData'],
   data () {
     return {
-      scheduleTab: '1',
       loading: false,
       dataSource: [],
       volumes: [],
@@ -219,21 +209,24 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
+@import '@/style/volume-operation-dialog';
 .snapshot-layout {
-  max-width: 800px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 
   .volume-selection {
     margin-bottom: 20px;
     padding: 16px;
-    border: 1px solid #d9d9d9;
+    border: 1px solid var(--ui-border);
     border-radius: 6px;
-    background-color: #fafafa;
+    background: var(--ui-bg-surface);
     .ant-form-item {
       margin-bottom: 0;
       .ant-select {
         width: 100%;
-        min-width: 400px;
+        min-width: 0;
       }
     }
   }

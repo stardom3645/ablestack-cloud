@@ -5862,6 +5862,7 @@
   "label.showing.results.for": "Showing results for \"%x\"",
   "label.site": "Netris Site",
   "label.snapshotpolicy": "Snapshot policy",
+  "label.recurringsnapshots": "Recurring snapshots",
   "label.snapshotpolicies": "Snapshot policies",
   "label.source.endpoint": "Source endpoint",
   "label.source.location": "Source location",

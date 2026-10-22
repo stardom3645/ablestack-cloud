@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-.volume-operation-form { width: 85vw; max-width: 100%; min-width: 0; @media (min-width: 760px) { width: 500px; } }
+.volume-operation-form { width: 100%; max-width: 100%; min-width: 0; }
 .volume-operation-target { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; overflow-wrap: anywhere; }
 .operation-secondary, .operation-help { font-size: 12px; opacity: .8; }
 .operation-label { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; width: 100%; overflow-wrap: anywhere; }

@@ -94,6 +94,11 @@ export default {
           show: () => 'listSnapshots' in store.getters.apis
         },
         {
+          name: 'recurringsnapshots',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/VolumeSnapshotPolicies.vue'))),
+          show: () => 'listSnapshotPolicies' in store.getters.apis
+        },
+        {
           name: 'metrics',
           resourceType: 'Volume',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/StatsTab.vue'))),
