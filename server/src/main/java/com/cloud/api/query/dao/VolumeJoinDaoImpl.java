@@ -249,8 +249,8 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
                 volResponse.setStorageType(volume.isUseLocalStorage() ? ServiceOffering.StorageType.local.toString() : ServiceOffering.StorageType.shared.toString());
             }
             volResponse.setBytesReadRate(volume.getBytesReadRate());
-            volResponse.setBytesWriteRate(volume.getBytesReadRate());
-            volResponse.setIopsReadRate(volume.getIopsWriteRate());
+            volResponse.setBytesWriteRate(volume.getBytesWriteRate());
+            volResponse.setIopsReadRate(volume.getIopsReadRate());
             volResponse.setIopsWriteRate(volume.getIopsWriteRate());
             volResponse.setCacheMode(volume.getCacheMode());
 
