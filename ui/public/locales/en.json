@@ -1125,7 +1125,7 @@
   "label.dynamic": "Dynamic",
   "label.dynamicscalingenabled": "Dynamic scaling enabled",
   "label.dynamicscalingenabled.tooltip": "Instance can dynamically scale only when dynamic scaling is enabled on Template, service offering and global setting.",
-  "label.diskofferingstrictness": "Disk offering strictness",
+  "label.diskofferingstrictness": "Restrict root disk offering changes",
   "label.disksizestrictness": "Disk size strictness",
   "label.edge": "Edge",
   "label.edge.zone": "Edge Zone",

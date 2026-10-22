@@ -1087,7 +1087,7 @@
   "label.dynamic": "Dynamic",
   "label.dynamicscalingenabled": "Dynamic Scaling 활성화",
   "label.dynamicscalingenabled.tooltip": "VM은 템플릿, 서비스 오퍼링 및 글로벌 설정에서 Dynamic Scaling이 활성화된 경우에만 Dynamic Scaling 가능",
-  "label.diskofferingstrictness": "디스크 오퍼링 엄격성",
+  "label.diskofferingstrictness": "루트 디스크 오퍼링 변경 제한",
   "label.disksizestrictness": "디스크 크기 엄격성",
   "label.edge": "Edge",
   "label.edge.zone": "Edge Zone",
