@@ -374,7 +374,7 @@
                 <a-radio-button value="storage">{{ $t('label.storage') }}</a-radio-button>
               </a-radio-group>
             </a-form-item>
-            <DiskQosFields v-if="form.qostype === 'hypervisor'" ref="qosEditor" :form="form" :api-params="apiParams" />
+            <DiskQosFields :compact="organized" v-if="form.qostype === 'hypervisor'" ref="qosEditor" :form="form" :api-params="apiParams" />
             <a-form-item v-if="!isSystem && qosType === 'storage'" name="iscustomizeddiskiops" ref="iscustomizeddiskiops">
               <template #label>
                 <tooltip-label :title="$t('label.iscustomizeddiskiops')" :tooltip="apiParams.customizediops.description"/>
@@ -454,7 +454,7 @@
               :filterOption="(input, option) => { return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0 }"
               @select="val => fetchvSphereStoragePolicies(val)"
               :loading="zoneLoading"
-              :placeholder="apiParams.zoneid.description">
+              :placeholder="organized ? $t('label.all.zone') : apiParams.zoneid.description">
               <a-select-option v-for="(opt, optIndex) in zones" :key="optIndex" :label="opt.name || opt.description">
                 <span>
                   <resource-icon v-if="opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>

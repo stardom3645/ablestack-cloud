@@ -13,6 +13,9 @@ import Sections from '@/components/offering/OfferingFormSections'
 import Group from '@/components/offering/OfferingAdvancedGroup'
 import Editor from '@/components/offering/AllocationPolicyEditor'
 import Definition from '@/components/offering/OfferingDiskDefinition'
+import Qos from '@/components/offering/DiskQosFields'
+import { reactive } from 'vue'
+import { qosFields } from '@/utils/offeringQos'
 import DiskForm from '@/components/offering/DiskOfferingForm'
 import ComputeForm from '@/components/offering/ComputeOfferingForm'
 import AddDisk from '@/views/offering/AddDiskOffering'
@@ -130,4 +133,30 @@ test('linked offering summary shows definition and tags rather than fabricated a
   const w = shallowMount(Definition, { props: { resource: { tags: 'gfs2,ssd', allocation: { contractversion: '1', requestedformat: 'qcow2', requestedpolicy: 'metadata', evidence: 'unverified' } } }, global: testGlobals })
   expect(w.text()).toContain('QCOW2'); expect(w.text()).toContain('metadata'); expect(w.text()).toContain('gfs2,ssd')
   expect(w.text()).not.toContain('appliedmethod'); w.unmount()
+})
+
+test('creation QoS keeps four base limits separate from mounted burst inputs and preserves values when collapsed', async () => {
+  const form = reactive({})
+  const schema = Object.fromEntries(qosFields.map(field => [field.api, {}]))
+  const w = mount({ components: { Qos }, setup: () => ({ form, schema }), template: '<a-form :model="form"><Qos ref="qos" :form="form" :api-params="schema" compact /></a-form>' }, { global: testGlobals })
+  expect(w.findAll('.qos-base-groups input')).toHaveLength(4)
+  expect(w.findAll('.qos-burst input')).toHaveLength(8)
+  expect(w.get('details').element.open).toBe(false)
+  await w.get('input[data-qos="bytesreadrate"]').setValue('100')
+  w.get('details').element.open = true
+  await w.get('input[data-qos="bytesreadratemax"]').setValue('200')
+  await w.get('input[data-qos="bytesreadratemaxlength"]').setValue('2')
+  w.get('details').element.open = false
+  await expect(w.vm.$refs.qos.validate()).resolves.toBeUndefined()
+  expect(form).toMatchObject({ diskbytesreadrate: '100', diskbytesreadratemax: '200', diskbytesreadratemaxlength: '2' })
+  w.unmount()
+})
+
+test('an invalid burst opens its controls so creation cannot fail behind a closed disclosure', async () => {
+  const form = reactive({ diskbytesreadrate: '100', diskbytesreadratemax: '0', diskbytesreadratemaxlength: '1' })
+  const schema = Object.fromEntries(qosFields.map(field => [field.api, {}]))
+  const w = mount({ components: { Qos }, setup: () => ({ form, schema }), template: '<a-form :model="form"><Qos ref="qos" :form="form" :api-params="schema" compact /></a-form>' }, { global: testGlobals })
+  expect(w.get('details').element.open).toBe(true)
+  await expect(w.vm.$refs.qos.validate()).rejects.toThrow('message.offering.qos.length')
+  w.unmount()
 })

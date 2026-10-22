@@ -31,7 +31,7 @@
           <a-input
             v-focus="true"
             v-model:value="form.name"
-            :placeholder="apiParams.name.description"/>
+            :placeholder="organized ? $t('label.name') : apiParams.name.description"/>
         </a-form-item>
         <a-form-item name="displaytext" ref="displaytext">
           <template #label>
@@ -150,7 +150,7 @@
               </a-radio-button>
             </a-radio-group>
           </a-form-item>
-          <DiskQosFields v-if="form.qostype === 'hypervisor'" ref="qosEditor" :form="form" :api-params="apiParams" />
+          <DiskQosFields :compact="organized" v-if="form.qostype === 'hypervisor'" ref="qosEditor" :form="form" :api-params="apiParams" />
           <a-form-item v-if="form.qostype === 'storage'" name="iscustomizeddiskiops" ref="iscustomizeddiskiops">
             <template #label>
               <tooltip-label :title="$t('label.iscustomizeddiskiops')" :tooltip="apiParams.customizediops.description"/>
@@ -245,7 +245,7 @@
               }"
               @select="val => fetchvSphereStoragePolicies(val)"
               :loading="zoneLoading"
-              :placeholder="apiParams.zoneid.description">
+              :placeholder="organized ? $t('label.all.zone') : apiParams.zoneid.description">
               <a-select-option v-for="(opt, optIndex) in zones" :key="optIndex" :label="opt.name || opt.description">
                 <span>
                   <resource-icon v-if="opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>

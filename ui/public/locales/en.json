@@ -9421,5 +9421,11 @@
   "label.offering.storage.shared": "Shared storage",
   "message.offering.tags.placeholder": "For example: gfs2, ssd",
   "message.offering.root.size.default": "Template default",
-  "message.offering.encryption.unsupported": "Encrypted volume deployment is not currently supported with Europa policies."
+  "message.offering.encryption.unsupported": "Encrypted volume deployment is not currently supported with Europa policies.",
+  "message.offering.qos.creation": "Blank or zero adds no offering override. System defaults may still apply.",
+  "label.offering.qos.burst.settings": "Burst limits",
+  "label.offering.qos.bytesreadrate": "Read throughput",
+  "label.offering.qos.byteswriterate": "Write throughput",
+  "label.offering.qos.iopsreadrate": "Read IOPS",
+  "label.offering.qos.iopswriterate": "Write IOPS"
 }
