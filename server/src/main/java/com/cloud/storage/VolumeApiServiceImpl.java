@@ -2808,22 +2808,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     }
 
     protected StoragePool getPoolForAllocatedOrUploadedVolumeForAttach(final VolumeInfo volumeToAttach, final UserVmVO vm) {
-        DataCenter zone = _dcDao.findById(vm.getDataCenterId());
-        Pair<Long, Long> clusterHostId = virtualMachineManager.findClusterAndHostIdForVm(vm, false);
-        long podId = vm.getPodIdToDeployIn();
-        if (clusterHostId.first() != null) {
-            Cluster cluster = clusterDao.findById(clusterHostId.first());
-            podId = cluster.getPodId();
-        }
-        Pod pod = podDao.findById(podId);
-        DiskOfferingVO offering = _diskOfferingDao.findById(volumeToAttach.getDiskOfferingId());
-        DiskProfile diskProfile =  new DiskProfile(volumeToAttach.getId(), volumeToAttach.getVolumeType(),
-                volumeToAttach.getName(), volumeToAttach.getId(), volumeToAttach.getSize(), offering.getTagsArray(),
-                offering.isUseLocalStorage(), offering.isRecreatable(),
-                volumeToAttach.getTemplateId());
-        diskProfile.setHyperType(vm.getHypervisorType());
-        StoragePool pool = _volumeMgr.findStoragePool(diskProfile, zone, pod, clusterHostId.first(),
-                clusterHostId.second(), vm, Collections.emptySet());
+        StoragePool pool = getSuitablePoolForAllocatedOrUploadedVolumeForAttach(volumeToAttach, vm);
         if (pool == null) {
             throw new CloudRuntimeException(String.format("Failed to find a primary storage for volume in state: %s", volumeToAttach.getState()));
         }
@@ -2836,7 +2821,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         if (!Arrays.asList(Volume.State.Allocated, Volume.State.Uploaded).contains(volumeToAttach.getState())) {
             return newVolumeOnPrimaryStorage;
         }
-        //don't create volume on primary storage if its being attached to the vm which Root's volume hasn't been created yet
+        // Reuse a materialized VM volume's pool, otherwise use the allocator with the VM's known placement constraints.
         StoragePool destPrimaryStorage = null;
         if (existingVolumeOfVm != null && !existingVolumeOfVm.getState().equals(Volume.State.Allocated)) {
             destPrimaryStorage = _storagePoolDao.findById(existingVolumeOfVm.getPoolId());
@@ -2872,9 +2857,16 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         Long podId = vm.getPodIdToDeployIn();
         if (clusterHostId.first() != null) {
             Cluster cluster = clusterDao.findById(clusterHostId.first());
+            if (cluster == null) {
+                throw new CloudRuntimeException(String.format("Cannot find cluster [%s] for volume attachment", clusterHostId.first()));
+            }
             podId = cluster.getPodId();
         }
-        Pod pod = podDao.findById(podId);
+        // A VM that has never started can have no pod, cluster or host. The allocator supports a zone-only plan.
+        Pod pod = podId == null ? null : podDao.findById(podId);
+        if (podId != null && pod == null) {
+            throw new CloudRuntimeException(String.format("Cannot find pod [%s] for volume attachment", podId));
+        }
         DiskOfferingVO offering = _diskOfferingDao.findById(volumeToAttach.getDiskOfferingId());
         DiskProfile diskProfile =  new DiskProfile(volumeToAttach.getId(), volumeToAttach.getVolumeType(),
                 volumeToAttach.getName(), volumeToAttach.getId(), volumeToAttach.getSize(), offering.getTagsArray(),
