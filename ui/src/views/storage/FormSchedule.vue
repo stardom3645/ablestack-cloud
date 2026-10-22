@@ -32,7 +32,7 @@
           @finish="handleSubmit"
          >
           <a-row :gutter="12">
-            <a-col :md="24" :lg="24">
+            <a-col :xs="24" :md="24" :lg="24">
               <a-form-item :label="$t('label.intervaltype')" name="intervaltype" ref="intervaltype">
                 <a-radio-group
                   v-model:value="form.intervaltype"
@@ -53,7 +53,7 @@
                 </a-radio-group>
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="12" v-if="form.intervaltype==='hourly'">
+            <a-col :xs="24" :md="24" :lg="12" v-if="form.intervaltype==='hourly'">
               <a-form-item :label="$t('label.time')" name="time" ref="time">
                 <a-tooltip
                   placement="right"
@@ -68,7 +68,7 @@
                 </a-tooltip>
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="12" v-if="['daily', 'weekly', 'monthly'].includes(form.intervaltype)">
+            <a-col :xs="24" :md="24" :lg="12" v-if="['daily', 'weekly', 'monthly'].includes(form.intervaltype)">
               <a-form-item
                 class="custom-time-select"
                 :label="$t('label.time')"
@@ -82,7 +82,7 @@
                   style="width: 100%;" />
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="12" v-if="form.intervaltype==='weekly'">
+            <a-col :xs="24" :md="24" :lg="12" v-if="form.intervaltype==='weekly'">
               <a-form-item :label="$t('label.day.of.week')" name="day-of-week" ref="day-of-week">
                 <a-select
                   v-model:value="form['day-of-week']"
@@ -98,7 +98,7 @@
                 </a-select>
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="12" v-if="form.intervaltype==='monthly'">
+            <a-col :xs="24" :md="24" :lg="12" v-if="form.intervaltype==='monthly'">
               <a-form-item :label="$t('label.day.of.month')" ref="day-of-month" name="day-of-month">
                 <a-select
                   v-model:value="form['day-of-month']"
@@ -114,7 +114,7 @@
                 </a-select>
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="12">
+            <a-col :xs="24" :md="24" :lg="12">
               <a-form-item :label="$t('label.keep')" name="maxsnaps" ref="maxsnaps">
                 <a-tooltip
                   placement="right"
@@ -126,7 +126,7 @@
                 </a-tooltip>
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="24">
+            <a-col :xs="24" :md="24" :lg="24">
               <a-form-item :label="$t('label.timezone')" ref="timezone" name="timezone">
                 <a-select
                   v-model:value="form.timezone"
@@ -142,7 +142,7 @@
                 </a-select>
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="24" v-if="resourceType === 'Volume'">
+            <a-col :xs="24" :md="24" :lg="24" v-if="resourceType === 'Volume'">
               <a-form-item ref="zoneids" name="zoneids" :required="(!isAdmin && form.useStorageReplication)">
                 <template #label>
                   <tooltip-label :title="$t('label.zones')" :tooltip="''"/>
@@ -173,7 +173,7 @@
                 </a-select>
               </a-form-item>
             </a-col>
-            <a-col :md="24" :lg="24" v-if="resourceType === 'Volume'">
+            <a-col :xs="24" :md="24" :lg="24" v-if="resourceType === 'Volume'">
               <a-form-item name="useStorageReplication" ref="useStorageReplication">
                 <template #label>
                   <tooltip-label :title="$t('label.usestoragereplication')" :tooltip="apiParams.usestoragereplication.description" />
