@@ -41,4 +41,18 @@ public class SnapshotDeletionSerializationTest {
         Assert.assertEquals("revision", result.get("scopehash").getAsString());
         Assert.assertEquals(95L, result.getAsJsonArray("reference").get(0).getAsJsonObject().get("referenceid").getAsLong());
     }
+    @Test
+    public void forcedDatabaseOnlyResultDoesNotClaimPhysicalCompletion() {
+        SnapshotDeletionResponse response = new SnapshotDeletionResponse("snapshot", "fixture", "Destroyed", null);
+        response.setExecutionResult(false, 1);
+        response.addCleanupResult(95L, "Primary", "DB_ONLY", "MISSING_TARGET_METADATA");
+        com.google.gson.JsonObject result = new ResponseObjectTypeAdapter().serialize(response, ResponseObject.class, null)
+                .getAsJsonObject().getAsJsonObject("deletesnapshotresponse");
+        Assert.assertTrue(result.get("force").getAsBoolean());
+        Assert.assertTrue(result.get("dbcleanupcomplete").getAsBoolean());
+        Assert.assertFalse(result.get("dryrun").getAsBoolean());
+        Assert.assertFalse(result.get("physicalcleanupcomplete").getAsBoolean());
+        Assert.assertEquals("DB_ONLY", result.getAsJsonArray("cleanupresult").get(0).getAsJsonObject().get("action").getAsString());
+    }
+
 }

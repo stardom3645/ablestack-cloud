@@ -9409,5 +9409,17 @@
   "message.snapshot.recovery.context.changed": "화면 또는 사용자 범위가 변경됐습니다. 다시 진단하세요.",
   "message.snapshot.recovery.failed": "삭제 진단 또는 재처리에 실패했습니다. 대상 상태와 작업 결과를 확인하세요.",
   "message.snapshot.recovery.unknown": "작업 결과를 확인하지 못했습니다. 자동 재제출하지 않습니다. 기존 작업 결과를 확인하세요.",
-  "label.snapshot.id": "스냅샷 UUID"
+  "label.snapshot.id": "스냅샷 UUID",
+  "label.snapshot.force.delete": "강제삭제 (관리자 복구)",
+  "message.snapshot.force.scope": "확인 가능한 사본의 실물 삭제를 시도한 뒤, 정보 누락이나 저장소 정리 실패가 있어도 선택한 DB 정보를 삭제 상태로 정리합니다. 미확인 대상은 정리 이력에 남겨 재시도할 수 있습니다. 매핑이 누락된 실물의 부재는 보장할 수 없습니다.",
+  "message.snapshot.force.acknowledge": "강제 DB 정리와 미확인 실물이 남을 수 있음을 확인했습니다.",
+  "message.snapshot.force.db.complete": "DB 정리가 완료됐습니다. 일부 실물은 확인하거나 삭제하지 못했습니다. 결과를 확인하고 다시 진단하여 잔여 정리를 재시도할 수 있습니다.",
+  "label.snapshot.force.physical.deleted": "실물 삭제 또는 부재 확인 · DB 정리 완료",
+  "label.snapshot.force.db.only": "DB 정리 완료 · 실물 정리 미확인",
+  "label.snapshot.force.pending": "정리 보류 실물 대상",
+  "message.snapshot.force.admin": "강제삭제는 루트 관리자만 실행할 수 있습니다.",
+  "label.snapshot.force.db.plan": "실물 위치 확인 불가 · DB 정리 예정",
+  "label.snapshot.force.physical.plan": "실물 삭제 시도 후 DB 정리 예정",
+  "label.snapshot.force.execute": "강제삭제 실행",
+  "message.snapshot.force.no.references": "저장소 참조가 누락되어 실물 위치를 확인할 수 없습니다. 강제삭제는 DB 정보를 정리하며 실물 정리 여부는 별도로 확인해야 합니다."
 }

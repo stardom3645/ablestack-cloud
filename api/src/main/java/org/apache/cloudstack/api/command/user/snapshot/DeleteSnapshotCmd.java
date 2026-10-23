@@ -60,6 +60,13 @@ public class DeleteSnapshotCmd extends BaseAsyncCmd {
             description = "Optional scopehash from dryrun; reject deletion if its target or state has changed")
     private String expectedScopeHash;
 
+    // Keep force visible to the parser: silently dropping it for non-admins would execute a normal deletion.
+    // SnapshotManager validates root-admin permission for both diagnosis and execution.
+    @Parameter(name = "force", type = CommandType.BOOLEAN,
+            description = "Administrator recovery: attempt physical deletion and tombstone unresolved metadata, retaining pending cleanup audit. Requires dryrun scopehash.")
+    private Boolean force;
+
+
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -112,7 +119,13 @@ public class DeleteSnapshotCmd extends BaseAsyncCmd {
     public void execute() {
         CallContext.current().setEventDetails("Snapshot ID: " + getResourceUuid(ApiConstants.ID));
         if (Boolean.TRUE.equals(dryRun)) {
-            SnapshotDeletionResponse response = _snapshotService.previewSnapshotDeletion(getId(), getZoneId());
+            SnapshotDeletionResponse response = _snapshotService.previewSnapshotDeletion(getId(), getZoneId(), Boolean.TRUE.equals(force));
+            response.setResponseName(getCommandName());
+            setResponseObject(response);
+            return;
+        }
+        if (Boolean.TRUE.equals(force)) {
+            SnapshotDeletionResponse response = _snapshotService.forceDeleteSnapshot(getId(), getZoneId(), expectedScopeHash);
             response.setResponseName(getCommandName());
             setResponseObject(response);
             return;

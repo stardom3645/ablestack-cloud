@@ -133,6 +133,7 @@ public class SnapshotManagerTest {
     AnnotationDao annotationDao;
     @Mock
     SnapshotDao _snapshotDao;
+    @Mock private com.cloud.storage.dao.SnapshotDetailsDao snapshotDetailsDao;
     @Mock
     VolumeDao _volumeDao;
     @Mock
@@ -430,17 +431,18 @@ public class SnapshotManagerTest {
         Assert.assertNull(snapshot);
     }
 
-    @Test(expected = CloudRuntimeException.class)
+    @Test(expected = InvalidParameterValueException.class)
     public void testArchiveSnapshotSnapshotNotOnPrimary() {
-        when(snapshotFactory.getSnapshotOnPrimaryStore(anyLong())).thenReturn(null);
-        _snapshotMgr.archiveSnapshot(TEST_SNAPSHOT_ID);
+        when(snapshotMock.getUuid()).thenReturn("archive-fixture");
+        when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp);
+        _snapshotMgr.archiveSnapshotWithLock(TEST_SNAPSHOT_ID, null);
     }
 
-    @Test(expected = CloudRuntimeException.class)
+    @Test(expected = InvalidParameterValueException.class)
     public void testArchiveSnapshotSnapshotNotReady() {
-        when(snapshotFactory.getSnapshotOnPrimaryStore(anyLong())).thenReturn(snapshotInfoMock);
-        when(snapshotInfoMock.getStatus()).thenReturn(ObjectInDataStoreStateMachine.State.Destroyed);
-        _snapshotMgr.archiveSnapshot(TEST_SNAPSHOT_ID);
+        when(snapshotMock.getUuid()).thenReturn("archive-fixture");
+        when(snapshotMock.getState()).thenReturn(Snapshot.State.Creating);
+        _snapshotMgr.archiveSnapshotWithLock(TEST_SNAPSHOT_ID, null);
     }
 
     public void assertSnapshotPolicyResultAgainstPreBuiltInstance(SnapshotPolicyVO snapshotPolicyVo, Short interval){
@@ -698,6 +700,7 @@ public class SnapshotManagerTest {
     }
     @Test
     public void deletionReconcilesOnlyAffectedOwnerCountersOnce() {
+        Mockito.when(snapshotStoreMock.getInstallPath()).thenReturn("snapshots/10/9/fixture");
         SnapshotManagerImpl manager = Mockito.spy(_snapshotMgr);
         Mockito.doReturn(snapshotMock).when(manager).validateSnapshotDeletion(TEST_SNAPSHOT_ID);
         Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp, Snapshot.State.Destroyed);
@@ -717,6 +720,7 @@ public class SnapshotManagerTest {
 
     @Test
     public void failedDeletionDoesNotChargeUnsettledReference() {
+        Mockito.when(snapshotStoreMock.getInstallPath()).thenReturn("snapshots/2/9/fixture");
         SnapshotManagerImpl manager = Mockito.spy(_snapshotMgr);
         Mockito.doReturn(snapshotMock).when(manager).validateSnapshotDeletion(TEST_SNAPSHOT_ID);
         Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp);
@@ -765,6 +769,17 @@ public class SnapshotManagerTest {
         Mockito.doThrow(new com.cloud.exception.PermissionDeniedException("other owner"))
                 .when(_accountMgr).checkAccess(Mockito.any(Account.class), Mockito.isNull(), Mockito.eq(true), Mockito.eq(snapshotMock));
         _snapshotMgr.deleteSnapshot(TEST_SNAPSHOT_ID, null);
+    }
+
+    @Test
+    public void missingPathRequiresForcedDiagnosisBeforeAnyStorageOperation() {
+        SnapshotManagerImpl manager = Mockito.spy(_snapshotMgr);
+        Mockito.doReturn(snapshotMock).when(manager).validateSnapshotDeletion(TEST_SNAPSHOT_ID);
+        Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp);
+        Mockito.doReturn(new Pair<>(List.of(snapshotStoreMock), List.of(1L))).when(manager)
+                .getStoreRefsAndZonesForSnapshotDelete(TEST_SNAPSHOT_ID, null);
+        Assert.assertThrows(InvalidParameterValueException.class, () -> manager.deleteSnapshotWithLock(TEST_SNAPSHOT_ID, null, null));
+        Mockito.verify(snapshotStrategy, Mockito.never()).deleteSnapshot(Mockito.anyLong(), Mockito.any());
     }
 
 }

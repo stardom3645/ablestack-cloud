@@ -25,9 +25,21 @@
       <a-form-item :label="$t('label.snapshot.recovery.zone')">
         <a-input v-model:value="zoneId" :disabled="busy || !!pendingJob" data-testid="recovery-zone-id" />
       </a-form-item>
+      <a-form-item v-if="canForce">
+        <a-checkbox v-model:checked="force" :disabled="busy || !!pendingJob" data-testid="recovery-force">
+          {{ $t('label.snapshot.force.delete') }}
+        </a-checkbox>
+        <a-alert v-if="force" type="warning" :message="$t('message.snapshot.force.scope')" show-icon style="margin-top: 12px" />
+      </a-form-item>
       <a-button :loading="busy" :disabled="busy || !!pendingJob" @click="diagnose">{{ $t('label.snapshot.recovery.diagnose') }}</a-button>
       <a-alert v-if="error" type="error" :message="error" show-icon style="margin-top: 16px" />
-      <a-alert v-if="completed" type="success" :message="$t('message.snapshot.recovery.complete')" style="margin-top: 16px" />
+      <a-alert v-if="completed" :type="dbOnlyResult ? 'warning' : 'success'" :message="$t(dbOnlyResult ? 'message.snapshot.force.db.complete' : 'message.snapshot.recovery.complete')" style="margin-top: 16px" />
+      <ul v-if="executionResult && force" data-testid="force-cleanup-results">
+        <li v-for="(result, index) in (executionResult.cleanupresult || [])" :key="index">
+          {{ result.role }} #{{ result.referenceid }}: {{ $t(result.action === 'PHYSICAL_DELETED' ? 'label.snapshot.force.physical.deleted' : 'label.snapshot.force.db.only') }}
+        </li>
+      </ul>
+      <p v-if="executionResult && executionResult.pendingcleanup">{{ $t('label.snapshot.force.pending') }}: {{ executionResult.pendingcleanup }}</p>
       <div v-if="preview" class="recovery-preview" style="margin-top: 16px">
         <a-descriptions :column="1" bordered size="small">
           <a-descriptions-item :label="$t('label.name')">{{ preview.name }}</a-descriptions-item>
@@ -40,9 +52,14 @@
             #{{ ref.referenceid }} · {{ ref.storename }} · {{ ref.role }} · {{ ref.state }} · {{ ref.zoneid }}
           </li>
         </ul>
-        <p v-if="!(preview.reference || []).length">{{ $t('message.snapshot.recovery.no.references') }}</p>
+        <ul v-if="force && !completed" data-testid="force-cleanup-plan">
+          <li v-for="(result, index) in (preview.cleanupresult || [])" :key="index">
+            {{ result.role }} #{{ result.referenceid }}: {{ $t(result.action === 'DB_ONLY' ? 'label.snapshot.force.db.plan' : 'label.snapshot.force.physical.plan') }}
+          </li>
+        </ul>
+        <p v-if="!(preview.reference || []).length">{{ $t(force && unmappedPlan ? 'message.snapshot.force.no.references' : 'message.snapshot.recovery.no.references') }}</p>
         <a-checkbox v-model:checked="acknowledged" :disabled="busy || !!pendingJob || completed">
-          {{ $t('message.snapshot.recovery.acknowledge') }}
+          {{ $t(force ? 'message.snapshot.force.acknowledge' : 'message.snapshot.recovery.acknowledge') }}
         </a-checkbox>
       </div>
       <p v-if="pendingJob">{{ $t('label.job.id') }}: {{ pendingJob }}</p>
@@ -50,7 +67,7 @@
       <MoldDialogActions :busy="busy">
         <a-button :disabled="busy" @click="$emit('close-action')">{{ $t('label.close') }}</a-button>
         <a-button type="primary" danger :loading="busy" :disabled="!canRecover" @click="recover">
-          {{ $t('label.snapshot.recovery.execute') }}
+          {{ $t(force ? 'label.snapshot.force.execute' : 'label.snapshot.recovery.execute') }}
         </a-button>
       </MoldDialogActions>
     </a-form>
@@ -70,17 +87,21 @@ export default {
   emits: ['close-action', 'refresh-data'],
   props: { resource: { type: Object, default: () => ({}) } },
   data () {
-    return { snapshotId: '', zoneId: '', preview: null, previewScope: null, acknowledged: false, busy: false, error: '', completed: false, pendingJob: '', blockedSubmission: false, sequence: 0 }
+    return { force: false, executionResult: null, snapshotId: '', zoneId: '', preview: null, previewScope: null, acknowledged: false, busy: false, error: '', completed: false, pendingJob: '', blockedSubmission: false, sequence: 0 }
   },
   computed: {
+    canForce () { return this.$store.getters.userInfo?.roletype === 'Admin' },
+    unmappedPlan () { return !!this.preview?.cleanupresult?.some(result => result.reason === 'NO_IDENTIFIABLE_STORE_REFERENCE') },
+    dbOnlyResult () { return this.executionResult?.force && this.executionResult.physicalcleanupcomplete === false },
     canRecover () { return !!this.preview && this.acknowledged && !this.busy && !this.pendingJob && !this.blockedSubmission && !this.completed && this.dialogCurrent() }
   },
   watch: {
+    force () { this.invalidate() },
     snapshotId () { this.invalidate() },
     zoneId () { this.invalidate() }
   },
   methods: {
-    invalidate () { this.sequence++; this.preview = null; this.previewScope = null; this.acknowledged = false; this.completed = false },
+    invalidate () { this.sequence++; this.preview = null; this.previewScope = null; this.acknowledged = false; this.completed = false; this.executionResult = null },
     async waitForJob (jobId, sequence) {
       for (let i = 0; i < 120; i++) {
         if (!this.dialogCurrent() || sequence !== this.sequence) throw new Error(this.$t('message.snapshot.recovery.context.changed'))
@@ -101,7 +122,9 @@ export default {
       if (this.busy || this.pendingJob || !this.dialogCurrent()) return
       this.invalidate()
       this.error = ''
+      if (this.force && !this.canForce) { this.error = this.$t('message.snapshot.force.admin'); return }
       const scope = { id: this.snapshotId.trim().toLowerCase() }
+      if (this.force) scope.force = true
       if (this.zoneId.trim()) scope.zoneid = this.zoneId.trim().toLowerCase()
       if (!uuid.test(scope.id) || (scope.zoneid && !uuid.test(scope.zoneid))) {
         this.error = this.$t('message.snapshot.recovery.invalid.uuid'); return
@@ -113,7 +136,7 @@ export default {
         const response = json.deletesnapshotresponse
         const result = response.jobid ? await this.waitForJob(response.jobid, sequence) : response
         if (!this.dialogCurrent() || sequence !== this.sequence) return
-        if (result.snapshotid !== scope.id || !result.scopehash) throw new Error(this.$t('message.snapshot.recovery.failed'))
+        if (result.snapshotid !== scope.id || !result.scopehash || !!result.force !== !!scope.force) throw new Error(this.$t('message.snapshot.recovery.failed'))
         this.preview = result
         this.previewScope = scope
       } catch (error) { if (this.dialogCurrent() && sequence === this.sequence) this.showError(error) } finally { this.busy = false }
@@ -141,8 +164,15 @@ export default {
     },
     async finishJob () {
       try {
-        await this.waitForJob(this.pendingJob, this.sequence)
+        const result = await this.waitForJob(this.pendingJob, this.sequence)
         if (!this.dialogCurrent()) return
+        if (this.previewScope?.force && (!result?.force || result.dbcleanupcomplete !== true)) {
+          throw new Error(this.$t('message.snapshot.recovery.unknown'))
+        }
+        this.executionResult = result
+        if (result?.force && this.preview) {
+          this.preview = { ...this.preview, state: result.state || this.preview.state, reference: (this.preview.reference || []).map(ref => ({ ...ref, state: 'Destroyed' })) }
+        }
         this.pendingJob = ''
         this.completed = true
         this.acknowledged = false

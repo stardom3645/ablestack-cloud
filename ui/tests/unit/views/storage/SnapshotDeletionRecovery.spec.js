@@ -18,8 +18,8 @@ const id = '00000000-0000-0000-0000-000000000001'
 const zoneid = '00000000-0000-0000-0000-000000000002'
 const preview = { snapshotid: id, name: 'Disposable fixture', state: 'Destroyed', scopehash: 'revision', reference: [{ referenceid: 7, state: 'Destroying', storename: 'Secondary' }] }
 let wrapper
-function mount () {
-  wrapper = shallowMount(Recovery, { global: { renderStubDefaultSlot: true, mocks: { $t: x => x, $route: { path: '/snapshot' }, $store: { getters: { userInfo: { id: 'admin' }, project: {} } } } } })
+function mount (roletype) {
+  wrapper = shallowMount(Recovery, { global: { renderStubDefaultSlot: true, mocks: { $t: x => x, $route: { path: '/snapshot' }, $store: { getters: { userInfo: { id: 'admin', roletype }, project: {} } } } } })
   return wrapper
 }
 async function diagnosed () {
@@ -115,4 +115,72 @@ test('recovery action belongs only to the snapshot list and preserves normal det
   const normal = snapshot.actions.find(x => x.label === 'label.action.delete.snapshot')
   expect(normal.dataView).toBe(true)
   expect(normal.groupAction).toBe(true)
+})
+
+async function forcedDiagnosis () {
+  mount('Admin'); await wrapper.setData({ snapshotId: id, force: true })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { ...preview, state: 'BackedUp', force: true } })
+  await wrapper.vm.diagnose()
+}
+test('forced diagnosis and execution preserve explicit force mode and confirmation', async () => {
+  await forcedDiagnosis()
+  expect(postAPI).toHaveBeenCalledWith('deleteSnapshot', { id, force: true, dryrun: true })
+  expect(wrapper.vm.canRecover).toBe(false)
+  await wrapper.setData({ acknowledged: true })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
+  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { deletesnapshotresponse: { force: true, state: 'Destroyed', physicalcleanupcomplete: true, dbcleanupcomplete: true } } } })
+  await wrapper.vm.recover()
+  expect(postAPI).toHaveBeenLastCalledWith('deleteSnapshot', { id, force: true, expectedscopehash: 'revision' })
+  expect(wrapper.vm.completed).toBe(true)
+  expect(wrapper.vm.dbOnlyResult).toBe(false)
+  expect(wrapper.vm.preview.state).toBe('Destroyed')
+  expect(wrapper.vm.preview.reference[0].state).toBe('Destroyed')
+})
+test('database-only forced result is retained and displayed as unverified physical cleanup', async () => {
+  await forcedDiagnosis(); await wrapper.setData({ acknowledged: true })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
+  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { deletesnapshotresponse: { force: true, state: 'Destroyed', physicalcleanupcomplete: false, dbcleanupcomplete: true, pendingcleanup: 1, cleanupresult: [{ referenceid: 7, role: 'Primary', action: 'DB_ONLY' }] } } } })
+  await wrapper.vm.recover()
+  expect(wrapper.vm.dbOnlyResult).toBe(true)
+  expect(wrapper.vm.executionResult.pendingcleanup).toBe(1)
+  expect(wrapper.vm.pendingJob).toBe('')
+  expect(wrapper.vm.canRecover).toBe(false)
+})
+test('changing force mode invalidates the inspected target and acknowledgement', async () => {
+  await forcedDiagnosis(); await wrapper.setData({ acknowledged: true })
+  expect(wrapper.vm.canRecover).toBe(true)
+  await wrapper.setData({ force: false })
+  expect(wrapper.vm.preview).toBeNull()
+  expect(wrapper.vm.canRecover).toBe(false)
+})
+test('normal owner cannot request forced diagnosis', async () => {
+  mount('User'); await wrapper.setData({ snapshotId: id, force: true })
+  await wrapper.vm.diagnose()
+  expect(postAPI).not.toHaveBeenCalled()
+  expect(wrapper.vm.error).toBe('message.snapshot.force.admin')
+})
+test('legacy normal response cannot authorize a forced operation', async () => {
+  mount('Admin'); await wrapper.setData({ snapshotId: id, force: true })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: preview })
+  await wrapper.vm.diagnose()
+  expect(wrapper.vm.preview).toBeNull()
+  expect(wrapper.vm.canRecover).toBe(false)
+})
+
+test('a normal success response cannot claim completion of forced database cleanup', async () => {
+  await forcedDiagnosis(); await wrapper.setData({ acknowledged: true })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
+  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
+  await wrapper.vm.recover()
+  expect(wrapper.vm.completed).toBe(false)
+  expect(wrapper.vm.pendingJob).toBe('force-job')
+  expect(wrapper.vm.canRecover).toBe(false)
+})
+
+test('unmapped forced diagnosis explains database cleanup instead of a physical no-op', async () => {
+  mount('Admin'); await wrapper.setData({ snapshotId: id, force: true })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { ...preview, force: true, reference: [], cleanupresult: [{ referenceid: 0, action: 'DB_ONLY', reason: 'NO_IDENTIFIABLE_STORE_REFERENCE' }] } })
+  await wrapper.vm.diagnose()
+  expect(wrapper.vm.unmappedPlan).toBe(true)
+  expect(wrapper.vm.canRecover).toBe(false)
 })

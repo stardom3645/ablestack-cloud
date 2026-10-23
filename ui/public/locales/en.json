@@ -9444,5 +9444,17 @@
   "message.snapshot.recovery.context.changed": "The page or user scope changed. Diagnose again.",
   "message.snapshot.recovery.failed": "Deletion diagnosis or recovery failed. Inspect the target state and job result.",
   "message.snapshot.recovery.unknown": "The result is unknown. Deletion will not be resubmitted automatically. Check the existing job.",
-  "label.snapshot.id": "Snapshot UUID"
+  "label.snapshot.id": "Snapshot UUID",
+  "label.snapshot.force.delete": "Forced deletion (administrator recovery)",
+  "message.snapshot.force.scope": "Attempts physical deletion of identified copies, then terminates selected database metadata even when information is missing or storage cleanup fails. Unverified targets are retained in the cleanup audit and can be retried. Unknown mappings cannot prove that all physical copies are absent.",
+  "message.snapshot.force.acknowledge": "I acknowledge forced database cleanup and that unverified physical copies may remain.",
+  "message.snapshot.force.db.complete": "Database cleanup completed. Some physical targets could not be verified or deleted. Review the results and diagnose again to retry pending cleanup.",
+  "label.snapshot.force.physical.deleted": "Physical copy deleted or already absent; database metadata terminated",
+  "label.snapshot.force.db.only": "Database metadata terminated; physical cleanup unverified",
+  "label.snapshot.force.pending": "Physical targets awaiting cleanup",
+  "message.snapshot.force.admin": "Forced cleanup requires a root administrator.",
+  "label.snapshot.force.db.plan": "Target cannot be resolved; database cleanup planned",
+  "label.snapshot.force.physical.plan": "Physical deletion attempt followed by database cleanup",
+  "label.snapshot.force.execute": "Run forced deletion",
+  "message.snapshot.force.no.references": "Store reference mappings are missing. Forced deletion terminates database metadata; physical cleanup cannot be verified from this information."
 }

@@ -639,27 +639,155 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         return extractUrl;
     }
 
+    protected SnapshotVO validateSnapshotArchive(Long snapshotId) {
+        SnapshotVO snapshot = validateSnapshotDeletion(snapshotId);
+        if (snapshot.getRemoved() != null) {
+            throw new InvalidParameterValueException("Unable to archive a removed snapshot");
+        }
+        return snapshot;
+    }
+
+    protected org.apache.cloudstack.api.response.SnapshotArchiveResponse archivePlan(SnapshotVO snapshot, List<SnapshotInfo> copies) {
+        List<SnapshotInfo> primary = copies.stream().filter(info -> info.getDataStore().getRole() == DataStoreRole.Primary)
+                .collect(java.util.stream.Collectors.toList());
+        List<SnapshotInfo> secondary = copies.stream().filter(info -> info.getDataStore().getRole() == DataStoreRole.Image)
+                .collect(java.util.stream.Collectors.toList());
+        String reason;
+        String message;
+        boolean eligible = false;
+        if (!forcedSnapshotPending(snapshot.getId()).isEmpty()) {
+            reason = "FORCED_CLEANUP_PENDING";
+            message = "Inspect or retry pending forced cleanup before archiving";
+        } else if (snapshot.getState() != Snapshot.State.BackedUp && snapshot.getState() != Snapshot.State.CreatedOnPrimary) {
+            reason = "SNAPSHOT_NOT_STABLE";
+            message = "Archive requires a stable BackedUp or CreatedOnPrimary snapshot";
+        } else if (primary.size() > 1 || secondary.size() > 1 || copies.size() != primary.size() + secondary.size()) {
+            reason = "AMBIGUOUS_REFERENCES";
+            message = "Multiple or unsupported copy references require inspection before archiving";
+        } else if (!secondary.isEmpty() && secondary.get(0).getStatus() != ObjectInDataStoreStateMachine.State.Ready
+                && secondary.get(0).getStatus() != ObjectInDataStoreStateMachine.State.Allocated) {
+            reason = "SECONDARY_NOT_STABLE";
+            message = "Secondary copy is not Ready or an Allocated retry destination";
+        } else if (primary.isEmpty()) {
+            eligible = secondary.size() == 1 && secondary.get(0).getStatus() == ObjectInDataStoreStateMachine.State.Ready;
+            reason = eligible ? "ALREADY_ARCHIVED" : "NO_VALID_COPY";
+            message = eligible ? "Verify the existing secondary copy and return without creating or deleting any copy"
+                    : "No usable primary or Ready secondary copy exists";
+        } else if (primary.get(0).getStatus() != ObjectInDataStoreStateMachine.State.Ready
+                && !(primary.get(0).getStatus() == ObjectInDataStoreStateMachine.State.Destroying && secondary.size() == 1
+                    && secondary.get(0).getStatus() == ObjectInDataStoreStateMachine.State.Ready)) {
+            reason = "PRIMARY_NOT_STABLE";
+            message = "Primary must be Ready, or Destroying with an existing Ready secondary copy";
+        } else if (primary.get(0).getChild() != null
+                || !allocationDetailsDao.findDetails("SNAPSHOT_ID", String.valueOf(snapshot.getId()), null).isEmpty()) {
+            reason = "PRIMARY_IN_USE";
+            message = "A dependent snapshot or volume still requires the primary copy";
+        } else if (!secondary.isEmpty() && secondary.get(0).getStatus() == ObjectInDataStoreStateMachine.State.Ready) {
+            eligible = true;
+            reason = primary.get(0).getStatus() == ObjectInDataStoreStateMachine.State.Destroying ? "RETRY_PRIMARY_CLEANUP" : "REUSE_SECONDARY";
+            message = "Verify the existing secondary copy before removing the primary; no backup is allocated";
+        } else {
+            StoragePoolVO pool = _storagePoolDao.findById(primary.get(0).getDataStore().getId());
+            eligible = pool != null && (pool.isManaged() || pool.getPoolType() == StoragePoolType.RBD);
+            reason = eligible ? (secondary.isEmpty() ? "BACKUP_REQUIRED" : "RETRY_BACKUP") : "UNSUPPORTED_PRIMARY";
+            message = eligible ? "Copy from managed or RBD primary, verify the backup, then remove primary"
+                    : "Primary-only archive is supported for managed storage or RBD; this primary is unsupported";
+        }
+        return new org.apache.cloudstack.api.response.SnapshotArchiveResponse(snapshot.getUuid(), snapshot.getName(), snapshot.getState().name(),
+                eligible, reason, message, primary.size(), secondary.size(), snapshotDeletionScopeHash(snapshot, null,
+                        _snapshotStoreDao.findBySnapshotIdWithNonDestroyedState(snapshot.getId())));
+    }
+
+    @Override
+    public org.apache.cloudstack.api.response.SnapshotArchiveResponse previewSnapshotArchive(Long snapshotId) {
+        SnapshotVO snapshot = validateSnapshotArchive(snapshotId);
+        return archivePlan(snapshot, snapshotFactory.getSnapshots(snapshotId, null));
+    }
+
     @Override
     public Snapshot archiveSnapshot(Long snapshotId) {
-        SnapshotInfo snapshotOnPrimary = snapshotFactory.getSnapshotOnPrimaryStore(snapshotId);
+        return archiveSnapshot(snapshotId, null);
+    }
 
-        if (snapshotOnPrimary == null || !snapshotOnPrimary.getStatus().equals(ObjectInDataStoreStateMachine.State.Ready)) {
-            throw new CloudRuntimeException("Can only archive snapshots present on primary storage. " + "Cannot find snapshot " + snapshotId + " on primary storage");
-        }
-        validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshotOnPrimary.getVolumeId(), "archive");
-
-        SnapshotInfo snapshotOnSecondary = snapshotSrv.backupSnapshot(snapshotOnPrimary);
-        SnapshotVO snapshotVO = _snapshotDao.findById(snapshotOnSecondary.getId());
-        snapshotVO.setLocationType(Snapshot.LocationType.SECONDARY);
-        _snapshotDao.persist(snapshotVO);
-
+    @Override
+    @DB
+    public Snapshot archiveSnapshot(Long snapshotId, String expectedScopeHash) {
+        validateSnapshotArchive(snapshotId);
+        // Share the deletion lock: archiving must never race deletion of the verified backup.
+        GlobalLock lock = GlobalLock.getInternLock("snapshot-delete-" + snapshotId);
         try {
-            snapshotSrv.deleteSnapshot(snapshotOnPrimary);
-        } catch (Exception e) {
-            throw new CloudRuntimeException(String.format("Snapshot archived to Secondary Storage but there was an error deleting  the snapshot on Primary Storage. Please manually delete the primary snapshot %s", snapshotOnPrimary), e);
+            if (!lock.lock(30)) {
+                throw new CloudRuntimeException("Snapshot archive or deletion is already running; inspect the existing job");
+            }
+            try {
+                return archiveSnapshotWithLock(snapshotId, expectedScopeHash);
+            } finally {
+                lock.unlock();
+            }
+        } finally {
+            lock.releaseRef();
         }
+    }
 
-        return snapshotOnSecondary;
+    protected Snapshot archiveSnapshotWithLock(Long snapshotId, String expectedScopeHash) {
+        SnapshotVO snapshot = validateSnapshotArchive(snapshotId);
+        List<SnapshotInfo> copies = snapshotFactory.getSnapshots(snapshotId, null);
+        org.apache.cloudstack.api.response.SnapshotArchiveResponse plan = archivePlan(snapshot, copies);
+        if (expectedScopeHash != null && !expectedScopeHash.equals(snapshotDeletionScopeHash(snapshot, null,
+                _snapshotStoreDao.findBySnapshotIdWithNonDestroyedState(snapshotId)))) {
+            throw new InvalidParameterValueException("Snapshot archive scope changed; run the diagnosis again");
+        }
+        if (!plan.isEligible()) {
+            throw new InvalidParameterValueException(plan.getReason() + ": " + plan.getMessage());
+        }
+        validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshot.getVolumeId(), "archive");
+        SnapshotInfo primary = copies.stream().filter(info -> info.getDataStore().getRole() == DataStoreRole.Primary).findFirst().orElse(null);
+        SnapshotInfo secondary = copies.stream().filter(info -> info.getDataStore().getRole() == DataStoreRole.Image
+                && info.getStatus() == ObjectInDataStoreStateMachine.State.Ready).findFirst().orElse(null);
+        boolean attemptedChange = false;
+        try {
+            if (secondary == null) {
+                attemptedChange = true;
+                try {
+                    snapshotSrv.backupSnapshotForArchive(primary);
+                } catch (Exception error) {
+                    throw new CloudRuntimeException("ARCHIVE_BACKUP_FAILED: primary retained; inspect the incomplete backup and retry archive", error);
+                }
+                List<SnapshotInfo> backups = snapshotFactory.getSnapshots(snapshotId, null).stream()
+                        .filter(info -> info.getDataStore().getRole() == DataStoreRole.Image).collect(java.util.stream.Collectors.toList());
+                if (backups.size() != 1 || backups.get(0).getStatus() != ObjectInDataStoreStateMachine.State.Ready) {
+                    throw new CloudRuntimeException("ARCHIVE_BACKUP_INCOMPLETE: primary preserved; inspect the backup and retry");
+                }
+                secondary = backups.get(0);
+            }
+            if (!snapshotSrv.verifySnapshotBackup(secondary)) {
+                throw new CloudRuntimeException("SECONDARY_VERIFICATION_FAILED: primary preserved; exact Ready backup file could not be verified");
+            }
+            if (primary != null) {
+                attemptedChange = true;
+                boolean removed;
+                try {
+                    removed = snapshotSrv.deleteSnapshot(primary);
+                } catch (Exception error) {
+                    throw new CloudRuntimeException("ARCHIVE_PRIMARY_CLEANUP_FAILED: verified secondary retained; retry archive to finish primary cleanup", error);
+                }
+                if (!removed || snapshotFactory.getSnapshots(snapshotId, null).stream()
+                        .anyMatch(info -> info.getDataStore().getRole() == DataStoreRole.Primary)) {
+                    throw new CloudRuntimeException("ARCHIVE_PRIMARY_CLEANUP_FAILED: verified secondary retained; retry archive to finish primary cleanup");
+                }
+            }
+            SnapshotVO archived = _snapshotDao.findById(snapshotId);
+            if (archived.getLocationType() != Snapshot.LocationType.SECONDARY) {
+                archived.setLocationType(Snapshot.LocationType.SECONDARY);
+                _snapshotDao.update(snapshotId, archived);
+            }
+            return archived;
+        } finally {
+            if (attemptedChange) {
+                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
+                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+            }
+        }
     }
 
     @Override
@@ -976,6 +1104,215 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         return response;
     }
 
+    private static final String FORCE_DELETE_PENDING = "snapshot.force-delete.pending.";
+    private static final String FORCE_DELETE_UNMAPPED = "snapshot.force-delete.unmapped";
+
+    protected void validateForcedSnapshotDeletion(SnapshotVO snapshot) {
+        if (!_accountMgr.isRootAdmin(CallContext.current().getCallingAccount().getId())) {
+            throw new com.cloud.exception.PermissionDeniedException("Forced snapshot cleanup requires a root administrator");
+        }
+        if (List.of(Snapshot.State.Creating, Snapshot.State.BackingUp, Snapshot.State.Copying).contains(snapshot.getState())) {
+            throw new InvalidParameterValueException("Cannot force cleanup while a snapshot operation is active");
+        }
+        if (!allocationDetailsDao.findDetails("SNAPSHOT_ID", String.valueOf(snapshot.getId()), null).isEmpty()) {
+            throw new InvalidParameterValueException("Cannot force cleanup of a snapshot required by a volume");
+        }
+        com.cloud.utils.db.SearchCriteria<SnapshotDataStoreVO> children = _snapshotStoreDao.createSearchCriteria();
+        children.addAnd("parentSnapshotId", com.cloud.utils.db.SearchCriteria.Op.EQ, snapshot.getId());
+        children.addAnd("state", com.cloud.utils.db.SearchCriteria.Op.NIN, ObjectInDataStoreStateMachine.State.Destroyed,
+                ObjectInDataStoreStateMachine.State.Destroying, ObjectInDataStoreStateMachine.State.Failed);
+        if (!_snapshotStoreDao.search(children, null).isEmpty()) {
+            throw new InvalidParameterValueException("Cannot force cleanup of a snapshot with dependent child copies");
+        }
+    }
+
+    protected java.util.Map<String, String> forcedSnapshotPending(long snapshotId) {
+        java.util.Map<String, String> all = snapshotDetailsDao.listDetailsKeyPairs(snapshotId);
+        java.util.Map<String, String> pending = new java.util.TreeMap<>();
+        if (all != null) {
+            all.forEach((key, value) -> { if (key.startsWith(FORCE_DELETE_PENDING)) { pending.put(key, value); } });
+        }
+        return pending;
+    }
+
+    protected List<SnapshotDataStoreVO> forcedSnapshotScope(long snapshotId, Long zoneId) {
+        if (zoneId != null && dataCenterDao.findById(zoneId) == null) {
+            throw new InvalidParameterValueException("Unable to find the specified zone");
+        }
+        java.util.Map<String, String> pending = forcedSnapshotPending(snapshotId);
+        List<SnapshotDataStoreVO> refs = new ArrayList<>();
+        for (SnapshotDataStoreVO ref : _snapshotStoreDao.listBySnapshotId(snapshotId)) {
+            if (ref.getState() == ObjectInDataStoreStateMachine.State.Destroyed && !pending.containsKey(FORCE_DELETE_PENDING + ref.getId())) {
+                continue;
+            }
+            if (zoneId != null) {
+                Long storeZone = null;
+                try { storeZone = dataStoreMgr.getStoreZoneId(ref.getDataStoreId(), ref.getRole()); } catch (Exception ignored) { }
+                if (storeZone == null) {
+                    throw new InvalidParameterValueException("UNKNOWN_REFERENCE_ZONE: diagnose all zones before forcing metadata cleanup");
+                }
+                if (!zoneId.equals(storeZone)) { continue; }
+            }
+            refs.add(ref);
+        }
+        return refs;
+    }
+
+    protected String forcedSnapshotScopeHash(SnapshotVO snapshot, Long zoneId, List<SnapshotDataStoreVO> refs) {
+        return org.apache.commons.codec.digest.DigestUtils.sha256Hex("force:" + snapshotDeletionScopeHash(snapshot, zoneId, refs)
+                + ":" + forcedSnapshotPending(snapshot.getId()).toString());
+    }
+
+    protected SnapshotInfo forcedSnapshotInfo(long snapshotId, SnapshotDataStoreVO ref) {
+        if (ref.getInstallPath() == null || ref.getInstallPath().isBlank()) { return null; }
+        // An Allocated Image reference can point at the shared volume directory.
+        // Never send that directory to a physical snapshot-delete operation.
+        if (ref.getRole() == DataStoreRole.Image && (ref.getInstallPath().endsWith("/") || ref.getInstallPath().split("/").length < 4)) { return null; }
+        try { return snapshotFactory.getSnapshotForStoreRef(snapshotId, ref.getId()); } catch (Exception unavailable) { return null; }
+    }
+
+    protected java.util.Map<Long, SnapshotInfo> forcedSnapshotTargets(long snapshotId, List<SnapshotDataStoreVO> refs) {
+        java.util.Map<Long, SnapshotInfo> targets = new java.util.HashMap<>();
+        for (SnapshotDataStoreVO ref : refs) {
+            SnapshotInfo info = forcedSnapshotInfo(snapshotId, ref);
+            if (info != null) {
+                try {
+                    if (info.getChild() != null) {
+                        throw new InvalidParameterValueException("Cannot force cleanup of a snapshot with a dependent child copy");
+                    }
+                } catch (InvalidParameterValueException dependency) { throw dependency;
+                } catch (Exception missingMetadata) { info = null; }
+            }
+            targets.put(ref.getId(), info);
+        }
+        return targets;
+    }
+
+    @Override
+    public org.apache.cloudstack.api.response.SnapshotDeletionResponse previewSnapshotDeletion(long snapshotId, Long zoneId, boolean force) {
+        if (!force) { return previewSnapshotDeletion(snapshotId, zoneId); }
+        SnapshotVO snapshot = validateSnapshotDeletion(snapshotId);
+        validateForcedSnapshotDeletion(snapshot);
+        List<SnapshotDataStoreVO> refs = forcedSnapshotScope(snapshotId, zoneId);
+        java.util.Map<Long, SnapshotInfo> targets = forcedSnapshotTargets(snapshotId, refs);
+        org.apache.cloudstack.api.response.SnapshotDeletionResponse response = new org.apache.cloudstack.api.response.SnapshotDeletionResponse(
+                snapshot.getUuid(), snapshot.getName(), snapshot.getState().name(), zoneId == null ? null : dataCenterDao.findById(zoneId).getUuid());
+        response.setScopeHash(forcedSnapshotScopeHash(snapshot, zoneId, refs));
+        response.setForce(true, forcedSnapshotPending(snapshotId).size());
+        for (SnapshotDataStoreVO ref : refs) {
+            SnapshotInfo info = targets.get(ref.getId());
+            DataStore store = info == null ? null : info.getDataStore();
+            response.addReference(ref.getId(), store == null ? null : store.getUuid(), store == null ? "Unresolved store" : store.getName(),
+                    ref.getRole() == null ? "Unknown" : ref.getRole().name(), ref.getState() == null ? "Unknown" : ref.getState().name(), null);
+            response.addCleanupResult(ref.getId(), ref.getRole() == null ? "Unknown" : ref.getRole().name(),
+                    info == null ? "DB_ONLY" : "PHYSICAL_THEN_DB", info == null ? "MISSING_TARGET_METADATA" : "ATTEMPT_PHYSICAL_CLEANUP");
+        }
+        if (refs.isEmpty() && (snapshot.getState() != Snapshot.State.Destroyed || snapshotDetailsDao.findDetail(snapshotId, FORCE_DELETE_UNMAPPED) != null)) {
+            response.addCleanupResult(0, "Unknown", "DB_ONLY", "NO_IDENTIFIABLE_STORE_REFERENCE");
+        }
+        return response;
+    }
+
+    protected void retainForcedSnapshotTarget(SnapshotVO snapshot, SnapshotDataStoreVO ref, String reason) {
+        java.util.Map<String, Object> target = new java.util.LinkedHashMap<>();
+        target.put("referenceid", ref.getId()); target.put("snapshotuuid", snapshot.getUuid());
+        target.put("storeid", ref.getDataStoreId()); target.put("role", ref.getRole());
+        target.put("path", ref.getInstallPath()); target.put("volumeid", ref.getVolumeId()); target.put("reason", reason);
+        snapshotDetailsDao.addDetail(snapshot.getId(), FORCE_DELETE_PENDING + ref.getId(), new com.google.gson.Gson().toJson(target), false);
+    }
+
+    @Override
+    @DB
+    public org.apache.cloudstack.api.response.SnapshotDeletionResponse forceDeleteSnapshot(long snapshotId, Long zoneId, String expectedScopeHash) {
+        SnapshotVO snapshot = validateSnapshotDeletion(snapshotId);
+        validateForcedSnapshotDeletion(snapshot);
+        if (expectedScopeHash == null || expectedScopeHash.isBlank()) {
+            throw new InvalidParameterValueException("Forced cleanup requires a fresh force=true dryrun scopehash");
+        }
+        GlobalLock lock = GlobalLock.getInternLock("snapshot-delete-" + snapshotId);
+        try {
+            if (!lock.lock(30)) { throw new CloudRuntimeException("Snapshot operation is already running"); }
+            try { return forceDeleteSnapshotWithLock(snapshotId, zoneId, expectedScopeHash); }
+            finally { lock.unlock(); }
+        } finally { lock.releaseRef(); }
+    }
+
+    protected org.apache.cloudstack.api.response.SnapshotDeletionResponse forceDeleteSnapshotWithLock(long snapshotId, Long zoneId, String expectedScopeHash) {
+        SnapshotVO snapshot = validateSnapshotDeletion(snapshotId);
+        validateForcedSnapshotDeletion(snapshot);
+        List<SnapshotDataStoreVO> refs = forcedSnapshotScope(snapshotId, zoneId);
+        if (!java.util.Objects.equals(expectedScopeHash, forcedSnapshotScopeHash(snapshot, zoneId, refs))) {
+            throw new InvalidParameterValueException("Forced deletion scope changed; run force=true diagnosis again");
+        }
+        validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshot.getVolumeId(), "force delete");
+        java.util.Map<Long, SnapshotInfo> targets = forcedSnapshotTargets(snapshotId, refs);
+        Snapshot.State original = snapshot.getState();
+        boolean visibleCopy = refs.stream().anyMatch(SnapshotDataStoreVO::isDisplay);
+        org.apache.cloudstack.api.response.SnapshotDeletionResponse response = new org.apache.cloudstack.api.response.SnapshotDeletionResponse(
+                snapshot.getUuid(), snapshot.getName(), snapshot.getState().name(), zoneId == null ? null : dataCenterDao.findById(zoneId).getUuid());
+        boolean physicalComplete = true;
+        if (refs.isEmpty() && zoneId == null && (original != Snapshot.State.Destroyed || snapshotDetailsDao.findDetail(snapshotId, FORCE_DELETE_UNMAPPED) != null)) {
+            physicalComplete = false;
+            snapshotDetailsDao.addDetail(snapshotId, FORCE_DELETE_UNMAPPED, "No store reference mapping; physical absence could not be proven during explicit forced database cleanup", false);
+            response.addCleanupResult(0, "Unknown", "DB_ONLY", "NO_IDENTIFIABLE_STORE_REFERENCE");
+        }
+        try {
+            for (SnapshotDataStoreVO ref : refs) {
+                SnapshotInfo info = targets.get(ref.getId());
+                boolean deleted = false;
+                String reason = "MISSING_TARGET_METADATA";
+                if (info != null) {
+                    // Retain the target before I/O; a crash must not erase its retry address.
+                    retainForcedSnapshotTarget(snapshot, ref, "PHYSICAL_DELETE_IN_PROGRESS");
+                    try { deleted = snapshotSrv.deleteSnapshot(info); }
+                    catch (Exception failed) { logger.warn("Forced snapshot cleanup could not delete reference {}", ref.getId(), failed); }
+                    reason = deleted ? "IDENTIFIED_TARGET_DELETED_OR_ABSENT" : "PHYSICAL_DELETE_FAILED";
+                }
+                if (deleted) {
+                    snapshotDetailsDao.removeDetail(snapshotId, FORCE_DELETE_PENDING + ref.getId());
+                } else {
+                    physicalComplete = false;
+                    retainForcedSnapshotTarget(snapshot, ref, reason);
+                }
+                ref.setDisplay(false);
+                ref.setState(ObjectInDataStoreStateMachine.State.Destroyed);
+                if (!_snapshotStoreDao.update(ref.getId(), ref)) {
+                    throw new CloudRuntimeException("Forced cleanup could not persist reference termination");
+                }
+                response.addCleanupResult(ref.getId(), ref.getRole() == null ? "Unknown" : ref.getRole().name(),
+                        deleted ? "PHYSICAL_DELETED" : "DB_ONLY", reason);
+            }
+            if (zoneId != null) { snapshotZoneDao.removeSnapshotFromZone(snapshotId, zoneId); }
+            List<SnapshotDataStoreVO> remaining = _snapshotStoreDao.findBySnapshotIdWithNonDestroyedState(snapshotId);
+            if (remaining.isEmpty()) {
+                snapshot.setState(Snapshot.State.Destroyed);
+                response.setState(Snapshot.State.Destroyed.name());
+                if (!_snapshotDao.update(snapshotId, snapshot)) { throw new CloudRuntimeException("Forced cleanup could not persist snapshot termination"); }
+                snapshotZoneDao.removeSnapshotFromZones(snapshotId);
+                annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshot.getUuid());
+            }
+            if ((visibleCopy || (refs.isEmpty() && zoneId == null))
+                    && (original == Snapshot.State.BackedUp || original == Snapshot.State.Destroying)) {
+                java.util.Set<Long> zones = new java.util.HashSet<>();
+                for (SnapshotDataStoreVO ref : refs) {
+                    try { Long id = dataStoreMgr.getStoreZoneId(ref.getDataStoreId(), ref.getRole()); if (id != null) { zones.add(id); } }
+                    catch (Exception ignored) { }
+                }
+                if (zones.isEmpty()) { zones.add(zoneId == null ? snapshot.getDataCenterId() : zoneId); }
+                for (Long id : zones) {
+                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_DELETE, snapshot.getAccountId(), id, snapshotId,
+                            snapshot.getName(), null, null, 0L, snapshot.getClass().getName(), snapshot.getUuid());
+                }
+            }
+            int pending = forcedSnapshotPending(snapshotId).size();
+            response.setExecutionResult(physicalComplete && pending == 0, pending);
+            return response;
+        } finally {
+            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
+            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+        }
+    }
+
     protected boolean snapshotDeletionReferenceSettled(SnapshotDataStoreVO ref) {
         return ref == null || ref.getState() == ObjectInDataStoreStateMachine.State.Destroyed
                 || ref.getState() == ObjectInDataStoreStateMachine.State.Hidden;
@@ -1015,6 +1352,15 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         List<SnapshotDataStoreVO> refs = scope.first();
         if (expectedScopeHash != null && !expectedScopeHash.equals(snapshotDeletionScopeHash(snapshot, zoneId, refs))) {
             throw new InvalidParameterValueException("Snapshot deletion scope changed; run the diagnosis again");
+        }
+        for (SnapshotDataStoreVO ref : refs) {
+            if (snapshotDeletionReferenceSettled(ref)) { continue; }
+            String path = ref.getInstallPath();
+            boolean volumeDirectory = ref.getRole() == DataStoreRole.Image && path != null
+                    && path.equals("snapshots/" + snapshot.getAccountId() + "/" + snapshot.getVolumeId());
+            if (path == null || path.isBlank() || volumeDirectory) {
+                throw new InvalidParameterValueException("INCOMPLETE_STORE_REFERENCE: run administrator force=true deletion diagnosis to inspect database-only cleanup");
+            }
         }
         validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshot.getVolumeId(), "delete");
         if (originalState == Snapshot.State.Destroyed && refs.stream().allMatch(this::snapshotDeletionReferenceSettled)) {

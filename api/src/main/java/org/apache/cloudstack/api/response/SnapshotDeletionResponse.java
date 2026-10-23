@@ -34,7 +34,7 @@ public class SnapshotDeletionResponse extends BaseResponse {
     @SerializedName("zoneid") @Param(description = "Selected zone UUID; absent for all zones")
     private String zoneId;
     @SerializedName("dryrun") @Param(description = "Read-only deletion diagnosis")
-    private final boolean dryRun = true;
+    private boolean dryRun = true;
     @SerializedName("reference") @Param(description = "Store references in the selected scope", responseObject = Reference.class)
     private final List<Reference> references = new ArrayList<>();
 
@@ -53,12 +53,53 @@ public class SnapshotDeletionResponse extends BaseResponse {
     @SerializedName("scopehash") @Param(description = "Revision of the diagnosed deletion scope")
     private String scopeHash;
 
+    public void setState(String state) { this.state = state; }
+
     public void setScopeHash(String scopeHash) {
         this.scopeHash = scopeHash;
     }
 
     public void addReference(long id, String storeId, String storeName, String role, String state, String zoneId) {
         references.add(new Reference(id, storeId, storeName, role, state, zoneId));
+    }
+
+    @SerializedName("force") @Param(description = "Explicit administrator forced cleanup mode")
+    private boolean force;
+    @SerializedName("dbcleanupcomplete") @Param(description = "Selected database metadata was logically deleted")
+    private Boolean dbCleanupComplete;
+    @SerializedName("physicalcleanupcomplete") @Param(description = "All identified physical targets settled and no pending audit remains; unknown mappings cannot prove absence")
+    private Boolean physicalCleanupComplete;
+    @SerializedName("pendingcleanup") @Param(description = "Unverified physical target audit entries retained for inspection or retry")
+    private int pendingCleanup;
+    @SerializedName("cleanupresult") @Param(description = "Forced cleanup plan or per-reference results", responseObject = CleanupResult.class)
+    private final List<CleanupResult> cleanupResults = new ArrayList<>();
+
+    public void setForce(boolean force, int pending) { this.force = force; this.pendingCleanup = pending; }
+    public void setExecutionResult(boolean physicalComplete, int pending) {
+        this.force = true;
+        this.dryRun = false;
+        this.dbCleanupComplete = true;
+        this.physicalCleanupComplete = physicalComplete;
+        this.pendingCleanup = pending;
+    }
+    public void addCleanupResult(long id, String role, String action, String reason) {
+        cleanupResults.add(new CleanupResult(id, role, action, reason));
+    }
+    public boolean isPhysicalCleanupComplete() { return Boolean.TRUE.equals(physicalCleanupComplete); }
+    public int getPendingCleanup() { return pendingCleanup; }
+
+    public static class CleanupResult extends BaseResponse {
+        @SerializedName("referenceid") @Param(description = "Store reference ID, or zero for unmapped metadata")
+        private long referenceId;
+        @SerializedName("role") @Param(description = "Store role")
+        private String role;
+        @SerializedName("action") @Param(description = "PHYSICAL_DELETED, DB_ONLY, or planned PHYSICAL_THEN_DB")
+        private String action;
+        @SerializedName("reason") @Param(description = "Stable result or missing-information reason")
+        private String reason;
+        CleanupResult(long id, String role, String action, String reason) {
+            this.referenceId = id; this.role = role; this.action = action; this.reason = reason;
+        }
     }
 
     public static class Reference extends BaseResponse {
