@@ -27,7 +27,7 @@ limitations under the License.
         <a-descriptions-item :label="$t('label.zone')">{{ context.target.zoneId === 'all' ? $t('message.snapshot.action.all.zones') : context.target.zoneId || $t('message.snapshot.action.reason.UNKNOWN_REFERENCE_ZONE') }}</a-descriptions-item>
       </a-descriptions>
       <a-alert v-if="compact && pending && !message" type="info" show-icon :message="$t('message.snapshot.dialog.pending')" />
-      <a-alert v-else-if="compact && recoveryAvailable && !message" type="info" show-icon :message="$t('message.snapshot.volume.source.absent')" />
+      <a-alert v-else-if="compact && recoveryAvailable && !message" type="info" show-icon :message="$t(recoveryMessage)" />
       <p v-else-if="!compact && recoveryAvailable">{{ $t('message.snapshot.action.source.recovery') }}</p>
       <p v-if="compact && loading && !context && !message" role="status">{{ $t('message.snapshot.action.validating') }}</p>
       <a-button v-if="!compact && showRefresh" size="small" :disabled="loading" @click="$emit('refresh')">{{ $t('label.snapshot.action.refresh') }}</a-button>
@@ -38,7 +38,7 @@ limitations under the License.
 export default {
   name: 'StorageSnapshotSafety',
   emits: ['refresh'],
-  props: { context: Object, loading: Boolean, error: String, compact: Boolean, pending: Boolean, showRefresh: { type: Boolean, default: true } },
+  props: { context: Object, loading: Boolean, error: String, compact: Boolean, pending: Boolean, recoveryMessage: { type: String, default: 'message.snapshot.volume.source.absent' }, showRefresh: { type: Boolean, default: true } },
   computed: {
     message () { return this.error || (this.context?.reason ? this.$t('message.snapshot.action.reason.' + this.context.reason) : '') },
     recoveryAvailable () { return this.context?.source?.sourceavailable === false }

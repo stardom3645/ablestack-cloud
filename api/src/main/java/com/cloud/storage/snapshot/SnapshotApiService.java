@@ -123,7 +123,7 @@ public interface SnapshotApiService {
      *            id (the id of the snapshot)
      *
      */
-    String extractSnapshot(ExtractSnapshotCmd cmd);
+    SnapshotExtractResult extractSnapshot(ExtractSnapshotCmd cmd);
 
     /**
      * Archives a snapshot from primary storage to secondary storage.

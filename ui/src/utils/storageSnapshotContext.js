@@ -98,6 +98,7 @@ export function snapshotActionParams (target, api, values, context) {
   const params = copyTarget(values)
   if (api === 'createSnapshot') { delete params.volumeId; params.volumeid = target.id } else if (['createVolume', 'createTemplate'].includes(api)) params.snapshotid = target.id
   else params.id = target.id
+  if (api === 'extractSnapshot') params.zoneid = context.record.zoneid
   if (api === 'deleteSnapshot') {
     delete params.zoneid
     if (target.zoneId && target.zoneId !== 'all') params.zoneid = target.zoneId

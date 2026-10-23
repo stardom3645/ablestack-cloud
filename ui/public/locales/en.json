@@ -1,4 +1,13 @@
 {
+  "message.snapshot.download.source.absent": "The snapshot backup can be downloaded even when the source volume is unavailable.",
+  "label.snapshot.download.prepare": "Create download link",
+  "label.snapshot.download.file": "Download snapshot file",
+  "label.snapshot.download.file.size": "Download file size",
+  "message.snapshot.download.prepare": "Verify the actual backup image before creating a download link.",
+  "message.snapshot.download.replace": "Any previous link will be revoked. When ready, open job details in the header notifications to download the file.",
+  "message.snapshot.download.ready": "The snapshot is ready to download.",
+  "message.snapshot.download.bearer": "Anyone with this link can download without signing in. Keep the link private.",
+  "message.snapshot.download.expiry": "If the link expires or cannot be accessed, create a new link from the snapshot. Creating a new link revokes the previous link.",
   "label.cni.variables.extract": "Extract variables",
   "label.cni.variables.preview": "Preview substitutions",
   "label.cni.variables.apply": "Apply selected variables",

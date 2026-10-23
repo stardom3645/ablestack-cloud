@@ -24,6 +24,17 @@ limitations under the License.
       <a-alert v-if="entry.error" :type="entry.status === 'unknown' ? 'warning' : 'error'" show-icon :message="errorText" />
       <a-alert v-if="entry.status === 'unknown'" type="warning" show-icon :message="$t('message.snapshot.job.query.only')" />
       <a-alert v-if="forceResult" type="warning" show-icon :message="$t(forceResult.physicalcleanupcomplete ? 'message.snapshot.job.force.complete' : 'message.snapshot.job.force.residual')" />
+      <template v-if="download">
+        <a-alert type="success" show-icon :message="$t('message.snapshot.download.ready')" :description="$t('message.snapshot.download.bearer')" />
+        <a-descriptions :column="1" bordered size="small">
+          <a-descriptions-item :label="$t('label.filename')">{{ download.filename }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.format')">{{ download.format }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.virtualsize')">{{ capacity(download.size) }}</a-descriptions-item>
+          <a-descriptions-item v-if="download.physicalsize > 0" :label="$t('label.snapshot.download.file.size')">{{ capacity(download.physicalsize) }}</a-descriptions-item>
+        </a-descriptions>
+        <a :href="download.url" target="_blank" rel="noopener noreferrer" :download="download.filename" data-testid="snapshot-download-link">{{ $t('label.snapshot.download.file') }}</a>
+        <p>{{ $t('message.snapshot.download.expiry') }}</p>
+      </template>
       <a-space wrap>
         <a-button v-if="entry.jobid || (entry.requestid && entry.status === 'unknown')" :loading="checking" @click="check">{{ $t('label.snapshot.recovery.check') }}</a-button>
         <router-link v-if="resultPath" :to="resultPath" @click="close">{{ $t('label.snapshot.job.result') }}</router-link>
@@ -55,6 +66,7 @@ import MoldDialog from '@/components/view/MoldDialog.vue'
 import { storageSnapshotOperations, operationScopeKey, querySnapshotOperation, releaseUnknownSnapshotSubmission, attachSnapshotOperationJob } from '@/utils/storageSnapshotOperations'
 import { snapshotSecurityScope, snapshotOperationResponse } from '@/utils/storageSnapshotContext'
 import { snapshotOperationLabels, snapshotResultPath } from '@/utils/storageSnapshotNotices'
+import { snapshotDownloadResult } from '@/utils/snapshotDownload'
 export default {
   name: 'StorageSnapshotJobDialog',
   components: { MoldDialog },
@@ -68,6 +80,7 @@ export default {
     operationLabel () { return snapshotOperationLabels[this.entry?.api] || 'label.snapshot.action.operations' },
     formattedTime () { return new Date(this.entry.created).toLocaleString(this.$i18n.locale.replace('_', '-')) },
     resultPath () { return this.entry ? snapshotResultPath(this.entry) : '' },
+    download () { return this.entry?.api === 'extractSnapshot' && this.entry.status === 'complete' ? snapshotDownloadResult(this.entry.result?.jobresult) : null },
     forceResult () { const body = snapshotOperationResponse(this.entry?.api, this.entry?.result?.jobresult) || this.entry?.result?.jobresult; return body?.force && body.dbcleanupcomplete === true ? body : null }
   },
   watch: { scope () { this.close() } },
@@ -76,6 +89,7 @@ export default {
     if (this.entry?.status === 'complete' && this.entry.jobid && !this.entry.result?.jobresult) this.check()
   },
   methods: {
+    capacity (bytes) { return `${(bytes / 1024 ** 3).toLocaleString(this.$i18n.locale.replace('_', '-'), { maximumFractionDigits: 4 })} GiB (${Number(bytes).toLocaleString()} B)` },
     close () { this.$emit('close') },
     current () { return this.scope === this.capturedScope && !!this.entry },
     async check () {

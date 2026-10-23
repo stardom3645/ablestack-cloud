@@ -13,6 +13,7 @@ import md5 from 'md5'
 import { getAPI, postAPI } from '@/api'
 import { snapshotOperationResponse } from '@/utils/storageSnapshotContext'
 import { createJobTracker } from '@/utils/jobTracker'
+import { snapshotDownloadResult } from '@/utils/snapshotDownload'
 
 export const storageSnapshotOperations = reactive({})
 const storageKey = 'mold.snapshot.operations.v1'
@@ -59,7 +60,8 @@ function resultConfirmed (api, result, forceExpected) {
   if (api === 'createSnapshot' || api === 'revertSnapshot' || api === 'copySnapshot') return !!payload.snapshot?.id || !!payload.snapshot?.[0]?.id || payload.success === true
   if (['createVolume', 'attachVolume'].includes(api)) return !!payload.volume?.id
   if (api === 'createTemplate') return !!payload.template?.id || !!payload.template?.[0]?.id
-  return payload.success === true || (api === 'extractSnapshot' && !!payload.snapshot?.url)
+  if (api === 'extractSnapshot') return !!snapshotDownloadResult(payload)
+  return payload.success === true
 }
 const tracker = createJobTracker({
   interval: 1500,

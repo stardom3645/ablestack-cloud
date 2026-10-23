@@ -72,3 +72,18 @@ test('another entry point holds the resource while its validation is pending', a
   await wrapper.setData({ acknowledged: true }); await wrapper.vm.submit(); expect(postAPI).not.toHaveBeenCalled()
   release({ id: 'selected' }); await pending
 })
+
+test('download uses VM dialog size and fresh frozen source with one async submission', async () => {
+  const snapshot = { ...row, zoneid: 'zone' }
+  wrapper = shallowMount(Dialog, { props: { currentAction: { api: 'extractSnapshot', label: 'label.action.download.snapshot' }, resource: snapshot }, global: { mocks: { $store: store, $route: route, $t: x => x }, stubs: { MoldDialog: { name: 'MoldDialog', props: ['size'], template: '<div><slot /></div>' } } } })
+  await flushPromises()
+  expect(wrapper.vm.isStandard).toBe(true); expect(wrapper.vm.isDownload).toBe(true)
+  expect(wrapper.findComponent({ name: 'StorageSnapshotSafety' }).props('recoveryMessage')).toBe('message.snapshot.download.source.absent')
+  expect(wrapper.findComponent({ name: 'MoldDialog' }).props('size')).toBe('md')
+  postAPI.mockResolvedValue({ extractsnapshotresponse: { jobid: 'download-job' } })
+  getAPI.mockResolvedValue({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { snapshot: { url: 'http://ssvm/file.qcow2', filename: 'file.qcow2', format: 'QCOW2', size: 1073741824, physicalsize: 2490368 } } } })
+  await wrapper.vm.submit(); await flushPromises()
+  expect(postAPI).toHaveBeenCalledTimes(1)
+  expect(postAPI.mock.calls[0][1]).toEqual({ id: 'selected', zoneid: 'zone', expectedscopehash: 'hash', customjobid: expect.any(String) })
+  expect(wrapper.emitted('close-action')).toHaveLength(1)
+})

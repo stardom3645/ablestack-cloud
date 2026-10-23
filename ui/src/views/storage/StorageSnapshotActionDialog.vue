@@ -15,37 +15,39 @@ limitations under the License.
 <template>
   <MoldDialog
     :visible="!closed"
-    :size="isRestore ? 'md' : 'lg'"
-    :class="{ 'snapshot-standard-dialog': isRestore }"
+    :size="isStandard ? 'md' : 'lg'"
+    :class="{ 'snapshot-standard-dialog': isStandard }"
     :title="$t(actionLabel)"
     :closable="!busy"
     :keyboard="!busy"
     :mask-closable="false"
     :form-actions="true"
     @cancel="close">
-    <div :class="{ 'snapshot-restore-content': isRestore }">
-      <a-alert v-if="!isRestore" type="warning" show-icon :message="$t(actionMessage)" />
-      <a-alert v-if="error && (!isRestore || !contexts.length)" type="error" show-icon role="alert" :message="error">
-        <template v-if="isRestore" #description><a-button type="link" size="small" :disabled="busy" @click="refresh">{{ $t('label.retry') }}</a-button></template>
+    <div :class="{ 'snapshot-restore-content': isStandard }">
+      <a-alert v-if="!isStandard" type="warning" show-icon :message="$t(actionMessage)" />
+      <a-alert v-if="error && (!isStandard || !contexts.length)" type="error" show-icon role="alert" :message="error">
+        <template v-if="isStandard" #description><a-button type="link" size="small" :disabled="busy" @click="refresh">{{ $t('label.retry') }}</a-button></template>
       </a-alert>
       <StorageSnapshotSafety
         v-for="(context, i) in contexts"
         :key="targets[i].id + targets[i].zoneId"
         :context="context"
-        :compact="isRestore && contexts.length === 1"
-        :error="isRestore && i === 0 ? error : undefined"
+        :compact="isStandard && contexts.length === 1"
+        :recovery-message="isDownload ? 'message.snapshot.download.source.absent' : undefined"
+        :error="isStandard && i === 0 ? error : undefined"
         :loading="busy"
         :pending="operationPending"
         @refresh="refresh" />
       <a-alert v-if="isRestore" type="warning" show-icon :message="$t('message.snapshot.restore.data.loss')" :description="restoreDescription" />
+      <a-alert v-if="isDownload" type="info" show-icon :message="$t('message.snapshot.download.prepare')" :description="$t('message.snapshot.download.replace')" />
       <p v-if="!contexts.length && !error" role="status">{{ $t('message.snapshot.action.validating') }}</p>
-      <a-checkbox v-model:checked="acknowledged" :disabled="busy || blocked">{{ $t(isRestore ? 'message.snapshot.restore.acknowledge' : 'message.snapshot.action.acknowledge') }}</a-checkbox>
+      <a-checkbox v-if="!isDownload" v-model:checked="acknowledged" :disabled="busy || blocked">{{ $t(isRestore ? 'message.snapshot.restore.acknowledge' : 'message.snapshot.action.acknowledge') }}</a-checkbox>
       <p v-for="result in results" :key="result.id">{{ result.target.name || result.target.id }} · {{ $t('label.snapshot.action.status.' + result.status) }} · {{ result.jobid }}</p>
     </div>
     <template #footer>
-      <a-button :disabled="busy" @click="close">{{ $t(isRestore ? 'label.cancel' : 'label.close') }}</a-button>
-      <a-button v-if="!isRestore" :disabled="busy" @click="refresh">{{ $t('label.snapshot.action.refresh') }}</a-button>
-      <a-button type="primary" danger :loading="busy" :disabled="busy || blocked || !acknowledged" @click="submit">{{ $t(isRestore ? 'label.restore' : actionLabel) }}</a-button>
+      <a-button :disabled="busy" @click="close">{{ $t(isStandard ? 'label.cancel' : 'label.close') }}</a-button>
+      <a-button v-if="!isStandard" :disabled="busy" @click="refresh">{{ $t('label.snapshot.action.refresh') }}</a-button>
+      <a-button type="primary" :danger="!isDownload" :loading="busy" :disabled="busy || blocked || (!isDownload && !acknowledged)" @click="submit">{{ $t(isDownload ? 'label.snapshot.download.prepare' : isRestore ? 'label.restore' : actionLabel) }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -62,6 +64,8 @@ export default {
   data () { return { targets: [], contexts: [], results: [], acknowledged: false, busy: false, error: '', closed: false, active: true, originPath: '', actionApi: '', actionLabel: '', actionMessage: '', security: '', sequence: 0 } },
   computed: {
     isRestore () { return this.actionApi === 'revertSnapshot' },
+    isDownload () { return this.actionApi === 'extractSnapshot' },
+    isStandard () { return this.isRestore || this.isDownload },
     restoreDescription () {
       const context = this.contexts[0]
       if (this.targets.length !== 1) return this.$t('message.snapshot.restore.targets', [this.targets.length])
@@ -92,7 +96,7 @@ export default {
       } catch (error) { if (this.current()) this.error = this.$t(error.message) } finally { this.busy = false }
     },
     async submit () {
-      if (this.busy || this.blocked || !this.acknowledged) return
+      if (this.busy || this.blocked || (!this.isDownload && !this.acknowledged)) return
       this.busy = true; this.error = ''
       const store = this.$store; const scope = this.security
       try {

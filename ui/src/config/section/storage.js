@@ -481,6 +481,9 @@ export default {
         },
         {
           api: 'extractSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
           icon: 'cloud-download-outlined',
           label: 'label.action.download.snapshot',
           message: 'message.action.download.snapshot',
@@ -490,14 +493,7 @@ export default {
               ((record.domainid === store.userInfo.domainid && record.account === store.userInfo.account) ||
                 (record.domainid === store.userInfo.domainid && record.projectid && store.project && store.project.id && record.projectid === store.project.id))) &&
               record.state === 'BackedUp'
-          },
-          args: ['zoneid'],
-          mapping: {
-            zoneid: {
-              value: (record) => { return record.zoneid }
-            }
-          },
-          response: (result) => { return `Please click <a href="${result.snapshot.url}" target="_blank">${result.snapshot.url}</a> to download.` }
+          }
         },
         {
           api: 'deleteSnapshot',

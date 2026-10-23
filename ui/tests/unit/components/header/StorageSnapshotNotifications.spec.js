@@ -123,3 +123,14 @@ test('an incomplete force response never claims database cleanup completion', ()
   const e = entry(); e.api = 'deleteSnapshot'; e.result = { jobstatus: 1, jobresult: { force: true, physicalcleanupcomplete: false } }
   mount(Dialog, { entryId: 'one' }); expect(wrapper.vm.forceResult).toBe(null)
 })
+
+test('download result exposes escaped structured metadata and a safe link in the common dialog', () => {
+  const e = entry('download', 'complete'); e.api = 'extractSnapshot'; e.result = { jobstatus: 1, jobresult: { snapshot: { url: 'http://ssvm/backup.raw', filename: 'backup.raw', format: 'RAW', size: 1073741824, physicalsize: 1073741824 } } }
+  wrapper = shallowMount(Dialog, { props: { entryId: 'download' }, global: { mocks: { $store: store, $i18n: { locale: 'ko_KR' }, $t: x => x }, stubs: { MoldDialog: { template: '<div><slot /></div>' } } } })
+  expect(wrapper.vm.download.filename).toBe('backup.raw')
+  expect(wrapper.vm.resultPath).toBe('')
+  const link = wrapper.find('[data-testid="snapshot-download-link"]')
+  expect(link.attributes('rel')).toBe('noopener noreferrer'); expect(link.attributes('download')).toBe('backup.raw')
+  e.result.jobresult.snapshot.url = 'javascript:alert(1)'
+  expect(wrapper.vm.download).toBeNull()
+})

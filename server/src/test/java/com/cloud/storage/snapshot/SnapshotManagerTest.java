@@ -595,6 +595,8 @@ public class SnapshotManagerTest {
     }
 
     private void mockForExtractSnapshotTests() {
+        Mockito.doReturn(Snapshot.State.BackedUp).when(snapshotMock).getState();
+        Mockito.doReturn(org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine.State.Ready).when(snapshotStoreMock).getState();
         Mockito.doReturn(TEST_SNAPSHOT_ID).when(extractSnapshotCmdMock).getId();
         Mockito.doReturn(TEST_ZONE_ID).when(extractSnapshotCmdMock).getZoneId();
         Mockito.doReturn(false).when(_accountMgr).isRootAdmin(Mockito.anyLong());
@@ -615,6 +617,7 @@ public class SnapshotManagerTest {
         Mockito.doReturn(TEST_VOLUME_FORMAT).when(volumeInfoMock).getFormat();
 
         Mockito.doReturn(TEST_SNAPSHOTDATASTORE_ID).when(snapshotStoreMock).getId();
+        Mockito.doReturn(true).when(snapshotStoreDao).update(Mockito.eq(TEST_SNAPSHOTDATASTORE_ID), Mockito.any());
         Mockito.doReturn(TEST_EXTRACT_URL).when(imageStoreEntityMock).createEntityExtractUrl(TEST_SNAPSHOT_PATH, TEST_VOLUME_FORMAT, snapshotInfoMock);
     }
 
@@ -665,9 +668,9 @@ public class SnapshotManagerTest {
         String extractUrl = "extractUrl";
         Mockito.doReturn(extractUrl).when(snapshotStoreMock).getExtractUrl();
 
-        Assert.assertEquals(extractUrl, _snapshotMgr.extractSnapshot(extractSnapshotCmdMock));
-        Mockito.verify(snapshotSrv, Mockito.never()).syncVolumeSnapshotsToRegionStore(Mockito.anyLong(), Mockito.any());
-        Mockito.verify(snapshotStoreDao, Mockito.never()).update(Mockito.anyLong(), Mockito.any());
+        Assert.assertEquals(TEST_EXTRACT_URL, _snapshotMgr.extractSnapshot(extractSnapshotCmdMock).getUrl());
+        Mockito.verify(imageStoreEntityMock).deleteExtractUrl(TEST_SNAPSHOT_PATH, extractUrl, com.cloud.storage.Upload.Type.SNAPSHOT);
+        Mockito.verify(snapshotSrv).syncVolumeSnapshotsToRegionStore(Mockito.anyLong(), Mockito.any());
     }
 
     @Test(expected = InvalidParameterValueException.class)
@@ -682,7 +685,7 @@ public class SnapshotManagerTest {
     public void extractSnapshotTestCreateExtractUrlReturnUrl() {
         mockForExtractSnapshotTests();
 
-        Assert.assertEquals(TEST_EXTRACT_URL, _snapshotMgr.extractSnapshot(extractSnapshotCmdMock));
+        Assert.assertEquals(TEST_EXTRACT_URL, _snapshotMgr.extractSnapshot(extractSnapshotCmdMock).getUrl());
         Mockito.verify(snapshotSrv).syncVolumeSnapshotsToRegionStore(TEST_VOLUME_ID, imageStoreEntityMock);
         Mockito.verify(snapshotStoreDao).update(TEST_SNAPSHOTDATASTORE_ID, snapshotStoreMock);
     }
@@ -693,10 +696,66 @@ public class SnapshotManagerTest {
         Mockito.doReturn(true).when(_accountMgr).isRootAdmin(Mockito.anyLong());
         Mockito.when(ApiDBUtils.isExtractionDisabled()).thenReturn(true);
 
-        Assert.assertEquals(TEST_EXTRACT_URL, _snapshotMgr.extractSnapshot(extractSnapshotCmdMock));
+        Assert.assertEquals(TEST_EXTRACT_URL, _snapshotMgr.extractSnapshot(extractSnapshotCmdMock).getUrl());
         Mockito.verify(snapshotSrv).syncVolumeSnapshotsToRegionStore(TEST_VOLUME_ID, imageStoreEntityMock);
         Mockito.verify(snapshotStoreDao).update(TEST_SNAPSHOTDATASTORE_ID, snapshotStoreMock);
     }
+    @Test(expected = InvalidParameterValueException.class)
+    public void extractRejectsUnstableSnapshot() {
+        mockForExtractSnapshotTests();
+        Mockito.doReturn(Snapshot.State.Creating).when(snapshotMock).getState();
+        _snapshotMgr.extractSnapshot(extractSnapshotCmdMock);
+    }
+
+    @Test(expected = InvalidParameterValueException.class)
+    public void extractRejectsNonReadySecondary() {
+        mockForExtractSnapshotTests();
+        Mockito.doReturn(org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine.State.Destroyed).when(snapshotStoreMock).getState();
+        _snapshotMgr.extractSnapshot(extractSnapshotCmdMock);
+    }
+
+    @Test
+    public void extractKvmUsesVerifiedBackupWithoutSourceVolume() {
+        mockForExtractSnapshotTests();
+        Mockito.doReturn(com.cloud.hypervisor.Hypervisor.HypervisorType.KVM).when(snapshotMock).getHypervisorType();
+        SnapshotManagerImpl manager = Mockito.spy(_snapshotMgr);
+        com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer metadata = new com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer("", (short)1);
+        metadata.setImageMetadata(Storage.ImageFormat.QCOW2, 1073741824L, 2490368L);
+        Mockito.doReturn(metadata).when(manager).inspectSnapshotDownload(imageStoreEntityMock, snapshotInfoMock);
+        Mockito.doReturn("http://ssvm/userdata/test.qcow2").when(imageStoreEntityMock).createEntityExtractUrl(TEST_SNAPSHOT_PATH, Storage.ImageFormat.QCOW2, snapshotInfoMock);
+        SnapshotExtractResult result = manager.extractSnapshot(extractSnapshotCmdMock);
+        Assert.assertEquals(Storage.ImageFormat.QCOW2, result.getFormat());
+        Assert.assertEquals(Long.valueOf(1073741824L), result.getSize());
+        Assert.assertEquals(Long.valueOf(2490368L), result.getPhysicalSize());
+        Mockito.verify(snapshotInfoMock, Mockito.never()).getBaseVolume();
+    }
+
+    @Test(expected = com.cloud.utils.exception.CloudRuntimeException.class)
+    public void extractMissingEndpointFailsBeforeLinkPublication() {
+        mockForExtractSnapshotTests();
+        _snapshotMgr._epSelector = Mockito.mock(org.apache.cloudstack.engine.subsystem.api.storage.EndPointSelector.class);
+        _snapshotMgr.inspectSnapshotDownload(imageStoreEntityMock, snapshotInfoMock);
+    }
+
+    @Test(expected = com.cloud.utils.exception.CloudRuntimeException.class)
+    public void extractRejectsEmptyUrlInsteadOfSuccessfulCompletion() {
+        mockForExtractSnapshotTests();
+        Mockito.doReturn("").when(imageStoreEntityMock).createEntityExtractUrl(TEST_SNAPSHOT_PATH, TEST_VOLUME_FORMAT, snapshotInfoMock);
+        _snapshotMgr.extractSnapshot(extractSnapshotCmdMock);
+    }
+
+    @Test
+    public void extractDatabaseFailureRevokesUntrackedExport() {
+        mockForExtractSnapshotTests();
+        Mockito.doReturn(false).when(snapshotStoreDao).update(Mockito.eq(TEST_SNAPSHOTDATASTORE_ID), Mockito.any());
+        try {
+            _snapshotMgr.extractSnapshot(extractSnapshotCmdMock);
+            Assert.fail("Expected failure when the URL cannot be persisted");
+        } catch (com.cloud.utils.exception.CloudRuntimeException expected) {
+            Mockito.verify(imageStoreEntityMock).deleteExtractUrl(TEST_SNAPSHOT_PATH, TEST_EXTRACT_URL, com.cloud.storage.Upload.Type.SNAPSHOT);
+        }
+    }
+
     @Test
     public void deletionReconcilesOnlyAffectedOwnerCountersOnce() {
         Mockito.when(snapshotStoreMock.getInstallPath()).thenReturn("snapshots/10/9/fixture");

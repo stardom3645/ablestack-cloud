@@ -556,7 +556,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_SNAPSHOT_EXTRACT, eventDescription = "extracting snapshot", async = true)
-    public String extractSnapshot(ExtractSnapshotCmd cmd) {
+    public SnapshotExtractResult extractSnapshot(ExtractSnapshotCmd cmd) {
         Account caller = CallContext.current().getCallingAccount();
         Long snapshotId = cmd.getId();
         Long zoneId = cmd.getZoneId();
@@ -579,6 +579,10 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
         _accountMgr.checkAccess(caller, null, true, snapshot);
 
+        if (snapshot.getState() != Snapshot.State.BackedUp) {
+            throw new InvalidParameterValueException("Only a BackedUp snapshot can be downloaded");
+        }
+
         List<DataStore> imageStores = dataStoreMgr.getImageStoresByScope(new ZoneScope(zoneId));
 
         if (CollectionUtils.isEmpty(imageStores)) {
@@ -591,14 +595,9 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
         for (DataStore store : imageStores) {
             snapshotDataStoreReference = _snapshotStoreDao.findByStoreSnapshot(DataStoreRole.Image, store.getId(), snapshotId);
-            if (snapshotDataStoreReference == null) {
+            if (snapshotDataStoreReference == null || snapshotDataStoreReference.getState() != ObjectInDataStoreStateMachine.State.Ready) {
                 logger.trace("Snapshot [{}] not in store [{}].", snapshot, store);
                 continue;
-            }
-            String existingExtractUrl = snapshotDataStoreReference.getExtractUrl();
-            if (existingExtractUrl != null) {
-                logger.debug("Extract URL already exists: [{}].", existingExtractUrl);
-                return existingExtractUrl;
             }
             chosenStore = (ImageStoreEntity) store;
             logger.debug("Snapshot [{}] found in store [{}].", snapshot, chosenStore);
@@ -615,17 +614,61 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
         SnapshotInfo snapshotObject = snapshotFactory.getSnapshot(snapshotId, chosenStore);
 
+        // Revoke the previous bearer URL instead of returning an unverified, expired or stale link.
+        // A failed revocation aborts the request; its DB reference remains available for retry.
+        if (snapshotDataStoreReference.getExtractUrl() != null) {
+            chosenStore.deleteExtractUrl(snapshotObject.getPath(), snapshotDataStoreReference.getExtractUrl(), Upload.Type.SNAPSHOT);
+            snapshotDataStoreReference.setExtractUrl(null);
+            snapshotDataStoreReference.setExtractUrlCreated(null);
+            _snapshotStoreDao.update(snapshotDataStoreReference.getId(), snapshotDataStoreReference);
+        }
+
         if (snapshotDataStoreReference.getKvmCheckpointPath() != null) {
             snapshotSrv.convertSnapshot(snapshotObject);
         }
 
-        String extractUrl = chosenStore.createEntityExtractUrl(snapshotObject.getPath(), snapshotObject.getBaseVolume().getFormat(), snapshotObject);
-        logger.debug("Extract URL [{}] created for snapshot [{}].", extractUrl, snapshot);
+        com.cloud.storage.Storage.ImageFormat format;
+        Long size = snapshot.getSize();
+        Long fileSize = null;
+        if (snapshot.getHypervisorType() == HypervisorType.KVM) {
+            com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer metadata = inspectSnapshotDownload(chosenStore, snapshotObject);
+            format = metadata.getFormat();
+            size = metadata.getVirtualSize();
+            fileSize = metadata.getFileSize();
+        } else {
+            // Other hypervisors retain their existing extraction contract.
+            format = snapshotObject.getBaseVolume().getFormat();
+        }
+        String extractUrl = chosenStore.createEntityExtractUrl(snapshotObject.getPath(), format, snapshotObject);
+        if (org.apache.commons.lang3.StringUtils.isBlank(extractUrl)) {
+            throw new CloudRuntimeException("Secondary storage did not return a download URL");
+        }
         snapshotDataStoreReference.setExtractUrl(extractUrl);
         snapshotDataStoreReference.setExtractUrlCreated(DateUtil.now());
-        _snapshotStoreDao.update(snapshotDataStoreReference.getId(), snapshotDataStoreReference);
+        if (!_snapshotStoreDao.update(snapshotDataStoreReference.getId(), snapshotDataStoreReference)) {
+            chosenStore.deleteExtractUrl(snapshotObject.getPath(), extractUrl, Upload.Type.SNAPSHOT);
+            throw new CloudRuntimeException("Unable to persist snapshot download URL; export was revoked");
+        }
 
-        return extractUrl;
+        return new SnapshotExtractResult(extractUrl, format, size, fileSize);
+    }
+
+    protected com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer inspectSnapshotDownload(ImageStoreEntity store, SnapshotInfo snapshot) {
+        com.cloud.agent.api.storage.CreateEntityDownloadURLCommand probe = new com.cloud.agent.api.storage.CreateEntityDownloadURLCommand(
+                store.getMountPoint(), snapshot.getPath(), null, null, snapshot.getTO());
+        probe.setInspectOnly(true);
+        EndPoint endpoint = _epSelector.select(store);
+        com.cloud.agent.api.Answer answer = endpoint == null ? null : endpoint.sendMessage(probe);
+        if (!(answer instanceof com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer) || !answer.getResult()) {
+            throw new CloudRuntimeException("Unable to inspect snapshot backup: " + (answer == null ? "secondary storage unavailable" : answer.getDetails()));
+        }
+        com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer metadata = (com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer)answer;
+        if ((metadata.getFormat() != com.cloud.storage.Storage.ImageFormat.RAW && metadata.getFormat() != com.cloud.storage.Storage.ImageFormat.QCOW2)
+                || metadata.getVirtualSize() == null || metadata.getVirtualSize() <= 0 || metadata.getFileSize() == null || metadata.getFileSize() <= 0
+                || !metadata.getVirtualSize().equals(snapshot.getSize())) {
+            throw new CloudRuntimeException("Secondary storage did not return verified snapshot image metadata; update the secondary storage agent");
+        }
+        return metadata;
     }
 
     protected SnapshotVO validateSnapshotArchive(Long snapshotId) {
@@ -1362,6 +1405,15 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         boolean visibleCopy = refs.stream().anyMatch(SnapshotDataStoreVO::isDisplay);
         boolean result;
         try {
+            for (SnapshotDataStoreVO ref : refs) {
+                if (ref.getRole() == DataStoreRole.Image && ref.getExtractUrl() != null) {
+                    ImageStoreEntity store = (ImageStoreEntity)dataStoreMgr.getDataStore(ref.getDataStoreId(), DataStoreRole.Image);
+                    store.deleteExtractUrl(ref.getInstallPath(), ref.getExtractUrl(), Upload.Type.SNAPSHOT);
+                    ref.setExtractUrl(null);
+                    ref.setExtractUrlCreated(null);
+                    _snapshotStoreDao.update(ref.getId(), ref);
+                }
+            }
             result = strategy.deleteSnapshot(snapshotId, zoneId);
         } finally {
             // Creation, old failed deletions and retries may have used different

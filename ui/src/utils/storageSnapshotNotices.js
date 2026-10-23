@@ -32,7 +32,7 @@ export function snapshotResultPath (entry) {
   if (volume?.id) return '/volume/' + volume.id
   if (template?.id) return '/template/' + template.id
   // A deleted snapshot's success payload must never offer a broken detail link.
-  if (snapshot?.id && entry.api !== 'deleteSnapshot') return '/snapshot/' + snapshot.id
+  if (snapshot?.id && !['deleteSnapshot', 'extractSnapshot'].includes(entry.api)) return '/snapshot/' + snapshot.id
   return ''
 }
 export function snapshotOperationAffectsRoute (entry, route) {
