@@ -3562,10 +3562,16 @@ public class KVMStorageProcessor implements StorageProcessor {
         NfsTO nfsImageStore = (NfsTO)imageStore;
         KVMStoragePool secondaryPool = storagePoolMgr.getStoragePoolByURI(nfsImageStore.getUrl() + File.separator + snapshotPath);
         KVMPhysicalDisk snapshotDisk = secondaryPool.getPhysicalDisk(snapshotName);
-        if (volume.getFormat() == ImageFormat.RAW) {
-            snapshotDisk.setFormat(PhysicalDiskFormat.RAW);
-        } else if (volume.getFormat() == ImageFormat.QCOW2) {
-            snapshotDisk.setFormat(PhysicalDiskFormat.QCOW2);
+        try {
+            SnapshotObjectTO snapshot = (SnapshotObjectTO)cmd.getSrcTO();
+            org.apache.cloudstack.storage.formatinspector.SnapshotImageMetadata metadata =
+                    org.apache.cloudstack.storage.formatinspector.SnapshotImageMetadata.inspect(new File(snapshotDisk.getPath()), snapshot.getSize());
+            snapshotDisk.setFormat(PhysicalDiskFormat.valueOf(metadata.getFormat().name()));
+            snapshotDisk.setVirtualSize(metadata.getVirtualSize());
+            snapshotDisk.setSize(metadata.getFileSize());
+        } catch (IOException e) {
+            secondaryPool.delete();
+            throw new CloudRuntimeException("Unable to verify snapshot backup image: " + e.getMessage(), e);
         }
 
         final String primaryUuid = pool.getUuid();
