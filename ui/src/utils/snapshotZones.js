@@ -14,13 +14,6 @@ import { readAllocationList } from '@/utils/volumeAllocation'
 export default {
   data: () => ({ zones: [], zoneLoading: false, zoneError: false, zoneVersion: 0, zonesDisposed: false }),
   computed: {
-    snapshotDefaultZone () {
-      return this.resource.zoneid ? { id: this.resource.zoneid, name: this.resource.zonename || this.resource.zoneid } : null
-    },
-    snapshotZoneIds: {
-      get () { return [...new Set([this.resource.zoneid, ...(this.form?.zoneids || [])].filter(Boolean))] },
-      set (ids) { this.form.zoneids = [...new Set(ids)].filter(id => id !== this.resource.zoneid) }
-    },
     snapshotZoneContext () {
       return JSON.stringify([this.resource.id, this.resource.zoneid, this.$route?.path,
         this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id])
@@ -28,7 +21,7 @@ export default {
   },
   watch: {
     snapshotZoneContext () {
-      this.zoneVersion++; this.zones = this.snapshotDefaultZone ? [this.snapshotDefaultZone] : []; this.zoneLoading = false; this.zoneError = false
+      this.zoneVersion++; this.zones = []; this.zoneLoading = false; this.zoneError = false
       if (this.form) this.form.zoneids = []
     }
   },
@@ -37,14 +30,11 @@ export default {
     async fetchZoneData () {
       const version = ++this.zoneVersion; const context = this.snapshotZoneContext; const zoneid = this.resource.zoneid
       const current = () => !this.zonesDisposed && version === this.zoneVersion && context === this.snapshotZoneContext
-      this.zoneLoading = true; this.zoneError = false; this.zones = this.snapshotDefaultZone ? [this.snapshotDefaultZone] : []
+      this.zoneLoading = true; this.zoneError = false; this.zones = []
       try {
         const request = (command, params, options) => getAPI(command, params, { ...options, timeout: 20000 })
         const rows = await readAllocationList(request, 'listZones', 'zone', { showicon: true }, current)
-        if (current()) {
-          const native = rows.find(zone => zone.id === zoneid) || this.snapshotDefaultZone
-          this.zones = [...(native ? [native] : []), ...rows.filter(zone => zone.type !== 'Edge' && zone.id !== zoneid)]
-        }
+        if (current()) this.zones = rows.filter(zone => zone.type !== 'Edge' && zone.id !== zoneid)
       } catch (error) {
         if (current()) {
           this.zoneError = true
