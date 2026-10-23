@@ -937,76 +937,136 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         return new Pair<>(snapshotStoreRefs, zoneIds);
     }
 
+    protected SnapshotVO validateSnapshotDeletion(long snapshotId) {
+        SnapshotVO snapshot = _snapshotDao.findById(snapshotId);
+        if (snapshot == null) {
+            throw new InvalidParameterValueException("Unable to find snapshot " + snapshotId);
+        }
+        _accountMgr.checkAccess(CallContext.current().getCallingAccount(), null, true, snapshot);
+        if (Type.GROUP.name().equals(snapshot.getTypeDescription())) {
+            throw new InvalidParameterValueException("Group snapshots cannot be deleted separately");
+        }
+        return snapshot;
+    }
+
+    protected String snapshotDeletionScopeHash(SnapshotVO snapshot, Long zoneId, List<SnapshotDataStoreVO> refs) {
+        StringBuilder revision = new StringBuilder(snapshot.getUuid()).append(':').append(snapshot.getState()).append(':').append(zoneId);
+        refs.stream().sorted(java.util.Comparator.comparingLong(SnapshotDataStoreVO::getId)).forEach(ref ->
+                revision.append('|').append(ref.getId()).append(':').append(ref.getDataStoreId()).append(':')
+                        .append(ref.getRole()).append(':').append(ref.getState()).append(':').append(ref.getInstallPath()));
+        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(revision.toString());
+    }
+
+    @Override
+    public org.apache.cloudstack.api.response.SnapshotDeletionResponse previewSnapshotDeletion(long snapshotId, Long zoneId) {
+        SnapshotVO snapshot = validateSnapshotDeletion(snapshotId);
+        List<SnapshotDataStoreVO> refs = getStoreRefsAndZonesForSnapshotDelete(snapshotId, zoneId).first();
+        org.apache.cloudstack.api.response.SnapshotDeletionResponse response = new org.apache.cloudstack.api.response.SnapshotDeletionResponse(
+                snapshot.getUuid(), snapshot.getName(), snapshot.getState().name(), zoneId == null ? null : dataCenterDao.findById(zoneId).getUuid());
+        response.setScopeHash(snapshotDeletionScopeHash(snapshot, zoneId, refs));
+        for (SnapshotDataStoreVO ref : refs) {
+            org.apache.cloudstack.engine.subsystem.api.storage.DataStore store = dataStoreMgr.getDataStore(ref.getDataStoreId(), ref.getRole());
+            if (store == null) {
+                throw new InvalidParameterValueException("Unable to resolve store for snapshot reference " + ref.getId());
+            }
+            Long storeZone = dataStoreMgr.getStoreZoneId(ref.getDataStoreId(), ref.getRole());
+            response.addReference(ref.getId(), store.getUuid(), store.getName(), ref.getRole().name(), ref.getState().name(),
+                    storeZone == null ? null : dataCenterDao.findById(storeZone).getUuid());
+        }
+        return response;
+    }
+
+    protected boolean snapshotDeletionReferenceSettled(SnapshotDataStoreVO ref) {
+        return ref == null || ref.getState() == ObjectInDataStoreStateMachine.State.Destroyed
+                || ref.getState() == ObjectInDataStoreStateMachine.State.Hidden;
+    }
+
+    @Override
+    public boolean deleteSnapshot(long snapshotId, Long zoneId) {
+        return deleteSnapshot(snapshotId, zoneId, null);
+    }
+
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_SNAPSHOT_DELETE, eventDescription = "deleting snapshot", async = true)
-    public boolean deleteSnapshot(long snapshotId, Long zoneId) {
-        Account caller = CallContext.current().getCallingAccount();
-
-        // Verify parameters
-        final SnapshotVO snapshotCheck = _snapshotDao.findById(snapshotId);
-
-        if (snapshotCheck == null) {
-            throw new InvalidParameterValueException("unable to find a snapshot with id " + snapshotId);
+    public boolean deleteSnapshot(long snapshotId, Long zoneId, String expectedScopeHash) {
+        validateSnapshotDeletion(snapshotId);
+        GlobalLock lock = GlobalLock.getInternLock("snapshot-delete-" + snapshotId);
+        try {
+            if (!lock.lock(30)) {
+                throw new CloudRuntimeException("Snapshot deletion is already running; inspect the existing job before retrying");
+            }
+            try {
+                return deleteSnapshotWithLock(snapshotId, zoneId, expectedScopeHash);
+            } finally {
+                lock.unlock();
+            }
+        } finally {
+            lock.releaseRef();
         }
+    }
 
-        if (Type.GROUP.name().equals(snapshotCheck.getTypeDescription())) {
-            throw new InvalidParameterValueException(String.format("The snapshot [%s] is part of a [%s] snapshots and cannot be deleted separately", snapshotCheck, snapshotCheck.getTypeDescription()));
+    protected boolean deleteSnapshotWithLock(long snapshotId, Long zoneId, String expectedScopeHash) {
+        SnapshotVO snapshot = validateSnapshotDeletion(snapshotId);
+        Snapshot.State originalState = snapshot.getState();
+        Pair<List<SnapshotDataStoreVO>, List<Long>> scope = getStoreRefsAndZonesForSnapshotDelete(snapshotId, zoneId);
+        List<SnapshotDataStoreVO> refs = scope.first();
+        if (expectedScopeHash != null && !expectedScopeHash.equals(snapshotDeletionScopeHash(snapshot, zoneId, refs))) {
+            throw new InvalidParameterValueException("Snapshot deletion scope changed; run the diagnosis again");
         }
-
-        if (snapshotCheck.getState() == Snapshot.State.Destroyed) {
-            throw new InvalidParameterValueException(String.format("Snapshot [%s] is already destroyed", snapshotCheck));
+        validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshot.getVolumeId(), "delete");
+        if (originalState == Snapshot.State.Destroyed && refs.stream().allMatch(this::snapshotDeletionReferenceSettled)) {
+            return true;
         }
-
-        _accountMgr.checkAccess(caller, null, true, snapshotCheck);
-        validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshotCheck.getVolumeId(), "delete");
-
-        SnapshotStrategy snapshotStrategy = _storageStrategyFactory.getSnapshotStrategy(snapshotCheck, zoneId, SnapshotOperation.DELETE);
-        if (snapshotStrategy == null) {
-            logger.error("Unable to find snapshot strategy to handle snapshot [{}]", snapshotCheck);
+        SnapshotStrategy strategy = _storageStrategyFactory.getSnapshotStrategy(snapshot, zoneId, SnapshotOperation.DELETE);
+        if (strategy == null) {
+            throw new CloudRuntimeException("Unable to find a deletion strategy for snapshot " + snapshot.getUuid());
+        }
+        boolean recovery = originalState == Snapshot.State.Destroyed || refs.stream()
+                .anyMatch(ref -> ref.getState() == ObjectInDataStoreStateMachine.State.Destroying);
+        java.util.Map<Long, Long> chargedRefs = new java.util.HashMap<>();
+        for (SnapshotDataStoreVO ref : refs) {
+            if (ref.getRole() != DataStoreRole.Primary && (ref.getState() == ObjectInDataStoreStateMachine.State.Ready
+                    || ref.getState() == ObjectInDataStoreStateMachine.State.Destroying)) {
+                chargedRefs.put(ref.getId(), ref.getPhysicalSize());
+            }
+        }
+        boolean result;
+        try {
+            result = strategy.deleteSnapshot(snapshotId, zoneId);
+        } finally {
+            // Account only for references actually settled, including partial success.
+            // A retry excludes already destroyed references and cannot charge them twice.
+            for (java.util.Map.Entry<Long, Long> ref : chargedRefs.entrySet()) {
+                if (!recovery && snapshotDeletionReferenceSettled(_snapshotStoreDao.findById(ref.getKey()))) {
+                    _resourceLimitMgr.decrementResourceCount(snapshot.getAccountId(), ResourceType.secondary_storage, ref.getValue());
+                }
+            }
+            SnapshotVO after = _snapshotDao.findById(snapshotId);
+            if ((after == null || after.getState() == Snapshot.State.Destroyed)
+                    && !recovery && originalState != Snapshot.State.Error && originalState != Snapshot.State.Destroyed) {
+                annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshot.getUuid());
+                _resourceLimitMgr.decrementResourceCount(snapshot.getAccountId(), ResourceType.snapshot);
+            }
+            if (recovery) {
+                // Historic failures may have already changed counters. Do not guess
+                // whether a Destroying reference was previously charged/decremented.
+                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
+                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+            }
+        }
+        boolean settled = getStoreRefsAndZonesForSnapshotDelete(snapshotId, zoneId).first().stream()
+                .allMatch(this::snapshotDeletionReferenceSettled);
+        if (!settled) {
+            logger.warn("Snapshot {} deletion left unsettled references in zone {}", snapshot.getUuid(), zoneId);
             return false;
         }
-
-        Pair<List<SnapshotDataStoreVO>, List<Long>> storeRefAndZones = getStoreRefsAndZonesForSnapshotDelete(snapshotId, zoneId);
-        List<SnapshotDataStoreVO> snapshotStoreRefs = storeRefAndZones.first();
-        List<Long> zoneIds = storeRefAndZones.second();
-
-        boolean result = snapshotStrategy.deleteSnapshot(snapshotId, zoneId);
-        if (result) {
-            for (Long zId : zoneIds) {
-                if (snapshotCheck.getState() == Snapshot.State.BackedUp) {
-                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_DELETE, snapshotCheck.getAccountId(), zId, snapshotId,
-                            snapshotCheck.getName(), null, null, 0L, snapshotCheck.getClass().getName(), snapshotCheck.getUuid());
-                }
-            }
-            final SnapshotVO postDeleteSnapshotEntry = _snapshotDao.findById(snapshotId);
-            if (postDeleteSnapshotEntry == null || Snapshot.State.Destroyed.equals(postDeleteSnapshotEntry.getState())) {
-                annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshotCheck.getUuid());
-
-                if (snapshotCheck.getState() != Snapshot.State.Error && snapshotCheck.getState() != Snapshot.State.Destroyed) {
-                    _resourceLimitMgr.decrementResourceCount(snapshotCheck.getAccountId(), ResourceType.snapshot);
-                }
-            }
-            for (SnapshotDataStoreVO snapshotStoreRef : snapshotStoreRefs) {
-                if (ObjectInDataStoreStateMachine.State.Ready.equals(snapshotStoreRef.getState()) && !DataStoreRole.Primary.equals(snapshotStoreRef.getRole())) {
-                    _resourceLimitMgr.decrementResourceCount(snapshotCheck.getAccountId(), ResourceType.secondary_storage, new Long(snapshotStoreRef.getPhysicalSize()));
-                }
+        if (result && (originalState == Snapshot.State.BackedUp || originalState == Snapshot.State.Destroying)) {
+            for (Long deletedZone : scope.second()) {
+                UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_DELETE, snapshot.getAccountId(), deletedZone, snapshotId,
+                        snapshot.getName(), null, null, 0L, snapshot.getClass().getName(), snapshot.getUuid());
             }
         }
-        final SnapshotVO postDeleteSnapshotEntry = _snapshotDao.findById(snapshotId);
-        if (postDeleteSnapshotEntry == null || Snapshot.State.Destroyed.equals(postDeleteSnapshotEntry.getState())) {
-            annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshotCheck.getUuid());
-
-            if (snapshotCheck.getState() != Snapshot.State.Error && snapshotCheck.getState() != Snapshot.State.Destroyed) {
-                _resourceLimitMgr.decrementResourceCount(snapshotCheck.getAccountId(), ResourceType.snapshot);
-            }
-        }
-        for (SnapshotDataStoreVO snapshotStoreRef : snapshotStoreRefs) {
-            if (ObjectInDataStoreStateMachine.State.Ready.equals(snapshotStoreRef.getState()) && !DataStoreRole.Primary.equals(snapshotStoreRef.getRole())) {
-                _resourceLimitMgr.decrementResourceCount(snapshotCheck.getAccountId(), ResourceType.secondary_storage, new Long(snapshotStoreRef.getPhysicalSize()));
-            }
-        }
-
         return result;
     }
 

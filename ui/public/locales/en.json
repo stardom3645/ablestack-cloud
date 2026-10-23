@@ -9429,5 +9429,19 @@
   "label.offering.qos.bytesreadrate": "Read throughput",
   "label.offering.qos.byteswriterate": "Write throughput",
   "label.offering.qos.iopsreadrate": "Read IOPS",
-  "label.offering.qos.iopswriterate": "Write IOPS"
+  "label.offering.qos.iopswriterate": "Write IOPS",
+  "label.snapshot.recovery": "Recover snapshot deletion",
+  "label.snapshot.recovery.zone": "Zone UUID (leave empty for all zones)",
+  "label.snapshot.recovery.diagnose": "Diagnose deletion scope",
+  "label.snapshot.recovery.allzones": "All zones",
+  "label.snapshot.recovery.execute": "Retry deletion",
+  "label.snapshot.recovery.check.result": "Check existing job",
+  "message.snapshot.recovery.scope": "Diagnose residual references by snapshot UUID. Copies in the confirmed scope will be deleted. Specify a zone UUID to preserve other zones. Hidden references may be retained for dependent chains.",
+  "message.snapshot.recovery.acknowledge": "I have checked the snapshot and zone deletion scope.",
+  "message.snapshot.recovery.no.references": "No references remain in this scope. Retrying an already destroyed snapshot succeeds without changes.",
+  "message.snapshot.recovery.complete": "Deletion completed. Diagnose again to inspect remaining references.",
+  "message.snapshot.recovery.invalid.uuid": "Enter a valid snapshot/zone UUID.",
+  "message.snapshot.recovery.context.changed": "The page or user scope changed. Diagnose again.",
+  "message.snapshot.recovery.failed": "Deletion diagnosis or recovery failed. Inspect the target state and job result.",
+  "message.snapshot.recovery.unknown": "The result is unknown. Deletion will not be resubmitted automatically. Check the existing job."
 }

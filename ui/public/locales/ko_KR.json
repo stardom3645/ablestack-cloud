@@ -9394,5 +9394,19 @@
   "label.offering.qos.bytesreadrate": "읽기 처리량",
   "label.offering.qos.byteswriterate": "쓰기 처리량",
   "label.offering.qos.iopsreadrate": "읽기 IOPS",
-  "label.offering.qos.iopswriterate": "쓰기 IOPS"
+  "label.offering.qos.iopswriterate": "쓰기 IOPS",
+  "label.snapshot.recovery": "삭제 잔여 복구",
+  "label.snapshot.recovery.zone": "대상 Zone UUID (비워 두면 모든 Zone)",
+  "label.snapshot.recovery.diagnose": "삭제 대상 진단",
+  "label.snapshot.recovery.allzones": "모든 Zone",
+  "label.snapshot.recovery.execute": "삭제 재처리",
+  "label.snapshot.recovery.check.result": "기존 작업 결과 확인",
+  "message.snapshot.recovery.scope": "스냅샷 UUID로 삭제 잔여를 진단합니다. 확인한 범위의 사본을 삭제하며 다른 Zone을 보존하려면 Zone UUID를 지정하세요. Hidden 참조는 의존 체인을 위해 보존될 수 있습니다.",
+  "message.snapshot.recovery.acknowledge": "표시된 스냅샷과 Zone 범위의 삭제 영향을 확인했습니다.",
+  "message.snapshot.recovery.no.references": "대상 범위에 남은 참조가 없습니다. 재처리는 무변경 성공으로 종결됩니다.",
+  "message.snapshot.recovery.complete": "삭제 작업이 완료됐습니다. 다시 진단하여 남은 참조를 확인할 수 있습니다.",
+  "message.snapshot.recovery.invalid.uuid": "올바른 스냅샷/Zone UUID를 입력하세요.",
+  "message.snapshot.recovery.context.changed": "화면 또는 사용자 범위가 변경됐습니다. 다시 진단하세요.",
+  "message.snapshot.recovery.failed": "삭제 진단 또는 재처리에 실패했습니다. 대상 상태와 작업 결과를 확인하세요.",
+  "message.snapshot.recovery.unknown": "작업 결과를 확인하지 못했습니다. 자동 재제출하지 않습니다. 기존 작업 결과를 확인하세요."
 }

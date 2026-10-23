@@ -177,6 +177,7 @@ public class DefaultSnapshotStrategyTest {
 
     @Test
     public void validateDeleteSnapshotInfosFailToDeleteReturnsFalse() {
+        Mockito.when(snapshotDaoMock.acquireInLockTable(Mockito.anyLong())).thenReturn(snapshotVoMock);
         Mockito.doReturn(mockSnapshotInfos).when(defaultSnapshotStrategySpy).retrieveSnapshotEntries(Mockito.anyLong(), Mockito.any());
         Mockito.doReturn(false).when(defaultSnapshotStrategySpy).deleteSnapshotInfo(Mockito.any(), Mockito.any());
         Assert.assertFalse(defaultSnapshotStrategySpy.deleteSnapshotInfos(snapshotVoMock, null));
@@ -184,6 +185,7 @@ public class DefaultSnapshotStrategyTest {
 
     @Test
     public void validateDeleteSnapshotInfosDeletesSuccessfullyReturnsTrue() {
+        Mockito.when(snapshotDaoMock.acquireInLockTable(Mockito.anyLong())).thenReturn(snapshotVoMock);
         Mockito.doReturn(mockSnapshotInfos).when(defaultSnapshotStrategySpy).retrieveSnapshotEntries(Mockito.anyLong(), Mockito.any());
         Mockito.doReturn(true).when(defaultSnapshotStrategySpy).deleteSnapshotInfo(Mockito.any(), Mockito.any());
         Assert.assertTrue(defaultSnapshotStrategySpy.deleteSnapshotInfos(snapshotVoMock, null));
@@ -196,6 +198,7 @@ public class DefaultSnapshotStrategyTest {
         Mockito.doNothing().when(snapshotObjectMock).processEvent(Mockito.any(Snapshot.Event.class));
         Mockito.when(dataStoreMock.getRole()).thenReturn(DataStoreRole.Primary);
 
+        Mockito.doReturn(true).when(defaultSnapshotStrategySpy).deleteSnapshotChain(Mockito.any(), Mockito.anyString());
         boolean result = defaultSnapshotStrategySpy.deleteSnapshotInfo(snapshotInfo1Mock, snapshotVoMock);
         Assert.assertTrue(result);
     }
@@ -223,7 +226,7 @@ public class DefaultSnapshotStrategyTest {
         Mockito.when(dataStoreMock.getRole()).thenReturn(DataStoreRole.Image);
 
         boolean result = defaultSnapshotStrategySpy.deleteSnapshotInfo(snapshotInfo1Mock, snapshotVoMock);
-        Assert.assertTrue(result);
+        Assert.assertFalse(result);
     }
 
     @Test
@@ -555,4 +558,29 @@ public class DefaultSnapshotStrategyTest {
 
         Assert.assertTrue(defaultSnapshotStrategySpy.isSnapshotStoredOnSecondaryForCLVMVolume(snapshot, volumeVO));
     }
+    @Test
+    public void partialReferenceFailureIsNotSuccess() {
+        Mockito.when(snapshotDaoMock.acquireInLockTable(Mockito.anyLong())).thenReturn(snapshotVoMock);
+        Mockito.doReturn(mockSnapshotInfos).when(defaultSnapshotStrategySpy).retrieveSnapshotEntries(Mockito.anyLong(), Mockito.any());
+        Mockito.doReturn(true).when(defaultSnapshotStrategySpy).deleteSnapshotInfo(snapshotInfo1Mock, snapshotVoMock);
+        Mockito.doReturn(false).when(defaultSnapshotStrategySpy).deleteSnapshotInfo(snapshotInfo2Mock, snapshotVoMock);
+        Assert.assertFalse(defaultSnapshotStrategySpy.deleteSnapshotInfos(snapshotVoMock, null));
+        Mockito.verify(snapshotDaoMock).releaseFromLockTable(Mockito.anyLong());
+    }
+
+    @Test
+    public void destroyedSnapshotStillProcessesResidualReferences() {
+        Mockito.when(snapshotDaoMock.findById(19L)).thenReturn(snapshotVoMock);
+        Mockito.when(snapshotVoMock.getState()).thenReturn(Snapshot.State.Destroyed);
+        Mockito.doReturn(false).when(defaultSnapshotStrategySpy).destroySnapshotEntriesAndFiles(snapshotVoMock, null);
+        Assert.assertFalse(defaultSnapshotStrategySpy.deleteSnapshot(19L, null));
+        Mockito.verify(defaultSnapshotStrategySpy).destroySnapshotEntriesAndFiles(snapshotVoMock, null);
+    }
+
+    @Test
+    public void noReferencesIsIdempotentSuccess() {
+        Mockito.doReturn(List.of()).when(defaultSnapshotStrategySpy).retrieveSnapshotEntries(Mockito.anyLong(), Mockito.any());
+        Assert.assertTrue(defaultSnapshotStrategySpy.deleteSnapshotInfos(snapshotVoMock, null));
+    }
+
 }

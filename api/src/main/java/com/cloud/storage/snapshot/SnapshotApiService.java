@@ -55,6 +55,10 @@ public interface SnapshotApiService {
      */
     boolean deleteSnapshot(long snapshotId, Long zoneId);
 
+    boolean deleteSnapshot(long snapshotId, Long zoneId, String expectedScopeHash);
+
+    org.apache.cloudstack.api.response.SnapshotDeletionResponse previewSnapshotDeletion(long snapshotId, Long zoneId);
+
     /**
      * Creates a policy with specified schedule. maxSnaps specifies the number of most recent snapshots that are to be
      * retained.

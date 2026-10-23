@@ -125,6 +125,14 @@ export default {
       },
       actions: [
         {
+          api: 'deleteSnapshot',
+          icon: 'tool-outlined',
+          label: 'label.snapshot.recovery',
+          listView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotDeletionRecovery.vue')))
+        },
+        {
           api: 'createVolume',
           icon: 'plus-outlined',
           docHelp: 'adminguide/storage.html#creating-a-new-volume',

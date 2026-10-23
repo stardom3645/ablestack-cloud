@@ -107,6 +107,7 @@ public class SnapshotDataFactoryImpl implements SnapshotDataFactory {
             DataStore store = storeMgr.getDataStore(snapshotDataStoreVO.getDataStoreId(), snapshotDataStoreVO.getRole());
             SnapshotObject info = SnapshotObject.getSnapshotObject(snapshot, store);
 
+            info.setDataStoreRefId(snapshotDataStoreVO.getId());
             infos.add(info);
         }
         return infos;

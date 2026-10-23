@@ -587,7 +587,7 @@ public class SnapshotServiceImpl implements SnapshotService {
         CommandResult result = callback.getResult();
         AsyncCallFuture<SnapshotResult> future = context.future;
         SnapshotInfo snapshot = context.snapshot;
-        SnapshotResult res = null;
+        SnapshotResult res = new SnapshotResult(context.snapshot, null);
         try {
             if (result.isFailed()) {
                 logger.debug("Failed to delete snapshot [{}] due to: [{}].", snapshot, result.getResult());
@@ -635,7 +635,9 @@ public class SnapshotServiceImpl implements SnapshotService {
 
         if (Hypervisor.HypervisorType.KVM.equals(snapInfo.getHypervisorType()) &&
                 SnapshotManager.kvmIncrementalSnapshot.valueIn(hostDao.findClusterIdByVolumeInfo(snapInfo.getBaseVolume()))) {
-            SnapshotDataStoreVO snapshotDataStoreVo = _snapshotStoreDao.findByStoreSnapshot(snapInfo.getDataStore().getRole(), snapInfo.getDataStore().getId(), snapInfo.getSnapshotId());
+            SnapshotDataStoreVO snapshotDataStoreVo = snapInfo.getDataStoreRefId() == null
+                    ? _snapshotStoreDao.findByStoreSnapshot(snapInfo.getDataStore().getRole(), snapInfo.getDataStore().getId(), snapInfo.getSnapshotId())
+                    : _snapshotStoreDao.findById(snapInfo.getDataStoreRefId());
             String kvmCheckpointPath = snapshotDataStoreVo.getKvmCheckpointPath();
             if (kvmCheckpointPath != null) {
                 snapInfo.setCheckpointPath(kvmCheckpointPath);
