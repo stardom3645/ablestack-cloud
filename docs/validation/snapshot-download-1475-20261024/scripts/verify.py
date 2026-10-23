@@ -60,7 +60,7 @@ for key,value in ui.items():
  check(key+' VM shell/overlap/theme',value['width']==720 and value['noOverlap'] and value['background']==('rgb(34, 40, 47)' if key.endswith('-dark') else 'rgb(255, 255, 255)'))
  if '-prepare-' in key:check(key+' download guidance', '스냅샷 백업을 다운로드할 수 있습니다' in value['text'] and '새 볼륨을 생성' not in value['text'])
  else:check(key+' localized safe result','다운로드 준비가 완료' in value['text'] and '생성된 리소스 보기' not in value['text'] and 'Please click' not in value['text'] and value['rel']=='noopener noreferrer')
- check(key+' native screenshot exists',(base/'images'/(key+'.png')).is_file())
+ check(key+' native screenshot exists',(base/'images'/(key+'.jpg')).is_file())
 check('UI failed jobs do not provide a download link',all(not x['hasDownloadLink'] and '서버 작업 실패' in x['text'] and 'Truncated snapshot' in x['text'] for x in read('ui-failure-observations.json').values()))
 check('UI cleanup lists show no fixture',all(x['noData'] and x['rows']==0 for x in read('ui-cleanup.json').values()))
 manifest=read('file-manifest.json');check('report/evidence/script/image file manifest',all((base/p).is_file() and hashlib.sha256((base/p).read_bytes()).hexdigest()==sha for p,sha in manifest.items()))
