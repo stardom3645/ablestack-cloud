@@ -227,7 +227,7 @@ public class Gfs2VolumeAllocation {
             finally {
                 try {
                     try (var remaining = Files.list(work)) {
-                        for (Path owned : remaining.toList()) { Files.delete(owned); }
+                        for (Path owned : remaining.collect(java.util.stream.Collectors.toList())) { Files.delete(owned); }
                     }
                     Files.delete(work);
                 } catch (IOException cleanup) {

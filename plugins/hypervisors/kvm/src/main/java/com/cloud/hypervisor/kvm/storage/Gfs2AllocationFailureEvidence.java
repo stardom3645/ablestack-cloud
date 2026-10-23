@@ -49,7 +49,7 @@ final class Gfs2AllocationFailureEvidence {
                 return "evidence=skipped-image-limit (2 GiB); no existing evidence changed";
             }
             List<Path> files;
-            try (var children = Files.list(work)) { files = children.toList(); }
+            try (var children = Files.list(work)) { files = children.collect(java.util.stream.Collectors.toList()); }
             for (Path file : files) {
                 if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) ||
                         (!file.equals(image) && !file.getFileName().toString().matches("zero-.*\\.raw"))) {
