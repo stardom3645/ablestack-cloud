@@ -464,6 +464,8 @@ export default {
           dataView: true,
           show: (record) => { return record.state === 'BackedUp' },
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateVolume.vue')))
         },
         {

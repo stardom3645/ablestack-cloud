@@ -9513,5 +9513,14 @@
   "message.snapshot.job.force.residual": "Database cleanup completed. Physical remnants may remain; check deletion recovery.",
   "label.archive.snapshot": "Archive snapshot",
   "label.copy.snapshot": "Copy snapshot",
-  "message.snapshot.job.result.unknown": "The result is unknown, which does not mean the operation failed. Check the existing operation result."
+  "message.snapshot.job.result.unknown": "The result is unknown, which does not mean the operation failed. Check the existing operation result.",
+  "message.snapshot.volume.source.absent": "The source volume is unavailable. You can still create a new volume from this snapshot.",
+  "message.snapshot.restore.data.loss": "Changes made after the snapshot was taken will be lost.",
+  "message.snapshot.restore.target": "Revert volume {0} to the point captured by snapshot {1}.",
+  "message.snapshot.restore.targets": "Revert the volumes belonging to the {0} selected snapshots to their captured points.",
+  "message.snapshot.restore.acknowledge": "I have checked the restore target and its impact on data.",
+  "label.snapshot.volume.name.placeholder": "Volume name (optional)",
+  "label.snapshot.volume.attach": "Attach to a virtual machine",
+  "label.snapshot.volume.select.vm": "Select a virtual machine",
+  "message.snapshot.dialog.pending": "Resubmission is blocked until the existing operation is resolved. Open its details in header notifications to check the same operation."
 }

@@ -33,7 +33,9 @@ async function mount (rows = [row]) {
 }
 test('selection and resource replacement cannot retarget a confirmed mutation', async () => {
   await mount(); await wrapper.setData({ acknowledged: true })
-  await wrapper.setProps({ resource: { id: 'different' }, currentAction: { api: 'revertSnapshot', storageSnapshotTargets: [{ id: 'different' }] } })
+  await wrapper.setProps({ resource: { id: 'different' }, currentAction: { api: 'revertSnapshot', label: 'label.action.revert.snapshot', storageSnapshotTargets: [{ id: 'different' }] } })
+  expect(wrapper.vm.actionLabel).toBe('label.action.delete.snapshot')
+  expect(wrapper.vm.isRestore).toBe(false)
   await wrapper.vm.submit()
   expect(postAPI).toHaveBeenCalledTimes(1)
   expect(postAPI.mock.calls[0]).toEqual(['deleteSnapshot', { id: 'selected', expectedscopehash: 'hash', customjobid: expect.any(String) }, { preserveOnFailure: true }])

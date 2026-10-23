@@ -17,12 +17,13 @@
 
 <template>
   <a-spin :spinning="loading">
-    <StorageSnapshotSafety v-if="snapshotSafetyTarget" :context="snapshotSafetyContext" :loading="snapshotSafetyLoading" :error="snapshotSafetyError" @refresh="refreshSnapshotSafety" />
-    <div v-if="!isNormalUserOrProject && !submitHandler">
+    <StorageSnapshotSafety v-if="snapshotSafetyTarget" compact :context="snapshotSafetyContext" :loading="snapshotSafetyLoading" :error="snapshotSafetyError" :pending="snapshotSafetyPending" @refresh="refreshSnapshotSafety" />
+    <div v-if="!snapshotSafetyTarget && !isNormalUserOrProject && !submitHandler">
       <ownership-selection @fetch-owner="fetchOwnerOptions" />
     </div>
     <a-form
       class="form"
+      :class="{ 'snapshot-volume-form': snapshotSafetyTarget }"
       layout="vertical"
       :ref="formRef"
       :model="form"
@@ -37,7 +38,7 @@
         <a-input
           v-focus="true"
           v-model:value="form.name"
-          :placeholder="apiParams.name.description" />
+          :placeholder="snapshotSafetyTarget ? $t('label.snapshot.volume.name.placeholder') : apiParams.name.description" />
       </a-form-item>
       <a-form-item ref="zoneid" name="zoneid" v-if="!createVolumeFromVM">
         <template #label>
@@ -66,6 +67,9 @@
           </a-select-option>
         </a-select>
       </a-form-item>
+      <div v-if="snapshotSafetyTarget && !isNormalUserOrProject && !submitHandler" class="snapshot-volume-owner">
+        <ownership-selection embedded @fetch-owner="fetchOwnerOptions" />
+      </div>
       <a-form-item ref="diskofferingid" name="diskofferingid" v-if="!createVolumeFromSnapshot || (createVolumeFromSnapshot && resource.volumetype === 'ROOT')">
         <template #label>
           <tooltip-label :title="$t('label.diskofferingid')" :tooltip="apiParams.diskofferingid.description || 'Disk Offering'"/>
@@ -199,17 +203,21 @@
         </a-form-item>
       </span>
       <a-form-item name="attachVolume" ref="attachVolume" v-if="!createVolumeFromVM">
-        <template #label>
+        <template v-if="!snapshotSafetyTarget" #label>
           <tooltip-label :title="$t('label.action.attach.to.instance')" :tooltip="$t('label.attach.vol.to.instance')" />
         </template>
-        <a-switch v-model:checked="form.attachVolume" :checked="attachVolume" @change="zone => onChangeAttachToVM(zone.id)" />
+        <label v-if="snapshotSafetyTarget" class="snapshot-volume-attach">
+          <a-switch v-model:checked="form.attachVolume" :checked="attachVolume" :aria-label="$t('label.snapshot.volume.attach')" @change="zone => onChangeAttachToVM(zone.id)" />
+          <span>{{ $t('label.snapshot.volume.attach') }}</span>
+        </label>
+        <a-switch v-else v-model:checked="form.attachVolume" :checked="attachVolume" @change="zone => onChangeAttachToVM(zone.id)" />
       </a-form-item>
       <span v-if="attachVolume">
-        <a-form-item :label="$t('label.virtualmachineid')" name="virtualmachineid" ref="virtualmachineid">
+        <a-form-item :label="$t(snapshotSafetyTarget ? 'label.virtualmachine' : 'label.virtualmachineid')" name="virtualmachineid" ref="virtualmachineid">
           <a-select
             v-focus="true"
             v-model:value="form.virtualmachineid"
-            :placeholder="attachVolumeApiParams.virtualmachineid.description"
+            :placeholder="snapshotSafetyTarget ? $t('label.snapshot.volume.select.vm') : attachVolumeApiParams.virtualmachineid.description"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -221,7 +229,7 @@
           </a-select>
         </a-form-item >
         <a-form-item ref="deviceid" name="deviceid" :label="$t('label.deviceid')" :extra="$t('message.vmvolume.device.auto')" :rules="[{ validator: validateDeviceId }]">
-          <div style="margin-bottom: 10px">
+          <div v-if="!snapshotSafetyTarget" style="margin-bottom: 10px">
             <a-collapse>
               <a-collapse-panel header="More information about deviceID">
                 <a-alert type="warning">
@@ -244,9 +252,9 @@
       <a-form-item v-if="submitHandler" class="volume-device-hint" ref="deviceid" name="deviceid" :label="$t('label.vmvolume.deviceid')" :extra="$t('message.vmvolume.device.auto')" :rules="[{ validator: validateDeviceId }]">
         <a-input-number v-model:value="form.deviceid" :min="1" :precision="0" :placeholder="$t('label.vmvolume.device.auto')" style="width: 100%" />
       </a-form-item>
-      <MoldDialogActions v-if="!hideActions" :span="24" class="" :busy="loading">
-        <a-button @click="closeModal">{{ $t('label.cancel') }}</a-button>
-        <a-button type="primary" ref="submit" :disabled="snapshotSafetyBlocked || allocationBlocked || (createOnStorage && (storageLoading || storageFetchError || !selectedStoragePool))" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+      <MoldDialogActions v-if="!hideActions" :span="24" class="" :busy="loading" @keyup.ctrl.enter="snapshotSafetyTarget && handleSubmit($event)">
+        <a-button :disabled="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
+        <a-button type="primary" ref="submit" :loading="loading" :disabled="snapshotSafetyBlocked || allocationBlocked || (createOnStorage && (storageLoading || storageFetchError || !selectedStoragePool))" @click="handleSubmit">{{ $t(snapshotSafetyTarget ? 'label.create' : 'label.ok') }}</a-button>
       </MoldDialogActions>
     </a-form>
   </a-spin>
@@ -824,5 +832,22 @@ export default {
     min-width: 400px;
     width: 100%;
   }
+}
+.form.snapshot-volume-form { width: 100%; min-width: 0; }
+.snapshot-volume-form > :deep(.ant-form-item),
+.snapshot-volume-form > span > :deep(.ant-form-item) { margin-bottom: 24px; }
+.snapshot-volume-attach { display: flex; align-items: center; gap: 8px; }
+.snapshot-volume-attach :deep(.ant-switch) { flex-shrink: 0; }
+.snapshot-volume-owner { margin-bottom: 24px; }
+.snapshot-volume-owner :deep(.ownership-selection-embedded) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+.snapshot-volume-owner :deep(.ant-form-item) { min-width: 0; margin: 0; }
+.snapshot-volume-owner :deep(.ant-form-item:first-child) { grid-column: 1 / -1; }
+.snapshot-volume-form :deep(.ant-form-item-label) { padding-bottom: 8px; }
+@media (max-width: 600px) {
+  .snapshot-volume-owner :deep(.ownership-selection-embedded) { grid-template-columns: minmax(0, 1fr); }
 }
 </style>

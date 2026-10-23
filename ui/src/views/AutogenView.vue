@@ -180,10 +180,10 @@
       />
       <keep-alive :max="isStorageUi ? 1 : undefined" v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
         <component
-          :is="isStorageUi ? 'MoldDialog' : 'a-modal'"
-          :size="isStorageUi ? storageDialogSize(currentAction.api) : undefined"
+          :is="standardActionDialog ? 'MoldDialog' : 'a-modal'"
+          :size="currentAction.standardDialogSize || (isStorageUi ? storageDialogSize(currentAction.api) : undefined)"
           class="mold-dialog"
-          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup', 'storage-standard-dialog': isStorageUi }"
+          :class="{ 'autoscale-dialog': $route.meta?.name === 'autoscalevmgroup', 'storage-standard-dialog': standardActionDialog, 'snapshot-standard-dialog': currentAction.snapshotStandardDialog }"
           centered
           :visible="showAction"
           :closable="true"
@@ -191,8 +191,8 @@
           :cancelText="$t('label.cancel')"
           @cancel="cancelAction"
           :confirmLoading="actionLoading"
-          :footer="isStorageUi ? undefined : null"
-          :form-actions="isStorageUi"
+          :footer="standardActionDialog ? undefined : null"
+          :form-actions="standardActionDialog"
           :width="currentAction.dialogWidth || 'auto'"
         >
           <template #title>
@@ -1266,6 +1266,7 @@ export default {
   computed: {
     snapshotOperationCompletions () { return scopedSnapshotOperations(storageSnapshotSecurityScope(this.$store)).map(entry => ({ ...entry })) },
     isStorageUi () { return storageUiRoute(this.$route) },
+    standardActionDialog () { return this.isStorageUi || !!this.currentAction.standardDialogSize },
     storageActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() },
     isSshKeyPairDetail () { return isSshKeyPairDetailRoute(this.$route) },
     sshKeyPairDetailVisible () {
@@ -2179,6 +2180,7 @@ export default {
       return request
     },
     closeAction (result) {
+      const snapshotDialog = this.currentAction?.storageSnapshotMode || this.currentAction?.snapshotStandardDialog
       const cniAction = this.currentAction?.api === 'deleteCniConfiguration' && this.currentAction.cniListScope === this.listScope()
       const cniLocation = this.currentAction?.cniListLocation
       const deletedCniDetail = cniAction && this.dataView && result?.removed?.includes(this.resource?.id)
@@ -2214,7 +2216,7 @@ export default {
       if (deletedUserDataDetail) this.$router.push('/userdata')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.
       this.$nextTick(() => {
-        const replacement = this.isStorageUi && originPath === this.$route?.path
+        const replacement = (this.isStorageUi || snapshotDialog) && originPath === this.$route?.path
           ? (this.$refs?.detailActionsTrigger?.$el || (triggerLabel && Array.from(this.$el?.querySelectorAll('.autogen-toolbar-actions button') || []).find(button => button.getAttribute('aria-label') === triggerLabel)))
           : null
         const target = trigger?.isConnected ? trigger : replacement
@@ -2268,6 +2270,9 @@ export default {
       if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       this.storageActionGeneration++
       if (action.storageSnapshotMode) {
+        this.actionTrigger = this.$refs?.detailActionsTrigger?.$el || document.activeElement
+        this.actionTriggerLabel = this.actionTrigger?.getAttribute('aria-label')
+        this.actionOriginPath = this.$route?.path
         this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, storageSnapshotTargets: Object.freeze((isGroupAction ? this.selectedItems : [action.resource || this.resource]).filter(Boolean).map(row => Object.freeze({ ...row }))) }
         this.resource = action.resource || {}; this.showAction = true
         return

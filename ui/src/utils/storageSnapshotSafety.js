@@ -22,9 +22,12 @@ export function storageSnapshotSafety (api, kind = 'snapshot', enabled = () => t
       this.refreshSnapshotSafety()
     },
     computed: {
+      snapshotSafetyPending () {
+        return !!this.snapshotSafetyTarget && snapshotOperationBusy(snapshotSecurityScope(this.$store), snapshotResourceKeys(this.snapshotSafetyTarget, this.snapshotSafetyContext))
+      },
       snapshotSafetyBlocked () {
         if (!this.snapshotSafetyTarget) return false
-        return this.snapshotSafetyLoading || !this.snapshotSafetyContext || !!this.snapshotSafetyContext.reason || !!this.snapshotSafetyError || !this.dialogCurrent() || snapshotOperationBusy(snapshotSecurityScope(this.$store), snapshotResourceKeys(this.snapshotSafetyTarget, this.snapshotSafetyContext))
+        return this.snapshotSafetyLoading || !this.snapshotSafetyContext || !!this.snapshotSafetyContext.reason || !!this.snapshotSafetyError || !this.dialogCurrent() || this.snapshotSafetyPending
       }
     },
     methods: {

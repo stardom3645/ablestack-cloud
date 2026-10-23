@@ -13,17 +13,39 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <MoldDialog :visible="!closed" size="lg" :title="$t(currentAction.label || 'label.action.delete.snapshot')" :mask-closable="false" :form-actions="true" @cancel="close">
-    <a-alert type="warning" show-icon :message="$t(currentAction.message || 'message.action.delete.snapshot')" />
-    <a-alert v-if="error" type="error" show-icon :message="error" />
-    <StorageSnapshotSafety v-for="(context, i) in contexts" :key="targets[i].id + targets[i].zoneId" :context="context" :loading="busy" @refresh="refresh" />
-    <p v-if="!contexts.length">{{ $t('message.snapshot.action.validating') }}</p>
-    <a-checkbox v-model:checked="acknowledged" :disabled="busy || blocked">{{ $t('message.snapshot.action.acknowledge') }}</a-checkbox>
-    <p v-for="result in results" :key="result.id">{{ result.target.name || result.target.id }} · {{ $t('label.snapshot.action.status.' + result.status) }} · {{ result.jobid }}</p>
+  <MoldDialog
+    :visible="!closed"
+    :size="isRestore ? 'md' : 'lg'"
+    :class="{ 'snapshot-standard-dialog': isRestore }"
+    :title="$t(actionLabel)"
+    :closable="!busy"
+    :keyboard="!busy"
+    :mask-closable="false"
+    :form-actions="true"
+    @cancel="close">
+    <div :class="{ 'snapshot-restore-content': isRestore }">
+      <a-alert v-if="!isRestore" type="warning" show-icon :message="$t(actionMessage)" />
+      <a-alert v-if="error && (!isRestore || !contexts.length)" type="error" show-icon role="alert" :message="error">
+        <template v-if="isRestore" #description><a-button type="link" size="small" :disabled="busy" @click="refresh">{{ $t('label.retry') }}</a-button></template>
+      </a-alert>
+      <StorageSnapshotSafety
+        v-for="(context, i) in contexts"
+        :key="targets[i].id + targets[i].zoneId"
+        :context="context"
+        :compact="isRestore && contexts.length === 1"
+        :error="isRestore && i === 0 ? error : undefined"
+        :loading="busy"
+        :pending="operationPending"
+        @refresh="refresh" />
+      <a-alert v-if="isRestore" type="warning" show-icon :message="$t('message.snapshot.restore.data.loss')" :description="restoreDescription" />
+      <p v-if="!contexts.length && !error" role="status">{{ $t('message.snapshot.action.validating') }}</p>
+      <a-checkbox v-model:checked="acknowledged" :disabled="busy || blocked">{{ $t(isRestore ? 'message.snapshot.restore.acknowledge' : 'message.snapshot.action.acknowledge') }}</a-checkbox>
+      <p v-for="result in results" :key="result.id">{{ result.target.name || result.target.id }} · {{ $t('label.snapshot.action.status.' + result.status) }} · {{ result.jobid }}</p>
+    </div>
     <template #footer>
-      <a-button @click="close">{{ $t('label.close') }}</a-button>
-      <a-button :disabled="busy" @click="refresh">{{ $t('label.snapshot.action.refresh') }}</a-button>
-      <a-button type="primary" danger :loading="busy" :disabled="busy || blocked || !acknowledged" @click="submit">{{ $t(currentAction.label || 'label.action.delete.snapshot') }}</a-button>
+      <a-button :disabled="busy" @click="close">{{ $t(isRestore ? 'label.cancel' : 'label.close') }}</a-button>
+      <a-button v-if="!isRestore" :disabled="busy" @click="refresh">{{ $t('label.snapshot.action.refresh') }}</a-button>
+      <a-button type="primary" danger :loading="busy" :disabled="busy || blocked || !acknowledged" @click="submit">{{ $t(isRestore ? 'label.restore' : actionLabel) }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -37,12 +59,21 @@ export default {
   components: { MoldDialog, StorageSnapshotSafety },
   emits: ['close-action', 'refresh-data'],
   props: { resource: { type: Object, default: () => ({}) }, currentAction: { type: Object, default: () => ({}) } },
-  data () { return { targets: [], contexts: [], results: [], acknowledged: false, busy: false, error: '', closed: false, active: true, originPath: '', actionApi: '', security: '', sequence: 0 } },
+  data () { return { targets: [], contexts: [], results: [], acknowledged: false, busy: false, error: '', closed: false, active: true, originPath: '', actionApi: '', actionLabel: '', actionMessage: '', security: '', sequence: 0 } },
   computed: {
+    isRestore () { return this.actionApi === 'revertSnapshot' },
+    restoreDescription () {
+      const context = this.contexts[0]
+      if (this.targets.length !== 1) return this.$t('message.snapshot.restore.targets', [this.targets.length])
+      return this.$t('message.snapshot.restore.target', [context?.source.volumename || context?.record.volumename || context?.record.volumeid || this.targets[0]?.record.volumeid || '', this.targets[0]?.record.name || this.targets[0]?.id || ''])
+    },
+    operationPending () { return this.contexts.some(c => snapshotOperationBusy(this.security, snapshotResourceKeys(c.target, c))) },
     blocked () { return !!this.error || !this.contexts.length || this.contexts.some(c => c.reason || snapshotOperationBusy(this.security, snapshotResourceKeys(c.target, c))) || !this.current() }
   },
   created () {
     this.actionApi = this.currentAction.api
+    this.actionLabel = this.currentAction.label || (this.isRestore ? 'label.action.revert.snapshot' : 'label.action.delete.snapshot')
+    this.actionMessage = this.currentAction.message || 'message.action.delete.snapshot'
     this.originPath = this.$route.path; this.security = snapshotSecurityScope(this.$store)
     const rows = this.currentAction.storageSnapshotTargets || [this.resource]
     this.targets = rows.map(row => freezeSnapshotTarget(row, { zoneId: this.currentAction.zoneScope ? row.zoneid || null : 'all' }))
@@ -94,3 +125,11 @@ export default {
   }
 }
 </script>
+<style scoped>
+.snapshot-restore-content { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.snapshot-restore-content > .snapshot-safety-compact { margin: 0; }
+.snapshot-restore-content > p { margin: 0; }
+.snapshot-restore-content :deep(.ant-checkbox-wrapper) { display: flex; align-items: flex-start; margin: 0; white-space: normal; }
+.snapshot-restore-content :deep(.ant-checkbox) { flex: 0 0 auto; margin-top: 4px; top: 0; }
+.snapshot-restore-content :deep(.ant-checkbox-wrapper > span:last-child) { min-width: 0; overflow-wrap: anywhere; }
+</style>

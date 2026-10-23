@@ -9478,5 +9478,14 @@
   "message.snapshot.job.force.residual": "DB 정리는 완료되었으나 물리 잔여물이 있을 수 있습니다. 삭제 복구에서 잔여 상태를 확인하세요.",
   "label.archive.snapshot": "스냅샷 아카이브",
   "label.copy.snapshot": "스냅샷 복사",
-  "message.snapshot.job.result.unknown": "작업 결과를 확인하지 못했습니다. 작업 실패를 의미하지 않습니다. 기존 작업 결과 조회로 다시 확인하세요."
+  "message.snapshot.job.result.unknown": "작업 결과를 확인하지 못했습니다. 작업 실패를 의미하지 않습니다. 기존 작업 결과 조회로 다시 확인하세요.",
+  "message.snapshot.volume.source.absent": "원본 볼륨이 없어도 이 스냅샷에서 새 볼륨을 생성할 수 있습니다.",
+  "message.snapshot.restore.data.loss": "스냅샷 생성 이후의 변경 데이터가 사라집니다.",
+  "message.snapshot.restore.target": "{0} 볼륨을 {1} 스냅샷 시점으로 되돌립니다.",
+  "message.snapshot.restore.targets": "선택한 스냅샷 {0}개의 원본 볼륨을 각 스냅샷 시점으로 되돌립니다.",
+  "message.snapshot.restore.acknowledge": "복원 대상과 데이터 변경 영향을 확인했습니다.",
+  "label.snapshot.volume.name.placeholder": "볼륨 이름 입력 (선택 사항)",
+  "label.snapshot.volume.attach": "가상머신에 연결",
+  "label.snapshot.volume.select.vm": "가상머신 선택",
+  "message.snapshot.dialog.pending": "기존 작업의 결과가 확인될 때까지 재제출을 차단합니다. 상단 알림의 작업 상세에서 기존 결과를 조회하세요."
 }
