@@ -17,15 +17,17 @@ jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('lodash/debounce', () => fn => fn)
 jest.mock('@/utils/timezone', () => ({ timeZone: () => Promise.resolve([]) }))
 
-const select = { props: ['loading', 'disabled'], template: '<div :class="{ loading }"><slot /></div>' }
+const select = { props: ['loading', 'disabled'], template: '<div :class="{ loading }" :data-disabled="disabled"><slot /></div>' }
 const mounts = []
 function dialog (component, extra = {}) {
   const wrapper = shallowMount(component, {
     props: { resource: { id: 'volume', zoneid: 'native', zonename: 'Native' }, ...(component === Schedule ? { dataSource: [], resourceType: 'Volume' } : {}), ...extra },
     global: {
+      renderStubDefaultSlot: true,
       stubs: { 'a-select': select },
       mocks: {
-        $t: k => k, $route: { path: '/volume/volume' },
+        $t: k => k,
+        $route: { path: '/volume/volume' },
         $store: { getters: { userInfo: { id: 'user' }, project: {}, apis: {} }, state: { user: {} } },
         $getApiParams: () => ({ asyncbackup: { description: 'Async backup' } })
       }
@@ -39,12 +41,12 @@ afterEach(() => { mounts.splice(0).forEach(w => w.unmount()) })
 
 describe.each([Schedule, TakeSnapshot])('$name additional zones', component => {
   test('loading changes reactively after a delayed empty response, including when no other state changes', async () => {
-    let resolve
-    getAPI.mockReturnValueOnce(new Promise(done => { resolve = done }))
+    let complete
+    getAPI.mockReturnValueOnce(new Promise(resolve => { complete = resolve }))
     const wrapper = dialog(component)
     await flushPromises()
     expect(wrapper.find('#zone-selection').classes()).toContain('loading')
-    resolve({ listzonesresponse: { count: 0 } })
+    complete({ listzonesresponse: { count: 0 } })
     await flushPromises()
     expect(wrapper.find('#zone-selection').classes()).not.toContain('loading')
     expect(wrapper.vm.zoneLoading).toBe(false)
@@ -67,7 +69,7 @@ describe.each([Schedule, TakeSnapshot])('$name additional zones', component => {
     else getAPI.mockResolvedValueOnce(failure)
     const wrapper = dialog(component); await flushPromises()
     expect(wrapper.vm.zoneLoading).toBe(false); expect(wrapper.vm.zoneError).toBe(true)
-    expect(wrapper.find('#zone-selection').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('#zone-selection').attributes('data-disabled')).toBe('true')
     getAPI.mockResolvedValueOnce({ listzonesresponse: { zone: [{ id: 'retry' }] } })
     await wrapper.vm.fetchZoneData(); await flushPromises()
     expect(wrapper.vm.zoneError).toBe(false); expect(wrapper.vm.zoneLoading).toBe(false)
@@ -75,14 +77,14 @@ describe.each([Schedule, TakeSnapshot])('$name additional zones', component => {
   })
 
   test('a late reply cannot repopulate another volume or a closed dialog', async () => {
-    let resolve
-    getAPI.mockReturnValueOnce(new Promise(done => { resolve = done }))
+    let complete
+    getAPI.mockReturnValueOnce(new Promise(resolve => { complete = resolve }))
     const wrapper = dialog(component)
     await wrapper.setProps({ resource: { id: 'second', zoneid: 'different' } })
-    resolve({ listzonesresponse: { zone: [{ id: 'old-private' }] } }); await flushPromises()
+    complete({ listzonesresponse: { zone: [{ id: 'old-private' }] } }); await flushPromises()
     expect(wrapper.vm.zones).toEqual([]); expect(wrapper.vm.zoneLoading).toBe(false)
     let release
-    getAPI.mockReturnValueOnce(new Promise(done => { release = done }))
+    getAPI.mockReturnValueOnce(new Promise(resolve => { release = resolve }))
     const pending = wrapper.vm.fetchZoneData(); wrapper.unmount()
     release({ listzonesresponse: { zone: [{ id: 'closed' }] } }); await pending
     expect(wrapper.vm.zones).toEqual([])
@@ -99,10 +101,16 @@ describe.each([Schedule, TakeSnapshot])('$name additional zones', component => {
   test('submission explicitly disables replication and ignores obsolete pool/replication values', async () => {
     postAPI.mockReturnValue(new Promise(() => {}))
     const vm = {
-      actionLoading: false, disabled: false, dialogCurrent: () => true,
+      actionLoading: false,
+      disabled: false,
+      dialogCurrent: () => true,
       formRef: { value: { validate: () => Promise.resolve() } },
       form: { intervaltype: 'hourly', time: 55, timezone: 'UTC', maxsnaps: 2, name: 'own-snapshot', zoneids: ['additional'], useStorageReplication: true, storageids: ['unsupported'] },
-      handleRemoveFields: values => ({ ...values }), volumeId: 'volume', resource: { id: 'volume' }, tags: [], $t: k => k
+      handleRemoveFields: values => ({ ...values }),
+      volumeId: 'volume',
+      resource: { id: 'volume' },
+      tags: [],
+      $t: k => k
     }
     component.methods.handleSubmit.call(vm); await flushPromises()
     expect(postAPI).toHaveBeenCalledTimes(1)
