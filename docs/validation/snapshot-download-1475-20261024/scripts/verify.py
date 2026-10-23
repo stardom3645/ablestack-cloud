@@ -20,13 +20,13 @@ check('24 changed source/test files and two unchanged common inspectors',len(sco
 check('source hashes match this checkout',all(hashlib.sha256((repo/p).read_bytes()).hexdigest()==sha for p,sha in source.items()))
 total=0
 for name,n in [('core-tests.log',2),('server-final-tests.log',50),('secondary-final-tests.log',60)]:
- log=(ev/name).read_text();rows=re.findall(r'Tests run: (\d+), Failures: 0, Errors: 0, Skipped: 0',log)
+ log=(ev/name).read_text(encoding='utf-8');rows=re.findall(r'Tests run: (\d+), Failures: 0, Errors: 0, Skipped: 0',log)
  check(name+' focused tests/install',bool(rows) and int(rows[-1])==n and 'BUILD SUCCESS' in log);total+=n
 check('Java focused total 112',total==112)
-for name in ['api-build.log','driver-final-build.log']:check(name+' changed module install','BUILD SUCCESS' in (ev/name).read_text())
-ui=(ev/'ui-verified-tests.log').read_text();check('UI 193 tests in 14 suites','14 passed, 14 total' in ui and '193 passed, 193 total' in ui)
-check('no-fix lint','No lint errors found' in (ev/'ui-final-lint.log').read_text())
-check('production UI build completed','Build complete' in (ev/'ui-verified-build.log').read_text() and 'postbuild' in (ev/'ui-verified-build.log').read_text())
+for name in ['api-build.log','driver-final-build.log']:check(name+' changed module install','BUILD SUCCESS' in (ev/name).read_text(encoding='utf-8'))
+ui=(ev/'ui-verified-tests.log').read_text(encoding='utf-8');check('UI 193 tests in 14 suites','14 passed, 14 total' in ui and '193 passed, 193 total' in ui)
+check('no-fix lint','No lint errors found' in (ev/'ui-final-lint.log').read_text(encoding='utf-8'))
+check('production UI build completed','Build complete' in (ev/'ui-verified-build.log').read_text(encoding='utf-8') and 'postbuild' in (ev/'ui-verified-build.log').read_text(encoding='utf-8'))
 check('no full Cloud/Actions/qemu build claimed',not scope['fullCloudBuild'] and not scope['actionsDispatch'] and not scope['qemuBuild'])
 for name in ['protected-windows.json','protected-wsl.json']:check(name+' preserved',read(name)['matchPrior'])
 matrix=[]

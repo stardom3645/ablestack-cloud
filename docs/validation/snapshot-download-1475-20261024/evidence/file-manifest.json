@@ -8,7 +8,7 @@
   "scripts/remote.py": "34b019f7dfa598ce72fe25d957eb767644c7a577049cc42c14a0fdf35a60379e",
   "scripts/extract.mjs": "2b486ba4618be14ac9fa51c569c3b9470dfc41cc770a922e835ee134a1737ad6",
   "scripts/korean.mjs": "5c85f84b051248d91dc37f17b9cb78ca30ac12931abad13cdee3106fda35965b",
-  "scripts/verify.py": "b89f47fb605ede96effdc040d8ec43f0fa8f86ba4ca2b9721af4f0dda2fc577c",
+  "scripts/verify.py": "b2f68be678dcd5179b5d80543601ae7f2fe25424565ed871fe459158af565f7f",
   "scripts/runtime_verify.py": "2da81aec2f81df2f043dcd27c210e5e8e5b1e1adcef56bcc57017ec1e63398a2",
   "scripts/final_state.py": "c077ea5cc25339cd15e259fc4d376bb9f135b90694257def70764fba368595b7",
   "scripts/lifecycle.py": "3a099d1d445db1f6208b5cb6b8c29e54146551950756b30cf3b17b0e2392f334",
