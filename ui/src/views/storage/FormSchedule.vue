@@ -143,7 +143,7 @@
               </a-form-item>
             </a-col>
             <a-col :xs="24" :md="24" :lg="24" v-if="resourceType === 'Volume'">
-              <a-form-item ref="zoneids" name="zoneids" >
+              <a-form-item ref="zoneids" name="zoneids">
                 <template #label>
                   <tooltip-label :title="$t('label.zones')" :tooltip="''"/>
                 </template>
@@ -154,7 +154,7 @@
                 </a-alert>
                 <a-select
                   id="zone-selection"
-                  v-model:value="form.zoneids"
+                  v-model:value="snapshotZoneIds"
                   mode="multiple"
                   showSearch
                   optionFilterProp="label"
@@ -165,7 +165,10 @@
                   :disabled="zoneLoading || zoneError"
                   :notFoundContent="$t('message.snapshot.zones.empty')"
                   :placeholder="''">
-                  <a-select-option v-for="opt in this.zones" :key="opt.id" :label="opt.name || opt.description">
+                  <template #tagRender="{ value, label, closable, onClose }">
+                    <a-tag :closable="value !== resource.zoneid && closable" style="margin: 0 4px 0 0" @close="onClose">{{ label }}</a-tag>
+                  </template>
+                  <a-select-option v-for="opt in zones" :key="opt.id" :value="opt.id" :disabled="opt.id === resource.zoneid" :label="(opt.name || opt.description) + (opt.id === resource.zoneid ? ' (' + $t('label.default') + ')' : '')">
                     <span>
                       <resource-icon v-if="opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
                       <global-outlined v-else style="margin-right: 5px"/>
@@ -467,9 +470,8 @@ export default {
         params.timezone = values.timezone
         params.maxsnaps = values.maxsnaps
         params.useStorageReplication = false
-        if (values.zoneids && values.zoneids.length > 0) {
-          params.zoneids = values.zoneids.join()
-        }
+        const zoneids = (values.zoneids || []).filter(id => id !== this.resource.zoneid)
+        if (zoneids.length > 0) params.zoneids = [...new Set(zoneids)].join()
         switch (values.intervaltype) {
           case 'hourly':
             params.schedule = values.time
