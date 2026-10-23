@@ -97,6 +97,9 @@ public class DefaultSnapshotStrategyTest {
 
     @Before
     public void setup() {
+        Mockito.lenient().when(snapshotVoMock.getState()).thenReturn(Snapshot.State.BackedUp);
+        Mockito.lenient().when(snapshotInfo1Mock.getDataStoreRefId()).thenReturn(null);
+        Mockito.lenient().when(snapshotInfo2Mock.getDataStoreRefId()).thenReturn(null);
         mockSnapshotInfos.add(snapshotInfo1Mock);
         mockSnapshotInfos.add(snapshotInfo2Mock);
     }

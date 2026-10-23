@@ -22,7 +22,9 @@ import com.google.gson.annotations.SerializedName;
 import com.cloud.serializer.Param;
 import org.apache.cloudstack.api.BaseResponse;
 
-public class SnapshotDeletionResponse extends SuccessResponse {
+public class SnapshotDeletionResponse extends BaseResponse {
+    @SerializedName("success") @Param(description = "Diagnosis completed successfully")
+    private final boolean success = true;
     @SerializedName("snapshotid") @Param(description = "Snapshot UUID")
     private String snapshotId;
     @SerializedName("name") @Param(description = "Snapshot name")
@@ -36,7 +38,12 @@ public class SnapshotDeletionResponse extends SuccessResponse {
     @SerializedName("reference") @Param(description = "Store references in the selected scope", responseObject = Reference.class)
     private final List<Reference> references = new ArrayList<>();
 
+    public SnapshotDeletionResponse() {
+        setObjectName("deletesnapshotresponse");
+    }
+
     public SnapshotDeletionResponse(String snapshotId, String name, String state, String zoneId) {
+        this();
         this.snapshotId = snapshotId;
         this.name = name;
         this.state = state;

@@ -11,6 +11,8 @@
 import { shallowMount } from '@vue/test-utils'
 import Recovery from '@/views/storage/SnapshotDeletionRecovery.vue'
 import { getAPI, postAPI } from '@/api'
+import storageSection from '@/config/section/storage'
+jest.mock('@/store', () => ({ getters: { apis: {}, userInfo: {} } }))
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 const id = '00000000-0000-0000-0000-000000000001'
 const zoneid = '00000000-0000-0000-0000-000000000002'
@@ -101,4 +103,16 @@ test('project change disables execution and ignores diagnosis', async () => {
   expect(wrapper.vm.dialogCurrent()).toBe(false)
   await wrapper.vm.recover()
   expect(postAPI).toHaveBeenCalledTimes(1)
+})
+
+test('recovery action belongs only to the snapshot list and preserves normal detail deletion', () => {
+  const snapshot = storageSection.children.find(x => x.name === 'snapshot')
+  const volume = storageSection.children.find(x => x.name === 'volume')
+  expect(volume.actions.some(x => x.label === 'label.snapshot.recovery')).toBe(false)
+  const action = snapshot.actions.find(x => x.label === 'label.snapshot.recovery')
+  expect(action.listView).toBe(true)
+  expect(action.dataView).not.toBe(true)
+  const normal = snapshot.actions.find(x => x.label === 'label.action.delete.snapshot')
+  expect(normal.dataView).toBe(true)
+  expect(normal.groupAction).toBe(true)
 })

@@ -982,6 +982,8 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
     }
 
     @Override
+    @DB
+    @ActionEvent(eventType = EventTypes.EVENT_SNAPSHOT_DELETE, eventDescription = "deleting snapshot", async = true)
     public boolean deleteSnapshot(long snapshotId, Long zoneId) {
         return deleteSnapshot(snapshotId, zoneId, null);
     }
@@ -1022,38 +1024,16 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         if (strategy == null) {
             throw new CloudRuntimeException("Unable to find a deletion strategy for snapshot " + snapshot.getUuid());
         }
-        boolean recovery = originalState == Snapshot.State.Destroyed || refs.stream()
-                .anyMatch(ref -> ref.getState() == ObjectInDataStoreStateMachine.State.Destroying);
-        java.util.Map<Long, Long> chargedRefs = new java.util.HashMap<>();
-        for (SnapshotDataStoreVO ref : refs) {
-            if (ref.getRole() != DataStoreRole.Primary && (ref.getState() == ObjectInDataStoreStateMachine.State.Ready
-                    || ref.getState() == ObjectInDataStoreStateMachine.State.Destroying)) {
-                chargedRefs.put(ref.getId(), ref.getPhysicalSize());
-            }
-        }
+        boolean visibleCopy = refs.stream().anyMatch(SnapshotDataStoreVO::isDisplay);
         boolean result;
         try {
             result = strategy.deleteSnapshot(snapshotId, zoneId);
         } finally {
-            // Account only for references actually settled, including partial success.
-            // A retry excludes already destroyed references and cannot charge them twice.
-            for (java.util.Map.Entry<Long, Long> ref : chargedRefs.entrySet()) {
-                if (!recovery && snapshotDeletionReferenceSettled(_snapshotStoreDao.findById(ref.getKey()))) {
-                    _resourceLimitMgr.decrementResourceCount(snapshot.getAccountId(), ResourceType.secondary_storage, ref.getValue());
-                }
-            }
-            SnapshotVO after = _snapshotDao.findById(snapshotId);
-            if ((after == null || after.getState() == Snapshot.State.Destroyed)
-                    && !recovery && originalState != Snapshot.State.Error && originalState != Snapshot.State.Destroyed) {
-                annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshot.getUuid());
-                _resourceLimitMgr.decrementResourceCount(snapshot.getAccountId(), ResourceType.snapshot);
-            }
-            if (recovery) {
-                // Historic failures may have already changed counters. Do not guess
-                // whether a Destroying reference was previously charged/decremented.
-                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
-                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
-            }
+            // Creation, old failed deletions and retries may have used different
+            // logical/physical size bases. Reconcile only these two owner counters
+            // from surviving records instead of subtracting an inferred amount.
+            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
+            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
         }
         boolean settled = getStoreRefsAndZonesForSnapshotDelete(snapshotId, zoneId).first().stream()
                 .allMatch(this::snapshotDeletionReferenceSettled);
@@ -1061,7 +1041,13 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             logger.warn("Snapshot {} deletion left unsettled references in zone {}", snapshot.getUuid(), zoneId);
             return false;
         }
-        if (result && (originalState == Snapshot.State.BackedUp || originalState == Snapshot.State.Destroying)) {
+        SnapshotVO after = _snapshotDao.findById(snapshotId);
+        if (result && (after == null || after.getState() == Snapshot.State.Destroyed)) {
+            annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshot.getUuid());
+        }
+        // Historic invisible leftovers already reported logical deletion. A retry
+        // of a newly failed visible copy still publishes its eventual completion.
+        if (result && visibleCopy && (originalState == Snapshot.State.BackedUp || originalState == Snapshot.State.Destroying)) {
             for (Long deletedZone : scope.second()) {
                 UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_DELETE, snapshot.getAccountId(), deletedZone, snapshotId,
                         snapshot.getName(), null, null, 0L, snapshot.getClass().getName(), snapshot.getUuid());

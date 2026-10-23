@@ -697,15 +697,12 @@ public class SnapshotManagerTest {
         Mockito.verify(snapshotStoreDao).update(TEST_SNAPSHOTDATASTORE_ID, snapshotStoreMock);
     }
     @Test
-    public void deletionChargesEachSettledReferenceAndSnapshotOnlyOnce() {
+    public void deletionReconcilesOnlyAffectedOwnerCountersOnce() {
         SnapshotManagerImpl manager = Mockito.spy(_snapshotMgr);
         Mockito.doReturn(snapshotMock).when(manager).validateSnapshotDeletion(TEST_SNAPSHOT_ID);
         Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp, Snapshot.State.Destroyed);
         Mockito.when(snapshotMock.getAccountId()).thenReturn(10L);
-        Mockito.when(snapshotStoreMock.getId()).thenReturn(21L);
-        Mockito.when(snapshotStoreMock.getState()).thenReturn(org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine.State.Ready);
-        Mockito.when(snapshotStoreMock.getRole()).thenReturn(DataStoreRole.Image);
-        Mockito.when(snapshotStoreMock.getPhysicalSize()).thenReturn(100L);
+        Mockito.when(snapshotMock.getDomainId()).thenReturn(1L);
         Mockito.doReturn(new Pair<>(List.of(snapshotStoreMock), List.of(1L)), new Pair<>(Collections.emptyList(), List.of(1L)))
                 .when(manager).getStoreRefsAndZonesForSnapshotDelete(TEST_SNAPSHOT_ID, null);
         Mockito.when(_storageStrategyFactory.getSnapshotStrategy(snapshotMock, null, SnapshotOperation.DELETE)).thenReturn(snapshotStrategy);
@@ -713,8 +710,9 @@ public class SnapshotManagerTest {
         try (MockedStatic<UsageEventUtils> usage = Mockito.mockStatic(UsageEventUtils.class)) {
             Assert.assertTrue(manager.deleteSnapshotWithLock(TEST_SNAPSHOT_ID, null, null));
         }
-        Mockito.verify(_resourceLimitMgr).decrementResourceCount(10L, ResourceType.secondary_storage, 100L);
-        Mockito.verify(_resourceLimitMgr).decrementResourceCount(10L, ResourceType.snapshot);
+        Mockito.verify(_resourceLimitMgr).recalculateResourceCount(10L, 1L, ResourceType.snapshot.getOrdinal());
+        Mockito.verify(_resourceLimitMgr).recalculateResourceCount(10L, 1L, ResourceType.secondary_storage.getOrdinal());
+        Mockito.verifyNoMoreInteractions(_resourceLimitMgr);
     }
 
     @Test
@@ -722,9 +720,7 @@ public class SnapshotManagerTest {
         SnapshotManagerImpl manager = Mockito.spy(_snapshotMgr);
         Mockito.doReturn(snapshotMock).when(manager).validateSnapshotDeletion(TEST_SNAPSHOT_ID);
         Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp);
-        Mockito.when(snapshotStoreMock.getId()).thenReturn(21L);
         Mockito.when(snapshotStoreMock.getState()).thenReturn(org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine.State.Destroying);
-        Mockito.when(snapshotStoreMock.getRole()).thenReturn(DataStoreRole.Image);
         Mockito.doReturn(new Pair<>(List.of(snapshotStoreMock), List.of(1L))).when(manager).getStoreRefsAndZonesForSnapshotDelete(TEST_SNAPSHOT_ID, null);
         Mockito.when(_storageStrategyFactory.getSnapshotStrategy(snapshotMock, null, SnapshotOperation.DELETE)).thenReturn(snapshotStrategy);
         Mockito.when(snapshotStrategy.deleteSnapshot(TEST_SNAPSHOT_ID, null)).thenReturn(false);
@@ -740,6 +736,35 @@ public class SnapshotManagerTest {
         Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp);
         Mockito.doReturn(new Pair<>(Collections.emptyList(), Collections.emptyList())).when(manager).getStoreRefsAndZonesForSnapshotDelete(TEST_SNAPSHOT_ID, null);
         manager.deleteSnapshotWithLock(TEST_SNAPSHOT_ID, null, "stale-revision");
+    }
+
+    @Test
+    public void zoneDeletionSelectsOnlyReferencesInRequestedZone() {
+        SnapshotDataStoreVO other = Mockito.mock(SnapshotDataStoreVO.class);
+        Mockito.when(snapshotStoreMock.getDataStoreId()).thenReturn(11L);
+        Mockito.when(snapshotStoreMock.getRole()).thenReturn(DataStoreRole.Image);
+        Mockito.when(other.getDataStoreId()).thenReturn(22L);
+        Mockito.when(other.getRole()).thenReturn(DataStoreRole.Image);
+        Mockito.when(snapshotStoreDao.findBySnapshotIdWithNonDestroyedState(TEST_SNAPSHOT_ID)).thenReturn(List.of(snapshotStoreMock, other));
+        Mockito.when(dataCenterDao.findById(7L)).thenReturn(dataCenterVOMock);
+        Mockito.when(dataStoreManagerMock.getStoreZoneId(11L, DataStoreRole.Image)).thenReturn(7L);
+        Mockito.when(dataStoreManagerMock.getStoreZoneId(22L, DataStoreRole.Image)).thenReturn(8L);
+        Pair<List<SnapshotDataStoreVO>, List<Long>> scope = _snapshotMgr.getStoreRefsAndZonesForSnapshotDelete(TEST_SNAPSHOT_ID, 7L);
+        Assert.assertEquals(List.of(snapshotStoreMock), scope.first());
+        Assert.assertFalse(scope.first().contains(other));
+    }
+
+    @Test(expected = InvalidParameterValueException.class)
+    public void destroyedSnapshotStillValidatesZone() {
+        Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.Destroyed);
+        _snapshotMgr.deleteSnapshotWithLock(TEST_SNAPSHOT_ID, 777L, null);
+    }
+
+    @Test(expected = com.cloud.exception.PermissionDeniedException.class)
+    public void destroyedSnapshotStillChecksOwnerBeforeDeletionLock() {
+        Mockito.doThrow(new com.cloud.exception.PermissionDeniedException("other owner"))
+                .when(_accountMgr).checkAccess(Mockito.any(Account.class), Mockito.isNull(), Mockito.eq(true), Mockito.eq(snapshotMock));
+        _snapshotMgr.deleteSnapshot(TEST_SNAPSHOT_ID, null);
     }
 
 }

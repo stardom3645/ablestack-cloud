@@ -455,8 +455,10 @@ public class DefaultSnapshotStrategy extends SnapshotStrategyBase {
                 snapshotStoreDao.updateDisplayForSnapshotStoreRole(snapshotVo.getId(), dataStore.getId(), dataStore.getRole(), false);
             } else {
                 SnapshotDataStoreVO reference = snapshotStoreDao.findById(snapshotInfo.getDataStoreRefId());
-                reference.setDisplay(false);
-                snapshotStoreDao.update(reference.getId(), reference);
+                if (reference != null) {
+                    reference.setDisplay(false);
+                    snapshotStoreDao.update(reference.getId(), reference);
+                }
             }
             if (isLastSnapshotRef && (snapshotVo.getState() == Snapshot.State.BackedUp || snapshotVo.getState() == Snapshot.State.Destroying)) {
                 snapshotObject.processEvent(Snapshot.Event.OperationSucceeded);

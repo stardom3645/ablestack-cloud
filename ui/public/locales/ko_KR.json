@@ -9408,5 +9408,6 @@
   "message.snapshot.recovery.invalid.uuid": "올바른 스냅샷/Zone UUID를 입력하세요.",
   "message.snapshot.recovery.context.changed": "화면 또는 사용자 범위가 변경됐습니다. 다시 진단하세요.",
   "message.snapshot.recovery.failed": "삭제 진단 또는 재처리에 실패했습니다. 대상 상태와 작업 결과를 확인하세요.",
-  "message.snapshot.recovery.unknown": "작업 결과를 확인하지 못했습니다. 자동 재제출하지 않습니다. 기존 작업 결과를 확인하세요."
+  "message.snapshot.recovery.unknown": "작업 결과를 확인하지 못했습니다. 자동 재제출하지 않습니다. 기존 작업 결과를 확인하세요.",
+  "label.snapshot.id": "스냅샷 UUID"
 }
