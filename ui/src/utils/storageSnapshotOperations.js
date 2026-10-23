@@ -24,7 +24,7 @@ export function snapshotSecurityReplaced (next, before) {
 export const operationScopeKey = scope => md5(scope) // Namespace only; never an authorization decision.
 function persist () {
   try {
-    const entries = Object.values(storageSnapshotOperations).map(({ id, scope, api, target, keys, status, jobid, requestid, created, error, result }) => ({ id, scope, api, target, keys, status, jobid, requestid, created, error, result: result ? { jobstatus: result.jobstatus } : null }))
+    const entries = Object.values(storageSnapshotOperations).map(({ id, scope, api, target, keys, status, jobid, requestid, created, error, dismissed, result }) => ({ id, scope, api, target, keys, status, jobid, requestid, created, error, dismissed, result: result ? { jobstatus: result.jobstatus } : null }))
     const pending = entries.filter(entry => ['checking', 'submitting', 'accepted', 'unknown'].includes(entry.status))
     const finished = entries.filter(entry => !['checking', 'submitting', 'accepted', 'unknown'].includes(entry.status)).slice(-100)
     sessionStorage.setItem(storageKey, JSON.stringify([...pending, ...finished]))
@@ -46,10 +46,10 @@ function requestUuid () {
   const hex = [...bytes].map(x => x.toString(16).padStart(2, '0')).join('')
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
-const active = status => ['checking', 'submitting', 'accepted', 'unknown'].includes(status)
+export const snapshotOperationActive = status => ['checking', 'submitting', 'accepted', 'unknown'].includes(status)
 export function snapshotOperationBusy (scope, keys) {
   const hash = operationScopeKey(scope)
-  return Object.values(storageSnapshotOperations).some(entry => entry.scope === hash && active(entry.status) && entry.keys.some(key => keys.includes(key)))
+  return Object.values(storageSnapshotOperations).some(entry => entry.scope === hash && snapshotOperationActive(entry.status) && entry.keys.some(key => keys.includes(key)))
 }
 function setState (entry, status, error = '') { entry.status = status; entry.error = error; persist() }
 function resultConfirmed (api, result, forceExpected) {
@@ -137,4 +137,13 @@ export function clearStorageSnapshotOperations () {
   tracker.clear(); contexts.clear()
   Object.keys(storageSnapshotOperations).forEach(id => delete storageSnapshotOperations[id])
   try { sessionStorage.removeItem(storageKey) } catch (_) { }
+}
+
+// Clearing notifications never releases an unresolved resource lease.
+export function dismissSnapshotNotifications (scope) {
+  const hash = operationScopeKey(scope)
+  for (const entry of Object.values(storageSnapshotOperations)) {
+    if (entry.scope === hash && !snapshotOperationActive(entry.status)) entry.dismissed = true
+  }
+  persist()
 }

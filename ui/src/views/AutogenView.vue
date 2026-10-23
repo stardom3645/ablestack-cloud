@@ -165,7 +165,6 @@
         </a-row>
       </a-card>
     </a-affix>
-    <StorageSnapshotOperations @refresh-data="fetchData" />
 
     <div v-show="showAction">
       <component
@@ -920,7 +919,8 @@ import { ref, reactive, toRaw, h } from 'vue'
 import { Button } from 'ant-design-vue'
 import { getAPI, postAPI, callAPI } from '@/api'
 import { freshSnapshotContext } from '@/utils/vmSnapshotList'
-import StorageSnapshotOperations from '@/components/view/StorageSnapshotOperations.vue'
+import { scopedSnapshotOperations, snapshotOperationAffectsRoute } from '@/utils/storageSnapshotNotices'
+import { snapshotSecurityScope as storageSnapshotSecurityScope } from '@/utils/storageSnapshotContext'
 import { snapshotBusy, snapshotSubmissions, trackUnknownSnapshotSubmission } from '@/utils/vmSnapshotActions'
 import VmSnapshotSummary from '@/components/view/VmSnapshotSummary'
 import { mixinDevice } from '@/utils/mixin.js'
@@ -960,7 +960,6 @@ import { normalizeVmGroupName, isVmGroupNameAction, isVmGroupAction, vmGroupErro
 export default {
   name: 'Resource',
   components: {
-    StorageSnapshotOperations,
     Breadcrumb,
     MoldDialog,
     ResourceView,
@@ -1201,6 +1200,10 @@ export default {
     next()
   },
   watch: {
+    snapshotOperationCompletions (next, before = []) {
+      const previous = new Map(before.map(entry => [entry.id, entry.status]))
+      if (next.some(entry => previous.has(entry.id) && previous.get(entry.id) !== entry.status && ['complete', 'failed'].includes(entry.status) && snapshotOperationAffectsRoute(entry, this.$route))) this.fetchData({ irefresh: true })
+    },
     isStorageUi () { this.observeStorageHeader() },
     snapshotSecurityScope () {
       if (this.$route.meta?.name === 'vmgroup' || this.isSshKeyPairDetail) this.fetchData()
@@ -1261,6 +1264,7 @@ export default {
     }
   },
   computed: {
+    snapshotOperationCompletions () { return scopedSnapshotOperations(storageSnapshotSecurityScope(this.$store)).map(entry => ({ ...entry })) },
     isStorageUi () { return storageUiRoute(this.$route) },
     storageActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() },
     isSshKeyPairDetail () { return isSshKeyPairDetailRoute(this.$route) },

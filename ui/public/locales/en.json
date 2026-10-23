@@ -9503,5 +9503,15 @@
   "message.snapshot.action.job.confirm": "Verify the existing job UUID, operation and target before linking it.",
   "message.snapshot.action.job.mismatch": "The existing job operation or target does not match this request.",
   "label.snapshot.action.request.id": "Request UUID",
-  "label.snapshot.recovery.jobid": "Job ID"
+  "label.snapshot.recovery.jobid": "Job ID",
+  "label.snapshot.job.details": "Operation details",
+  "label.snapshot.job.target": "Target",
+  "label.snapshot.job.result": "View created resource",
+  "label.snapshot.job.identification": "Advanced · identification and recovery",
+  "message.snapshot.job.query.only": "Only the existing operation is queried. Resubmission stays blocked until its result is confirmed.",
+  "message.snapshot.job.force.complete": "Forced deletion completed database and physical cleanup.",
+  "message.snapshot.job.force.residual": "Database cleanup completed. Physical remnants may remain; check deletion recovery.",
+  "label.archive.snapshot": "Archive snapshot",
+  "label.copy.snapshot": "Copy snapshot",
+  "message.snapshot.job.result.unknown": "The result is unknown, which does not mean the operation failed. Check the existing operation result."
 }
