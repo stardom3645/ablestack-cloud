@@ -75,6 +75,8 @@
 </template>
 
 <script>
+import { snapshotSecurityScope, readSnapshotApiPermission, readSnapshotDiagnosis, copyTarget } from '@/utils/storageSnapshotContext'
+import { storageSnapshotOperations, submitSnapshotOperation, querySnapshotOperation } from '@/utils/storageSnapshotOperations'
 import { getAPI, postAPI } from '@/api'
 import storageDialogContext from '@/utils/storageDialogContext'
 import MoldDialogActions from '@/components/view/MoldDialogActions'
@@ -87,7 +89,7 @@ export default {
   emits: ['close-action', 'refresh-data'],
   props: { resource: { type: Object, default: () => ({}) } },
   data () {
-    return { force: false, executionResult: null, snapshotId: '', zoneId: '', preview: null, previewScope: null, acknowledged: false, busy: false, error: '', completed: false, pendingJob: '', blockedSubmission: false, sequence: 0 }
+    return { operationId: '', force: false, executionResult: null, snapshotId: '', zoneId: '', preview: null, previewScope: null, acknowledged: false, busy: false, error: '', completed: false, pendingJob: '', blockedSubmission: false, sequence: 0 }
   },
   computed: {
     canForce () { return this.$store.getters.userInfo?.roletype === 'Admin' },
@@ -147,14 +149,28 @@ export default {
       this.error = ''
       try {
         this.blockedSubmission = true
-        const json = await postAPI('deleteSnapshot', { ...this.previewScope, expectedscopehash: this.preview.scopehash })
-        const response = json.deletesnapshotresponse
-        if (!response.jobid) throw new Error(this.$t('message.snapshot.recovery.unknown'))
-        this.pendingJob = response.jobid
+        const scope = copyTarget(this.previewScope); const expected = this.preview.scopehash; const store = this.$store; const security = snapshotSecurityScope(store); const sequence = this.sequence
+        const operation = await submitSnapshotOperation({
+          api: 'deleteSnapshot',
+          scope: security,
+          target: { id: scope.id, name: this.preview.name, zoneid: scope.zoneid || 'all', force: scope.force === true },
+          keys: ['snapshot:' + scope.id],
+          current: () => this.dialogCurrent() && sequence === this.sequence && snapshotSecurityScope(store) === security,
+          securityCurrent: () => snapshotSecurityScope(store) === security,
+          validate: async () => {
+            await readSnapshotApiPermission('deleteSnapshot')
+            const latest = await readSnapshotDiagnosis('deleteSnapshot', scope, () => this.dialogCurrent() && sequence === this.sequence)
+            if (latest.snapshotid !== scope.id || latest.scopehash !== expected || !!latest.force !== !!scope.force) throw new Error('message.snapshot.action.changed')
+            return { ...scope, expectedscopehash: expected }
+          }
+        })
+        this.operationId = operation.id
+        if (!operation.jobid) throw Object.assign(new Error(this.$t(operation.error || 'message.snapshot.recovery.unknown')), { submissionPrevented: operation.status === 'failed' })
+        this.pendingJob = operation.jobid
         this.blockedSubmission = false
         await this.finishJob()
       } catch (error) {
-        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        if (error.submissionPrevented || (error?.response?.status >= 400 && error?.response?.status < 500)) {
           this.blockedSubmission = false
           this.preview = null
           this.acknowledged = false
@@ -164,7 +180,15 @@ export default {
     },
     async finishJob () {
       try {
-        const result = await this.waitForJob(this.pendingJob, this.sequence)
+        const operation = storageSnapshotOperations[this.operationId]
+        let result
+        if (operation) {
+          const store = this.$store; const security = snapshotSecurityScope(store)
+          const job = await (operation.status === 'unknown' ? querySnapshotOperation(operation, () => snapshotSecurityScope(store) === security) : operation.completion)
+          if (job?.jobstatus === 2) throw Object.assign(new Error(job.jobresult?.errortext || this.$t('message.snapshot.recovery.failed')), { terminal: true })
+          if (job?.jobstatus !== 1 || operation.status !== 'complete') throw new Error(this.$t('message.snapshot.recovery.unknown'))
+          result = job.jobresult?.deletesnapshotresponse || job.jobresult
+        } else result = await this.waitForJob(this.pendingJob, this.sequence)
         if (!this.dialogCurrent()) return
         if (this.previewScope?.force && (!result?.force || result.dbcleanupcomplete !== true)) {
           throw new Error(this.$t('message.snapshot.recovery.unknown'))

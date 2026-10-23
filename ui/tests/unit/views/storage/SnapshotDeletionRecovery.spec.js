@@ -8,9 +8,11 @@
 // distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations.
+import '../../utils/cryptoRandom'
 import { shallowMount } from '@vue/test-utils'
 import Recovery from '@/views/storage/SnapshotDeletionRecovery.vue'
 import { getAPI, postAPI } from '@/api'
+import { clearStorageSnapshotOperations } from '@/utils/storageSnapshotOperations'
 import storageSection from '@/config/section/storage'
 jest.mock('@/store', () => ({ getters: { apis: {}, userInfo: {} } }))
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
@@ -25,10 +27,15 @@ function mount (roletype) {
 async function diagnosed () {
   mount(); await wrapper.setData({ snapshotId: id, zoneId: zoneid })
   postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'diagnosis' } })
-  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: preview } })
+  getAPI.query.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: preview } })
   await wrapper.vm.diagnose()
 }
-beforeEach(() => { getAPI.mockReset(); postAPI.mockReset() })
+beforeEach(() => {
+  clearStorageSnapshotOperations(); getAPI.mockReset(); postAPI.mockReset()
+  const query = jest.fn()
+  getAPI.mockImplementation((api, args) => api === 'listApis' ? Promise.resolve({ listapisresponse: { api: [{ name: args.name }] } }) : query(api, args))
+  getAPI.query = query
+})
 afterEach(() => wrapper?.unmount())
 
 test('diagnosis does not perform deletion and requires confirmation', async () => {
@@ -56,31 +63,31 @@ test('late diagnosis cannot overwrite a new target', async () => {
 })
 test('execution submits only the inspected scope and revision once', async () => {
   await diagnosed(); await wrapper.setData({ acknowledged: true })
-  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'delete-job' } })
-  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: preview }).mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'delete-job' } })
+  getAPI.query.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
   const first = wrapper.vm.recover(); await wrapper.vm.recover(); await first
-  expect(postAPI).toHaveBeenLastCalledWith('deleteSnapshot', { id, zoneid, expectedscopehash: 'revision' })
-  expect(postAPI).toHaveBeenCalledTimes(2)
+  expect(postAPI).toHaveBeenLastCalledWith('deleteSnapshot', { id, zoneid, expectedscopehash: 'revision', customjobid: expect.any(String) }, { preserveOnFailure: true })
+  expect(postAPI).toHaveBeenCalledTimes(3)
   expect(wrapper.vm.completed).toBe(true)
   expect(wrapper.emitted('refresh-data')).toHaveLength(1)
 })
 test('unknown job results retain the job and query again without resubmitting', async () => {
   await diagnosed(); await wrapper.setData({ acknowledged: true })
-  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'delete-job' } })
-  getAPI.mockRejectedValueOnce(new Error('network failure'))
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: preview }).mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'delete-job' } })
+  getAPI.query.mockRejectedValue({ response: { status: 403 } })
   await wrapper.vm.recover()
   expect(wrapper.vm.pendingJob).toBe('delete-job')
   expect(wrapper.vm.canRecover).toBe(false)
   await wrapper.vm.recover()
-  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
+  getAPI.query.mockReset().mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
   await wrapper.vm.checkResult()
-  expect(postAPI).toHaveBeenCalledTimes(2)
+  expect(postAPI).toHaveBeenCalledTimes(3)
   expect(wrapper.vm.completed).toBe(true)
 })
 test('terminal job failure clears confirmation and requires a new diagnosis', async () => {
   await diagnosed(); await wrapper.setData({ acknowledged: true })
-  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'delete-job' } })
-  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 2, jobresult: { errortext: 'store unavailable' } } })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: preview }).mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'delete-job' } })
+  getAPI.query.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 2, jobresult: { errortext: 'store unavailable' } } })
   await wrapper.vm.recover()
   expect(wrapper.vm.pendingJob).toBe('')
   expect(wrapper.vm.preview).toBeNull()
@@ -88,10 +95,10 @@ test('terminal job failure clears confirmation and requires a new diagnosis', as
 })
 test('unknown submission without a job id cannot resubmit', async () => {
   await diagnosed(); await wrapper.setData({ acknowledged: true })
-  postAPI.mockRejectedValueOnce(new Error('connection closed'))
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: preview }).mockRejectedValueOnce(new Error('connection closed'))
   await wrapper.vm.recover(); await wrapper.vm.recover()
   expect(wrapper.vm.canRecover).toBe(false)
-  expect(postAPI).toHaveBeenCalledTimes(2)
+  expect(postAPI).toHaveBeenCalledTimes(3)
 })
 test('invalid UUID is rejected before any API request', async () => {
   mount(); await wrapper.setData({ snapshotId: 'wrong' }); await wrapper.vm.diagnose()
@@ -127,10 +134,10 @@ test('forced diagnosis and execution preserve explicit force mode and confirmati
   expect(postAPI).toHaveBeenCalledWith('deleteSnapshot', { id, force: true, dryrun: true })
   expect(wrapper.vm.canRecover).toBe(false)
   await wrapper.setData({ acknowledged: true })
-  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
-  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { deletesnapshotresponse: { force: true, state: 'Destroyed', physicalcleanupcomplete: true, dbcleanupcomplete: true } } } })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { ...preview, force: true } }).mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
+  getAPI.query.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { deletesnapshotresponse: { force: true, state: 'Destroyed', physicalcleanupcomplete: true, dbcleanupcomplete: true } } } })
   await wrapper.vm.recover()
-  expect(postAPI).toHaveBeenLastCalledWith('deleteSnapshot', { id, force: true, expectedscopehash: 'revision' })
+  expect(postAPI).toHaveBeenLastCalledWith('deleteSnapshot', { id, force: true, expectedscopehash: 'revision', customjobid: expect.any(String) }, { preserveOnFailure: true })
   expect(wrapper.vm.completed).toBe(true)
   expect(wrapper.vm.dbOnlyResult).toBe(false)
   expect(wrapper.vm.preview.state).toBe('Destroyed')
@@ -138,8 +145,8 @@ test('forced diagnosis and execution preserve explicit force mode and confirmati
 })
 test('database-only forced result is retained and displayed as unverified physical cleanup', async () => {
   await forcedDiagnosis(); await wrapper.setData({ acknowledged: true })
-  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
-  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { deletesnapshotresponse: { force: true, state: 'Destroyed', physicalcleanupcomplete: false, dbcleanupcomplete: true, pendingcleanup: 1, cleanupresult: [{ referenceid: 7, role: 'Primary', action: 'DB_ONLY' }] } } } })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { ...preview, force: true } }).mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
+  getAPI.query.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { deletesnapshotresponse: { force: true, state: 'Destroyed', physicalcleanupcomplete: false, dbcleanupcomplete: true, pendingcleanup: 1, cleanupresult: [{ referenceid: 7, role: 'Primary', action: 'DB_ONLY' }] } } } })
   await wrapper.vm.recover()
   expect(wrapper.vm.dbOnlyResult).toBe(true)
   expect(wrapper.vm.executionResult.pendingcleanup).toBe(1)
@@ -169,8 +176,8 @@ test('legacy normal response cannot authorize a forced operation', async () => {
 
 test('a normal success response cannot claim completion of forced database cleanup', async () => {
   await forcedDiagnosis(); await wrapper.setData({ acknowledged: true })
-  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
-  getAPI.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
+  postAPI.mockResolvedValueOnce({ deletesnapshotresponse: { ...preview, force: true } }).mockResolvedValueOnce({ deletesnapshotresponse: { jobid: 'force-job' } })
+  getAPI.query.mockResolvedValueOnce({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
   await wrapper.vm.recover()
   expect(wrapper.vm.completed).toBe(false)
   expect(wrapper.vm.pendingJob).toBe('force-job')

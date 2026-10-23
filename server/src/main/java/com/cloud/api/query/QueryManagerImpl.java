@@ -709,6 +709,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
     private InternalBackupServiceJobDao internalBackupServiceJobDao;
 
     @Inject
+    private com.cloud.vm.snapshot.dao.VMSnapshotDao storageVMSnapshotDao;
+
+    @Inject
     private BackupDao backupDao;
 
     /*
@@ -2712,6 +2715,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         List<VolumeResponse> volumeResponses = ViewResponseHelper.createVolumeResponse(respView, result.first().toArray(new VolumeJoinVO[0]));
+
+        if (cmd.isIncludeSnapshotContext()) {
+            for (VolumeResponse item : volumeResponses) {
+                result.first().stream().filter(row -> row.getUuid().equals(item.getId())).findFirst()
+                        .ifPresent(row -> item.setSnapshotContext(snapshotOperationContext(row.getId())));
+            }
+        }
 
         for (VolumeResponse vr : volumeResponses) {
             String poolId = vr.getStoragePoolId();
@@ -6199,6 +6209,32 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         return publicIpQuarantineDao.searchAndCount(searchCriteria, null, showRemoved);
     }
 
+    private Map<String, Object> snapshotOperationContext(Long volumeId) {
+        com.cloud.storage.VolumeVO volume = volumeId == null ? null : volumeDao.findById(volumeId);
+        com.cloud.vm.VMInstanceVO vm = null;
+        if (volume != null) {
+            try {
+                accountMgr.checkAccess(CallContext.current().getCallingAccount(), null, false, volume);
+                vm = volume.getInstanceId() == null ? null : _vmInstanceDao.findById(volume.getInstanceId());
+                if (vm != null) { accountMgr.checkAccess(CallContext.current().getCallingAccount(), null, false, vm); }
+            } catch (com.cloud.exception.PermissionDeniedException denied) {
+                // Retained snapshots can remain recoverable after the source changes owner.
+                volume = null;
+                vm = null;
+            }
+        }
+        boolean vmSnapshots = vm != null && !storageVMSnapshotDao.findByVm(vm.getId()).isEmpty();
+        boolean restoring = false;
+        if (vm != null) {
+            for (org.apache.cloudstack.backup.Backup backup : backupDao.listByVmId(null, vm.getId())) {
+                if (backup.getStatus() != org.apache.cloudstack.backup.Backup.Status.Restoring) { continue; }
+                org.apache.cloudstack.backup.BackupOfferingVO offering = backupOfferingDao.findByIdIncludingRemoved(backup.getBackupOfferingId());
+                if (offering != null && org.apache.cloudstack.backup.BackupProviderNameUtils.isNetBackupFamily(offering.getProvider())) { restoring = true; }
+            }
+        }
+        return com.cloud.storage.snapshot.SnapshotOperationContext.describe(volume, vm, vmSnapshots, restoring);
+    }
+
     @Override
     public ListResponse<SnapshotResponse> listSnapshots(ListSnapshotsCmd cmd) {
         Account caller = CallContext.current().getCallingAccount();
@@ -6213,6 +6249,12 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             respView = ResponseView.Full;
         }
         List<SnapshotResponse> templateResponses = ViewResponseHelper.createSnapshotResponse(respView, cmd.isShowUnique(), result.first().toArray(new SnapshotJoinVO[0]));
+        if (cmd.isIncludeSnapshotContext()) {
+            for (SnapshotResponse item : templateResponses) {
+                result.first().stream().filter(row -> row.getUuid().equals(item.getSnapshotId())).findFirst()
+                        .ifPresent(row -> item.setSnapshotContext(snapshotOperationContext(row.getVolumeId())));
+            }
+        }
         response.setResponses(templateResponses, result.second());
         return response;
     }

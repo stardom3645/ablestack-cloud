@@ -165,10 +165,12 @@
         </a-row>
       </a-card>
     </a-affix>
+    <StorageSnapshotOperations @refresh-data="fetchData" />
 
     <div v-show="showAction">
       <component
         v-if="showAction && currentAction.selfManagedDialog"
+        :key="currentAction.storageSnapshotMode ? storageActionGeneration : undefined"
         ref="selfManagedAction"
         :is="currentAction.component"
         :resource="resource"
@@ -177,7 +179,7 @@
         @refresh-data="fetchData"
         @close-action="closeAction"
       />
-      <keep-alive v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
+      <keep-alive :max="isStorageUi ? 1 : undefined" v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
         <component
           :is="isStorageUi ? 'MoldDialog' : 'a-modal'"
           :size="isStorageUi ? storageDialogSize(currentAction.api) : undefined"
@@ -207,8 +209,9 @@
               <question-circle-outlined />
             </a>
           </template>
-          <keep-alive>
+          <keep-alive :max="isStorageUi ? 1 : undefined">
             <component
+              :key="isStorageUi ? storageActionGeneration : undefined"
               :is="currentAction.component"
               :resource="resource"
               :loading="loading"
@@ -917,6 +920,7 @@ import { ref, reactive, toRaw, h } from 'vue'
 import { Button } from 'ant-design-vue'
 import { getAPI, postAPI, callAPI } from '@/api'
 import { freshSnapshotContext } from '@/utils/vmSnapshotList'
+import StorageSnapshotOperations from '@/components/view/StorageSnapshotOperations.vue'
 import { snapshotBusy, snapshotSubmissions, trackUnknownSnapshotSubmission } from '@/utils/vmSnapshotActions'
 import VmSnapshotSummary from '@/components/view/VmSnapshotSummary'
 import { mixinDevice } from '@/utils/mixin.js'
@@ -956,6 +960,7 @@ import { normalizeVmGroupName, isVmGroupNameAction, isVmGroupAction, vmGroupErro
 export default {
   name: 'Resource',
   components: {
+    StorageSnapshotOperations,
     Breadcrumb,
     MoldDialog,
     ResourceView,
@@ -990,6 +995,7 @@ export default {
   },
   data () {
     return {
+      storageActionGeneration: 0,
       apiName: '',
       loading: false,
       // IntervalLoading: false,
@@ -1177,11 +1183,13 @@ export default {
   },
   beforeRouteUpdate (to, from, next) {
     if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
+    if (to.path !== from.path && (storageUiRoute(from) || (from.meta?.name || from.name) === 'snapshot') && this.showAction) this.closeAction()
     this.currentPath = this.$route.fullPath
     next()
   },
   beforeRouteLeave (to, from, next) {
     if (this.$refs.selfManagedAction?.blocksNavigation) { next(false); return }
+    if ((storageUiRoute(from) || (from.meta?.name || from.name) === 'snapshot') && this.showAction) this.closeAction()
     console.log('DEBUG - Due to route change, ignoring results for any on-going API request', this.apiName)
     sourceToken.cancel()
     sourceToken.init()
@@ -1197,6 +1205,7 @@ export default {
     snapshotSecurityScope () {
       if (this.$route.meta?.name === 'vmgroup' || this.isSshKeyPairDetail) this.fetchData()
       if (['createVMSnapshot', 'revertToVMSnapshot', 'deleteVMSnapshot', 'createSnapshotFromVMSnapshot'].includes(this.currentAction.api)) this.closeAction()
+      if (this.showAction && (this.$route.meta?.name || this.$route.name) === 'snapshot') this.closeAction()
     },
     '$route' (to, from) {
       if (to.fullPath !== from.fullPath && !to.path.startsWith('/action/') && to?.query?.tab !== 'browser') {
@@ -1211,7 +1220,7 @@ export default {
           this.fetchData({ irefresh: true })
           return
         }
-        if (storageUiRoute(from) && this.showAction) this.closeAction()
+        if ((storageUiRoute(from) || (from.meta?.name || from.name) === 'snapshot') && this.showAction) this.closeAction()
         this.resetSelection()
         const page = Number(to.query.page)
         const pageSize = Number(to.query.pagesize)
@@ -2252,6 +2261,13 @@ export default {
       }
     },
     execAction (action, isGroupAction) {
+      if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
+      this.storageActionGeneration++
+      if (action.storageSnapshotMode) {
+        this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, storageSnapshotTargets: Object.freeze((isGroupAction ? this.selectedItems : [action.resource || this.resource]).filter(Boolean).map(row => Object.freeze({ ...row }))) }
+        this.resource = action.resource || {}; this.showAction = true
+        return
+      }
       if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       if (isSshKeyPairDetailRoute(this.$route) && !this.canExecuteSshKeyPairAction(action)) return
       this.actionTrigger = document.activeElement

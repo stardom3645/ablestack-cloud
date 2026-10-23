@@ -403,27 +403,16 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         if (Type.GROUP.name().equals(snapshot.getTypeDescription())) {
             throw new InvalidParameterValueException(String.format("The snapshot [%s] is part of a [%s] snapshots and cannot be reverted separately", snapshot, snapshot.getTypeDescription()));
         }
+        Account caller = CallContext.current().getCallingAccount();
+        _accountMgr.checkAccess(caller, null, true, snapshot);
         VolumeVO volume = _volsDao.findById(snapshot.getVolumeId());
-        if (volume.getState() != Volume.State.Ready) {
-            throw new InvalidParameterValueException("The volume is not in Ready state.");
-        }
-
-        Long instanceId = volume.getInstanceId();
+        if (volume != null) { _accountMgr.checkAccess(caller, null, true, volume); }
+        UserVmVO vm = volume == null || volume.getInstanceId() == null ? null : _vmDao.findById(volume.getInstanceId());
+        if (vm != null) { _accountMgr.checkAccess(caller, null, true, vm); }
+        String reason = SnapshotOperationContext.revertReason(volume, vm,
+                vm != null && !_vmSnapshotDao.findByVm(volume.getInstanceId()).isEmpty(), false);
+        if (!reason.isEmpty()) { throw new InvalidParameterValueException(reason + ": Snapshot source is not available for revert"); }
         validateNoBackupActivityOrHistoryForVolumeSnapshot(volume.getId(), "revert");
-
-        // If this volume is attached to an VM, then the VM needs to be in the stopped state
-        // in order to revert the volume
-        if (instanceId != null) {
-            UserVmVO vm = _vmDao.findById(instanceId);
-            if (vm.getState() != State.Stopped && vm.getState() != State.Shutdown) {
-                throw new InvalidParameterValueException("The Instance the specified disk is attached to is not in the shutdown state.");
-            }
-            // If target VM has associated VM snapshots then don't allow to revert from snapshot
-            List<VMSnapshotVO> vmSnapshots = _vmSnapshotDao.findByVm(instanceId);
-            if (vmSnapshots.size() > 0 && !Type.GROUP.name().equals(snapshot.getTypeDescription())) {
-                throw new InvalidParameterValueException("Unable to revert Snapshot for Instance, please remove Instance Snapshots before reverting Instance from Snapshot");
-            }
-        }
 
         DataStoreRole dataStoreRole = snapshotHelper.getDataStoreRole(snapshot);
 
@@ -2550,10 +2539,11 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
     public Snapshot allocSnapshot(Long volumeId, Long policyId, String snapshotName, Snapshot.LocationType locationType, Boolean isFromVmSnapshot, List<Long> zoneIds) throws ResourceAllocationException {
         Account caller = CallContext.current().getCallingAccount();
         VolumeInfo volume = volFactory.getVolume(volumeId);
-        supportedByHypervisor(volume, isFromVmSnapshot);
-
-        // Verify permissions
+        if (volume == null) { throw new InvalidParameterValueException("SOURCE_VOLUME_UNAVAILABLE: Unable to find snapshot source volume"); }
+        // Check ownership before exposing source constraints or allocating anything.
         _accountMgr.checkAccess(caller, null, true, volume);
+        validateNoBackupActivityOrHistoryForVolumeSnapshot(volumeId, "create snapshot");
+        supportedByHypervisor(volume, isFromVmSnapshot);
         Type snapshotType = getSnapshotType(policyId);
         Account owner = _accountMgr.getAccount(volume.getAccountId());
 

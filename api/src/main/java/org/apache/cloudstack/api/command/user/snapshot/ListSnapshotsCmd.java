@@ -34,6 +34,12 @@ import com.cloud.storage.Snapshot;
 @APICommand(name = "listSnapshots", description = "Lists all available Snapshots for the Account.", responseObject = SnapshotResponse.class, entityType = {
         Snapshot.class }, responseView = ResponseObject.ResponseView.Restricted, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSnapshotsCmd extends BaseListTaggedResourcesCmd {
+    @Parameter(name = "includesnapshotcontext", type = CommandType.BOOLEAN,
+            description = "Include current source volume and Instance snapshot-operation context for safe UI preflight")
+    private Boolean includeSnapshotContext;
+
+    public boolean isIncludeSnapshotContext() { return Boolean.TRUE.equals(includeSnapshotContext); }
+
 
 
     /////////////////////////////////////////////////////

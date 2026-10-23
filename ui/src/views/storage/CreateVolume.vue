@@ -17,6 +17,7 @@
 
 <template>
   <a-spin :spinning="loading">
+    <StorageSnapshotSafety v-if="snapshotSafetyTarget" :context="snapshotSafetyContext" :loading="snapshotSafetyLoading" :error="snapshotSafetyError" @refresh="refreshSnapshotSafety" />
     <div v-if="!isNormalUserOrProject && !submitHandler">
       <ownership-selection @fetch-owner="fetchOwnerOptions" />
     </div>
@@ -245,13 +246,16 @@
       </a-form-item>
       <MoldDialogActions v-if="!hideActions" :span="24" class="" :busy="loading">
         <a-button @click="closeModal">{{ $t('label.cancel') }}</a-button>
-        <a-button type="primary" ref="submit" :disabled="allocationBlocked || (createOnStorage && (storageLoading || storageFetchError || !selectedStoragePool))" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+        <a-button type="primary" ref="submit" :disabled="snapshotSafetyBlocked || allocationBlocked || (createOnStorage && (storageLoading || storageFetchError || !selectedStoragePool))" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
       </MoldDialogActions>
     </a-form>
   </a-spin>
 </template>
 
 <script>
+import { submitSnapshotOperation } from '@/utils/storageSnapshotOperations'
+import { snapshotSecurityScope, copyTarget } from '@/utils/storageSnapshotContext'
+import { storageSnapshotSafety } from '@/utils/storageSnapshotSafety'
 import storageDialogContext from '@/utils/storageDialogContext'
 import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { ref, reactive, toRaw } from 'vue'
@@ -271,7 +275,7 @@ import { allocationIntent, poolAcceptsIntent, readAllocationCapability, readAllo
 
 export default {
   name: 'CreateVolume',
-  mixins: [storageDialogContext, mixinForm],
+  mixins: [storageDialogContext, storageSnapshotSafety('createVolume', 'snapshot', vm => !!vm.resource?.intervaltype), mixinForm],
   components: {
     MoldDialogActions,
     AllocationSummary,
@@ -327,7 +331,7 @@ export default {
     explicitAllocation () { return allocationIntent(this.selectedDiskOffering) },
     allocationBlocked () {
       return (this.createOnStorage && !!this.explicitAllocation && (this.allocationLoading || this.allocationError || !this.allocationCap?.policies[this.explicitAllocation.policy])) ||
-        (this.createVolumeFromSnapshot && (this.snapshotAllocationLoading || this.snapshotAllocationError || !!this.explicitAllocation || !!allocationIntent(this.snapshotAllocation)))
+        (this.createVolumeFromSnapshot && (this.snapshotAllocationLoading || (this.snapshotAllocationError && this.snapshotSafetyContext?.source.sourceavailable !== false) || !!this.explicitAllocation || !!allocationIntent(this.snapshotAllocation)))
     },
     eligibleStoragePools () { return offeringStoragePools(this.storagePools, this.selectedDiskOffering).filter(pool => poolAcceptsIntent(pool, this.selectedDiskOffering)) },
     hasRuleStoragePools () { return storageTags(this.selectedDiskOffering?.tags).length > 0 && this.storagePools.some(pool => pool.state === 'Up' && pool.istagarule) },
@@ -533,8 +537,8 @@ export default {
         if (!this.createVolumeFromSnapshot) {
           this.form.diskofferingid = this.offerings[0]?.id || ''
         }
-        this.customDiskOffering = this.offerings[0]?.iscustomized || false
-        this.isCustomizedDiskIOps = this.offerings[0]?.iscustomizediops || false
+        this.customDiskOffering = !this.createVolumeFromSnapshot && (this.offerings[0]?.iscustomized || false)
+        this.isCustomizedDiskIOps = !this.createVolumeFromSnapshot && (this.offerings[0]?.iscustomizediops || false)
         if (this.offerings[0]?.encrypt) {
           this.fetchKmsKeys()
         } else {
@@ -605,8 +609,8 @@ export default {
       })
     },
     handleSubmit (e) {
-      if (this.loading || this.allocationBlocked || (this.createOnStorage && this.storageLoading)) return
-      this.formRef.value.validate().then(() => {
+      if (this.loading || this.snapshotSafetyBlocked || this.allocationBlocked || (this.createOnStorage && this.storageLoading)) return
+      this.formRef.value.validate().then(async () => {
         if (this.loading || (this.dialogCurrent && !this.dialogCurrent())) return
         if (this.createOnStorage && (this.storageFetchError || this.storageLoading || !this.selectedStoragePool)) {
           throw new Error(this.$t(this.storageFetchError ? 'message.volume.storage.failed' : 'message.volume.storage.select.matching'))
@@ -651,6 +655,38 @@ export default {
           : null
         delete values.deviceid
         this.loading = true
+        if (this.snapshotSafetyTarget) {
+          try {
+            const capturedAttachment = attachment ? copyTarget(attachment) : null
+            const store = this.$store; const security = snapshotSecurityScope(store)
+            const current = () => this.dialogCurrent() && snapshotSecurityScope(store) === security
+            const validateAttachment = async () => {
+              if (!capturedAttachment) return
+              const allowed = (await getAPI('listApis', { name: 'attachVolume' }, { preserveOnFailure: true })).listapisresponse?.api || []
+              const machines = (await getAPI('listVirtualMachines', { id: capturedAttachment.virtualmachineid, listall: true }, { preserveOnFailure: true })).listvirtualmachinesresponse?.virtualmachine || []
+              const vm = machines[0]
+              if (!current() || !allowed.some(api => api.name === 'attachVolume') || machines.length !== 1 || vm.id !== capturedAttachment.virtualmachineid || !['Running', 'Stopped'].includes(vm.state) || vm.zoneid !== values.zoneid || (vm.projectid || '') !== (values.projectid || '') || (!values.projectid && (vm.account !== values.account || vm.domainid !== values.domainid))) throw new Error(this.$t('message.snapshot.action.changed'))
+            }
+            const operation = await this.submitSnapshotSafely(values, validateAttachment)
+            if (capturedAttachment && operation.jobid) {
+              const result = await operation.completion
+              if (operation.status !== 'complete' || !current()) return
+              const body = result.jobresult?.createvolumeresponse || result.jobresult
+              const created = body.volume
+              await submitSnapshotOperation({
+                api: 'attachVolume',
+                scope: security,
+                target: { id: created.id, name: created.name },
+                keys: ['volume:' + created.id, 'vm:' + capturedAttachment.virtualmachineid],
+                current,
+                securityCurrent: () => snapshotSecurityScope(store) === security,
+                validate: async () => { await validateAttachment(); return { ...capturedAttachment, id: created.id } }
+              })
+            }
+            if (operation.jobid && current()) this.closeModal()
+          } finally { this.loading = false }
+          return
+        }
         postAPI('createVolume', values).then(response => {
           this.$pollJob({
             jobId: response.createvolumeresponse.jobid,

@@ -68,7 +68,6 @@ import org.apache.cloudstack.backup.dao.BackupDao;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
-import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotDataFactory;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotService;
@@ -780,6 +779,29 @@ public class SnapshotManagerTest {
                 .getStoreRefsAndZonesForSnapshotDelete(TEST_SNAPSHOT_ID, null);
         Assert.assertThrows(InvalidParameterValueException.class, () -> manager.deleteSnapshotWithLock(TEST_SNAPSHOT_ID, null, null));
         Mockito.verify(snapshotStrategy, Mockito.never()).deleteSnapshot(Mockito.anyLong(), Mockito.any());
+    }
+
+    @Test(expected = com.cloud.exception.PermissionDeniedException.class)
+    public void testRevertRejectsChangedSourceVolumeOwner() {
+        Mockito.doThrow(new com.cloud.exception.PermissionDeniedException("Source ownership changed"))
+                .when(_accountMgr).checkAccess(Mockito.any(Account.class), Mockito.isNull(), Mockito.eq(true), Mockito.eq(volumeMock));
+        _snapshotMgr.revertSnapshot(TEST_SNAPSHOT_ID);
+    }
+
+    @Test(expected = com.cloud.exception.PermissionDeniedException.class)
+    public void testRevertRejectsChangedSourceVmOwner() {
+        when(volumeMock.getInstanceId()).thenReturn(TEST_VM_ID);
+        when(_vmDao.findById(anyLong())).thenReturn(vmMock);
+        Mockito.doThrow(new com.cloud.exception.PermissionDeniedException("Source VM ownership changed"))
+                .when(_accountMgr).checkAccess(Mockito.any(Account.class), Mockito.isNull(), Mockito.eq(true), Mockito.eq(vmMock));
+        _snapshotMgr.revertSnapshot(TEST_SNAPSHOT_ID);
+    }
+
+    @Test(expected = com.cloud.exception.PermissionDeniedException.class)
+    public void testCreateChecksOwnerBeforeSourceConstraintLookup() throws ResourceAllocationException {
+        Mockito.doThrow(new com.cloud.exception.PermissionDeniedException("Foreign source"))
+                .when(_accountMgr).checkAccess(Mockito.any(Account.class), Mockito.isNull(), Mockito.eq(true), Mockito.eq(volumeInfoMock));
+        _snapshotMgr.allocSnapshot(TEST_VOLUME_ID, Snapshot.MANUAL_POLICY_ID, "foreign-must-not-exist", Snapshot.LocationType.SECONDARY);
     }
 
 }

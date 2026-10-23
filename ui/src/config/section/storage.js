@@ -468,6 +468,9 @@ export default {
         },
         {
           api: 'revertSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
           icon: 'sync-outlined',
           label: 'label.action.revert.snapshot',
           message: 'message.action.revert.snapshot',
@@ -496,6 +499,9 @@ export default {
         },
         {
           api: 'deleteSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
           icon: 'delete-outlined',
           label: 'label.action.delete.snapshot',
           message: 'message.action.delete.snapshot',

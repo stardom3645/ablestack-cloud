@@ -108,6 +108,7 @@
       @cancel="onCloseModal"
       centered>
       <a-spin :spinning="copyLoading" v-ctrl-enter="handleCopySnapshotSubmit">
+        <StorageSnapshotSafety :context="copySafetyContext" :loading="copySafetyLoading" :error="copySafetyError" @refresh="refreshCopySafety" />
         <a-form
           :ref="formRef"
           :model="form"
@@ -182,70 +183,25 @@
       </a-spin>
     </a-modal>
 
-    <a-modal
-      :title="selectedItems.length > 0 && showTable ? $t(message.title) : $t('label.action.delete.snapshot')"
-      :visible="showDeleteSnapshot"
-      :closable="true"
-      :maskClosable="false"
-      :footer="null"
-      :width="showTable ? modalWidth : '30vw'"
-      @ok="selectedItems.length > 0 ? deleteSnapshots() : deleteSnapshot(currentRecord)"
-      @cancel="onCloseModal"
-      :ok-button-props="getOkProps()"
-      :cancel-button-props="getCancelProps()"
-      :confirmLoading="deleteLoading"
-      centered>
-      <div v-ctrl-enter="deleteSnapshot">
-        <div v-if="selectedRowKeys.length > 0">
-          <a-alert type="error">
-            <template #message>
-              <exclamation-circle-outlined style="color: red; fontSize: 30px; display: inline-flex" />
-              <span style="padding-left: 5px" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>&nbsp`" />
-              <span v-html="$t(message.confirmMessage)" />
-            </template>
-          </a-alert>
-        </div>
-        <a-alert v-else :message="$t('message.action.delete.snapshot')" type="warning" />
-        <br />
-        <a-table
-          v-if="selectedRowKeys.length > 0 && showTable"
-          size="middle"
-          :columns="selectedColumns"
-          :dataSource="selectedItems"
-          :rowKey="record => record.zoneid || record.name"
-          :pagination="true"
-          style="overflow-y: auto">
-        </a-table>
-        <a-spin :spinning="deleteLoading">
-          <div :span="24" class="action-button">
-            <a-button @click="onCloseModal">{{ $t('label.cancel') }}</a-button>
-            <a-button type="primary" ref="submit" @click="deleteSnapshot">{{ $t('label.ok') }}</a-button>
-          </div>
-        </a-spin>
-      </div>
-    </a-modal>
-    <bulk-action-progress
-      :showGroupActionModal="showGroupActionModal"
-      :selectedItems="selectedItems"
-      :selectedColumns="selectedColumns"
-      :message="message"
-      @handle-cancel="handleCancel" />
+    <StorageSnapshotActionDialog v-if="safetyDeleteAction" :key="deleteGeneration" :resource="resource" :current-action="safetyDeleteAction" @refresh-data="fetchData" @close-action="safetyDeleteAction = null; resetSelection(); fetchData()" />
   </div>
 </template>
 
 <script>
+import StorageSnapshotActionDialog from '@/views/storage/StorageSnapshotActionDialog.vue'
+import StorageSnapshotSafety from '@/components/view/StorageSnapshotSafety.vue'
+import { freezeSnapshotTarget, freshStorageSnapshotContext, snapshotSecurityScope, snapshotActionParams, snapshotResourceKeys, copyTarget } from '@/utils/storageSnapshotContext'
+import { submitSnapshotOperation, snapshotOperationBusy } from '@/utils/storageSnapshotOperations'
 import { listRefreshMixin } from '@/utils/listRefreshMixin'
 
 import { ref, reactive, toRaw } from 'vue'
-import { getAPI, postAPI } from '@/api'
+import { getAPI } from '@/api'
 import { isAdmin } from '@/role'
 import OsLogo from '@/components/widgets/OsLogo'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
-import BulkActionProgress from '@/components/view/BulkActionProgress'
 import Status from '@/components/widgets/Status'
-import eventBus from '@/config/eventBus'
 
 export default {
   mixins: [listRefreshMixin(['fetchData'])],
@@ -255,7 +211,8 @@ export default {
     TooltipLabel,
     OsLogo,
     ResourceIcon,
-    BulkActionProgress,
+    StorageSnapshotActionDialog,
+    StorageSnapshotSafety,
     Status
   },
   props: {
@@ -270,6 +227,16 @@ export default {
   },
   data () {
     return {
+      safetyDeleteAction: null,
+      deleteGeneration: 0,
+      copySequence: 0,
+      copySafetySequence: 0,
+      copyScope: '',
+      copyTarget: null,
+      copySafetyContext: null,
+      copySafetyError: '',
+      copySafetyFingerprint: '',
+      copySafetyLoading: false,
       columns: [],
       dataSource: [],
       page: 1,
@@ -343,7 +310,7 @@ export default {
   },
   computed: {
     isCopySnapshotSubmitDisabled () {
-      return this.form.storageid.length === 0 && this.form.zoneid.length === 0
+      return this.copyLoading || this.copySafetyLoading || !this.copySafetyContext || !!this.copySafetyError || !!this.copySafetyContext.reason || !this.copyCurrent() || snapshotOperationBusy(snapshotSecurityScope(this.$store), snapshotResourceKeys(this.copyTarget || {}, this.copySafetyContext)) || ((this.form.storageid || []).length === 0 && (this.form.zoneid || []).length === 0)
     },
     isAdmin () {
       return isAdmin()
@@ -442,152 +409,60 @@ export default {
       this.selectedItems = this.selectedItems.map(v => ({ ...v, status: 'InProgress' }))
       this.onShowDeleteModal(this.selectedItems[0])
     },
-    handleCancel () {
-      eventBus.emit('update-bulk-job-status', { items: this.selectedItems, action: false })
-      this.showGroupActionModal = false
-      this.selectedItems = []
-      this.selectedColumns = []
-      this.selectedRowKeys = []
-      this.showTable = false
-      this.fetchData()
-      if (this.dataSource.length === 0) {
-        this.$router.go(-1)
-      }
-    },
-    getOkProps () {
-      if (this.selectedRowKeys.length > 0) {
-        return { props: { type: 'default' } }
-      } else {
-        return { props: { type: 'primary' } }
-      }
-    },
-    getCancelProps () {
-      if (this.selectedRowKeys.length > 0) {
-        return { props: { type: 'primary' } }
-      } else {
-        return { props: { type: 'default' } }
-      }
-    },
-    deleteSnapshots (e) {
-      this.showConfirmationAction = false
-      this.selectedColumns.splice(0, 0, {
-        key: 'status',
-        dataIndex: 'status',
-        title: this.$t('label.operation.status'),
-        filters: [
-          { text: 'In Progress', value: 'InProgress' },
-          { text: 'Success', value: 'success' },
-          { text: 'Failed', value: 'failed' }
-        ]
-      })
-      if (this.selectedRowKeys.length > 0 && this.showTable) {
-        this.showGroupActionModal = true
-      }
-      for (const snapshot of this.selectedItems) {
-        this.deleteSnapshot(snapshot)
-      }
-    },
-    deleteSnapshot (snapshot) {
-      if (!snapshot.id) {
-        snapshot = this.currentRecord
-      }
-      const params = {
-        id: snapshot.id,
-        zoneid: snapshot.zoneid
-      }
-      this.deleteLoading = true
-      postAPI(this.deleteApi, params).then(json => {
-        const jobId = json.deletesnapshotresponse.jobid
-        eventBus.emit('update-job-details', { jobId, resourceId: null })
-        const singleZone = (this.dataSource.length === 1)
-        this.$pollJob({
-          jobId,
-          title: this.$t('label.action.delete.snapshot'),
-          description: this.resource.name,
-          successMethod: result => {
-            if (singleZone) {
-              const isResourcePage = (this.$route.params && this.$route.params.id)
-              const isSameResource = isResourcePage && this.$route.params.id === result.jobinstanceid
-              if (isResourcePage && isSameResource && this.selectedItems.length === 0 && !this.showGroupActionModal) {
-                this.$router.push({ path: '/snapshot' })
-              }
-            } else {
-              if (this.selectedItems.length === 0) {
-                this.fetchData()
-              }
-            }
-            if (this.selectedItems.length > 0) {
-              eventBus.emit('update-resource-state', { selectedItems: this.selectedItems, resource: snapshot.zoneid, state: 'success' })
-            }
-          },
-          errorMethod: () => {
-            if (this.selectedItems.length === 0) {
-              this.fetchData()
-            }
-            if (this.selectedItems.length > 0) {
-              eventBus.emit('update-resource-state', { selectedItems: this.selectedItems, resource: snapshot.zoneid, state: 'failed' })
-            }
-          },
-          showLoading: !(this.selectedItems.length > 0 && this.showGroupActionModal),
-          loadingMessage: `${this.$t('label.deleting.snapshot')} ${this.resource.name} ${this.$t('label.in.progress')}`,
-          catchMessage: this.$t('error.fetching.async.job.result'),
-          bulkAction: this.selectedItems.length > 0 && this.showGroupActionModal
-        })
-        this.onCloseModal()
-        if (this.selectedItems.length === 0) {
-          this.fetchData()
-        }
-      }).catch(error => {
-        this.$notifyError(error)
-      }).finally(() => {
-        this.deleteLoading = false
-      })
-    },
     fetchZoneData () {
+      const origin = JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]); const sequence = this.copySequence
       this.zones = []
       this.zoneLoading = true
       getAPI('listZones', { showicon: true }).then(json => {
+        if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
         const zones = json.listzonesresponse.zone || []
         this.zones = [...zones.filter((zone) => this.currentRecord.zoneid !== zone.id)]
       }).finally(() => {
+        if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
         this.zoneLoading = false
       })
     },
     fetchStoragePoolData () {
+      const origin = JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]); const sequence = this.copySequence
       const params = {}
       params.showicon = true
       this.storagePoolsLoading = true
       getAPI('listStoragePools', params).then(json => {
+        if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
         const listStoragePools = json.liststoragepoolsresponse.storagepool
         if (listStoragePools) {
           this.storagePools = listStoragePools
-          this.storagePools = this.storagePools.filter(pool => pool.storagecapabilities.CAN_COPY_SNAPSHOT_BETWEEN_ZONES_AND_SAME_POOL_TYPE && pool.zoneid !== this.resource.zoneid)
+          this.storagePools = this.storagePools.filter(pool => [true, 'true'].includes(pool.storagecapabilities?.CAN_COPY_SNAPSHOT_BETWEEN_ZONES_AND_SAME_POOL_TYPE) && pool.zoneid !== this.resource.zoneid)
         }
       }).finally(() => {
+        if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
         this.storagePoolsLoading = false
       })
     },
     showCopySnapshot (record) {
-      this.currentRecord = record
+      this.copySequence++
+      this.currentRecord = Object.freeze({ ...record })
+      this.copyTarget = freezeSnapshotTarget({ ...this.resource, ...record }, { zoneId: record.zoneid || null })
+      this.copyScope = JSON.stringify([this.$route.path, this.resource.id, snapshotSecurityScope(this.$store)])
+      this.copySafetyError = ''; this.copySafetyContext = null
       this.form.zoneid = []
       this.form.storageid = []
       this.fetchZoneData()
-      if (isAdmin) {
+      if (isAdmin()) {
         this.fetchStoragePoolData()
       }
       this.showCopyActionForm = true
+      this.refreshCopySafety()
     },
     onShowDeleteModal (record) {
-      this.forcedDelete = false
-      this.currentRecord = record
-      this.showDeleteSnapshot = true
-      if (this.showConfirmationAction) {
-        this.showTable = true
-      } else {
-        this.selectedItems = []
-      }
+      const targets = this.showConfirmationAction ? this.selectedItems : [record]
+      this.deleteGeneration++
+      this.safetyDeleteAction = { api: 'deleteSnapshot', label: 'label.action.delete.snapshot', message: 'message.action.delete.snapshot', zoneScope: true, storageSnapshotTargets: targets.map(row => Object.freeze({ ...this.resource, ...row })) }
     },
     onCloseModal () {
+      this.copySequence++; this.copySafetySequence++
+      this.copySafetyContext = null
+      this.copyTarget = null
       this.currentRecord = {}
       this.showCopyActionForm = false
       this.showDeleteSnapshot = false
@@ -595,47 +470,55 @@ export default {
       this.showTable = false
       this.selectedRowKeys = []
     },
-    handleCopySnapshotSubmit (e) {
-      e.preventDefault()
-      if (this.copyLoading) return
-      this.formRef.value.validate().then(() => {
-        const values = toRaw(this.form)
-        const params = {
-          id: this.currentRecord.id,
-          sourcezoneid: this.currentRecord.zoneid,
-          useStorageReplication: values.useStorageReplication,
-          destzoneids: values.zoneid.join(),
-          storageids: values.storageid.join()
-        }
-        this.copyLoading = true
-        postAPI(this.copyApi, params).then(json => {
-          const jobId = json.copysnapshotresponse.jobid
-          eventBus.emit('update-job-details', { jobId, resourceId: null })
-          this.$pollJob({
-            jobId,
-            title: this.$t('label.action.copy.snapshot'),
-            description: this.resource.name,
-            successMethod: result => {
-              this.fetchData()
-            },
-            errorMethod: () => this.fetchData(),
-            loadingMessage: `${this.$t('label.action.copy.snapshot')} ${this.resource.name} ${this.$t('label.in.progress')}`,
-            catchMessage: this.$t('error.fetching.async.job.result')
-          })
-        }).catch(error => {
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
-          })
-        }).finally(() => {
-          this.copyLoading = false
-          this.$emit('refresh-data')
-          this.onCloseModal()
-          this.fetchData()
+    copyCurrent () { return this.showCopyActionForm && this.copyTarget && this.copyScope === JSON.stringify([this.$route.path, this.resource.id, snapshotSecurityScope(this.$store)]) },
+    async refreshCopySafety () {
+      if (!this.copyCurrent()) return
+      const sequence = ++this.copySafetySequence; this.copySafetyLoading = true; this.copySafetyError = ''
+      try {
+        const context = await freshStorageSnapshotContext(this.copyTarget, this.copyApi, () => this.copyCurrent() && sequence === this.copySafetySequence)
+        if (!this.copyCurrent() || sequence !== this.copySafetySequence) return
+        this.copySafetyContext = context; this.copySafetyFingerprint = context.fingerprint
+      } catch (error) { if (this.copyCurrent()) this.copySafetyError = this.$t(error.message) } finally { if (sequence === this.copySafetySequence) this.copySafetyLoading = false }
+    },
+    async handleCopySnapshotSubmit (e) {
+      if (e?.preventDefault) e.preventDefault()
+      if (this.isCopySnapshotSubmitDisabled) return
+      this.copyLoading = true
+      const store = this.$store; const scope = snapshotSecurityScope(store); const target = this.copyTarget; const fingerprint = this.copySafetyFingerprint
+      try {
+        await this.formRef.value.validate()
+        const values = copyTarget(toRaw(this.form))
+        const params = { useStorageReplication: values.useStorageReplication, destzoneids: values.zoneid.join(), storageids: values.storageid.join() }
+        const operation = await submitSnapshotOperation({
+          api: this.copyApi,
+          scope,
+          target: { id: target.id, name: target.record.name, zoneid: target.zoneId },
+          keys: snapshotResourceKeys(target, this.copySafetyContext),
+          current: () => this.copyCurrent() && snapshotSecurityScope(store) === scope,
+          securityCurrent: () => snapshotSecurityScope(store) === scope,
+          validate: async () => {
+            const latest = await freshStorageSnapshotContext(target, this.copyApi, () => this.copyCurrent())
+            if (latest.reason || latest.fingerprint !== fingerprint) throw new Error('message.snapshot.action.changed')
+            await Promise.all(values.zoneid.map(async id => {
+              const zones = (await getAPI('listZones', { id }, { preserveOnFailure: true })).listzonesresponse.zone || []
+              if (zones.length !== 1 || zones[0].id !== id || id === target.zoneId || zones[0].allocationstate !== 'Enabled') throw new Error('message.snapshot.action.destination.changed')
+            }))
+            await Promise.all(values.storageid.map(async id => {
+              const pools = (await getAPI('listStoragePools', { id }, { preserveOnFailure: true })).liststoragepoolsresponse.storagepool || []
+              const pool = pools[0]; const capability = pool?.storagecapabilities?.CAN_COPY_SNAPSHOT_BETWEEN_ZONES_AND_SAME_POOL_TYPE
+              if (pools.length !== 1 || pool.id !== id || pool.state !== 'Up' || pool.zoneid === target.zoneId || ![true, 'true'].includes(capability)) throw new Error('message.snapshot.action.destination.changed')
+            }))
+            return snapshotActionParams(target, this.copyApi, params, latest)
+          }
         })
-      }).catch(error => {
-        this.formRef.value.scrollToField(error.errorFields[0].name)
-      })
+        if (operation.jobid && this.copyCurrent()) this.onCloseModal()
+        else if (this.copyCurrent()) this.copySafetyError = this.$t(operation.error)
+      } catch (error) {
+        if (this.copyCurrent()) {
+          this.copySafetyError = this.$t(error.message || 'message.snapshot.action.validation.failed')
+          if (error.errorFields?.length) this.formRef.value.scrollToField(error.errorFields[0].name)
+        }
+      } finally { this.copyLoading = false }
     }
   }
 }

@@ -1,0 +1,72 @@
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements. See the NOTICE file distributed with this
+// work for additional information regarding copyright ownership. The ASF
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance with the License.
+// You may obtain a copy at http://www.apache.org/licenses/LICENSE-2.0 .
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations.
+import '../../utils/cryptoRandom'
+import { shallowMount, flushPromises } from '@vue/test-utils'
+import Dialog from '@/views/storage/StorageSnapshotActionDialog.vue'
+import { freshStorageSnapshotContext } from '@/utils/storageSnapshotContext'
+import { submitSnapshotOperation, clearStorageSnapshotOperations } from '@/utils/storageSnapshotOperations'
+import { getAPI, postAPI } from '@/api'
+jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
+jest.mock('@/utils/storageSnapshotContext', () => ({ ...jest.requireActual('@/utils/storageSnapshotContext'), freshStorageSnapshotContext: jest.fn() }))
+let wrapper, store, route
+const row = { id: 'selected', name: 'original', volumeid: 'volume' }
+beforeEach(() => {
+  clearStorageSnapshotOperations(); jest.clearAllMocks()
+  store = { getters: { userInfo: { id: 'admin', roletype: 'Admin' }, project: {} }, state: { user: { token: 'session' } } }
+  route = { path: '/snapshot' }
+  freshStorageSnapshotContext.mockImplementation(async target => ({ target, record: target.record, source: {}, fingerprint: 'initial', reason: '', diagnosis: { scopehash: 'hash' } }))
+  postAPI.mockResolvedValue({ deletesnapshotresponse: { jobid: 'job' } })
+  getAPI.mockResolvedValue({ queryasyncjobresultresponse: { jobstatus: 1, jobresult: { success: true } } })
+})
+afterEach(() => { if (wrapper) wrapper.unmount(); clearStorageSnapshotOperations() })
+async function mount (rows = [row]) {
+  wrapper = shallowMount(Dialog, { props: { currentAction: { api: 'deleteSnapshot', storageSnapshotTargets: rows } }, global: { mocks: { $store: store, $route: route, $t: x => x } } })
+  await flushPromises(); return wrapper
+}
+test('selection and resource replacement cannot retarget a confirmed mutation', async () => {
+  await mount(); await wrapper.setData({ acknowledged: true })
+  await wrapper.setProps({ resource: { id: 'different' }, currentAction: { api: 'revertSnapshot', storageSnapshotTargets: [{ id: 'different' }] } })
+  await wrapper.vm.submit()
+  expect(postAPI).toHaveBeenCalledTimes(1)
+  expect(postAPI.mock.calls[0]).toEqual(['deleteSnapshot', { id: 'selected', expectedscopehash: 'hash', customjobid: expect.any(String) }, { preserveOnFailure: true }])
+})
+test('fresh state drift blocks all selected mutations before the first POST', async () => {
+  await mount([row, { ...row, id: 'second' }]); await wrapper.setData({ acknowledged: true })
+  freshStorageSnapshotContext.mockImplementation(async target => ({ target, record: target.record, source: {}, fingerprint: target.id === 'second' ? 'changed' : 'initial' }))
+  await wrapper.vm.submit(); expect(postAPI).not.toHaveBeenCalled(); expect(wrapper.vm.error).toBe('message.snapshot.action.changed')
+})
+test.each(['route', 'project', 'login'])('%s switch during preflight prevents mutation', async change => {
+  await mount(); await wrapper.setData({ acknowledged: true })
+  freshStorageSnapshotContext.mockImplementation(async target => {
+    if (change === 'route') route.path = '/vm'
+    if (change === 'project') store.getters.project.id = 'other'
+    if (change === 'login') store.state.user.token = 'other'
+    return { target, record: target.record, source: {}, fingerprint: 'initial' }
+  })
+  await wrapper.vm.submit(); expect(postAPI).not.toHaveBeenCalled()
+})
+test('unknown first delivery halts the remaining bulk operations and reopening cannot resubmit', async () => {
+  await mount([row, { ...row, id: 'second' }]); await wrapper.setData({ acknowledged: true })
+  postAPI.mockRejectedValue(new Error('lost response')); getAPI.mockRejectedValue({ response: { status: 403 } })
+  await wrapper.vm.submit(); expect(postAPI).toHaveBeenCalledTimes(1)
+  await wrapper.setData({ acknowledged: true }); await wrapper.vm.submit(); expect(postAPI).toHaveBeenCalledTimes(1)
+  expect(wrapper.vm.results[0].status).toBe('unknown')
+})
+test('failed refresh disables confirmation until a new successful review', async () => {
+  await mount(); freshStorageSnapshotContext.mockRejectedValue(new Error('unavailable'))
+  await wrapper.vm.refresh(); expect(wrapper.vm.blocked).toBe(true)
+})
+test('another entry point holds the resource while its validation is pending', async () => {
+  await mount(); let release
+  const pending = submitSnapshotOperation({ api: 'deleteSnapshot', scope: wrapper.vm.security, target: row, keys: ['snapshot:selected'], current: () => true, securityCurrent: () => true, validate: () => new Promise(resolve => { release = resolve }) })
+  await wrapper.setData({ acknowledged: true }); await wrapper.vm.submit(); expect(postAPI).not.toHaveBeenCalled()
+  release({ id: 'selected' }); await pending
+})
