@@ -137,7 +137,7 @@ public class SnapshotJoinDaoImpl extends GenericDaoBaseWithTagInformation<Snapsh
             if (snapshot.getDownloadState() == VMTemplateStorageResourceAssoc.Status.DOWNLOAD_IN_PROGRESS) {
                 status = snapshot.getDownloadPercent() + "% Downloaded";
             } else if (snapshot.getErrorString() == null) {
-                status = snapshot.getStoreState().toString();
+                status = snapshot.getStoreState() == null ? null : snapshot.getStoreState().toString();
             } else {
                 status = snapshot.getErrorString();
             }
@@ -181,6 +181,9 @@ public class SnapshotJoinDaoImpl extends GenericDaoBaseWithTagInformation<Snapsh
         snapshotResponse.setState(snapshot.getStatus());
         snapshotResponse.setLocationType(snapshot.getLocationType() != null ? snapshot.getLocationType().name() : null);
         if (!isShowUnique) {
+            snapshotResponse.setCopyInfo(com.cloud.api.query.SnapshotCopyContract.describe(snapshot,
+                    view == ResponseObject.ResponseView.Full || snapshot.getAccountId() == caller.getId()
+                            || snapshot.getAccountType() == Account.Type.PROJECT));
             snapshotResponse.setDatastoreState(snapshot.getStoreState() != null ? snapshot.getStoreState().name() : null);
             if (view.equals(ResponseObject.ResponseView.Full)) {
                 snapshotResponse.setDatastoreId(snapshot.getStoreUuid());

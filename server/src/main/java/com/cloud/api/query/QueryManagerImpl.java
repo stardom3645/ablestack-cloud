@@ -6306,6 +6306,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             }
         }
 
+        locationType = SnapshotCopyContract.location(locationType, storagePoolId, imageStoreId);
+
         Filter searchFilter = new Filter(SnapshotJoinVO.class, "snapshotStorePair", SortKeyAscending.value(), startIndex, pageSize);
 
         List<Long> permittedAccountIds = new ArrayList<>();
@@ -6338,7 +6340,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         sb.and("snapshotTypeNEQ", sb.entity().getSnapshotType(), SearchCriteria.Op.NIN);
         sb.and("dataCenterId", sb.entity().getDataCenterId(), SearchCriteria.Op.EQ);
         sb.and("locationType", sb.entity().getStoreRole(), SearchCriteria.Op.EQ);
-        sb.and("imageStoreId", sb.entity().getStoreId(), SearchCriteria.Op.EQ);
+        sb.and("storeId", sb.entity().getStoreId(), SearchCriteria.Op.EQ);
 
         if (tags != null && !tags.isEmpty()) {
             SearchBuilder<ResourceTagVO> tagSearch = resourceTagDao.createSearchBuilder();
@@ -6348,15 +6350,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 tagSearch.cp();
             }
             tagSearch.and("resourceType", tagSearch.entity().getResourceType(), SearchCriteria.Op.EQ);
-            sb.groupBy(sb.entity().getId());
             sb.join("tagSearch", tagSearch, sb.entity().getId(), tagSearch.entity().getResourceId(), JoinBuilder.JoinType.INNER);
-        }
-
-        if (storagePoolId != null) {
-            SearchBuilder<SnapshotDataStoreVO> storagePoolSb = snapshotDataStoreDao.createSearchBuilder();
-            storagePoolSb.and("poolId", storagePoolSb.entity().getDataStoreId(), SearchCriteria.Op.EQ);
-            storagePoolSb.and("role", storagePoolSb.entity().getRole(), SearchCriteria.Op.EQ);
-            sb.join("storagePoolSb", storagePoolSb, sb.entity().getId(), storagePoolSb.entity().getSnapshotId(), JoinBuilder.JoinType.INNER);
         }
 
         SearchCriteria<SnapshotJoinVO> sc = sb.create();
@@ -6364,14 +6358,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         sc.setParameters("statusNEQ", Snapshot.State.Destroyed);
 
-        if (imageStoreId != null) {
-            sc.setParameters("imageStoreId", imageStoreId);
-            locationType = Snapshot.LocationType.SECONDARY;
-        }
-
-        if (storagePoolId != null) {
-            sc.setJoinParameters("storagePoolSb", "poolId", storagePoolId);
-            sc.setJoinParameters("storagePoolSb", "role", DataStoreRole.Image);
+        if (imageStoreId != null || storagePoolId != null) {
+            sc.setParameters("storeId", imageStoreId != null ? imageStoreId : storagePoolId);
         }
 
         if (volumeId != null) {

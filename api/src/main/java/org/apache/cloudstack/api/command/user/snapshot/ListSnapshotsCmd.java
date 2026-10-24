@@ -67,7 +67,7 @@ public class ListSnapshotsCmd extends BaseListTaggedResourcesCmd {
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, description = "List Snapshots by zone id")
     private Long zoneId;
 
-    @Parameter(name = ApiConstants.SHOW_UNIQUE, type = CommandType.BOOLEAN, description = "If set to false, list templates across zones and their storages", since = "4.19.0")
+    @Parameter(name = ApiConstants.SHOW_UNIQUE, type = CommandType.BOOLEAN, description = "Default true: one logical snapshot per entry/count. False: one snapshot/datastore reference per entry/count across zones; missing datastore references are explicitly Unknown", since = "4.19.0")
     private Boolean showUnique;
 
     @Parameter(name = ApiConstants.LOCATION_TYPE, type = CommandType.STRING, description = "list snapshots by location type. Used only when showunique=false. " +
