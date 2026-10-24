@@ -129,36 +129,6 @@
               </a-select-option>
             </a-select>
           </a-form-item>
-          <a-form-item name="useStorageReplication" ref="useStorageReplication">
-            <template #label>
-              <tooltip-label :title="$t('label.usestoragereplication')" :tooltip="apiParams.usestoragereplication.description" />
-            </template>
-            <a-switch v-model:checked="form.useStorageReplication" />
-          </a-form-item>
-          <a-form-item v-if="isAdmin && form.useStorageReplication" ref="storageid" name="storageid" :label="$t('label.storagepools')">
-            <a-select
-              id="storage-selection"
-              mode="multiple"
-              :placeholder="$t('label.select.storagepools')"
-              v-model:value="form.storageid"
-              showSearch
-              optionFilterProp="label"
-              :filterOption="(input, option) => {
-                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }"
-              :loading="storagePoolLoading"
-              v-focus="true">
-              <a-select-option v-for="opt in storagePools" :key="opt.id" :label="opt.name || opt.description">
-                <div>
-                  <span v-if="opt.icon && opt.icon.base64image">
-                    <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-                  </span>
-                  <global-outlined v-else style="margin-right: 5px" />
-                  {{ opt.name || opt.description }}
-                </div>
-              </a-select-option>
-            </a-select>
-          </a-form-item>
           <MoldDialogActions :busy="copyLoading">
             <a-button :disabled="copyLoading" @click="onCloseModal">{{ $t('label.cancel') }}</a-button>
             <a-button
@@ -189,11 +159,9 @@ import { readSnapshotCopyPage, snapshotCopyZones, snapshotCopySize } from '@/uti
 
 import { ref, reactive, toRaw } from 'vue'
 import { getAPI } from '@/api'
-import { isAdmin } from '@/role'
 import OsLogo from '@/components/widgets/OsLogo'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipButton from '@/components/widgets/TooltipButton'
-import TooltipLabel from '@/components/widgets/TooltipLabel'
 import Status from '@/components/widgets/Status'
 
 export default {
@@ -203,7 +171,6 @@ export default {
     MoldDialog,
     MoldDialogActions,
     TooltipButton,
-    TooltipLabel,
     OsLogo,
     ResourceIcon,
     StorageSnapshotActionDialog,
@@ -245,8 +212,6 @@ export default {
       currentRecord: {},
       zones: [],
       zoneLoading: false,
-      storagePools: [],
-      storagePoolLoading: false,
       copyLoading: false,
       deleteLoading: false,
       showDeleteSnapshot: false,
@@ -268,7 +233,6 @@ export default {
   beforeCreate () {
     this.deleteApi = 'deleteSnapshot'
     this.copyApi = 'copySnapshot'
-    this.apiParams = this.$getApiParams(this.copyApi)
   },
   created () {
     this.initForm()
@@ -300,18 +264,13 @@ export default {
       return ['role', 'datastore', 'state', 'availability', 'size', 'progress'].map(key => ({ key, title: this.$t('label.snapshot.copy.column.' + key) }))
     },
     isCopySnapshotSubmitDisabled () {
-      return this.copyLoading || this.copySafetyLoading || !this.copySafetyContext || !!this.copySafetyError || !!this.copySafetyContext.reason || !this.copyCurrent() || snapshotOperationBusy(snapshotSecurityScope(this.$store), snapshotResourceKeys(this.copyTarget || {}, this.copySafetyContext)) || ((this.form.storageid || []).length === 0 && (this.form.zoneid || []).length === 0)
-    },
-    isAdmin () {
-      return isAdmin()
+      return this.copyLoading || this.copySafetyLoading || !this.copySafetyContext || !!this.copySafetyError || !!this.copySafetyContext.reason || !this.copyCurrent() || snapshotOperationBusy(snapshotSecurityScope(this.$store), snapshotResourceKeys(this.copyTarget || {}, this.copySafetyContext)) || (this.form.zoneid || []).length === 0
     }
   },
   methods: {
     initForm () {
       this.formRef = ref()
-      this.form = reactive({
-        useStorageReplication: false
-      })
+      this.form = reactive({ zoneid: [] })
       this.rules = reactive({
         zoneid: [{ type: 'array', required: false }]
       })
@@ -421,23 +380,6 @@ export default {
         this.zoneLoading = false
       })
     },
-    fetchStoragePoolData () {
-      const origin = JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]); const sequence = this.copySequence
-      const params = {}
-      params.showicon = true
-      this.storagePoolsLoading = true
-      getAPI('listStoragePools', params).then(json => {
-        if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
-        const listStoragePools = json.liststoragepoolsresponse.storagepool
-        if (listStoragePools) {
-          this.storagePools = listStoragePools
-          this.storagePools = this.storagePools.filter(pool => [true, 'true'].includes(pool.storagecapabilities?.CAN_COPY_SNAPSHOT_BETWEEN_ZONES_AND_SAME_POOL_TYPE) && pool.zoneid !== this.resource.zoneid)
-        }
-      }).finally(() => {
-        if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
-        this.storagePoolsLoading = false
-      })
-    },
     showCopySnapshot (record) {
       if (!record?.zoneid || this.listRefreshFailed) return
       this.copySequence++
@@ -446,11 +388,7 @@ export default {
       this.copyScope = JSON.stringify([this.$route.path, this.resource.id, snapshotSecurityScope(this.$store)])
       this.copySafetyError = ''; this.copySafetyContext = null
       this.form.zoneid = []
-      this.form.storageid = []
       this.fetchZoneData()
-      if (isAdmin()) {
-        this.fetchStoragePoolData()
-      }
       this.showCopyActionForm = true
       this.refreshCopySafety()
     },
@@ -489,7 +427,7 @@ export default {
       try {
         await this.formRef.value.validate()
         const values = copyTarget(toRaw(this.form))
-        const params = { useStorageReplication: values.useStorageReplication, destzoneids: values.zoneid.join(), storageids: values.storageid.join() }
+        const params = { destzoneids: values.zoneid.join() }
         const operation = await submitSnapshotOperation({
           api: this.copyApi,
           scope,
@@ -503,11 +441,6 @@ export default {
             await Promise.all(values.zoneid.map(async id => {
               const zones = (await getAPI('listZones', { id }, { preserveOnFailure: true })).listzonesresponse.zone || []
               if (zones.length !== 1 || zones[0].id !== id || id === target.zoneId || zones[0].allocationstate !== 'Enabled') throw new Error('message.snapshot.action.destination.changed')
-            }))
-            await Promise.all(values.storageid.map(async id => {
-              const pools = (await getAPI('listStoragePools', { id }, { preserveOnFailure: true })).liststoragepoolsresponse.storagepool || []
-              const pool = pools[0]; const capability = pool?.storagecapabilities?.CAN_COPY_SNAPSHOT_BETWEEN_ZONES_AND_SAME_POOL_TYPE
-              if (pools.length !== 1 || pool.id !== id || pool.state !== 'Up' || pool.zoneid === target.zoneId || ![true, 'true'].includes(capability)) throw new Error('message.snapshot.action.destination.changed')
             }))
             return snapshotActionParams(target, this.copyApi, params, latest)
           }
