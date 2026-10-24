@@ -19,6 +19,7 @@ beforeEach(() => {
   target = freezeSnapshotTarget(record)
   getAPI.mockImplementation((api, args) => {
     if (api === 'listApis') return Promise.resolve({ listapisresponse: { api: [{ name: args.name }] } })
+    if (api === 'listSnapshotCopyTargets') return Promise.resolve({ listsnapshotcopytargetsresponse: { snapshotcopytargets: { snapshotid: 'snapshot', sourcezoneid: args.sourcezoneid, eligible: true, reason: '', scopehash: 'a'.repeat(64), destinations: [] } } })
     if (api === 'listSnapshots') return Promise.resolve({ listsnapshotsresponse: { count: 1, snapshot: args.showunique ? [record] : [{ id: 'snapshot', zoneid: 'zone', datastoreid: 'store', datastorestate: 'Ready' }] } })
     if (api === 'listVolumes') return Promise.resolve({ listvolumesresponse: { count: 1, volume: [{ id: 'volume', name: 'source', state: 'Ready', snapshotcontext: source() }] } })
   })
@@ -88,7 +89,7 @@ test('copy freezes its source zone independently of destination form values', as
   const scoped = freezeSnapshotTarget(record, { zoneId: 'zone' })
   const context = await freshStorageSnapshotContext(scoped, 'copySnapshot')
   expect(context.reason).toBe('')
-  expect(snapshotActionParams(scoped, 'copySnapshot', { id: 'other', sourcezoneid: 'other', destzoneids: 'destination' }, context)).toEqual({ id: 'snapshot', sourcezoneid: 'zone', destzoneids: 'destination' })
+  expect(snapshotActionParams(scoped, 'copySnapshot', { id: 'other', sourcezoneid: 'other', destzoneids: 'destination' }, context)).toEqual({ id: 'snapshot', sourcezoneid: 'zone', destzoneids: 'destination', expectedscopehash: 'a'.repeat(64) })
 })
 test('create snapshot pins the original volume UUID', async () => {
   const volume = freezeSnapshotTarget({ id: 'volume' }, { kind: 'volume' })
@@ -120,6 +121,7 @@ test('context switch after the first source read does not issue later reads in a
   const original = getAPI.getMockImplementation()
   getAPI.mockImplementation((api, args) => {
     const result = original(api, args)
+    if (api === 'listSnapshotCopyTargets') return Promise.resolve({ listsnapshotcopytargetsresponse: { snapshotcopytargets: { snapshotid: 'snapshot', sourcezoneid: args.sourcezoneid, eligible: true, reason: '', scopehash: 'a'.repeat(64), destinations: [] } } })
     if (api === 'listSnapshots') current = false
     return result
   })

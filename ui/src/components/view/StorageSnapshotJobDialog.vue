@@ -18,10 +18,12 @@ limitations under the License.
       <a-descriptions :column="1" bordered size="small">
         <a-descriptions-item :label="$t('label.action')">{{ $t(operationLabel) }}</a-descriptions-item>
         <a-descriptions-item :label="$t('label.snapshot.job.target')">{{ entry.target.name || entry.target.id }}</a-descriptions-item>
+        <a-descriptions-item v-if="entry.target.destinationnames?.length" :label="$t('label.snapshot.transfer.destinations')">{{ entry.target.destinationnames.join(', ') }}</a-descriptions-item>
         <a-descriptions-item :label="$t('label.state')">{{ $t('label.snapshot.action.status.' + entry.status) }}</a-descriptions-item>
         <a-descriptions-item :label="$t('label.created')"><time :datetime="entry.created">{{ formattedTime }}</time></a-descriptions-item>
       </a-descriptions>
       <a-alert v-if="entry.error" :type="entry.status === 'unknown' ? 'warning' : 'error'" show-icon :message="errorText" />
+      <a-alert v-if="entry.api === 'copySnapshot' && entry.status === 'failed'" type="info" show-icon :message="$t('message.snapshot.transfer.retry.failed')" />
       <a-alert v-if="entry.status === 'unknown'" type="warning" show-icon :message="$t('message.snapshot.job.query.only')" />
       <a-alert v-if="forceResult" type="warning" show-icon :message="$t(forceResult.physicalcleanupcomplete ? 'message.snapshot.job.force.complete' : 'message.snapshot.job.force.residual')" />
       <template v-if="download">

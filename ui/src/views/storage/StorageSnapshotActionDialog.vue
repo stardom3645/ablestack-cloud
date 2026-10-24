@@ -39,15 +39,16 @@ limitations under the License.
         :pending="operationPending"
         @refresh="refresh" />
       <a-alert v-if="isRestore" type="warning" show-icon :message="$t('message.snapshot.restore.data.loss')" :description="restoreDescription" />
+      <a-alert v-if="isArchive && contexts.length && !contexts[0].reason" type="info" show-icon :message="$t('message.snapshot.archive.effect')" :description="$t('message.snapshot.archive.reason.' + contexts[0].diagnosis.reason)" />
       <a-alert v-if="isDownload" type="info" show-icon :message="$t('message.snapshot.download.prepare')" :description="$t('message.snapshot.download.replace')" />
       <p v-if="!contexts.length && !error" role="status">{{ $t('message.snapshot.action.validating') }}</p>
-      <a-checkbox v-if="!isDownload" v-model:checked="acknowledged" :disabled="busy || blocked">{{ $t(isRestore ? 'message.snapshot.restore.acknowledge' : 'message.snapshot.action.acknowledge') }}</a-checkbox>
+      <a-checkbox v-if="!isDownload" v-model:checked="acknowledged" :disabled="busy || blocked">{{ $t(isRestore ? 'message.snapshot.restore.acknowledge' : isArchive ? 'message.snapshot.archive.acknowledge' : 'message.snapshot.action.acknowledge') }}</a-checkbox>
       <p v-for="result in results" :key="result.id">{{ result.target.name || result.target.id }} · {{ $t('label.snapshot.action.status.' + result.status) }} · {{ result.jobid }}</p>
     </div>
     <template #footer>
       <a-button :disabled="busy" @click="close">{{ $t(isStandard ? 'label.cancel' : 'label.close') }}</a-button>
       <a-button v-if="!isStandard" :disabled="busy" @click="refresh">{{ $t('label.snapshot.action.refresh') }}</a-button>
-      <a-button type="primary" :danger="!isDownload" :loading="busy" :disabled="busy || blocked || (!isDownload && !acknowledged)" @click="submit">{{ $t(isDownload ? 'label.snapshot.download.prepare' : isRestore ? 'label.restore' : actionLabel) }}</a-button>
+      <a-button type="primary" :danger="!isDownload && !isArchive" :loading="busy" :disabled="busy || blocked || (!isDownload && !acknowledged)" @click="submit">{{ $t(isDownload ? 'label.snapshot.download.prepare' : isRestore ? 'label.restore' : actionLabel) }}</a-button>
     </template>
   </MoldDialog>
 </template>
@@ -65,7 +66,8 @@ export default {
   computed: {
     isRestore () { return this.actionApi === 'revertSnapshot' },
     isDownload () { return this.actionApi === 'extractSnapshot' },
-    isStandard () { return this.isRestore || this.isDownload },
+    isArchive () { return this.actionApi === 'archiveSnapshot' },
+    isStandard () { return this.isRestore || this.isDownload || this.isArchive },
     restoreDescription () {
       const context = this.contexts[0]
       if (this.targets.length !== 1) return this.$t('message.snapshot.restore.targets', [this.targets.length])

@@ -74,8 +74,8 @@ test('unknown Zone reference is retained but cannot become a mutation target', a
   const vm = await mount(); vm.dataSource = [row('unknown', null, null)]; vm.setSelection(['zone:unknown']); vm.bulkActionConfirmation(); expect(vm.zoneGroups).toHaveLength(1); expect(vm.selectedItems).toEqual([]); expect(vm.safetyDeleteAction).toBeNull()
 })
 test('copy dialog uses the VM standard wrapper and footer', () => {
-  const source = require('fs').readFileSync(require('path').resolve(__dirname, '../../../../src/views/storage/SnapshotZones.vue'), 'utf8')
-  expect(source).toMatch(/<MoldDialog[\s\S]*?size="md"[\s\S]*?form-actions/); expect(source).toContain('<MoldDialogActions :busy="copyLoading">'); expect(source).not.toContain('<a-modal')
+  const source = require('fs').readFileSync(require('path').resolve(__dirname, '../../../../src/views/storage/SnapshotCopyDialog.vue'), 'utf8')
+  expect(source).toMatch(/<MoldDialog[\s\S]*?size="md"[\s\S]*?form-actions/); expect(source).toContain('<template #footer>'); expect(source).not.toContain('<a-modal')
 })
 test('page parser rejects mixed targets, duplicate references and incomplete contracts', () => {
   for (const rows of [[row('a'), row('a')], [row('a', 'Image', 'z', 'other')], [{ id: 's' }]]) expect(() => readSnapshotCopyPage(response(rows), 's', 10)).toThrow()

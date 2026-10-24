@@ -2700,13 +2700,38 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         return false;
     }
 
+    protected void completeSecondarySnapshotCopy(SnapshotDataStoreVO source, DataStore destination, Account account, long zoneId, boolean verify) {
+        // No successful Zone/usage bookkeeping may precede the physical image verification.
+        long secondaryBytes = source.getSize();
+        if (verify) {
+            verifySnapshotCopy(_snapshotDao.findByIdIncludingRemoved(source.getSnapshotId()), destination);
+            secondaryBytes = _snapshotStoreDao.findByStoreSnapshot(DataStoreRole.Image, destination.getId(), source.getSnapshotId()).getPhysicalSize();
+            if (secondaryBytes <= 0) { throw new CloudRuntimeException("Verified snapshot physical size is unavailable"); }
+        }
+        recordSnapshotCopy(account, source, zoneId, secondaryBytes);
+    }
+
+    protected void recordSnapshotCopy(Account account, SnapshotDataStoreVO source, long destinationZoneId, long secondaryBytes) {
+        boolean counted = snapshotZoneDao.findByZoneSnapshot(destinationZoneId, source.getSnapshotId()) != null;
+        snapshotZoneDao.addSnapshotToZone(source.getSnapshotId(), destinationZoneId);
+        // A verification retry replaces the same Zone copy; it must not charge it twice.
+        if (counted) { return; }
+        _resourceLimitMgr.incrementResourceCount(account.getId(), ResourceType.secondary_storage, secondaryBytes);
+        if (account.getId() != Account.ACCOUNT_ID_SYSTEM) {
+            SnapshotVO snapshot = _snapshotDao.findByIdIncludingRemoved(source.getSnapshotId());
+            UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_COPY, account.getId(), destinationZoneId, snapshot.getId(), null, null, null,
+                    secondaryBytes, snapshot.getSize(), snapshot.getClass().getName(), snapshot.getUuid());
+        }
+    }
+
     @DB
     private boolean copySnapshotToZone(SnapshotDataStoreVO snapshotDataStoreVO, DataStore srcSecStore,
-                                       DataCenterVO dstZone, DataStore dstSecStore, Account account, boolean kvmIncrementalSnapshot, boolean shouldCheckResourceLimits)
+                                       DataCenterVO dstZone, DataStore dstSecStore, Account account, boolean kvmIncrementalSnapshot, boolean shouldCheckResourceLimits, boolean verifySecondaryCopy)
             throws ResourceAllocationException {
         final long snapshotId = snapshotDataStoreVO.getSnapshotId();
         final long dstZoneId = dstZone.getId();
         if (checkAndProcessSnapshotAlreadyExistInStore(snapshotId, dstSecStore)) {
+            if (verifySecondaryCopy) { verifySnapshotCopy(_snapshotDao.findByIdIncludingRemoved(snapshotId), dstSecStore); }
             return true;
         }
         // Resource limit checks are not performed here at the moment, but they were added in case this method is used
@@ -2740,13 +2765,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                     logger.debug("Copy snapshot ID: {} failed for image store {}: {}", snapshotId, dstSecStore, result.getResult());
                     return false;
                 }
-                snapshotZoneDao.addSnapshotToZone(snapshotId, dstZoneId);
-                _resourceLimitMgr.incrementResourceCount(account.getId(), ResourceType.secondary_storage, snapshotDataStoreVO.getSize());
-                if (account.getId() != Account.ACCOUNT_ID_SYSTEM) {
-                    SnapshotVO snapshotVO = _snapshotDao.findByIdIncludingRemoved(snapshotId);
-                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_COPY, account.getId(), dstZoneId, snapshotId, null, null, null, snapshotVO.getSize(),
-                            snapshotVO.getSize(), snapshotVO.getClass().getName(), snapshotVO.getUuid());
-                }
+                completeSecondarySnapshotCopy(snapshotDataStoreVO, dstSecStore, account, dstZoneId, verifySecondaryCopy);
                 if (kvmIncrementalSnapshot) {
                     ((ImageStoreEntity) srcSecStore).deleteExtractUrl(snapshotOnSecondary.getPath(), copyUrl, Upload.Type.SNAPSHOT);
                 }
@@ -2761,6 +2780,11 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
     @DB
     private boolean copySnapshotChainToZone(SnapshotVO snapshotVO, DataStore srcSecStore, DataCenterVO destZone, Account account)
+            throws StorageUnavailableException, ResourceAllocationException {
+        return copySnapshotChainToZone(snapshotVO, srcSecStore, destZone, account, null);
+    }
+
+    private boolean copySnapshotChainToZone(SnapshotVO snapshotVO, DataStore srcSecStore, DataCenterVO destZone, Account account, DataStore plannedStore)
             throws StorageUnavailableException, ResourceAllocationException {
         final long snapshotId = snapshotVO.getId();
         final long destZoneId = destZone.getId();
@@ -2788,6 +2812,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         if (CollectionUtils.isEmpty(snapshotChain)) {
             return true;
         }
+        if (dstSecStore == null && plannedStore != null) { dstSecStore = plannedStore; }
         if (dstSecStore == null) {
             // find all eligible image stores for the destination zone
             List<DataStore> dstSecStores = dataStoreMgr.getImageStoresByScopeExcludingReadOnly(new ZoneScope(destZoneId));
@@ -2803,7 +2828,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             logger.debug("Copying snapshot chain for snapshot ID: {} on secondary store: {} of zone ID: {}", snapshotVO, dstSecStore, destZone);
             Collections.reverse(snapshotChain);
             for (SnapshotDataStoreVO snapshotDataStoreVO : snapshotChain) {
-                if (!copySnapshotToZone(snapshotDataStoreVO, srcSecStore, destZone, dstSecStore, account, kvmIncrementalSnapshot, false)) {
+                if (!copySnapshotToZone(snapshotDataStoreVO, srcSecStore, destZone, dstSecStore, account, kvmIncrementalSnapshot, false, plannedStore != null)) {
                     logger.error("Failed to copy snapshot: {} to zone: {} due to failure to copy snapshot ID: {} from snapshot chain",
                             snapshotVO, destZone, snapshotDataStoreVO.getSnapshotId());
                     return false;
@@ -2882,9 +2907,216 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         return destPool;
     }
 
+    private boolean snapshotCopyZoneVisible(Account caller, DataCenterVO zone) {
+        if (_accountMgr.isRootAdmin(caller.getId()) || zone.getDomainId() == null) {
+            return true;
+        }
+        return _domainDao.isChildDomain(zone.getDomainId(), caller.getDomainId())
+                || (_accountMgr.isDomainAdmin(caller.getId()) && _domainDao.isChildDomain(caller.getDomainId(), zone.getDomainId()));
+    }
+
+    private boolean snapshotNfsCopyStore(DataStore store) {
+        return store != null && store.getTO() instanceof com.cloud.agent.api.to.NfsTO
+                && ((com.cloud.agent.api.to.NfsTO)store.getTO()).getUrl().toLowerCase(java.util.Locale.ROOT).startsWith("nfs://");
+    }
+
+    private EndPoint snapshotCopyEndpoint(DataStore store) {
+        if (store == null) { return null; }
+        List<EndPoint> endpoints = _epSelector.findAllEndpointsForScope(store);
+        if (endpoints == null) { return null; }
+        return endpoints.stream().filter(endpoint -> {
+            com.cloud.host.HostVO host = hostDao.findById(endpoint.getId());
+            return host != null && host.getStatus() == com.cloud.host.Status.Up;
+        }).min(java.util.Comparator.comparingLong(EndPoint::getId)).orElse(null);
+    }
+
+    private String snapshotCopySourceReason(SnapshotVO snapshot, DataStore source) {
+        if (snapshot.getState() != Snapshot.State.BackedUp) { return "SNAPSHOT_NOT_READY"; }
+        if (snapshot.getHypervisorType() != HypervisorType.KVM) { return "UNSUPPORTED_HYPERVISOR"; }
+        if (!forcedSnapshotPending(snapshot.getId()).isEmpty()) { return "FORCED_CLEANUP_PENDING"; }
+        if (source == null) { return "NO_READY_SECONDARY"; }
+        if (!snapshotNfsCopyStore(source)) { return "UNSUPPORTED_IMAGE_STORE"; }
+        if (StringUtils.isBlank(((ImageStoreEntity)source).getMountPoint())) { return "SOURCE_STORE_NOT_READY"; }
+        return snapshotCopyEndpoint(source) == null ? "SOURCE_SECONDARY_UNAVAILABLE" : "";
+    }
+
+    protected SnapshotCopyDestination snapshotCopyDestination(SnapshotVO snapshot, DataStore source, DataCenterVO zone) {
+        if (zone.getType() == DataCenter.Type.Edge) { return new SnapshotCopyDestination(zone, null, null, "EDGE_ZONE"); }
+        if (zone.getAllocationState() != Grouping.AllocationState.Enabled) { return new SnapshotCopyDestination(zone, null, null, "ZONE_DISABLED"); }
+        DataStore ready = getSnapshotZoneImageStore(snapshot.getId(), zone.getId());
+        if (ready != null) {
+            EndPoint endpoint = snapshotCopyEndpoint(ready);
+            return new SnapshotCopyDestination(zone, ready, endpoint, !snapshotNfsCopyStore(ready) ? "UNSUPPORTED_IMAGE_STORE"
+                    : StringUtils.isBlank(((ImageStoreEntity)ready).getMountPoint()) ? "DESTINATION_STORE_NOT_READY"
+                    : endpoint == null ? "DESTINATION_SECONDARY_UNAVAILABLE" : "ALREADY_PRESENT");
+        }
+        List<DataStore> stores = dataStoreMgr.getImageStoresByScope(new ZoneScope(zone.getId()));
+        if (CollectionUtils.isEmpty(stores)) { return new SnapshotCopyDestination(zone, null, null, "NO_IMAGE_STORE"); }
+        List<SnapshotDataStoreVO> references = _snapshotStoreDao.findBySnapshotIdWithNonDestroyedState(snapshot.getId());
+        DataStore retryStore = null;
+        for (SnapshotDataStoreVO ref : references) {
+            if (ref.getRole() != DataStoreRole.Image || !Long.valueOf(zone.getId()).equals(dataStoreMgr.getStoreZoneId(ref.getDataStoreId(), ref.getRole()))) { continue; }
+            if (ref.getState() == ObjectInDataStoreStateMachine.State.Creating || ref.getState() == ObjectInDataStoreStateMachine.State.Copying) {
+                return new SnapshotCopyDestination(zone, null, null, "COPY_IN_PROGRESS");
+            }
+            if (ref.getState() == ObjectInDataStoreStateMachine.State.Hidden || ref.getState() == ObjectInDataStoreStateMachine.State.Destroying) {
+                return new SnapshotCopyDestination(zone, null, null, "TARGET_NOT_STABLE");
+            }
+            DataStore candidate = dataStoreMgr.getDataStore(ref.getDataStoreId(), ref.getRole());
+            if (retryStore != null && candidate != null && candidate.getId() != retryStore.getId()) {
+                return new SnapshotCopyDestination(zone, null, null, "AMBIGUOUS_TARGET_REFERENCES");
+            }
+            retryStore = candidate;
+        }
+        boolean retry = retryStore != null;
+        SnapshotDataStoreVO ancestor = source == null ? null : _snapshotStoreDao.findByStoreSnapshot(DataStoreRole.Image, source.getId(), snapshot.getId());
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        while (ancestor != null && ancestor.getParentSnapshotId() != 0 && seen.add(ancestor.getSnapshotId())) {
+            DataStore parentStore = getSnapshotZoneImageStore(ancestor.getParentSnapshotId(), zone.getId());
+            if (parentStore != null) {
+                if (retryStore != null && retryStore.getId() != parentStore.getId()) {
+                    return new SnapshotCopyDestination(zone, null, null, "CHAIN_STORE_MISMATCH");
+                }
+                retryStore = parentStore;
+                break;
+            }
+            ancestor = _snapshotStoreDao.findByStoreSnapshot(DataStoreRole.Image, source.getId(), ancestor.getParentSnapshotId());
+        }
+        if (retryStore != null) { stores = new ArrayList<>(List.of(retryStore)); }
+        List<DataStore> nfs = stores.stream().filter(this::snapshotNfsCopyStore).collect(java.util.stream.Collectors.toList());
+        if (nfs.isEmpty()) { return new SnapshotCopyDestination(zone, null, null, "UNSUPPORTED_IMAGE_STORE"); }
+        java.util.Set<Long> writableIds = dataStoreMgr.getImageStoresByScopeExcludingReadOnly(new ZoneScope(zone.getId())).stream()
+                .map(DataStore::getId).collect(java.util.stream.Collectors.toSet());
+        List<DataStore> writable = nfs.stream().filter(store -> writableIds.contains(store.getId()))
+                .sorted(java.util.Comparator.comparing(DataStore::getUuid)).collect(java.util.stream.Collectors.toList());
+        if (writable.isEmpty()) { return new SnapshotCopyDestination(zone, null, null, "READ_ONLY_IMAGE_STORE"); }
+        DataStore selected = null;
+        for (DataStore candidate : writable) {
+            if (dataStoreMgr.getImageStoreWithFreeCapacity(new ArrayList<>(List.of(candidate))) != null) { selected = candidate; break; }
+        }
+        if (selected == null) { return new SnapshotCopyDestination(zone, null, null, "NO_CAPACITY"); }
+        if (StringUtils.isBlank(((ImageStoreEntity)selected).getMountPoint())) { return new SnapshotCopyDestination(zone, selected, null, "DESTINATION_STORE_NOT_READY"); }
+        EndPoint endpoint = snapshotCopyEndpoint(selected);
+        return new SnapshotCopyDestination(zone, selected, endpoint, endpoint == null ? "DESTINATION_SECONDARY_UNAVAILABLE" : retry ? "RETRY" : "");
+    }
+
+    @Override
+    public org.apache.cloudstack.api.response.SnapshotCopyTargetsResponse previewSnapshotCopy(long snapshotId, Long sourceZoneId) {
+        SnapshotVO snapshot = validateSnapshotDeletion(snapshotId);
+        long sourceId = sourceZoneId == null ? snapshot.getDataCenterId() : sourceZoneId;
+        DataCenterVO sourceZone = dataCenterDao.findById(sourceId);
+        if (sourceZone == null) { throw new InvalidParameterValueException("Source Zone is unavailable"); }
+        Account caller = CallContext.current().getCallingAccount();
+        if (!snapshotCopyZoneVisible(caller, sourceZone)) { throw new PermissionDeniedException("Source Zone is unavailable to this account"); }
+        DataStore source = getSnapshotZoneImageStore(snapshotId, sourceId);
+        String reason = snapshotCopySourceReason(snapshot, source);
+        boolean details = _accountMgr.isRootAdmin(caller.getId());
+        List<Map<String, Object>> targets = new ArrayList<>();
+        StringBuilder revision = new StringBuilder(snapshotDeletionScopeHash(snapshot, null,
+                _snapshotStoreDao.findBySnapshotIdWithNonDestroyedState(snapshotId)));
+        revision.append(":").append(caller.getId()).append(":").append(sourceId).append(":").append(SnapshotCopyDestination.storeRevision(source)).append(":").append(reason);
+        List<DataCenterVO> zones = new ArrayList<>(dataCenterDao.listAllZones());
+        zones.sort(java.util.Comparator.comparing(DataCenterVO::getUuid));
+        for (DataCenterVO zone : zones) {
+            if (zone.getId() == sourceId || !snapshotCopyZoneVisible(caller, zone)) { continue; }
+            SnapshotCopyDestination destination = snapshotCopyDestination(snapshot, source, zone);
+            targets.add(destination.describe(details));
+            revision.append("|").append(destination.fingerprint());
+        }
+        return new org.apache.cloudstack.api.response.SnapshotCopyTargetsResponse(snapshot.getUuid(), sourceZone.getUuid(), sourceZone.getName(),
+                details && source != null ? source.getUuid() : null, details && source != null ? source.getName() : null,
+                reason.isEmpty(), reason, org.apache.commons.codec.digest.DigestUtils.sha256Hex(revision.toString()), targets);
+    }
+
+    /** Keep provider-specific primary replication available to API clients; Mold exposes Secondary copy only. */
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_SNAPSHOT_COPY, eventDescription = "copying snapshot", create = false)
     public Snapshot copySnapshot(CopySnapshotCmd cmd) throws StorageUnavailableException, ResourceAllocationException {
+        SnapshotVO snapshot = validateSnapshotDeletion(cmd.getId());
+        if (cmd.useStorageReplication() || CollectionUtils.isNotEmpty(cmd.getStoragePoolIds()) || snapshot.getHypervisorType() != HypervisorType.KVM) {
+            return copySnapshotLegacy(cmd);
+        }
+        GlobalLock lock = GlobalLock.getInternLock("snapshot-delete-" + snapshot.getId());
+        try {
+            if (!lock.lock(30)) { throw new CloudRuntimeException("Snapshot copy, archive or deletion is already running; inspect the existing job"); }
+            try { return copySecondarySnapshotWithLock(cmd); } finally { lock.unlock(); }
+        } finally { lock.releaseRef(); }
+    }
+
+    protected Snapshot copySecondarySnapshotWithLock(CopySnapshotCmd cmd) throws ResourceAllocationException, StorageUnavailableException {
+        SnapshotVO snapshot = validateSnapshotDeletion(cmd.getId());
+        long sourceId = cmd.getSourceZoneId() == null ? snapshot.getDataCenterId() : cmd.getSourceZoneId();
+        org.apache.cloudstack.api.response.SnapshotCopyTargetsResponse preview = previewSnapshotCopy(snapshot.getId(), sourceId);
+        if (cmd.getExpectedScopeHash() != null && !cmd.getExpectedScopeHash().equals(preview.getScopeHash())) {
+            throw new InvalidParameterValueException("Snapshot copy source or destinations changed; refresh the target list");
+        }
+        if (!preview.isEligible()) { throw new InvalidParameterValueException(preview.getReason()); }
+        List<Long> ids = new ArrayList<>(new java.util.LinkedHashSet<>(cmd.getDestinationZoneIds()));
+        if (ids.isEmpty() || ids.contains(sourceId)) { throw new InvalidParameterValueException("Select destination Zones different from the source"); }
+        Account caller = CallContext.current().getCallingAccount();
+        DataStore source = getSnapshotZoneImageStore(snapshot.getId(), sourceId);
+        List<SnapshotCopyDestination> destinations = new ArrayList<>();
+        for (Long id : ids) {
+            DataCenterVO zone = dataCenterDao.findById(id);
+            if (zone == null || !snapshotCopyZoneVisible(caller, zone)) { throw new PermissionDeniedException("Destination Zone is unavailable to this account"); }
+            SnapshotCopyDestination destination = snapshotCopyDestination(snapshot, source, zone);
+            if (!destination.eligible() && !destination.present()) { throw new InvalidParameterValueException(zone.getName() + ": " + destination.reason); }
+            destinations.add(destination);
+        }
+        SnapshotInfo sourceSnapshot = snapshotFactory.getSnapshot(snapshot.getId(), source);
+        inspectSnapshotDownload((ImageStoreEntity)source, sourceSnapshot);
+        AccountVO owner = _accountDao.findById(snapshot.getAccountId());
+        List<String> complete = new ArrayList<>();
+        List<String> failed = new ArrayList<>();
+        for (SnapshotCopyDestination planned : destinations) {
+            try {
+                SnapshotCopyDestination current = snapshotCopyDestination(snapshot, source, planned.zone);
+                if (!planned.fingerprint().equals(current.fingerprint())) { throw new InvalidParameterValueException("DESTINATION_CHANGED"); }
+                if (planned.present()) {
+                    verifySnapshotCopy(snapshot, planned.store);
+                } else if (!transferSnapshotToDestination(snapshot, source, planned, owner)) {
+                    throw new CloudRuntimeException("TRANSFER_FAILED");
+                }
+                complete.add(planned.zone.getName());
+            } catch (Exception error) {
+                logger.warn("Snapshot {} copy to Zone {} failed: {}", snapshot.getUuid(), planned.zone.getUuid(), error.getMessage());
+                failed.add(planned.zone.getName() + (error instanceof InvalidParameterValueException ? " (DESTINATION_CHANGED)" : " (TRANSFER_OR_VERIFICATION_FAILED)"));
+            }
+        }
+        if (!failed.isEmpty()) {
+            throw new CloudRuntimeException("Snapshot copy failed. Completed destinations: " + String.join(", ", complete)
+                    + ". Failed destinations: " + String.join(", ", failed) + ". Refresh destinations and retry failed Zones; completed copies are retained.");
+        }
+        return snapshot;
+    }
+
+    protected boolean transferSnapshotToDestination(SnapshotVO snapshot, DataStore source, SnapshotCopyDestination destination, AccountVO owner)
+            throws StorageUnavailableException, ResourceAllocationException {
+        if (!copySnapshotChainToZone(snapshot, source, destination.zone, owner, destination.store)) { return false; }
+        return true;
+    }
+
+    /** Persist only physically verified sizes; a failed verification remains retryable. */
+    protected void verifySnapshotCopy(SnapshotVO snapshot, DataStore store) {
+        SnapshotDataStoreVO reference = _snapshotStoreDao.findByStoreSnapshot(DataStoreRole.Image, store.getId(), snapshot.getId());
+        if (reference == null) { throw new CloudRuntimeException("Copied snapshot reference is unavailable"); }
+        try {
+            com.cloud.agent.api.storage.CreateEntityDownloadURLAnswer metadata = inspectSnapshotDownload((ImageStoreEntity)store,
+                    snapshotFactory.getSnapshot(snapshot.getId(), store));
+            reference.setSize(metadata.getVirtualSize());
+            reference.setPhysicalSize(metadata.getFileSize());
+            reference.setErrorString("");
+            if (!_snapshotStoreDao.update(reference.getId(), reference)) { throw new CloudRuntimeException("Unable to persist verified snapshot size"); }
+        } catch (RuntimeException error) {
+            reference.setState(ObjectInDataStoreStateMachine.State.Failed);
+            reference.setDownloadState(VMTemplateStorageResourceAssoc.Status.DOWNLOAD_ERROR);
+            reference.setErrorString("Snapshot image verification failed; retry copying this Zone");
+            _snapshotStoreDao.update(reference.getId(), reference);
+            throw error;
+        }
+    }
+
+    private Snapshot copySnapshotLegacy(CopySnapshotCmd cmd) throws StorageUnavailableException, ResourceAllocationException {
         final Long snapshotId = cmd.getId();
         Long sourceZoneId = cmd.getSourceZoneId();
         List<Long> destZoneIds = cmd.getDestinationZoneIds();

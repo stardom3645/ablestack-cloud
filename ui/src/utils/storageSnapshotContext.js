@@ -9,6 +9,7 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations.
 import { getAPI, postAPI } from '@/api'
+import { readSnapshotCopyTargets } from '@/utils/storageSnapshotTransfer'
 
 export const snapshotOperationResponse = (api, json) => json?.[api.toLowerCase() + 'response'] || (api === 'archiveSnapshot' ? json?.createsnapshotresponse : undefined)
 export const storageSnapshotApis = ['createSnapshot', 'createVolume', 'createTemplate', 'revertSnapshot', 'archiveSnapshot', 'copySnapshot', 'deleteSnapshot', 'extractSnapshot']
@@ -70,7 +71,7 @@ export async function freshStorageSnapshotContext (target, api, current = () => 
   for (const key of ['account', 'domainid', 'projectid', ...(volumeTarget ? [] : ['volumeid'])]) {
     if ((expected[key] || '') !== (record[key] || '')) fail('message.snapshot.action.context.changed')
   }
-  let copies = []; let diagnosis
+  let copies = []; let diagnosis; let copyplan
   if (!volumeTarget) {
     const json = await request('listSnapshots', { id: target.id, listall: true, showunique: false, page: 1, pagesize: 500 })
     copies = rows(json, 'listsnapshotsresponse', 'snapshot')
@@ -83,7 +84,10 @@ export async function freshStorageSnapshotContext (target, api, current = () => 
   else if (api === 'deleteSnapshot' && !['BackedUp', 'CreatedOnPrimary', 'Destroying', 'Error'].includes(record.state)) reason = 'SNAPSHOT_NOT_READY'
   if (target.zoneId === null) reason = 'UNKNOWN_REFERENCE_ZONE'
   if (api === 'copySnapshot' && target.zoneId === 'all') reason = 'UNKNOWN_REFERENCE_ZONE'
-  if (api === 'copySnapshot' && target.zoneId && target.zoneId !== 'all' && !copies.some(row => row.zoneid === target.zoneId && row.datastorestate === 'Ready')) reason = 'SOURCE_ZONE_UNAVAILABLE'
+  if (api === 'copySnapshot' && target.zoneId && target.zoneId !== 'all') {
+    copyplan = readSnapshotCopyTargets(await request('listSnapshotCopyTargets', { id: target.id, sourcezoneid: target.zoneId }), target)
+    if (!copyplan.eligible) reason = copyplan.reason
+  }
   if (['deleteSnapshot', 'archiveSnapshot'].includes(api)) {
     diagnosis = await readSnapshotDiagnosis(api, { id: target.id, ...(target.zoneId !== 'all' && target.zoneId ? { zoneid: target.zoneId } : {}), ...(params.force ? { force: true } : {}) }, current)
     if (diagnosis.snapshotid !== target.id) fail('message.snapshot.action.incomplete')
@@ -92,7 +96,7 @@ export async function freshStorageSnapshotContext (target, api, current = () => 
   if (!current()) fail('message.snapshot.action.context.changed')
   const identity = Object.fromEntries(['id', 'name', 'state', 'volumeid', 'volumename', 'account', 'domainid', 'projectid', 'zoneid'].map(k => [k, record[k] || '']))
   const references = copies.map(row => Object.fromEntries(['id', 'zoneid', 'datastoreid', 'datastoretype', 'datastorestate', 'locationtype'].map(k => [k, row[k] || '']))).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
-  return { target, record, source, copies, reason, diagnosis, fingerprint: JSON.stringify([identity, source, references, diagnosis?.scopehash]) }
+  return { target, record, source, copies, reason, diagnosis, copyplan, fingerprint: JSON.stringify([identity, source, references, diagnosis?.scopehash, copyplan?.scopehash]) }
 }
 export function snapshotActionParams (target, api, values, context) {
   const params = copyTarget(values)
@@ -103,7 +107,7 @@ export function snapshotActionParams (target, api, values, context) {
     delete params.zoneid
     if (target.zoneId && target.zoneId !== 'all') params.zoneid = target.zoneId
   }
-  if (api === 'copySnapshot') params.sourcezoneid = target.zoneId
+  if (api === 'copySnapshot') { params.sourcezoneid = target.zoneId; params.expectedscopehash = context.copyplan.scopehash }
   if (context?.diagnosis?.scopehash) params.expectedscopehash = context.diagnosis.scopehash
   return params
 }

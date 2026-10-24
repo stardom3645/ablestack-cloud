@@ -480,6 +480,16 @@ export default {
           show: (record) => { return record.state === 'BackedUp' && record.revertable }
         },
         {
+          api: 'archiveSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
+          icon: 'inbox-outlined',
+          label: 'label.action.archive.snapshot',
+          dataView: true,
+          show: record => ['BackedUp', 'CreatedOnPrimary', 'Error'].includes(record.state)
+        },
+        {
           api: 'extractSnapshot',
           storageSnapshotMode: true,
           selfManagedDialog: true,

@@ -85,63 +85,7 @@
       @showSizeChange="handleChangePageSize"
       showSizeChanger />
 
-    <MoldDialog
-      v-if="copyApi in $store.getters.apis"
-      size="md"
-      form-actions
-      :title="$t('label.action.copy.snapshot')"
-      :visible="showCopyActionForm"
-      :closable="true"
-      :maskClosable="false"
-      :confirmLoading="copyLoading"
-      @cancel="onCloseModal"
-      centered>
-      <a-spin :spinning="copyLoading" v-ctrl-enter="handleCopySnapshotSubmit">
-        <StorageSnapshotSafety compact :context="copySafetyContext" :loading="copySafetyLoading" :error="copySafetyError" @refresh="refreshCopySafety" />
-        <a-form
-          :ref="formRef"
-          :model="form"
-          :rules="rules"
-          layout="vertical"
-          class="snapshot-copy-form"
-          @finish="handleCopySnapshotSubmit">
-          <a-form-item ref="zoneid" name="zoneid" :label="$t('label.zoneid')">
-            <a-select
-              id="zone-selection"
-              mode="multiple"
-              :placeholder="$t('label.select.zones')"
-              v-model:value="form.zoneid"
-              showSearch
-              optionFilterProp="label"
-              :filterOption="(input, option) => {
-                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }"
-              :loading="zoneLoading"
-              v-focus="true">
-              <a-select-option v-for="zone in zones" :key="zone.id" :label="zone.name">
-                <div>
-                  <span v-if="zone.icon && zone.icon.base64image">
-                    <resource-icon :image="zone.icon.base64image" size="1x" style="margin-right: 5px"/>
-                  </span>
-                  <global-outlined v-else style="margin-right: 5px" />
-                  {{ zone.name }}
-                </div>
-              </a-select-option>
-            </a-select>
-          </a-form-item>
-          <MoldDialogActions :busy="copyLoading">
-            <a-button :disabled="copyLoading" @click="onCloseModal">{{ $t('label.cancel') }}</a-button>
-            <a-button
-              type="primary"
-              ref="submit"
-              :disabled="isCopySnapshotSubmitDisabled"
-              @click="handleCopySnapshotSubmit">
-                {{ $t('label.ok') }}
-              </a-button>
-          </MoldDialogActions>
-        </a-form>
-      </a-spin>
-    </MoldDialog>
+    <SnapshotCopyDialog v-if="copyRecord" :resource="resource" :source-zone="copyRecord" @close-action="onCloseModal" @refresh-data="fetchData" />
 
     <StorageSnapshotActionDialog v-if="safetyDeleteAction" :key="deleteGeneration" :resource="resource" :current-action="safetyDeleteAction" @refresh-data="fetchData" @close-action="safetyDeleteAction = null; resetSelection(); fetchData()" />
   </div>
@@ -149,15 +93,11 @@
 
 <script>
 import StorageSnapshotActionDialog from '@/views/storage/StorageSnapshotActionDialog.vue'
-import StorageSnapshotSafety from '@/components/view/StorageSnapshotSafety.vue'
-import { freezeSnapshotTarget, freshStorageSnapshotContext, snapshotSecurityScope, snapshotActionParams, snapshotResourceKeys, copyTarget } from '@/utils/storageSnapshotContext'
-import { submitSnapshotOperation, snapshotOperationBusy } from '@/utils/storageSnapshotOperations'
+import SnapshotCopyDialog from '@/views/storage/SnapshotCopyDialog.vue'
+import { snapshotSecurityScope } from '@/utils/storageSnapshotContext'
 import { listRefreshMixin, detailTabRouteKey } from '@/utils/listRefreshMixin'
-import MoldDialog from '@/components/view/MoldDialog.vue'
-import MoldDialogActions from '@/components/view/MoldDialogActions.vue'
 import { readSnapshotCopyPage, snapshotCopyZones, snapshotCopySize } from '@/utils/snapshotCopies'
 
-import { ref, reactive, toRaw } from 'vue'
 import { getAPI } from '@/api'
 import OsLogo from '@/components/widgets/OsLogo'
 import ResourceIcon from '@/components/view/ResourceIcon'
@@ -165,16 +105,14 @@ import TooltipButton from '@/components/widgets/TooltipButton'
 import Status from '@/components/widgets/Status'
 
 export default {
-  mixins: [listRefreshMixin(['fetchData'], { routeKey: vm => JSON.stringify([detailTabRouteKey(vm.$route), snapshotSecurityScope(vm.$store), 'listSnapshots' in vm.$store.getters.apis]), active: vm => !vm.showCopyActionForm && !vm.safetyDeleteAction })],
+  mixins: [listRefreshMixin(['fetchData'], { routeKey: vm => JSON.stringify([detailTabRouteKey(vm.$route), snapshotSecurityScope(vm.$store), 'listSnapshots' in vm.$store.getters.apis]), active: vm => !vm.copyRecord && !vm.safetyDeleteAction })],
   name: 'SnapshotZones',
   components: {
-    MoldDialog,
-    MoldDialogActions,
     TooltipButton,
     OsLogo,
     ResourceIcon,
     StorageSnapshotActionDialog,
-    StorageSnapshotSafety,
+    SnapshotCopyDialog,
     Status
   },
   props: {
@@ -192,13 +130,7 @@ export default {
       safetyDeleteAction: null,
       deleteGeneration: 0,
       copySequence: 0,
-      copySafetySequence: 0,
-      copyScope: '',
-      copyTarget: null,
-      copySafetyContext: null,
-      copySafetyError: '',
-      copySafetyFingerprint: '',
-      copySafetyLoading: false,
+      copyRecord: null,
       expandedZoneKeys: [],
       loadedCopyScope: '',
       copyReadDenied: false,
@@ -235,7 +167,6 @@ export default {
     this.copyApi = 'copySnapshot'
   },
   created () {
-    this.initForm()
     this.fetchData()
   },
   watch: {
@@ -262,19 +193,9 @@ export default {
     },
     copyColumns () {
       return ['role', 'datastore', 'state', 'availability', 'size', 'progress'].map(key => ({ key, title: this.$t('label.snapshot.copy.column.' + key) }))
-    },
-    isCopySnapshotSubmitDisabled () {
-      return this.copyLoading || this.copySafetyLoading || !this.copySafetyContext || !!this.copySafetyError || !!this.copySafetyContext.reason || !this.copyCurrent() || snapshotOperationBusy(snapshotSecurityScope(this.$store), snapshotResourceKeys(this.copyTarget || {}, this.copySafetyContext)) || (this.form.zoneid || []).length === 0
     }
   },
   methods: {
-    initForm () {
-      this.formRef = ref()
-      this.form = reactive({ zoneid: [] })
-      this.rules = reactive({
-        zoneid: [{ type: 'array', required: false }]
-      })
-    },
     async fetchData () {
       const listRequest = this.listRequestToken('fetchData')
       const scope = JSON.stringify([this.resource.id, this.copySecurityScope, this.page, this.pageSize])
@@ -367,14 +288,12 @@ export default {
     },
     fetchZoneData () {
       const origin = JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]); const sequence = this.copySequence
-      this.zones = []
       this.zoneLoading = true
       if (!('listZones' in this.$store.getters.apis)) { this.zoneLoading = false; return }
       getAPI('listZones', { showicon: true }, { preserveOnFailure: true }).then(json => {
         if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
         const zones = json.listzonesresponse.zone || []
         this.zoneIcons = Object.fromEntries(zones.filter(zone => zone.icon?.base64image).map(zone => [zone.id, zone.icon.base64image]))
-        this.zones = zones.filter(zone => this.currentRecord.zoneid !== zone.id)
       }).catch(error => { if (origin === JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) && sequence === this.copySequence) this.$notifyError(error) }).finally(() => {
         if (origin !== JSON.stringify([this.resource.id, snapshotSecurityScope(this.$store)]) || sequence !== this.copySequence) return
         this.zoneLoading = false
@@ -382,15 +301,7 @@ export default {
     },
     showCopySnapshot (record) {
       if (!record?.zoneid || this.listRefreshFailed) return
-      this.copySequence++
-      this.currentRecord = Object.freeze({ ...record })
-      this.copyTarget = freezeSnapshotTarget({ ...this.resource, ...record }, { zoneId: record.zoneid || null })
-      this.copyScope = JSON.stringify([this.$route.path, this.resource.id, snapshotSecurityScope(this.$store)])
-      this.copySafetyError = ''; this.copySafetyContext = null
-      this.form.zoneid = []
-      this.fetchZoneData()
-      this.showCopyActionForm = true
-      this.refreshCopySafety()
+      this.copyRecord = Object.freeze({ zoneid: record.zoneid, zonename: record.zonename })
     },
     onShowDeleteModal (record, bulk = false) {
       if (!record?.zoneid || this.listRefreshFailed) return
@@ -399,60 +310,8 @@ export default {
       this.safetyDeleteAction = { api: 'deleteSnapshot', label: 'label.action.delete.snapshot', message: 'message.action.delete.snapshot', zoneScope: true, storageSnapshotTargets: targets.map(row => Object.freeze({ ...this.resource, ...row })) }
     },
     onCloseModal () {
-      this.copySequence++; this.copySafetySequence++
-      this.copySafetyContext = null
-      this.copyTarget = null
-      this.currentRecord = {}
-      this.showCopyActionForm = false
-      this.showDeleteSnapshot = false
-      this.showConfirmationAction = false
-      this.showTable = false
-      this.selectedRowKeys = []
-    },
-    copyCurrent () { return this.showCopyActionForm && this.copyTarget && this.copyScope === JSON.stringify([this.$route.path, this.resource.id, snapshotSecurityScope(this.$store)]) },
-    async refreshCopySafety () {
-      if (!this.copyCurrent()) return
-      const sequence = ++this.copySafetySequence; this.copySafetyLoading = true; this.copySafetyError = ''
-      try {
-        const context = await freshStorageSnapshotContext(this.copyTarget, this.copyApi, () => this.copyCurrent() && sequence === this.copySafetySequence)
-        if (!this.copyCurrent() || sequence !== this.copySafetySequence) return
-        this.copySafetyContext = context; this.copySafetyFingerprint = context.fingerprint
-      } catch (error) { if (this.copyCurrent()) this.copySafetyError = this.$t(error.message) } finally { if (sequence === this.copySafetySequence) this.copySafetyLoading = false }
-    },
-    async handleCopySnapshotSubmit (e) {
-      if (e?.preventDefault) e.preventDefault()
-      if (this.isCopySnapshotSubmitDisabled) return
-      this.copyLoading = true
-      const store = this.$store; const scope = snapshotSecurityScope(store); const target = this.copyTarget; const fingerprint = this.copySafetyFingerprint
-      try {
-        await this.formRef.value.validate()
-        const values = copyTarget(toRaw(this.form))
-        const params = { destzoneids: values.zoneid.join() }
-        const operation = await submitSnapshotOperation({
-          api: this.copyApi,
-          scope,
-          target: { id: target.id, name: target.record.name, zoneid: target.zoneId },
-          keys: snapshotResourceKeys(target, this.copySafetyContext),
-          current: () => this.copyCurrent() && snapshotSecurityScope(store) === scope,
-          securityCurrent: () => snapshotSecurityScope(store) === scope,
-          validate: async () => {
-            const latest = await freshStorageSnapshotContext(target, this.copyApi, () => this.copyCurrent())
-            if (latest.reason || latest.fingerprint !== fingerprint) throw new Error('message.snapshot.action.changed')
-            await Promise.all(values.zoneid.map(async id => {
-              const zones = (await getAPI('listZones', { id }, { preserveOnFailure: true })).listzonesresponse.zone || []
-              if (zones.length !== 1 || zones[0].id !== id || id === target.zoneId || zones[0].allocationstate !== 'Enabled') throw new Error('message.snapshot.action.destination.changed')
-            }))
-            return snapshotActionParams(target, this.copyApi, params, latest)
-          }
-        })
-        if (operation.jobid && this.copyCurrent()) this.onCloseModal()
-        else if (this.copyCurrent()) this.copySafetyError = this.$t(operation.error)
-      } catch (error) {
-        if (this.copyCurrent()) {
-          this.copySafetyError = this.$t(error.message || 'message.snapshot.action.validation.failed')
-          if (error.errorFields?.length) this.formRef.value.scrollToField(error.errorFields[0].name)
-        }
-      } finally { this.copyLoading = false }
+      this.copySequence++; this.copyRecord = null
+      this.showConfirmationAction = false; this.selectedRowKeys = []
     }
   }
 }

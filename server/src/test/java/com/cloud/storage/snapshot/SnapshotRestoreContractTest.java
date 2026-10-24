@@ -18,8 +18,10 @@ package com.cloud.storage.snapshot;
 
 import java.util.Map;
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.exception.InvalidParameterValueException;
 

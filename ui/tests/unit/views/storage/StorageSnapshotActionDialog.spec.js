@@ -87,3 +87,18 @@ test('download uses VM dialog size and fresh frozen source with one async submis
   expect(postAPI.mock.calls[0][1]).toEqual({ id: 'selected', zoneid: 'zone', expectedscopehash: 'hash', customjobid: expect.any(String) })
   expect(wrapper.emitted('close-action')).toHaveLength(1)
 })
+
+test('archive uses the VM standard, requires acknowledgement and submits one pinned async job', async () => {
+  freshStorageSnapshotContext.mockImplementation(async target => ({ target, record: target.record, source: {}, reason: '', fingerprint: 'initial', diagnosis: { scopehash: 'hash', eligible: true, reason: 'REUSE_SECONDARY' } }))
+  wrapper = shallowMount(Dialog, { props: { resource: row, currentAction: { api: 'archiveSnapshot', label: 'label.action.archive.snapshot' } }, global: { mocks: { $store: store, $route: route, $t: x => x }, stubs: { MoldDialog: { name: 'MoldDialog', props: ['size'], template: '<div><slot /><slot name="footer" /></div>' } } } })
+  await flushPromises(); expect(wrapper.vm.isArchive).toBe(true); expect(wrapper.findComponent({ name: 'MoldDialog' }).props('size')).toBe('md')
+  await wrapper.vm.submit(); expect(postAPI).not.toHaveBeenCalled()
+  await wrapper.setData({ acknowledged: true }); postAPI.mockResolvedValue({ createsnapshotresponse: { jobid: 'archive-job' } }); await wrapper.vm.submit(); await flushPromises()
+  expect(postAPI.mock.calls[0]).toEqual(['archiveSnapshot', { id: 'selected', expectedscopehash: 'hash', customjobid: expect.any(String) }, { preserveOnFailure: true }]); expect(wrapper.emitted('close-action')).toHaveLength(1)
+})
+
+test('unsupported archive diagnosis blocks confirmation without posting a mutation', async () => {
+  freshStorageSnapshotContext.mockImplementation(async target => ({ target, record: target.record, source: {}, reason: 'AMBIGUOUS_REFERENCES', fingerprint: 'initial', diagnosis: { scopehash: 'hash', eligible: false, reason: 'AMBIGUOUS_REFERENCES' } }))
+  wrapper = shallowMount(Dialog, { props: { resource: row, currentAction: { api: 'archiveSnapshot' } }, global: { mocks: { $store: store, $route: route, $t: x => x } } }); await flushPromises(); await wrapper.setData({ acknowledged: true }); await wrapper.vm.submit()
+  expect(wrapper.vm.blocked).toBe(true); expect(postAPI).not.toHaveBeenCalled()
+})

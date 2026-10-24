@@ -150,5 +150,7 @@ public interface SnapshotApiService {
 
     void markVolumeSnapshotsAsDestroyed(Volume volume);
 
+    org.apache.cloudstack.api.response.SnapshotCopyTargetsResponse previewSnapshotCopy(long snapshotId, Long sourceZoneId);
+
     Snapshot copySnapshot(CopySnapshotCmd cmd) throws StorageUnavailableException, ResourceAllocationException;
 }
