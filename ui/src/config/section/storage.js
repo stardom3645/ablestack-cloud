@@ -388,7 +388,7 @@ export default {
       permission: ['listSnapshots'],
       resourceType: 'Snapshot',
       columns: (getters, route) => {
-        const fields = ['name', 'state', 'volumename', 'intervaltype', 'physicalsize', 'created']
+        const fields = ['name', 'state', 'volumename', 'intervaltype', 'physicalsize', 'virtualsize', 'created']
         if (route?.query.showunique === 'false') fields.splice(1, 0, { field: 'copy', customTitle: 'snapshot.search.location' }, { field: 'datastorename', customTitle: 'storage' })
         if (store.getters.features.snapshotshowchainsize) {
           fields.splice(fields.indexOf('created'), 0, 'chainsize', 'parentname')
@@ -513,6 +513,7 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
           icon: 'delete-outlined',
           label: 'label.action.delete.snapshot',
+          toolbarLabel: 'label.action.delete.snapshot',
           message: 'message.action.delete.snapshot',
           dataView: true,
           show: (record) => { return record.state !== 'Destroyed' },

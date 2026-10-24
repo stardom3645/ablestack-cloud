@@ -16,14 +16,14 @@
 // under the License.
 
 <template>
-  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup' }" @contextmenu="handleGlobalContextMenu">
+  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup', 'snapshot-list-table': $route.name === 'snapshot' }" @contextmenu="handleGlobalContextMenu">
     <a-table
       size="middle"
       :loading="loading"
       :locale="emptyText ? { emptyText } : undefined"
       :columns="isOrderUpdatable() ? columns : columns.filter(x => x.dataIndex !== 'order')"
       :dataSource="items"
-      :scroll="['autoscalevmgroup', 'affinitygroup'].includes($route.name) ? { x: 980 } : undefined"
+      :scroll="$route.name === 'snapshot' ? { x: 1400 } : ['autoscalevmgroup', 'affinitygroup'].includes($route.name) ? { x: 980 } : undefined"
       :rowKey="listRowKey"
       :pagination="false"
       :rowSelection="explicitlyAllowRowSelection || enableGroupAction() || $route.name === 'event' ? {selectedRowKeys: selectedRowKeys, onChange: onSelectChange, getCheckboxProps: record => ({ disabled: selectionDisabled(record) }), columnWidth: 30} : null"
@@ -263,6 +263,7 @@
         >{{ translateEventType(text) }}</span>
         <span v-else>{{ translateEventType(text) }}</span>
       </template>
+      <template v-if="$route.name === 'snapshot' && column.key === 'intervaltype'"><span>{{ $t(snapshotListInterval(text)) }}</span></template>
       <template v-if="column.key === 'schedule'">
         <div v-if="['/snapshotpolicy', '/backupschedule'].some(path => $route.path.endsWith(path))">
           <label class="interval-content">
@@ -438,7 +439,8 @@
           >
       </template>
       <template v-else-if="['size', 'virtualsize'].includes(column.key)">
-        <span v-if="$route.meta.name === 'buckets' && text !== undefined && text !== null">
+        <span v-if="$route.name === 'snapshot'">{{ snapshotListSize(snapshotListSizeValue(record, column.key)) ?? $t('label.snapshot.list.unknown') }}</span>
+        <span v-else-if="$route.meta.name === 'buckets' && text !== undefined && text !== null">
           {{ convertKB(text) }}
         </span>
         <span v-else-if="text && $route.path === '/kubernetes'">
@@ -452,7 +454,8 @@
         <span>{{ text }} GiB</span>
       </template>
       <template v-if="column.key === 'physicalsize'">
-        <span v-if="text">
+        <span v-if="$route.name === 'snapshot'">{{ snapshotListSize(snapshotListSizeValue(record, column.key)) ?? $t('label.snapshot.list.unknown') }}</span>
+        <span v-else-if="text">
           {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
         </span>
       </template>
@@ -1196,6 +1199,7 @@
 <script>
 import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import InstanceGroupSummary from '@/views/compute/InstanceGroupSummary'
+import { snapshotListSize, snapshotListInterval, snapshotListSizeValue } from '@/utils/storageSnapshotPresentation'
 import { listRowKey } from '@/utils/listRefresh'
 import { snapshotCopyList } from '@/utils/storageSnapshotSearch'
 import { sshKeyPairLink } from '@/utils/sshKeyPairIdentity'
@@ -1343,6 +1347,7 @@ export default {
     }
   },
   watch: {
+    actions () { if (this.$route.name === 'snapshot') this.closeContextQuickView() },
     items: {
       deep: true,
       handler (newData, oldData) {
@@ -1430,6 +1435,9 @@ export default {
     }
   },
   methods: {
+    snapshotListSize,
+    snapshotListSizeValue,
+    snapshotListInterval,
     volumeVmPath,
     cniDetailLink,
     sshKeyPairLink,
@@ -1507,7 +1515,7 @@ export default {
       }
       event.preventDefault()
       event.stopPropagation()
-      this.contextQuickViewRecord = this.$route.name === 'vmsnapshot' ? Object.freeze({ ...record }) : record
+      this.contextQuickViewRecord = ['vmsnapshot', 'snapshot'].includes(this.$route.name) ? Object.freeze({ ...record }) : record
       this.contextQuickViewPosition = {
         x: event.clientX,
         y: event.clientY
@@ -2106,4 +2114,11 @@ export default {
     }
   }
 
+</style>
+
+<style scoped>
+.snapshot-list-table { max-width: 100%; min-width: 0; }
+.snapshot-list-table :deep(th) { white-space: nowrap; }
+.snapshot-list-table :deep(.ant-table-container) { overflow-x: auto; }
+.snapshot-list-table :deep(tr:focus-visible) { outline: 2px solid var(--ui-link, #1890ff); outline-offset: -2px; }
 </style>
