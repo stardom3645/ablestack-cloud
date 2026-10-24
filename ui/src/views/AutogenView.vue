@@ -848,8 +848,8 @@
         @retry="fetchData({ irefresh: true })" />
       <a-alert v-if="snapshotSearchFailure" class="storage-query-error" type="error" show-icon :message="$t('message.snapshot.search.' + snapshotSearchFailure)" />
       <a-alert v-if="isSnapshotCopyList" class="storage-query-error" type="info" show-icon :message="$t('message.snapshot.search.copy.readonly')" />
-      <a-alert v-if="(isStorageUi || isSnapshotList) && listRefreshError" class="storage-query-error" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
-        <template #description><p v-if="isSnapshotList && snapshotListError">{{ snapshotListError.startsWith('message.') ? $t(snapshotListError) : snapshotListError }}</p><a-button size="small" :disabled="listRequestPending" @click="fetchData({ irefresh: true })">{{ $t('label.retry') }}</a-button></template>
+      <a-alert v-if="(isStorageUi || isSnapshotReadView) && listRefreshError" class="storage-query-error" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
+        <template #description><p v-if="isSnapshotReadView && snapshotListError">{{ snapshotListError.startsWith('message.') ? $t(snapshotListError) : snapshotListError }}</p><a-button size="small" :disabled="listRequestPending" @click="fetchData({ irefresh: true })">{{ $t('label.retry') }}</a-button></template>
       </a-alert>
       <div v-if="dataView">
         <a-spin v-if="isSshKeyPairDetail && !sshKeyPairDetailVisible" :spinning="loading">
@@ -865,10 +865,10 @@
           v-if="$route.path.startsWith('/publicip')"
         ></slot>
         <resource-view
-          v-else-if="(!isSshKeyPairDetail || sshKeyPairDetailVisible) && ($route.meta?.name !== 'vmgroup' || resource.id || loading)"
-          :key="isSshKeyPairDetail ? listScope() : $route.path"
+          v-else-if="(!isSnapshotDetail || resource.id || loading) && (!isSshKeyPairDetail || sshKeyPairDetailVisible) && ($route.meta?.name !== 'vmgroup' || resource.id || loading)"
+          :key="isSshKeyPairDetail || isSnapshotDetail ? listScope() : $route.path"
           :readPending="listRequestPending"
-          :readyForActions="isStorageUi ? storageActionReady : isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name === 'cniconfiguration' ? cniDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady))"
+          :readyForActions="(isStorageUi || isSnapshotDetail) ? storageActionReady : isSshKeyPairDetail ? sshKeyPairDetailActionReady : ($route.meta?.name === 'cniconfiguration' ? cniDetailActionReady : ($route.meta?.name !== 'vmgroup' || vmGroupQueryReady))"
           :resource="resource"
           :loading="loading"
           :tabs="$route.meta.tabs"
@@ -948,6 +948,7 @@ import { getAPI, postAPI, callAPI } from '@/api'
 import { freshSnapshotContext } from '@/utils/vmSnapshotList'
 import { scopedSnapshotOperations, snapshotOperationAffectsRoute } from '@/utils/storageSnapshotNotices'
 import { snapshotSecurityScope as storageSnapshotSecurityScope } from '@/utils/storageSnapshotContext'
+import { snapshotDetailRoute, snapshotDetailParams, snapshotDetailPermissions, readSnapshotDetail } from '@/utils/storageSnapshotDetail'
 import { snapshotListPage, snapshotSourceVolumeRoute, loadSnapshotListColumns, saveSnapshotListColumns } from '@/utils/storageSnapshotPresentation'
 import { storageSnapshotListQuery, storageSnapshotSortColumn, storageSnapshotSortQuery } from '@/utils/storageSnapshotList'
 import { normalizeSnapshotSearch, snapshotSearchError, snapshotSearchPermissionError, snapshotSearchQuery, snapshotCopyList, snapshotListRoute } from '@/utils/storageSnapshotSearch'
@@ -1011,7 +1012,7 @@ export default {
   provide: function () {
     return {
       parentFetchData: this.fetchData,
-      resourceActionReady: () => !(this.isStorageUi || this.isSnapshotList) || this.storageActionReady,
+      resourceActionReady: () => !(this.isStorageUi || this.isSnapshotReadView) || this.storageActionReady,
       parentExecuteAction: this.handleDataViewAction,
       parentToggleLoading: this.toggleLoading,
       parentStartLoading: this.startLoading,
@@ -1239,7 +1240,7 @@ export default {
     isStorageUi () { this.observeStorageHeader() },
     isSnapshotList () { this.observeStorageHeader() },
     snapshotSecurityScope () {
-      if (this.$route.meta?.name === 'vmgroup' || this.isSshKeyPairDetail || snapshotListRoute(this.$route)) this.fetchData()
+      if (this.$route.meta?.name === 'vmgroup' || this.isSshKeyPairDetail || this.$route.name === 'snapshot' || snapshotDetailRoute(this.$route)) this.fetchData()
       if (['createVMSnapshot', 'revertToVMSnapshot', 'deleteVMSnapshot', 'createSnapshotFromVMSnapshot'].includes(this.currentAction.api)) this.closeAction()
       if (this.showAction && (this.$route.meta?.name || this.$route.name) === 'snapshot') this.closeAction()
     },
@@ -1304,6 +1305,8 @@ export default {
     snapshotOperationCompletions () { return scopedSnapshotOperations(storageSnapshotSecurityScope(this.$store)).map(entry => ({ ...entry })) },
     isStorageUi () { return storageUiRoute(this.$route) },
     isSnapshotList () { return snapshotListRoute(this.$route) },
+    isSnapshotDetail () { return snapshotDetailRoute(this.$route) },
+    isSnapshotReadView () { return this.isSnapshotList || this.isSnapshotDetail },
     isSnapshotCopyList () { return snapshotCopyList(this.$route) },
     standardActionDialog () { return this.isStorageUi || !!this.currentAction.standardDialogSize },
     storageActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() },
@@ -1327,7 +1330,7 @@ export default {
       const filtered = ['keyword', 'q', 'state', 'type', 'current', 'virtualmachineid', 'virtualmachineids', 'account', 'domainid'].some(key => this.$route.query[key] !== undefined && this.$route.query[key] !== '')
       return this.$t(filtered ? 'message.vmsnapshot.list.no.results' : 'message.vmsnapshot.list.empty')
     },
-    snapshotSecurityScope () { return JSON.stringify([this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$store.state?.user?.token, this.$store.getters.userInfo?.roletype]) },
+    snapshotSecurityScope () { return JSON.stringify([this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$store.state?.user?.token, this.$store.getters.userInfo?.roletype, ...(snapshotDetailRoute(this.$route) ? [this.$store.getters.userInfo?.roleid, snapshotDetailPermissions(this.$store.getters)] : [])]) },
     activeFiltersList () {
       const queryParams = Object.assign({}, this.$route.query)
       const activeFilters = []
@@ -1402,6 +1405,7 @@ export default {
       return 'self'
     },
     visibleDataViewActions () {
+      if (this.isSnapshotDetail && !this.storageActionReady) return []
       if (this.isStorageUi && !this.resource?.id) return []
       if (this.isSshKeyPairDetail && !this.sshKeyPairDetailActionReady) return []
       if (this.$route.meta?.name === 'vmgroup' && !this.vmGroupQueryReady) return []
@@ -1539,10 +1543,10 @@ export default {
     listScope () {
       if (isSshKeyPairDetailRoute(this.$route)) return sshKeyPairDetailScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
       if (this.$route.meta?.name === 'vmgroup') return vmGroupQueryScope(this.$route, this.$store.getters, this.$store.state?.user?.token)
-      const routeKey = storageUiRoute(this.$route) && this.$route.params?.id
+      const routeKey = (storageUiRoute(this.$route) || snapshotDetailRoute(this.$route)) && this.$route.params?.id
         ? storageDetailRouteKey(this.$route)
         : this.$route.meta?.name === 'cniconfiguration' && this.$route.params?.id ? cniHistoryRouteKey(this.$route) : this.$route.fullPath
-      return JSON.stringify([routeKey, ...(snapshotListRoute(this.$route) ? [this.$store.getters.userInfo?.roletype, this.$store.state?.user?.token] : []), this.$store.getters.project?.id,
+      return JSON.stringify([routeKey, ...((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route)) ? [this.$store.getters.userInfo?.roletype, this.$store.state?.user?.token, this.$store.getters.userInfo?.roleid, ...(snapshotDetailRoute(this.$route) ? [snapshotDetailPermissions(this.$store.getters)] : [])] : []), this.$store.getters.project?.id,
         this.$store.getters.userInfo?.id, this.$store.getters.metrics, this.$store.getters.listAllProjects])
     },
     getStyle () {
@@ -1710,7 +1714,7 @@ export default {
           : null
         this.routeName = matchedRoute?.meta?.name || this.$route?.meta?.name || this.$route?.name || ''
       }
-      const securityScope = JSON.stringify([this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$route.params.id, ...(snapshotListRoute(this.$route) ? [this.$store.getters.userInfo?.roletype, this.$store.state?.user?.token] : [])])
+      const securityScope = JSON.stringify([this.$store.getters.userInfo?.id, this.$store.getters.project?.id, this.$route.params.id, ...((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route)) ? [this.$store.getters.userInfo?.roletype, this.$store.state?.user?.token, this.$store.getters.userInfo?.roleid, ...(snapshotDetailRoute(this.$route) ? [snapshotDetailPermissions(this.$store.getters)] : [])] : [])])
       if (this.listSecurityScope !== securityScope) {
         this.items = []
         this.resource = {}
@@ -1725,7 +1729,7 @@ export default {
       }
       const version = ++this.listRequestVersion
       const sameList = this.listLoadedScope === scope
-      if (snapshotListRoute(this.$route) && !sameList) {
+      if ((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route)) && !sameList) {
         this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null
         this.snapshotListError = ''; this.listRefreshError = false
         this.resetSelection()
@@ -2070,7 +2074,8 @@ export default {
         params = sshKeyPairVmParams(params, this.$route.query)
       }
       const cniQuery = ['cniconfiguration', 'affinitygroup'].includes(this.$route.meta?.name)
-      const response = vmGroups || sshDetail || cniQuery || storageUiRoute(this.$route) || snapshotListRoute(this.$route) ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
+      const snapshotDetail = snapshotDetailRoute(this.$route)
+      const response = snapshotDetail ? Promise.resolve().then(() => readSnapshotDetail(getAPI, snapshotDetailParams(this.$route, this.$store.getters.project), this.$store.getters, () => version === this.listRequestVersion && scope === this.listScope())) : vmGroups || sshDetail || cniQuery || storageUiRoute(this.$route) || snapshotListRoute(this.$route) ? getAPI(requestApi, params, { preserveOnFailure: true, timeout: 20000 }) : callAPI(requestApi, params)
       const request = response.then(async json => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         const groupResult = vmGroups ? vmGroupQueryRows(json) : null
@@ -2191,15 +2196,15 @@ export default {
       }).catch(error => {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         if (sshDetail) { this.rejectSshKeyPairDetail(sshKeyPairDetailFailure(error)); return }
-        if (cniQuery || storageUiRoute(this.$route) || snapshotListRoute(this.$route)) {
-          if (snapshotListRoute(this.$route)) this.snapshotListError = Object.values(error?.response?.data || {}).find(value => value?.errortext)?.errortext || (error.message?.startsWith('message.') ? error.message : 'message.snapshot.list.read.failed')
+        if (cniQuery || storageUiRoute(this.$route) || snapshotListRoute(this.$route) || snapshotDetail) {
+          if (snapshotListRoute(this.$route) || snapshotDetail) this.snapshotListError = Object.values(error?.response?.data || {}).find(value => value?.errortext)?.errortext || (error.message?.startsWith('message.') ? error.message : 'message.snapshot.list.read.failed')
           this.listRefreshError = true
           if (cniQuery) {
             this.resetSelection()
             if (this.$refs.listview) this.$refs.listview.resetSelection()
           }
           const code = Number(error?.response?.data?.errorresponse?.errorcode || error?.response?.status)
-          if (!sameList || [401, 403, 431, 432, 531].includes(code)) {
+          if (!sameList || [401, 403, 431, 432, 531].includes(code) || (snapshotDetail && code === 404)) {
             this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null
             this.resetSelection()
             if (this.$refs.listview) this.$refs.listview.resetSelection()
@@ -2373,7 +2378,7 @@ export default {
       }
     },
     execAction (action, isGroupAction) {
-      if (snapshotListRoute(this.$route) && this.storageActionReady === false) return
+      if ((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route)) && this.storageActionReady === false) return
       if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       this.storageActionGeneration++
       if (action.storageSnapshotMode) {
