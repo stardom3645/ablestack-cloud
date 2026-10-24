@@ -1,11 +1,11 @@
 import json,hashlib,sys,re
 from pathlib import Path
 here=Path(__file__).resolve().parents[1];repo=here.parents[2]
-def read(p):return json.loads((here/p).read_text())
+def read(p):return json.loads((here/p).read_text(encoding='utf-8'))
 summary=read('evidence-summary.json');assert summary['tests']==80 and summary['suites']==6
-assert '80 passed' in (here/'logs/ui-tests-final.log').read_text()
-assert 'No lint errors found' in (here/'logs/ui-lint-final.log').read_text()
-assert 'Build complete.' in (here/'logs/ui-build-final.log').read_text()
+assert '80 passed' in (here/'logs/ui-tests-final.log').read_text(encoding='utf-8')
+assert 'No lint errors found' in (here/'logs/ui-lint-final.log').read_text(encoding='utf-8')
+assert 'Build complete.' in (here/'logs/ui-build-final.log').read_text(encoding='utf-8')
 for x in read('source-manifest.json'):assert hashlib.sha256((repo/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
 ui=read('browser/ui-validation.json')
 for c in ['31','32']:
@@ -31,5 +31,5 @@ for c in ['31','32']:
 assert read('evidence/protection-verified.json')['windows']['preserved']and read('evidence/protection-verified.json')['wsl']['preserved']
 for f in here.rglob('*'):
  if f.is_file()and f.suffix in ['.json','.jsonl','.md','.mjs','.py','.log','.txt']:
-  text=f.read_text();assert not re.search(r'Ablecloud[0-9]+!',text),'Credential leak: '+str(f)
+  text=f.read_text(encoding='utf-8');assert not re.search(r'Ablecloud[0-9]+!',text),'Credential leak: '+str(f)
 print('PASS: 80 tests, 49 cases per cluster, real UI job/owner traces, final assets/theme/layout, cleanup and preservation')
