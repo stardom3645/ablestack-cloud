@@ -74,6 +74,16 @@ public class ListSnapshotsCmd extends BaseListTaggedResourcesCmd {
             "Valid location types: 'primary', 'secondary'. Default is empty", since = "4.19.0")
     private String locationType;
 
+    @Parameter(name = "sortkey", type = CommandType.STRING, description = "Server sort field: created (default), id, name, state, volumename, intervaltype, virtualsize, account, domain or project. Copy-dependent fields are not supported.")
+    private String sortKey;
+
+    @Parameter(name = "sortorder", type = CommandType.STRING, description = "Server sort direction: asc or desc (default). Ties use snapshot id in the same direction, then datastore reference ascending.")
+    private String sortOrder;
+
+    public String getSortKey() { return sortKey; }
+
+    public String getSortOrder() { return sortOrder; }
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////

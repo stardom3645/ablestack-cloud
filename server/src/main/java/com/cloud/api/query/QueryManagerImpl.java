@@ -6241,7 +6241,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 cmd.getVolumeId(), cmd.getSnapshotName(), cmd.getKeyword(), cmd.getTags(),
                 cmd.getSnapshotType(), cmd.getIntervalType(), cmd.getZoneId(), cmd.getLocationType(),
                 cmd.isShowUnique(), cmd.getAccountName(), cmd.getDomainId(), cmd.getProjectId(), cmd.getStoragePoolId(),
-                cmd.getImageStoreId(), cmd.getStartIndex(), cmd.getPageSizeVal(), cmd.listAll(), cmd.isRecursive(), caller);
+                cmd.getImageStoreId(), cmd.getStartIndex(), cmd.getPageSizeVal(), cmd.listAll(), cmd.isRecursive(), caller,
+                new SnapshotListOrdering(cmd.getSortKey(), cmd.getSortOrder()));
         ListResponse<SnapshotResponse> response = new ListResponse<>();
         ResponseView respView = ResponseView.Restricted;
         if (cmd instanceof ListSnapshotsCmdByAdmin) {
@@ -6279,7 +6280,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 null, null, null, null,
                 null, null, zoneId, location,
                 false, null, null, null, null, null,
-                null, null, true, false, caller);
+                null, null, true, false, caller, new SnapshotListOrdering(null, null));
         ResponseView respView = ResponseView.Restricted;
         if (CallContext.current().getCallingAccount().getType() == Account.Type.ADMIN) {
             respView = ResponseView.Full;
@@ -6294,7 +6295,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             final Long volumeId, final String name, final String keyword, final Map<String, String> tags,
             final String snapshotTypeStr, final String intervalTypeStr, final Long zoneId, final String locationTypeStr,
             final boolean isShowUnique, final String accountName, Long domainId, final Long projectId, final Long storagePoolId, final Long imageStoreId,
-            final Long startIndex, final Long pageSize,final boolean listAll, boolean isRecursive, final Account caller) {
+            final Long startIndex, final Long pageSize,final boolean listAll, boolean isRecursive, final Account caller,
+            final SnapshotListOrdering ordering) {
         ids = getIdsListFromCmd(id, ids);
         Snapshot.LocationType locationType = null;
         if (locationTypeStr != null) {
@@ -6307,7 +6309,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         locationType = SnapshotCopyContract.location(locationType, storagePoolId, imageStoreId);
 
-        Filter searchFilter = new Filter(SnapshotJoinVO.class, "snapshotStorePair", SortKeyAscending.value(), startIndex, pageSize);
+        Filter searchFilter = ordering.filter(startIndex, pageSize, isShowUnique);
 
         List<Long> permittedAccountIds = new ArrayList<>();
         Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, ListProjectResourcesCriteria>(domainId, isRecursive, null);
@@ -6324,11 +6326,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         SearchBuilder<SnapshotJoinVO> sb = snapshotJoinDao.createSearchBuilder();
-        if (isShowUnique) {
-            sb.select(null, Func.DISTINCT, sb.entity().getId()); // select distinct snapshotId
-        } else {
-            sb.select(null, Func.DISTINCT, sb.entity().getSnapshotStorePair()); // select distinct (snapshotId, store_role, store_id) key
-        }
+        ordering.selectPage(sb, isShowUnique);
         accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccountIds, listProjectResourcesCriteria);
         sb.and("statusNEQ", sb.entity().getStatus(), SearchCriteria.Op.NEQ); //exclude those Destroyed snapshot, not showing on UI
         sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.IN);
@@ -6432,13 +6430,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             return snapshotDataPair;
         }
         List<SnapshotJoinVO> snapshotData = snapshotDataPair.first();
-        List<SnapshotJoinVO> snapshots;
-        if (isShowUnique) {
-            snapshots = snapshotJoinDao.findByDistinctIds(zoneId, snapshotData.stream().map(SnapshotJoinVO::getId).toArray(Long[]::new));
-        } else {
-            snapshots = snapshotJoinDao.searchBySnapshotStorePair(snapshotData.stream().map(SnapshotJoinVO::getSnapshotStorePair).toArray(String[]::new));
-        }
-        return new Pair<>(snapshots, count);
+        List<SnapshotJoinVO> snapshots = snapshotJoinDao.searchBySnapshotStorePair(
+                snapshotData.stream().map(SnapshotJoinVO::getSnapshotStorePair).toArray(String[]::new));
+        return new Pair<>(SnapshotListOrdering.hydrateOrder(snapshotData, snapshots), count);
     }
 
     @Override

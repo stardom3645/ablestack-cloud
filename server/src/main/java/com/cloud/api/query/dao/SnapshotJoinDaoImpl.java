@@ -89,6 +89,19 @@ public class SnapshotJoinDaoImpl extends GenericDaoBaseWithTagInformation<Snapsh
         snapshotByZoneSearch.done();
     }
 
+    @Override
+    protected StringBuilder createPartialSelectSql(SearchCriteria<?> criteria, boolean whereClause, boolean enableQueryCache) {
+        StringBuilder sql = super.createPartialSelectSql(criteria, whereClause, enableQueryCache);
+        // The grouped page chooses MIN(reference). Map its JDBC label back to the VO
+        // field; otherwise GenericDaoBase interprets the expression as a column name.
+        String representative = "MIN(snapshot_view.snapshot_store_pair)";
+        int index = sql.indexOf(representative);
+        if (index >= 0 && index < sql.indexOf(" FROM")) {
+            sql.insert(index + representative.length(), " AS snapshot_store_pair");
+        }
+        return sql;
+    }
+
     private void setSnapshotInfoDetailsInResponse(SnapshotJoinVO snapshot, SnapshotResponse snapshotResponse, boolean isShowUnique) {
         if (!isShowUnique) {
             return;

@@ -921,6 +921,7 @@ import { getAPI, postAPI, callAPI } from '@/api'
 import { freshSnapshotContext } from '@/utils/vmSnapshotList'
 import { scopedSnapshotOperations, snapshotOperationAffectsRoute } from '@/utils/storageSnapshotNotices'
 import { snapshotSecurityScope as storageSnapshotSecurityScope } from '@/utils/storageSnapshotContext'
+import { storageSnapshotListQuery, storageSnapshotSortColumn, storageSnapshotSortQuery } from '@/utils/storageSnapshotList'
 import { snapshotBusy, snapshotSubmissions, trackUnknownSnapshotSubmission } from '@/utils/vmSnapshotActions'
 import VmSnapshotSummary from '@/components/view/VmSnapshotSummary'
 import { mixinDevice } from '@/utils/mixin.js'
@@ -1580,6 +1581,10 @@ export default {
       })
     },
     fetchData (params = {}) {
+      if (this.$route.name === 'snapshot' && !this.$route.params.id) {
+        const clean = storageSnapshotListQuery(this.$route.query)
+        if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) return this.$router.replace({ query: clean })
+      }
       if (this.$route.meta?.name === 'affinitygroup') {
         const clean = affinityGroupQuery(this.$route.query)
         if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) {
@@ -1698,6 +1703,9 @@ export default {
       if ((this.$route.name === 'vmsnapshot' || ['vmgroup', 'cniconfiguration'].includes(this.$route.meta?.name)) && !rebuildSchema) {
         this.columns.forEach(column => { column.sortOrder = (params.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === column.key ? (params.sortorder === 'asc' ? 'ascend' : 'descend') : null })
       }
+      if (this.$route.name === 'snapshot' && !this.dataView && !rebuildSchema) {
+        this.columns.forEach(column => Object.assign(column, storageSnapshotSortColumn(column.key, params)))
+      }
       delete params.q
       delete params.filter
       delete params.irefresh
@@ -1809,7 +1817,8 @@ export default {
             title: this.$t('label.' + String(title).toLowerCase()),
             dataIndex: key,
             sorter: this.$route.name === 'vmsnapshot' ? ['displayname', 'state', 'type', 'current', 'created'].includes(key) : sorter,
-            ...((this.$route.name === 'vmsnapshot' || ['vmgroup', 'cniconfiguration'].includes(this.$route.meta?.name)) ? { sortOrder: (this.$route.query.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {})
+            ...((this.$route.name === 'vmsnapshot' || ['vmgroup', 'cniconfiguration'].includes(this.$route.meta?.name)) ? { sortOrder: (this.$route.query.sortkey || (this.$route.name === 'vmsnapshot' ? 'created' : '')) === key ? (this.$route.query.sortorder === 'asc' ? 'ascend' : 'descend') : null } : {}),
+            ...(this.$route.name === 'snapshot' ? storageSnapshotSortColumn(key, this.$route.query) : {})
           })
           if (this.$route.name !== 'autoscalevmgroup' || defaultColumnKeys.some(column => (typeof column === 'object' ? column.field : column) === key)) this.selectedColumns.push(key)
         }
@@ -3159,15 +3168,18 @@ export default {
     },
     onSearch (opts) {
       const query = Object.assign({}, this.$route.query)
+      const snapshotKeywordSearch = this.$route.name === 'snapshot' && opts && Object.prototype.hasOwnProperty.call(opts, 'searchQuery')
       let searchFilters = this.$route?.meta?.searchFilters || []
       if (typeof searchFilters === 'function') {
         searchFilters = searchFilters()
       }
-      if (Array.isArray(searchFilters)) {
+      if (Array.isArray(searchFilters) && !snapshotKeywordSearch) {
         searchFilters.forEach(key => delete query[key])
       }
-      delete query.name
-      delete query.templatetype
+      if (!snapshotKeywordSearch) {
+        delete query.name
+        delete query.templatetype
+      }
       delete query.keyword
       delete query.q
       this.searchParams = {}
@@ -3208,11 +3220,15 @@ export default {
     },
     changePage (page, pageSize) {
       const query = Object.assign({}, this.$route.query)
-      query.page = this.$route.meta?.name === 'cniconfiguration' && Number(pageSize) !== this.pageSize ? 1 : page
+      query.page = (this.$route.meta?.name === 'cniconfiguration' || this.$route.name === 'snapshot') && Number(pageSize) !== this.pageSize ? 1 : page
       query.pagesize = pageSize
       this.$router.push({ query })
     },
     handleTableChange (pagination, filters, sorter) {
+      if (this.$route.name === 'snapshot') {
+        this.$router.push({ query: storageSnapshotSortQuery(this.$route.query, sorter, this.pageSize) })
+        return
+      }
       if (['vmgroup', 'cniconfiguration'].includes(this.$route.meta?.name)) {
         const query = { ...this.$route.query }
         if (sorter?.order) { query.sortkey = sorter.field; query.sortorder = sorter.order === 'ascend' ? 'asc' : 'desc' } else { delete query.sortkey; delete query.sortorder }
@@ -3224,7 +3240,7 @@ export default {
     },
     changePageSize (currentPage, pageSize) {
       const query = Object.assign({}, this.$route.query)
-      query.page = this.$route.meta?.name === 'cniconfiguration' ? 1 : currentPage
+      query.page = (this.$route.meta?.name === 'cniconfiguration' || this.$route.name === 'snapshot') ? 1 : currentPage
       query.pagesize = pageSize
       this.$router.push({ query })
     },
