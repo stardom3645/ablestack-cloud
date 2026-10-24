@@ -221,7 +221,7 @@
   },
   {
     "path": "scripts/verify.py",
-    "sha256": "5779bb5c7ad4252a076cdc951dfe8922dfba7fb1d05cae23dd39374269d7c1db"
+    "sha256": "1117d0a02daec0e7ed22759accf4c31ef128bc4f4d92c2bf03f43918a760dcac"
   },
   {
     "path": "server-tests.log",

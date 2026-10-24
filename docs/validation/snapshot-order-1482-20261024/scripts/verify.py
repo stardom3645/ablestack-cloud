@@ -141,5 +141,5 @@ for item in read('manifest.json'):
 for log, marker in [('api-build.log', 'BUILD SUCCESS'), ('server-tests.log', 'Tests run: 20, Failures: 0, Errors: 0'), ('ui-tests.log', 'Tests:       74 passed'), ('ui-lint.log', 'No lint errors found'), ('ui-build.log', 'Build complete.')]:
     check(marker in (folder / log).read_text(encoding='utf-8'), 'Final test/build log ' + log)
 result = {'status': 'PASS', 'checks': checks, 'scope': 'Offline evidence consistency and SHA256; not Cloud CI'}
-(folder / 'verification.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
+(folder / 'verification.json').write_bytes((json.dumps(result, indent=2) + '\n').encode('utf-8'))
 print(json.dumps(result))
