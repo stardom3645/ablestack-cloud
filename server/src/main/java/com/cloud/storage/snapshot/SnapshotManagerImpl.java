@@ -2042,30 +2042,46 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         return snapshotSchedules;
     }
 
-    private Type getSnapshotType(Long policyId) {
-        if (policyId.equals(Snapshot.MANUAL_POLICY_ID)) {
-            return Type.MANUAL;
+    protected SnapshotPolicyVO resolveSnapshotPolicy(Long policyId, VolumeInfo volume) {
+        if (policyId == null || policyId == Snapshot.MANUAL_POLICY_ID || policyId == Snapshot.INTERNAL_POLICY_ID) {
+            return null;
         }
-
-        else if (policyId.equals(Snapshot.INTERNAL_POLICY_ID)) {
-            return Type.INTERNAL;
+        SnapshotPolicyVO policy = policyId > 0 ? _snapshotPolicyDao.findById(policyId) : null;
+        if (policy == null || policy.getVolumeId() != volume.getId()
+                || policy.getAccountId() != volume.getAccountId() || policy.getDomainId() != volume.getDomainId()) {
+            throw new InvalidParameterValueException("Snapshot policy is unavailable for the source volume");
         }
+        if (getSnapshotType(DateUtil.getIntervalType(policy.getInterval())) == null) {
+            throw new InvalidParameterValueException("Unsupported snapshot policy interval");
+        }
+        return policy;
+    }
 
-        else {
-            SnapshotPolicyVO spstPolicyVO = _snapshotPolicyDao.findById(policyId);
-            IntervalType intvType = DateUtil.getIntervalType(spstPolicyVO.getInterval());
-            return getSnapshotType(intvType);
+    protected Type getSnapshotType(Long policyId, SnapshotPolicyVO policy) {
+        if (policy != null) {
+            return getSnapshotType(DateUtil.getIntervalType(policy.getInterval()));
+        }
+        return policyId != null && policyId == Snapshot.INTERNAL_POLICY_ID ? Type.INTERNAL : Type.MANUAL;
+    }
+
+    protected void recordSnapshotCreationSource(SnapshotVO snapshot, Type type, SnapshotPolicyVO policy) {
+        snapshotDetailsDao.addDetail(snapshot.getId(), "snapshot.creation.intent", policy == null ? type.name() : "POLICY", false);
+        if (policy != null) {
+            // Keep policy provenance after policy/schedule/job expiration. These are not user-editable tags.
+            snapshotDetailsDao.addDetail(snapshot.getId(), "snapshot.policy.id", String.valueOf(policy.getId()), false);
+            snapshotDetailsDao.addDetail(snapshot.getId(), "snapshot.policy.uuid", policy.getUuid(), false);
+            snapshotDetailsDao.addDetail(snapshot.getId(), "snapshot.policy.interval", type.name(), false);
         }
     }
 
     private Type getSnapshotType(IntervalType intvType) {
-        if (intvType.equals(IntervalType.HOURLY)) {
+        if (IntervalType.HOURLY.equals(intvType)) {
             return Type.HOURLY;
-        } else if (intvType.equals(IntervalType.DAILY)) {
+        } else if (IntervalType.DAILY.equals(intvType)) {
             return Type.DAILY;
-        } else if (intvType.equals(IntervalType.WEEKLY)) {
+        } else if (IntervalType.WEEKLY.equals(intvType)) {
             return Type.WEEKLY;
-        } else if (intvType.equals(IntervalType.MONTHLY)) {
+        } else if (IntervalType.MONTHLY.equals(intvType)) {
             return Type.MONTHLY;
         }
         return null;
@@ -2596,7 +2612,8 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         _accountMgr.checkAccess(caller, null, true, volume);
         validateNoBackupActivityOrHistoryForVolumeSnapshot(volumeId, "create snapshot");
         supportedByHypervisor(volume, isFromVmSnapshot);
-        Type snapshotType = getSnapshotType(policyId);
+        SnapshotPolicyVO policy = resolveSnapshotPolicy(policyId, volume);
+        Type snapshotType = getSnapshotType(policyId, policy);
         Account owner = _accountMgr.getAccount(volume.getAccountId());
 
         ResourceType storeResourceType = getStoreResourceType(volume.getDataCenterId(), locationType);
@@ -2640,6 +2657,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             if (snapshot == null) {
                 throw new CloudRuntimeException(String.format("Failed to create snapshot for volume: %s", volume));
             }
+            recordSnapshotCreationSource(snapshot, snapshotType, policy);
             creationSourceService.captureSnapshot(snapshot, volume);
             CallContext.current().putContextParameter(Snapshot.class, snapshot.getUuid());
             _resourceLimitMgr.incrementResourceCount(volume.getAccountId(), ResourceType.snapshot);
