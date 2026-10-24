@@ -6252,7 +6252,12 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (cmd.isIncludeSnapshotContext()) {
             for (SnapshotResponse item : templateResponses) {
                 result.first().stream().filter(row -> row.getUuid().equals(item.getSnapshotId())).findFirst()
-                        .ifPresent(row -> item.setSnapshotContext(snapshotOperationContext(row.getVolumeId())));
+                        .ifPresent(row -> {
+                            Map<String, Object> context = snapshotOperationContext(row.getVolumeId());
+                            context.put("restore", com.cloud.storage.snapshot.SnapshotRestoreContract.describe(row.getSize(),
+                                    _diskOfferingDao.findById(row.getDiskOfferingId())));
+                            item.setSnapshotContext(context);
+                        });
             }
         }
         response.setResponses(templateResponses, result.second());

@@ -9531,5 +9531,7 @@
   "label.snapshot.volume.name.placeholder": "Volume name (optional)",
   "label.snapshot.volume.attach": "Attach to a virtual machine",
   "label.snapshot.volume.select.vm": "Select a virtual machine",
-  "message.snapshot.dialog.pending": "Resubmission is blocked until the existing operation is resolved. Open its details in header notifications to check the same operation."
+  "message.snapshot.dialog.pending": "Resubmission is blocked until the existing operation is resolved. Open its details in header notifications to check the same operation.",
+  "message.snapshot.volume.inheritance": "Inherits the capacity and disk offering captured by the snapshot. Resize the volume after restoration.",
+  "message.snapshot.volume.inheritance.unavailable": "The inherited capacity or disk offering is unavailable. Refresh the snapshot state."
 }

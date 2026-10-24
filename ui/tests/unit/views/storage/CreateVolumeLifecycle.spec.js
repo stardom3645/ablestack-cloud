@@ -137,3 +137,12 @@ test('confirmed missing source permits snapshot recovery while incomplete source
   ctx.snapshotSafetyContext = { source: { sourceavailable: false } }; ctx.explicitAllocation = { policy: 'full' }
   expect(CreateVolume.computed.allocationBlocked.call(ctx)).toBe(true)
 })
+
+test('failed snapshot restore retains target and inputs while surfacing the async failure', async () => {
+  const ctx = snapshotContext(); ctx.attachVolume = false
+  ctx.submitSnapshotSafely.mockResolvedValue({ jobid: 'failed-job', status: 'failed', error: 'storage unavailable', completion: Promise.resolve({ jobstatus: 2 }) })
+  CreateVolume.methods.handleSubmit.call(ctx); await flush()
+  expect(ctx.closeModal).not.toHaveBeenCalled(); expect(ctx.form.name).toBe('first-volume')
+  expect(ctx.resource.id).toBe('snapshot'); expect(ctx.snapshotSafetyError).toBe('storage unavailable')
+  expect(ctx.loading).toBe(false)
+})

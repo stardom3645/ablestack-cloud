@@ -70,7 +70,7 @@
       <div v-if="snapshotSafetyTarget && !isNormalUserOrProject && !submitHandler" class="snapshot-volume-owner">
         <ownership-selection embedded @fetch-owner="fetchOwnerOptions" />
       </div>
-      <a-form-item ref="diskofferingid" name="diskofferingid" v-if="!createVolumeFromSnapshot || (createVolumeFromSnapshot && resource.volumetype === 'ROOT')">
+      <a-form-item ref="diskofferingid" name="diskofferingid" v-if="!createVolumeFromSnapshot">
         <template #label>
           <tooltip-label :title="$t('label.diskofferingid')" :tooltip="apiParams.diskofferingid.description || 'Disk Offering'"/>
         </template>
@@ -93,6 +93,18 @@
           </a-select-option>
         </a-select>
       </a-form-item>
+      <div v-if="createVolumeFromSnapshot" class="snapshot-restore-contract" data-testid="snapshot-restore-contract" aria-live="polite">
+        <template v-if="snapshotRestore">
+          <dl>
+            <div><dt>{{ $t('label.size') }}</dt><dd>{{ snapshotRestore.sizeGiB }} GiB</dd></div>
+            <div><dt>{{ $t('label.diskofferingid') }}</dt><dd>{{ snapshotRestore.diskofferingname }}</dd></div>
+          </dl>
+          <p>{{ $t('message.snapshot.volume.inheritance') }}</p>
+        </template>
+        <a-alert v-else-if="!snapshotSafetyLoading" type="error" show-icon :message="$t('message.snapshot.volume.inheritance.unavailable')">
+          <template #description><a-button type="link" size="small" @click="refreshSnapshotSafety">{{ $t('label.retry') }}</a-button></template>
+        </a-alert>
+      </div>
       <AllocationSummary v-if="selectedDiskOffering" :resource="selectedDiskOffering" compact />
       <p v-if="explicitAllocation" class="volume-storage-error">{{ $t('message.allocation.cost.' + explicitAllocation.policy) }}</p>
       <p v-if="explicitAllocation && !createOnStorage" class="volume-storage-error">{{ $t('message.allocation.target.pending') }}</p>
@@ -254,7 +266,7 @@
       </a-form-item>
       <MoldDialogActions v-if="!hideActions" :span="24" class="" :busy="loading" @keyup.ctrl.enter="snapshotSafetyTarget && handleSubmit($event)">
         <a-button :disabled="loading" @click="closeModal">{{ $t('label.cancel') }}</a-button>
-        <a-button type="primary" ref="submit" :loading="loading" :disabled="snapshotSafetyBlocked || allocationBlocked || (createOnStorage && (storageLoading || storageFetchError || !selectedStoragePool))" @click="handleSubmit">{{ $t(snapshotSafetyTarget ? 'label.create' : 'label.ok') }}</a-button>
+        <a-button type="primary" ref="submit" :loading="loading" :disabled="snapshotSafetyBlocked || snapshotRestoreBlocked || allocationBlocked || (createOnStorage && (storageLoading || storageFetchError || !selectedStoragePool))" @click="handleSubmit">{{ $t(snapshotSafetyTarget ? 'label.create' : 'label.ok') }}</a-button>
       </MoldDialogActions>
     </a-form>
   </a-spin>
@@ -279,6 +291,7 @@ import OwnershipSelection from '@/views/compute/wizard/OwnershipSelection.vue'
 import StoragePoolCapacity from '@/views/storage/StoragePoolCapacity.vue'
 import store from '@/store'
 import AllocationSummary from '@/components/view/AllocationSummary'
+import { snapshotRestoreInheritance, pureSnapshotRestoreParams } from '@/utils/snapshotRestore'
 import { allocationIntent, poolAcceptsIntent, readAllocationCapability, readAllocationList } from '@/utils/volumeAllocation'
 
 export default {
@@ -336,6 +349,8 @@ export default {
     }
   },
   computed: {
+    snapshotRestore () { return snapshotRestoreInheritance(this.snapshotSafetyContext) },
+    snapshotRestoreBlocked () { return this.createVolumeFromSnapshot && !this.snapshotRestore },
     explicitAllocation () { return allocationIntent(this.selectedDiskOffering) },
     allocationBlocked () {
       return (this.createOnStorage && !!this.explicitAllocation && (this.allocationLoading || this.allocationError || !this.allocationCap?.policies[this.explicitAllocation.policy])) ||
@@ -514,6 +529,14 @@ export default {
     },
     fetchDiskOfferings (zoneId) {
       const sequence = ++this.offeringRequestId
+      if (this.createVolumeFromSnapshot) {
+        this.offerings = []
+        this.customDiskOffering = false
+        this.isCustomizedDiskIOps = false
+        for (const key of ['diskofferingid', 'size', 'miniops', 'maxiops', 'kmskeyid']) delete this.form[key]
+        this.loading = false
+        return Promise.resolve()
+      }
       this.offerings = []
       this.form.diskofferingid = undefined
       this.form.storageid = undefined
@@ -617,7 +640,7 @@ export default {
       })
     },
     handleSubmit (e) {
-      if (this.loading || this.snapshotSafetyBlocked || this.allocationBlocked || (this.createOnStorage && this.storageLoading)) return
+      if (this.loading || this.snapshotSafetyBlocked || this.snapshotRestoreBlocked || this.allocationBlocked || (this.createOnStorage && this.storageLoading)) return
       this.formRef.value.validate().then(async () => {
         if (this.loading || (this.dialogCurrent && !this.dialogCurrent())) return
         if (this.createOnStorage && (this.storageFetchError || this.storageLoading || !this.selectedStoragePool)) {
@@ -625,7 +648,7 @@ export default {
         }
         if (this.allocationBlocked) throw new Error(this.$t('message.allocation.capability.failed'))
         const formRaw = toRaw(this.form)
-        const values = this.handleRemoveFields(formRaw)
+        let values = this.handleRemoveFields(formRaw)
         if (this.createVolumeFromVM) {
           values.account = this.resource.account
           values.domainid = this.resource.domainid
@@ -638,7 +661,7 @@ export default {
         delete values.createOnStorage
         if (!this.createOnStorage) delete values.storageid
         if (this.createVolumeFromSnapshot) {
-          values.snapshotid = this.resource.id
+          values = pureSnapshotRestoreParams(values, this.resource.id)
         }
         if (this.attachVolume) {
           this.vmidtoattach = values.virtualmachineid
@@ -676,9 +699,16 @@ export default {
               if (!current() || !allowed.some(api => api.name === 'attachVolume') || machines.length !== 1 || vm.id !== capturedAttachment.virtualmachineid || !['Running', 'Stopped'].includes(vm.state) || vm.zoneid !== values.zoneid || (vm.projectid || '') !== (values.projectid || '') || (!values.projectid && (vm.account !== values.account || vm.domainid !== values.domainid))) throw new Error(this.$t('message.snapshot.action.changed'))
             }
             const operation = await this.submitSnapshotSafely(values, validateAttachment)
+            let result
+            if (operation.jobid) {
+              result = await operation.completion
+              if (!current()) return
+              if (operation.status !== 'complete') {
+                this.snapshotSafetyError = this.$t(operation.error || 'message.snapshot.action.failed')
+                return
+              }
+            }
             if (capturedAttachment && operation.jobid) {
-              const result = await operation.completion
-              if (operation.status !== 'complete' || !current()) return
               const body = result.jobresult?.createvolumeresponse || result.jobresult
               const created = body.volume
               await submitSnapshotOperation({
@@ -778,8 +808,14 @@ export default {
       this.attachVolume = !this.attachVolume
       this.virtualmachines = []
       if (this.attachVolume) {
+        this.rules.virtualmachineid = [{ required: true, message: this.$t('message.error.select') }]
+        this.rules.deviceid = [{ validator: this.validateDeviceId }]
         this.attachVolumeApiParams = this.$getApiParams('attachVolume')
         this.fetchVirtualMachines(this.form.zoneid)
+      } else {
+        delete this.rules.virtualmachineid
+        delete this.rules.deviceid
+        if (this.formRef?.value?.clearValidate) this.formRef.value.clearValidate(['virtualmachineid', 'deviceid'])
       }
     },
     onChangeCreateOnStorage (checked) {
@@ -838,6 +874,11 @@ export default {
 .snapshot-volume-form > span > :deep(.ant-form-item) { margin-bottom: 24px; }
 .snapshot-volume-attach { display: flex; align-items: center; gap: 8px; }
 .snapshot-volume-attach :deep(.ant-switch) { flex-shrink: 0; }
+.snapshot-restore-contract { margin-bottom: 24px; color: var(--ui-text-primary); }
+.snapshot-restore-contract dl { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px; }
+.snapshot-restore-contract dt { color: var(--ui-text-secondary); margin-bottom: 8px; }
+.snapshot-restore-contract dd { margin: 0; overflow-wrap: anywhere; }
+.snapshot-restore-contract p { margin: 12px 0 0; color: var(--ui-text-secondary); }
 .snapshot-volume-owner { margin-bottom: 24px; }
 .snapshot-volume-owner :deep(.ownership-selection-embedded) {
   display: grid;

@@ -157,7 +157,7 @@ public class SnapshotJoinDaoImpl extends GenericDaoBaseWithTagInformation<Snapsh
             snapshotResponse.setVolumeName(snapshot.getVolumeName());
             snapshotResponse.setVolumeType(snapshot.getVolumeType().name());
             snapshotResponse.setVolumeState(snapshot.getVolumeState().name());
-            snapshotResponse.setVirtualSize(snapshot.getVolumeSize());
+            snapshotResponse.setVirtualSize(snapshot.getSize());
             VolumeVO volume = ApiDBUtils.findVolumeById(snapshot.getVolumeId());
             if (volume != null && volume.getVolumeType() == Type.ROOT && volume.getInstanceId() != null) {
                 VMInstanceVO vm = ApiDBUtils.findVMInstanceById(volume.getInstanceId());
