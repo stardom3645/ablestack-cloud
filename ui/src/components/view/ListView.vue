@@ -54,7 +54,9 @@
       </div>
     </template>
     <template #bodyCell="{ column, text, record }">
-      <AffinityGroupPolicy v-if="$route.meta?.name === 'affinitygroup' && column.key === 'type'" :type="record.type" compact />
+      <span v-if="$route.name === 'snapshot' && column.key === 'copy'">{{ $t(record.copy?.role === 'Primary' ? 'label.primary.storage' : record.copy?.role === 'Image' ? 'label.secondary.storage' : 'label.unknown') }}</span>
+      <span v-else-if="$route.name === 'snapshot' && column.key === 'datastorename'">{{ record.datastorename || $t('message.snapshot.search.store.unavailable') }}</span>
+      <AffinityGroupPolicy v-else-if="$route.meta?.name === 'affinitygroup' && column.key === 'type'" :type="record.type" compact />
       <span v-else-if="$route.meta?.name === 'affinitygroup' && column.key === 'description'">{{ text || '—' }}</span>
       <template v-else-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'zonename'].includes(column.key)">
         <auto-scale-list-cell :resource="record" :column="column.key" />
@@ -1195,6 +1197,7 @@
 import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import InstanceGroupSummary from '@/views/compute/InstanceGroupSummary'
 import { listRowKey } from '@/utils/listRefresh'
+import { snapshotCopyList } from '@/utils/storageSnapshotSearch'
 import { sshKeyPairLink } from '@/utils/sshKeyPairIdentity'
 import { getAPI, postAPI } from '@/api'
 import OsLogo from '@/components/widgets/OsLogo'
@@ -1448,7 +1451,7 @@ export default {
         }
       }
     },
-    listRowKey,
+    listRowKey (record) { return snapshotCopyList(this.$route) ? (record.copy?.id || listRowKey(record)) : listRowKey(record) },
     translateEventType (type) {
       if (!type || typeof type !== 'string') {
         return type
@@ -1548,6 +1551,7 @@ export default {
           .test(this.$route.path)
     },
     enableGroupAction () {
+      if (snapshotCopyList(this.$route)) return false
       if (this.resourcePath) return this.explicitlyAllowRowSelection
       return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'cniconfiguration', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
         'vmsnapshot', 'backup', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway', 'vnfapp',

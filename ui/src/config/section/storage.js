@@ -387,8 +387,9 @@ export default {
       docHelp: 'adminguide/storage.html#working-with-volume-snapshots',
       permission: ['listSnapshots'],
       resourceType: 'Snapshot',
-      columns: () => {
+      columns: (getters, route) => {
         const fields = ['name', 'state', 'volumename', 'intervaltype', 'physicalsize', 'created']
+        if (route?.query.showunique === 'false') fields.splice(1, 0, { field: 'copy', customTitle: 'snapshot.search.location' }, { field: 'datastorename', customTitle: 'storage' })
         if (store.getters.features.snapshotshowchainsize) {
           fields.splice(fields.indexOf('created'), 0, 'chainsize', 'parentname')
         }
@@ -432,7 +433,7 @@ export default {
         }
       ],
       searchFilters: () => {
-        const filters = ['name', 'domainid', 'account', 'tags', 'zoneid']
+        const filters = ['name', 'volumeid', 'snapshottype', 'intervaltype', 'showunique', 'locationtype', 'domainid', 'account', 'tags', 'zoneid']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
           filters.push('storageid')
           filters.push('imagestoreid')

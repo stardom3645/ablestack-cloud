@@ -52,7 +52,7 @@ public class ListSnapshotsCmd extends BaseListTaggedResourcesCmd {
     @Parameter(name=ApiConstants.IDS, type=CommandType.LIST, collectionType=CommandType.UUID, entityType=SnapshotResponse.class, description = "The IDs of the Snapshots, mutually exclusive with id", since = "4.9")
     private List<Long> ids;
 
-    @Parameter(name = ApiConstants.INTERVAL_TYPE, type = CommandType.STRING, description = "Valid values are HOURLY, DAILY, WEEKLY, and MONTHLY.")
+    @Parameter(name = ApiConstants.INTERVAL_TYPE, type = CommandType.STRING, description = "Recurring interval: HOURLY, DAILY, WEEKLY or MONTHLY. Applies with or without volumeid and intersects snapshottype=RECURRING. Cannot be combined with MANUAL.")
     private String intervalType;
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "Lists Snapshot by Snapshot name")

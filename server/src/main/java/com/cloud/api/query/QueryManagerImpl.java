@@ -320,7 +320,6 @@ import com.cloud.storage.DataStoreRole;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.ScopeType;
 import com.cloud.storage.Snapshot;
-import com.cloud.storage.SnapshotVO;
 import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.Storage.TemplateType;
@@ -2820,6 +2819,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Boolean isRecursive = domainIdRecursiveListProject.second();
         ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
         Filter searchFilter = new Filter(VolumeVO.class, "created", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+        // Candidate pages must not overlap when several volumes have the same creation time.
+        searchFilter.addOrderBy(VolumeVO.class, "id", false);
 
         SearchBuilder<VolumeVO> volumeSearchBuilder = volumeDao.createSearchBuilder();
         volumeSearchBuilder.select(null, Func.DISTINCT, volumeSearchBuilder.entity().getId()); // select distinct
@@ -6397,22 +6398,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
-        if (snapshotTypeStr != null) {
-            Snapshot.Type snapshotType = SnapshotVO.getSnapshotType(snapshotTypeStr);
-            if (snapshotType == null) {
-                throw new InvalidParameterValueException("Unsupported snapshot type " + snapshotTypeStr);
-            }
-            if (snapshotType == Snapshot.Type.RECURRING) {
-                sc.setParameters("snapshotTypeEQ", Snapshot.Type.HOURLY.ordinal(), Snapshot.Type.DAILY.ordinal(), Snapshot.Type.WEEKLY.ordinal(), Snapshot.Type.MONTHLY.ordinal());
-            } else {
-                sc.setParameters("snapshotTypeEQ", snapshotType.ordinal());
-            }
-        } else if (intervalTypeStr != null && volumeId != null) {
-            Snapshot.Type type = SnapshotVO.getSnapshotType(intervalTypeStr);
-            if (type == null) {
-                throw new InvalidParameterValueException("Unsupported snapshot interval type " + intervalTypeStr);
-            }
-            sc.setParameters("snapshotTypeEQ", type.ordinal());
+        Object[] snapshotTypes = SnapshotListFilters.types(snapshotTypeStr, intervalTypeStr);
+        if (snapshotTypes != null) {
+            sc.setParameters("snapshotTypeEQ", snapshotTypes);
         } else {
             // Show only MANUAL and RECURRING snapshot types
             sc.setParameters("snapshotTypeNEQ", Snapshot.Type.TEMPLATE.ordinal(), Snapshot.Type.GROUP.ordinal());

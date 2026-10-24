@@ -823,6 +823,8 @@
         :updated="listLastUpdated"
         :retained="!!listLoadedScope"
         @retry="fetchData({ irefresh: true })" />
+      <a-alert v-if="snapshotSearchFailure" class="storage-query-error" type="error" show-icon :message="$t('message.snapshot.search.' + snapshotSearchFailure)" />
+      <a-alert v-if="isSnapshotCopyList" class="storage-query-error" type="info" show-icon :message="$t('message.snapshot.search.copy.readonly')" />
       <a-alert v-if="isStorageUi && listRefreshError" class="storage-query-error" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
         <template #description><a-button size="small" :disabled="listRequestPending" @click="fetchData({ irefresh: true })">{{ $t('label.retry') }}</a-button></template>
       </a-alert>
@@ -867,7 +869,7 @@
           :emptyText="$route.meta?.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
           :columns="columns"
           :items="items"
-          :actions="$route.meta?.name === 'vmgroup' && !vmGroupQueryReady ? [] : actions"
+          :actions="isSnapshotCopyList || snapshotSearchFailure || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
           :currentPage="page"
           :pageSize="pageSize"
           :columnKeys="columnKeys"
@@ -922,6 +924,7 @@ import { freshSnapshotContext } from '@/utils/vmSnapshotList'
 import { scopedSnapshotOperations, snapshotOperationAffectsRoute } from '@/utils/storageSnapshotNotices'
 import { snapshotSecurityScope as storageSnapshotSecurityScope } from '@/utils/storageSnapshotContext'
 import { storageSnapshotListQuery, storageSnapshotSortColumn, storageSnapshotSortQuery } from '@/utils/storageSnapshotList'
+import { normalizeSnapshotSearch, snapshotSearchError, snapshotSearchPermissionError, snapshotSearchQuery, snapshotCopyList, snapshotListRoute } from '@/utils/storageSnapshotSearch'
 import { snapshotBusy, snapshotSubmissions, trackUnknownSnapshotSubmission } from '@/utils/vmSnapshotActions'
 import VmSnapshotSummary from '@/components/view/VmSnapshotSummary'
 import { mixinDevice } from '@/utils/mixin.js'
@@ -1044,6 +1047,7 @@ export default {
       listSecurityScope: null,
       listCustomRender: {},
       listRefreshError: false,
+      snapshotSearchFailure: '',
       listLastUpdated: null,
       storageHeaderWidth: 0,
       vmGroupContextScope: null,
@@ -1253,7 +1257,11 @@ export default {
     '$store.getters.metrics' (oldVal, newVal) {
       this.fetchData()
     },
-    '$store.getters.listAllProjects' (oldVal, newVal) {
+    '$store.getters.listAllProjects' (enabled) {
+      if (snapshotListRoute(this.$route) && !this.$store.getters.project?.id) {
+        const projectid = enabled ? '-1' : '0'
+        if (this.$route.query.projectid !== projectid) return this.$router.push({ query: { ...this.$route.query, projectid, page: '1' } })
+      }
       this.fetchData()
     },
     showAction (visible) {
@@ -1267,6 +1275,7 @@ export default {
   computed: {
     snapshotOperationCompletions () { return scopedSnapshotOperations(storageSnapshotSecurityScope(this.$store)).map(entry => ({ ...entry })) },
     isStorageUi () { return storageUiRoute(this.$route) },
+    isSnapshotCopyList () { return snapshotCopyList(this.$route) },
     standardActionDialog () { return this.isStorageUi || !!this.currentAction.standardDialogSize },
     storageActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() },
     isSshKeyPairDetail () { return isSshKeyPairDetailRoute(this.$route) },
@@ -1284,6 +1293,7 @@ export default {
       return this.$t(filtered ? 'message.vm.group.query.no.results' : 'message.vm.group.query.empty')
     },
     snapshotEmptyText () {
+      if (this.$route.name === 'snapshot') return this.$t('message.snapshot.search.no.results')
       if (this.$route.name !== 'vmsnapshot') return ''
       const filtered = ['keyword', 'q', 'state', 'type', 'current', 'virtualmachineid', 'virtualmachineids', 'account', 'domainid'].some(key => this.$route.query[key] !== undefined && this.$route.query[key] !== '')
       return this.$t(filtered ? 'message.vmsnapshot.list.no.results' : 'message.vmsnapshot.list.empty')
@@ -1380,6 +1390,7 @@ export default {
       })
     },
     visibleListActions () {
+      if (this.isSnapshotCopyList || this.snapshotSearchFailure) return []
       if (!this.actions || this.actions.length === 0 || this.dataView) {
         return []
       }
@@ -1563,7 +1574,28 @@ export default {
         return { props: { type: 'default' } }
       }
     },
+    async syncSnapshotProject (projectId) {
+      // The URL retains the scope. 0 is a UI-only default-view marker, never an API project ID.
+      if (typeof projectId !== 'string') return
+      const globalView = ['0', '-1'].includes(projectId)
+      if ((globalView ? !this.$store.getters.project?.id : projectId === this.$store.getters.project?.id) && !!this.$store.getters.listAllProjects === (projectId === '-1')) return
+      const scope = () => JSON.stringify([this.$route.fullPath, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id, this.$store.getters.listAllProjects])
+      const captured = scope()
+      try {
+        let project = {}
+        if (!globalView) {
+          const json = await getAPI('listProjects', { id: projectId, listall: true, details: 'min', ignoreproject: true }, { preserveOnFailure: true, timeout: 20000 })
+          project = json?.listprojectsresponse?.project?.find(item => item.id === projectId)
+          if (!project) throw new Error(this.$t('message.snapshot.search.lookup.denied'))
+        }
+        if (!snapshotListRoute(this.$route) || captured !== scope() || this.$route.query.projectid !== projectId) return
+        await this.$store.dispatch('SetProject', project)
+        await this.$store.dispatch('SetListAllProjects', projectId === '-1')
+        this.fetchData({ irefresh: true })
+      } catch (error) { if (snapshotListRoute(this.$route) && captured === scope()) this.$notifyError(error) }
+    },
     switchProject (projectId) {
+      if (snapshotListRoute(this.$route)) return this.syncSnapshotProject(projectId)
       if (!projectId || !projectId.length || projectId.length !== 36) {
         return
       }
@@ -1582,8 +1614,17 @@ export default {
     },
     fetchData (params = {}) {
       if (this.$route.name === 'snapshot' && !this.$route.params.id) {
-        const clean = storageSnapshotListQuery(this.$route.query)
+        const projectId = this.$route.query.projectid || this.$store.getters.project?.id || (this.$store.getters.listAllProjects ? '-1' : '0')
+        const clean = storageSnapshotListQuery(normalizeSnapshotSearch({ ...this.$route.query, ...(projectId ? { projectid: projectId } : {}) }))
         if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) return this.$router.replace({ query: clean })
+        this.snapshotSearchFailure = snapshotSearchError(clean) || snapshotSearchPermissionError(clean, this.$store.getters)
+        if (this.snapshotSearchFailure) {
+          this.listRequestVersion++; this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null
+          this.listRequestPending = false; this.loading = false; this.listRefreshError = false; this.resetSelection()
+          return
+        }
+      } else {
+        this.snapshotSearchFailure = ''
       }
       if (this.$route.meta?.name === 'affinitygroup') {
         const clean = affinityGroupQuery(this.$route.query)
@@ -1654,7 +1695,7 @@ export default {
       }
       const version = ++this.listRequestVersion
       const sameList = this.listLoadedScope === scope
-      const schemaScope = JSON.stringify([this.$route.path, this.$i18n?.locale, this.$store.getters.metrics, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id])
+      const schemaScope = JSON.stringify([this.$route.path, this.$i18n?.locale, this.$store.getters.metrics, this.$store.getters.listAllProjects, this.$store.getters.userInfo?.id, this.isSnapshotCopyList])
       const rebuildSchema = this.listSchemaScope !== schemaScope
       if (rebuildSchema) {
         this.apiName = ''
@@ -1750,7 +1791,7 @@ export default {
           if (this.$route.meta.columns) {
             const columns = this.$route.meta.columns
             if (columns && typeof columns === 'function') {
-              this.columnKeys = asArray(columns(this.$store.getters))
+              this.columnKeys = asArray(columns(this.$store.getters, this.$route))
             } else {
               this.columnKeys = asArray(columns)
             }
@@ -1825,6 +1866,7 @@ export default {
         this.allColumns = this.$route.name === 'autoscalevmgroup' ? [...this.columns] : this.columns
         if (this.$route.name === 'autoscalevmgroup') this.columns = this.allColumns.filter(column => this.selectedColumns.includes(column.dataIndex))
 
+        const requiredCopyColumns = this.isSnapshotCopyList ? this.columns.filter(column => ['copy', 'datastorename'].includes(column.key)) : []
         if (!store.getters.metrics) {
           if (!this.$store.getters.customColumns[this.$store.getters.userInfo.id]) {
             this.$store.getters.customColumns[this.$store.getters.userInfo.id] = {}
@@ -1848,6 +1890,10 @@ export default {
           }
         }
 
+        if (this.isSnapshotCopyList) {
+          this.selectedColumns = [...new Set([...this.selectedColumns, 'copy', 'datastorename'])]
+          requiredCopyColumns.forEach(column => { if (!this.columns.some(old => old.key === column.key)) this.columns.splice(1, 0, column) })
+        }
         if (this.$route.name === 'autoscalevmgroup' && !this.columns.some(column => column.key === 'filtercolumn')) this.updateSelectedColumns()
 
         this.chosenColumns = this.columns.filter(column => {
@@ -1933,8 +1979,9 @@ export default {
       }
 
       if (this.$store.getters.listAllProjects && !this.projectView) {
-        params.projectid = this.$route.meta?.name === 'affinitygroup' ? (this.$route.query.projectid || '-1') : '-1'
+        params.projectid = (this.$route.meta?.name === 'affinitygroup' || snapshotListRoute(this.$route)) ? (this.$route.query.projectid || '-1') : '-1'
       }
+      if (snapshotListRoute(this.$route) && params.projectid === '0') { delete params.projectid; params.ignoreproject = true }
 
       params.page = this.page
       params.pagesize = this.pageSize
@@ -2245,6 +2292,11 @@ export default {
         delete queryParams[`tags[${filter.tagIdx}].value`]
       } else {
         delete queryParams[filter.key]
+        if (this.$route.name === 'snapshot') {
+          if (filter.key === 'showunique') delete queryParams.locationtype
+          if (filter.key === 'snapshottype') delete queryParams.intervaltype
+          if (filter.key === 'domainid') delete queryParams.account
+        }
         if (this.$route.name === 'vmsnapshot' && filter.key === 'state') delete queryParams.filter
       }
       queryParams.page = '1'
@@ -3167,6 +3219,13 @@ export default {
       this.$router.push({ query })
     },
     onSearch (opts) {
+      if (this.$route.name === 'snapshot' && opts && Object.prototype.hasOwnProperty.call(opts, 'snapshotSearch')) {
+        const query = storageSnapshotListQuery(snapshotSearchQuery(this.$route.query, opts.snapshotSearch, this.pageSize))
+        this.searchParams = {}
+        if (JSON.stringify(query) === JSON.stringify(this.$route.query)) this.fetchData(query)
+        else this.$router.push({ query })
+        return
+      }
       const query = Object.assign({}, this.$route.query)
       const snapshotKeywordSearch = this.$route.name === 'snapshot' && opts && Object.prototype.hasOwnProperty.call(opts, 'searchQuery')
       let searchFilters = this.$route?.meta?.searchFilters || []
