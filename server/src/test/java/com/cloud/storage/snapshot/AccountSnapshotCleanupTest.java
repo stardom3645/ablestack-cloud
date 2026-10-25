@@ -114,4 +114,18 @@ public class AccountSnapshotCleanupTest {
         when(endpoint.sendMessage(any(DeleteSnapshotsDirCommand.class))).thenReturn(new Answer(null, false, "Store unavailable"));
         assertFalse(manager.deleteSnapshotDirsForAccount(account));
     }
+    @Test public void removedAccountFinishesWithoutPublicRecountOfHiddenAccount() {
+        when(account.getState()).thenReturn(Account.State.REMOVED);
+        assertTrue(manager.deleteSnapshotDirsForAccount(account));
+        verify(manager).deleteSnapshot(7L, null);
+        verify(_epSelector).select(origin); verify(_epSelector).select(remote);
+        verifyNoInteractions(_resourceLimitMgr);
+    }
+    @Test public void removedAccountStillRetainsUnresolvedPhysicalCleanup() {
+        when(account.getState()).thenReturn(Account.State.REMOVED);
+        reference.setState(ObjectInDataStoreStateMachine.State.Hidden);
+        assertFalse(manager.deleteSnapshotDirsForAccount(account));
+        verifyNoInteractions(_epSelector, _resourceLimitMgr);
+    }
+
 }

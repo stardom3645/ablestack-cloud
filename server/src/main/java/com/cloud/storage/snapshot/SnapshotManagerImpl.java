@@ -1720,9 +1720,14 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             }
             return success;
         } finally {
-            // Retries and already-deleted snapshots must never decrement twice.
-            _resourceLimitMgr.recalculateResourceCount(account.getId(), account.getDomainId(), ResourceType.snapshot.getOrdinal());
-            _resourceLimitMgr.recalculateResourceCount(account.getId(), account.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+            // Removed accounts are hidden before this callback. Account cleanup
+            // reconciles and removes their remaining counters after every resource
+            // has settled; the public recount API cannot resolve a removed account.
+            // Live-account retries still recount instead of decrementing twice.
+            if (account.getState() != Account.State.REMOVED) {
+                _resourceLimitMgr.recalculateResourceCount(account.getId(), account.getDomainId(), ResourceType.snapshot.getOrdinal());
+                _resourceLimitMgr.recalculateResourceCount(account.getId(), account.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+            }
         }
     }
 

@@ -8,7 +8,7 @@ on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
   <div class="snapshot-detail-summary" data-testid="snapshot-detail-summary">
     <div v-for="key in ['virtualsize', 'physicalsize']" :key="key" class="resource-detail-item">
       <div class="resource-detail-item__label">{{ $t(key === 'physicalsize' ? 'label.snapshot.detail.backup.size' : 'label.virtualsize') }}</div>
-      <div class="resource-detail-item__details"><hdd-outlined /> {{ size(resource[key]) }}</div>
+      <div class="resource-detail-item__details"><hdd-outlined /> {{ size(key === 'physicalsize' ? backupPhysicalSize : resource[key]) }}</div>
     </div>
     <div class="resource-detail-item">
       <div class="resource-detail-item__label">{{ $t('label.volume') }}</div>
@@ -44,6 +44,7 @@ export default {
   name: 'StorageSnapshotSummary',
   props: { resource: { type: Object, required: true } },
   computed: {
+    backupPhysicalSize () { return (this.resource.snapshotdetail?.copies || []).some(row => row.copy?.role === 'Image' && row.copy.state === 'Ready') ? this.resource.physicalsize : undefined },
     volume () { return this.resource.snapshotdetail?.volume },
     vm () { return this.resource.snapshotdetail?.vm },
     zones () { return [...new Map((this.resource.snapshotdetail?.copies || []).map(row => [row.zoneid || '', { id: row.zoneid, name: row.zonename }])).values()] }
