@@ -87,6 +87,7 @@ public class ForcedSnapshotDeletionTest {
     @Mock private SnapshotService snapshotSrv;
     @Mock private AccountManager _accountMgr;
     @Mock private ResourceLimitService _resourceLimitMgr;
+    @Mock private com.cloud.user.dao.AccountDao _accountDao;
     @Mock private VolumeDetailsDao allocationDetailsDao;
     @Mock private VolumeDao _volsDao;
     @Mock private DataStoreManager dataStoreMgr;
@@ -104,6 +105,10 @@ public class ForcedSnapshotDeletionTest {
     private MockedStatic<UsageEventUtils> usage;
 
     @Before public void setup() {
+        com.cloud.user.AccountVO retainedOwner = org.mockito.Mockito.mock(com.cloud.user.AccountVO.class);
+        org.mockito.Mockito.lenient().when(retainedOwner.getState()).thenReturn(Account.State.ENABLED);
+        org.mockito.Mockito.lenient().when(_accountDao.findByIdIncludingRemoved(org.mockito.Mockito.anyLong())).thenReturn(retainedOwner);
+
         usage = mockStatic(UsageEventUtils.class);
         Account account = mock(Account.class); lenient().when(account.getId()).thenReturn(2L);
         CallContext.register(mock(User.class), account);
@@ -285,4 +290,21 @@ public class ForcedSnapshotDeletionTest {
         assertFalse(run(null).isPhysicalCleanupComplete());
         usage.verifyNoInteractions();
     }
+    @Test public void removedOwnerDoesNotTurnCompletedPhysicalRecoveryIntoRecountFailure() {
+        com.cloud.user.AccountVO removed = mock(com.cloud.user.AccountVO.class);
+        when(removed.getState()).thenReturn(Account.State.REMOVED);
+        when(_accountDao.findByIdIncludingRemoved(2L)).thenReturn(removed);
+        doReturn(true).when(snapshotSrv).deleteSnapshot(info);
+        SnapshotDeletionResponse result = run(null);
+        assertTrue(result.isPhysicalCleanupComplete()); assertEquals(0, result.getPendingCleanup());
+        assertEquals(State.Destroyed, ref.getState()); assertEquals(Snapshot.State.Destroyed, global.get());
+        org.mockito.Mockito.verifyNoInteractions(_resourceLimitMgr);
+    }
+    @Test public void missingOwnerStillAllowsExplicitPhysicalRecovery() {
+        when(_accountDao.findByIdIncludingRemoved(2L)).thenReturn(null);
+        doReturn(true).when(snapshotSrv).deleteSnapshot(info);
+        assertTrue(run(null).isPhysicalCleanupComplete());
+        org.mockito.Mockito.verifyNoInteractions(_resourceLimitMgr);
+    }
+
 }

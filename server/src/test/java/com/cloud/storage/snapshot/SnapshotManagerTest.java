@@ -239,8 +239,14 @@ public class SnapshotManagerTest {
     private static final String TEST_SNAPSHOT_PATH = "path";
     private static final Storage.ImageFormat TEST_VOLUME_FORMAT = Storage.ImageFormat.RAW;
 
+    @Mock private com.cloud.user.dao.AccountDao _accountDao;
+
     @Before
     public void setup() throws ResourceAllocationException {
+        com.cloud.user.AccountVO retainedOwner = Mockito.mock(com.cloud.user.AccountVO.class);
+        Mockito.lenient().when(retainedOwner.getState()).thenReturn(Account.State.ENABLED);
+        Mockito.lenient().when(_accountDao.findByIdIncludingRemoved(Mockito.anyLong())).thenReturn(retainedOwner);
+
 
         when(_snapshotDao.findById(anyLong())).thenReturn(snapshotMock);
         when(snapshotMock.getVolumeId()).thenReturn(TEST_VOLUME_ID);
@@ -774,6 +780,30 @@ public class SnapshotManagerTest {
         Mockito.verify(_resourceLimitMgr).recalculateResourceCount(10L, 1L, ResourceType.snapshot.getOrdinal());
         Mockito.verify(_resourceLimitMgr).recalculateResourceCount(10L, 1L, ResourceType.secondary_storage.getOrdinal());
         Mockito.verifyNoMoreInteractions(_resourceLimitMgr);
+    }
+
+    @Test
+    public void removedOwnerDeletionPublishesUsageWithoutPublicRecount() {
+        Mockito.when(snapshotStoreMock.getInstallPath()).thenReturn("snapshots/10/9/fixture");
+        com.cloud.user.AccountVO removed = Mockito.mock(com.cloud.user.AccountVO.class);
+        Mockito.when(removed.getState()).thenReturn(Account.State.REMOVED);
+        Mockito.when(_accountDao.findByIdIncludingRemoved(10L)).thenReturn(removed);
+        Mockito.when(snapshotStoreMock.isDisplay()).thenReturn(true);
+        SnapshotManagerImpl manager = Mockito.spy(_snapshotMgr);
+        Mockito.doReturn(snapshotMock).when(manager).validateSnapshotDeletion(TEST_SNAPSHOT_ID);
+        Mockito.when(snapshotMock.getState()).thenReturn(Snapshot.State.BackedUp, Snapshot.State.Destroyed);
+        Mockito.when(snapshotMock.getAccountId()).thenReturn(10L);
+        Mockito.doReturn(new Pair<>(List.of(snapshotStoreMock), List.of(1L)), new Pair<>(Collections.emptyList(), List.of(1L)))
+                .when(manager).getStoreRefsAndZonesForSnapshotDelete(TEST_SNAPSHOT_ID, null);
+        Mockito.when(_storageStrategyFactory.getSnapshotStrategy(snapshotMock, null, SnapshotOperation.DELETE)).thenReturn(snapshotStrategy);
+        Mockito.when(snapshotStrategy.deleteSnapshot(TEST_SNAPSHOT_ID, null)).thenReturn(true);
+        try (MockedStatic<UsageEventUtils> usage = Mockito.mockStatic(UsageEventUtils.class)) {
+            Assert.assertTrue(manager.deleteSnapshotWithLock(TEST_SNAPSHOT_ID, null, null));
+            usage.verify(() -> UsageEventUtils.publishUsageEvent(com.cloud.event.EventTypes.EVENT_SNAPSHOT_DELETE,
+                    10L, 1L, TEST_SNAPSHOT_ID, snapshotMock.getName(), null, null, 0L,
+                    snapshotMock.getClass().getName(), snapshotMock.getUuid()));
+        }
+        Mockito.verifyNoInteractions(_resourceLimitMgr);
     }
 
     @Test

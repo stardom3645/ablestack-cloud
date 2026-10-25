@@ -61,7 +61,7 @@ export default {
 .snapshot-detail-summary { min-width: 0; }
 .snapshot-detail-summary .resource-detail-item__details { overflow-wrap: anywhere; flex-wrap: wrap; }
 .snapshot-detail-note { margin: 4px 0 0; color: var(--ui-muted, inherit); overflow-wrap: anywhere; }
-.snapshot-detail-zones { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.snapshot-detail-summary .snapshot-detail-zones { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; }
 </style>
 
 <style scoped src="@/style/components/view/resource-detail-fields.css"></style>

@@ -816,8 +816,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             return archived;
         } finally {
             if (attemptedChange) {
-                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
-                _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+                recalculateSnapshotOwnerResourceCount(snapshot);
             }
         }
     }
@@ -1440,9 +1439,17 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             response.setExecutionResult(physicalComplete && pending == 0, pending);
             return response;
         } finally {
-            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
-            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+            recalculateSnapshotOwnerResourceCount(snapshot);
         }
+    }
+
+    protected void recalculateSnapshotOwnerResourceCount(SnapshotVO snapshot) {
+        AccountVO owner = _accountDao.findByIdIncludingRemoved(snapshot.getAccountId());
+        // Teardown hides the owner before deleting its remaining snapshots. The
+        // account cleanup owns final counter removal; public recount rejects it.
+        if (owner == null || owner.getState() == Account.State.REMOVED) { return; }
+        _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
+        _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
     }
 
     protected boolean snapshotDeletionReferenceSettled(SnapshotDataStoreVO ref) {
@@ -1519,8 +1526,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             // Creation, old failed deletions and retries may have used different
             // logical/physical size bases. Reconcile only these two owner counters
             // from surviving records instead of subtracting an inferred amount.
-            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.snapshot.getOrdinal());
-            _resourceLimitMgr.recalculateResourceCount(snapshot.getAccountId(), snapshot.getDomainId(), ResourceType.secondary_storage.getOrdinal());
+            recalculateSnapshotOwnerResourceCount(snapshot);
         }
         boolean settled = getStoreRefsAndZonesForSnapshotDelete(snapshotId, zoneId).first().stream()
                 .allMatch(this::snapshotDeletionReferenceSettled);

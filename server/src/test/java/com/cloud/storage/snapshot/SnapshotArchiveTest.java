@@ -88,6 +88,7 @@ public class SnapshotArchiveTest {
     @Mock private SnapshotService snapshotSrv;
     @Mock private AccountManager _accountMgr;
     @Mock private ResourceLimitService _resourceLimitMgr;
+    @Mock private com.cloud.user.dao.AccountDao _accountDao;
     @Mock private VolumeDetailsDao allocationDetailsDao;
     @Mock private com.cloud.storage.dao.SnapshotDetailsDao snapshotDetailsDao;
     @Mock private VolumeDao _volsDao;
@@ -98,6 +99,10 @@ public class SnapshotArchiveTest {
     private AtomicReference<List<SnapshotInfo>> copies;
 
     @Before public void setup() {
+        com.cloud.user.AccountVO retainedOwner = org.mockito.Mockito.mock(com.cloud.user.AccountVO.class);
+        org.mockito.Mockito.lenient().when(retainedOwner.getState()).thenReturn(Account.State.ENABLED);
+        org.mockito.Mockito.lenient().when(_accountDao.findByIdIncludingRemoved(org.mockito.Mockito.anyLong())).thenReturn(retainedOwner);
+
         CallContext.register(mock(User.class), mock(Account.class));
         snapshot = mock(SnapshotVO.class);
         lenient().when(snapshot.getId()).thenReturn(7L);
