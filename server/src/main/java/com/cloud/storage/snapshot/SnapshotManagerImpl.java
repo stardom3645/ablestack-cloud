@@ -1174,7 +1174,12 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         java.util.Map<String, String> pending = forcedSnapshotPending(snapshotId);
         List<SnapshotDataStoreVO> refs = new ArrayList<>();
         for (SnapshotDataStoreVO ref : _snapshotStoreDao.listBySnapshotId(snapshotId)) {
-            if (ref.getState() == ObjectInDataStoreStateMachine.State.Destroyed && !pending.containsKey(FORCE_DELETE_PENDING + ref.getId())) {
+            // Explicit administrator diagnosis must also inspect historic terminal references.
+            // Older agents could report success for a misresolved absolute path while
+            // leaving its file behind, without creating a pending-cleanup marker.
+            if (ref.getState() == ObjectInDataStoreStateMachine.State.Destroyed
+                    && (ref.getInstallPath() == null || ref.getInstallPath().isBlank())
+                    && !pending.containsKey(FORCE_DELETE_PENDING + ref.getId())) {
                 continue;
             }
             if (zoneId != null) {
@@ -1190,9 +1195,65 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         return refs;
     }
 
+    protected java.util.Map<Long, com.google.gson.JsonObject> orphanedForcedSnapshotTargets(SnapshotVO snapshot, Long zoneId) {
+        java.util.Set<Long> known = _snapshotStoreDao.listBySnapshotId(snapshot.getId()).stream()
+                .map(SnapshotDataStoreVO::getId).collect(java.util.stream.Collectors.toSet());
+        java.util.Map<Long, com.google.gson.JsonObject> targets = new java.util.TreeMap<>();
+        for (java.util.Map.Entry<String, String> entry : forcedSnapshotPending(snapshot.getId()).entrySet()) {
+            if (entry.getKey().equals(FORCE_DELETE_UNMAPPED)) { continue; }
+            try {
+                long id = Long.parseLong(entry.getKey().substring(FORCE_DELETE_PENDING.length()));
+                if (known.contains(id)) { continue; }
+                com.google.gson.JsonObject target = new com.google.gson.Gson().fromJson(entry.getValue(), com.google.gson.JsonObject.class);
+                if (target.get("referenceid").getAsLong() != id || !snapshot.getUuid().equals(target.get("snapshotuuid").getAsString())
+                        || snapshot.getVolumeId() != target.get("volumeid").getAsLong()) { continue; }
+                DataStoreRole role = DataStoreRole.valueOf(target.get("role").getAsString());
+                if (zoneId != null) {
+                    Long storeZone = dataStoreMgr.getStoreZoneId(target.get("storeid").getAsLong(), role);
+                    if (storeZone == null) { throw new InvalidParameterValueException("UNKNOWN_REFERENCE_ZONE: diagnose all zones before forcing metadata cleanup"); }
+                    if (!zoneId.equals(storeZone)) { continue; }
+                }
+                targets.put(id, target);
+            } catch (InvalidParameterValueException unresolvedZone) { throw unresolvedZone;
+            } catch (Exception incompleteAudit) { logger.warn("Cannot resolve forced snapshot cleanup audit {}", entry.getKey()); }
+        }
+        return targets;
+    }
+
+    protected DataStore forcedSnapshotNfsStore(long storeId, DataStoreRole role, String path) {
+        if (role != DataStoreRole.Image || path == null || path.isBlank() || path.endsWith("/") || path.split("/").length < 4) { return null; }
+        try {
+            DataStore store = dataStoreMgr.getDataStore(storeId, role);
+            return store != null && store.getTO() instanceof com.cloud.agent.api.to.NfsTO ? store : null;
+        } catch (Exception unavailable) { return null; }
+    }
+
+    protected boolean deleteForcedSnapshotNfsTarget(long snapshotId, DataStore store, String path, String checkpoint) {
+        if (store == null) { return false; }
+        org.apache.cloudstack.storage.to.SnapshotObjectTO target = new org.apache.cloudstack.storage.to.SnapshotObjectTO();
+        target.setId(snapshotId); target.setDataStore(store.getTO()); target.setPath(path); target.setCheckpointPath(checkpoint);
+        org.apache.cloudstack.storage.command.DeleteCommand command = new org.apache.cloudstack.storage.command.DeleteCommand(target);
+        EndPoint endpoint = _epSelector.select(store);
+        Answer answer = endpoint == null ? null : endpoint.sendMessage(command);
+        return answer != null && answer.getResult();
+    }
+
     protected String forcedSnapshotScopeHash(SnapshotVO snapshot, Long zoneId, List<SnapshotDataStoreVO> refs) {
+        java.util.Map<Long, String> stores = new java.util.TreeMap<>();
+        for (SnapshotDataStoreVO ref : refs) {
+            stores.put(ref.getId(), forcedSnapshotStoreIdentity(ref.getDataStoreId(), ref.getRole()));
+        }
+        orphanedForcedSnapshotTargets(snapshot, zoneId).forEach((id, target) -> stores.put(id,
+                forcedSnapshotStoreIdentity(target.get("storeid").getAsLong(), DataStoreRole.valueOf(target.get("role").getAsString()))));
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex("force:" + snapshotDeletionScopeHash(snapshot, zoneId, refs)
-                + ":" + forcedSnapshotPending(snapshot.getId()).toString());
+                + ":" + forcedSnapshotPending(snapshot.getId()).toString() + ":" + stores.toString());
+    }
+
+    protected String forcedSnapshotStoreIdentity(long id, DataStoreRole role) {
+        try {
+            DataStore store = dataStoreMgr.getDataStore(id, role);
+            return store == null ? "Unresolved" : store.getUuid() + ":" + store.getTO().getUrl();
+        } catch (Exception unavailable) { return "Unresolved"; }
     }
 
     protected SnapshotInfo forcedSnapshotInfo(long snapshotId, SnapshotDataStoreVO ref) {
@@ -1233,13 +1294,24 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         response.setForce(true, forcedSnapshotPending(snapshotId).size());
         for (SnapshotDataStoreVO ref : refs) {
             SnapshotInfo info = targets.get(ref.getId());
-            DataStore store = info == null ? null : info.getDataStore();
+            DataStore store = info == null ? forcedSnapshotNfsStore(ref.getDataStoreId(), ref.getRole(), ref.getInstallPath()) : info.getDataStore();
+            boolean identifiable = info != null || store != null;
             response.addReference(ref.getId(), store == null ? null : store.getUuid(), store == null ? "Unresolved store" : store.getName(),
                     ref.getRole() == null ? "Unknown" : ref.getRole().name(), ref.getState() == null ? "Unknown" : ref.getState().name(), null);
             response.addCleanupResult(ref.getId(), ref.getRole() == null ? "Unknown" : ref.getRole().name(),
-                    info == null ? "DB_ONLY" : "PHYSICAL_THEN_DB", info == null ? "MISSING_TARGET_METADATA" : "ATTEMPT_PHYSICAL_CLEANUP");
+                    !identifiable ? "DB_ONLY" : "PHYSICAL_THEN_DB", !identifiable ? "MISSING_TARGET_METADATA" : "ATTEMPT_PHYSICAL_CLEANUP");
         }
-        if (refs.isEmpty() && (snapshot.getState() != Snapshot.State.Destroyed || snapshotDetailsDao.findDetail(snapshotId, FORCE_DELETE_UNMAPPED) != null)) {
+        java.util.Map<Long, com.google.gson.JsonObject> orphaned = orphanedForcedSnapshotTargets(snapshot, zoneId);
+        for (java.util.Map.Entry<Long, com.google.gson.JsonObject> entry : orphaned.entrySet()) {
+            com.google.gson.JsonObject target = entry.getValue();
+            DataStoreRole role = DataStoreRole.valueOf(target.get("role").getAsString());
+            DataStore store = forcedSnapshotNfsStore(target.get("storeid").getAsLong(), role,
+                    target.has("path") && !target.get("path").isJsonNull() ? target.get("path").getAsString() : null);
+            response.addReference(entry.getKey(), store == null ? null : store.getUuid(), store == null ? "Unresolved store" : store.getName(), role.name(), "Missing", null);
+            response.addCleanupResult(entry.getKey(), role.name(), store == null ? "DB_ONLY" : "PHYSICAL_THEN_DB",
+                    store == null ? "MISSING_TARGET_METADATA" : "RETRY_RETAINED_PHYSICAL_TARGET");
+        }
+        if (refs.isEmpty() && orphaned.isEmpty() && (snapshot.getState() != Snapshot.State.Destroyed || snapshotDetailsDao.findDetail(snapshotId, FORCE_DELETE_UNMAPPED) != null)) {
             response.addCleanupResult(0, "Unknown", "DB_ONLY", "NO_IDENTIFIABLE_STORE_REFERENCE");
         }
         return response;
@@ -1250,6 +1322,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         target.put("referenceid", ref.getId()); target.put("snapshotuuid", snapshot.getUuid());
         target.put("storeid", ref.getDataStoreId()); target.put("role", ref.getRole());
         target.put("path", ref.getInstallPath()); target.put("volumeid", ref.getVolumeId()); target.put("reason", reason);
+        target.put("checkpoint", ref.getKvmCheckpointPath());
         snapshotDetailsDao.addDetail(snapshot.getId(), FORCE_DELETE_PENDING + ref.getId(), new com.google.gson.Gson().toJson(target), false);
     }
 
@@ -1278,12 +1351,13 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         }
         validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshot.getVolumeId(), "force delete");
         java.util.Map<Long, SnapshotInfo> targets = forcedSnapshotTargets(snapshotId, refs);
+        java.util.Map<Long, com.google.gson.JsonObject> orphaned = orphanedForcedSnapshotTargets(snapshot, zoneId);
         Snapshot.State original = snapshot.getState();
         boolean visibleCopy = refs.stream().anyMatch(SnapshotDataStoreVO::isDisplay);
         org.apache.cloudstack.api.response.SnapshotDeletionResponse response = new org.apache.cloudstack.api.response.SnapshotDeletionResponse(
                 snapshot.getUuid(), snapshot.getName(), snapshot.getState().name(), zoneId == null ? null : dataCenterDao.findById(zoneId).getUuid());
         boolean physicalComplete = true;
-        if (refs.isEmpty() && zoneId == null && (original != Snapshot.State.Destroyed || snapshotDetailsDao.findDetail(snapshotId, FORCE_DELETE_UNMAPPED) != null)) {
+        if (refs.isEmpty() && orphaned.isEmpty() && zoneId == null && (original != Snapshot.State.Destroyed || snapshotDetailsDao.findDetail(snapshotId, FORCE_DELETE_UNMAPPED) != null)) {
             physicalComplete = false;
             snapshotDetailsDao.addDetail(snapshotId, FORCE_DELETE_UNMAPPED, "No store reference mapping; physical absence could not be proven during explicit forced database cleanup", false);
             response.addCleanupResult(0, "Unknown", "DB_ONLY", "NO_IDENTIFIABLE_STORE_REFERENCE");
@@ -1293,10 +1367,15 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                 SnapshotInfo info = targets.get(ref.getId());
                 boolean deleted = false;
                 String reason = "MISSING_TARGET_METADATA";
-                if (info != null) {
+                DataStore nfs = ref.getState() == ObjectInDataStoreStateMachine.State.Destroyed || info == null
+                        ? forcedSnapshotNfsStore(ref.getDataStoreId(), ref.getRole(), ref.getInstallPath()) : null;
+                if (info != null || nfs != null) {
                     // Retain the target before I/O; a crash must not erase its retry address.
                     retainForcedSnapshotTarget(snapshot, ref, "PHYSICAL_DELETE_IN_PROGRESS");
-                    try { deleted = snapshotSrv.deleteSnapshot(info); }
+                    try {
+                        deleted = nfs == null ? snapshotSrv.deleteSnapshot(info)
+                                : deleteForcedSnapshotNfsTarget(snapshotId, nfs, ref.getInstallPath(), ref.getKvmCheckpointPath());
+                    }
                     catch (Exception failed) { logger.warn("Forced snapshot cleanup could not delete reference {}", ref.getId(), failed); }
                     reason = deleted ? "IDENTIFIED_TARGET_DELETED_OR_ABSENT" : "PHYSICAL_DELETE_FAILED";
                 }
@@ -1306,20 +1385,41 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                     physicalComplete = false;
                     retainForcedSnapshotTarget(snapshot, ref, reason);
                 }
-                ref.setDisplay(false);
-                ref.setState(ObjectInDataStoreStateMachine.State.Destroyed);
-                if (!_snapshotStoreDao.update(ref.getId(), ref)) {
-                    throw new CloudRuntimeException("Forced cleanup could not persist reference termination");
+                // A historic tombstone may already have exactly these values.
+                // GenericDao reports no update for an unchanged row; it is not
+                // a failed physical recovery or a reason to replay accounting.
+                if (ref.isDisplay() || ref.getState() != ObjectInDataStoreStateMachine.State.Destroyed) {
+                    ref.setDisplay(false);
+                    ref.setState(ObjectInDataStoreStateMachine.State.Destroyed);
+                    if (!_snapshotStoreDao.update(ref.getId(), ref)) {
+                        throw new CloudRuntimeException("Forced cleanup could not persist reference termination");
+                    }
                 }
                 response.addCleanupResult(ref.getId(), ref.getRole() == null ? "Unknown" : ref.getRole().name(),
                         deleted ? "PHYSICAL_DELETED" : "DB_ONLY", reason);
             }
+            for (java.util.Map.Entry<Long, com.google.gson.JsonObject> entry : orphaned.entrySet()) {
+                com.google.gson.JsonObject target = entry.getValue();
+                DataStoreRole role = DataStoreRole.valueOf(target.get("role").getAsString());
+                String path = target.has("path") && !target.get("path").isJsonNull() ? target.get("path").getAsString() : null;
+                String checkpoint = target.has("checkpoint") && !target.get("checkpoint").isJsonNull() ? target.get("checkpoint").getAsString() : null;
+                boolean deleted = false;
+                try {
+                    deleted = deleteForcedSnapshotNfsTarget(snapshotId, forcedSnapshotNfsStore(target.get("storeid").getAsLong(), role, path), path, checkpoint);
+                } catch (Exception failed) { logger.warn("Could not retry retained snapshot cleanup target {}", entry.getKey(), failed); }
+                if (deleted) { snapshotDetailsDao.removeDetail(snapshotId, FORCE_DELETE_PENDING + entry.getKey()); }
+                else { physicalComplete = false; }
+                response.addCleanupResult(entry.getKey(), role.name(), deleted ? "PHYSICAL_DELETED" : "DB_ONLY",
+                        deleted ? "RETAINED_TARGET_DELETED_OR_ABSENT" : "UNVERIFIED_RETAINED_TARGET");
+            }
             if (zoneId != null) { snapshotZoneDao.removeSnapshotFromZone(snapshotId, zoneId); }
             List<SnapshotDataStoreVO> remaining = _snapshotStoreDao.findBySnapshotIdWithNonDestroyedState(snapshotId);
             if (remaining.isEmpty()) {
-                snapshot.setState(Snapshot.State.Destroyed);
+                if (snapshot.getState() != Snapshot.State.Destroyed) {
+                    snapshot.setState(Snapshot.State.Destroyed);
+                    if (!_snapshotDao.update(snapshotId, snapshot)) { throw new CloudRuntimeException("Forced cleanup could not persist snapshot termination"); }
+                }
                 response.setState(Snapshot.State.Destroyed.name());
-                if (!_snapshotDao.update(snapshotId, snapshot)) { throw new CloudRuntimeException("Forced cleanup could not persist snapshot termination"); }
                 snapshotZoneDao.removeSnapshotFromZones(snapshotId);
                 annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshot.getUuid());
             }
@@ -1565,74 +1665,65 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
     @Override
     public boolean deleteSnapshotDirsForAccount(Account account) {
-
-        long accountId = account.getId();
-        List<VolumeVO> volumes = _volsDao.findIncludingRemovedByAccount(accountId);
-        // The above call will list only non-destroyed volumes.
-        // So call this method before marking the volumes as destroyed.
-        // i.e Call them before the VMs for those volumes are destroyed.
         boolean success = true;
-        for (VolumeVO volume : volumes) {
-            if (volume.getPoolId() == null) {
-                continue;
-            }
-            Long volumeId = volume.getId();
-            Long dcId = volume.getDataCenterId();
-            if (_snapshotDao.listByVolumeIdIncludingRemoved(volumeId).isEmpty()) {
-                // This volume doesn't have any snapshots. Nothing do delete.
-                continue;
-            }
-            List<DataStore> ssHosts = dataStoreMgr.getImageStoresByScope(new ZoneScope(dcId));
-            for (DataStore ssHost : ssHosts) {
-                String snapshotDir = TemplateConstants.DEFAULT_SNAPSHOT_ROOT_DIR + "/" + accountId + "/" + volumeId;
-                DeleteSnapshotsDirCommand cmd = new DeleteSnapshotsDirCommand(ssHost.getTO(), snapshotDir);
-                EndPoint ep = _epSelector.select(ssHost);
-                Answer answer = null;
-                if (ep == null) {
-                    String errMsg = "No remote endpoint to send command, check if host or ssvm is down?";
-                    logger.error(errMsg);
-                    answer = new Answer(cmd, false, errMsg);
-                } else {
-                    answer = ep.sendMessage(cmd);
+        try {
+            for (VolumeVO volume : _volsDao.findIncludingRemovedByAccount(account.getId())) {
+                List<SnapshotVO> snapshots = _snapshotDao.listByVolumeIdIncludingRemoved(volume.getId());
+                if (snapshots.isEmpty()) { continue; }
+                boolean settled = true;
+                // Capture stores before deletion removes zone mappings. Copies can
+                // reside outside the source volume's zone.
+                java.util.Map<Long, DataStore> stores = new java.util.LinkedHashMap<>();
+                for (DataStore store : dataStoreMgr.getImageStoresByScope(new ZoneScope(volume.getDataCenterId()))) {
+                    stores.put(store.getId(), store);
                 }
-                if ((answer != null) && answer.getResult()) {
-                    logger.debug("Deleted all snapshots for volume {} under account {}", volume, account);
-                } else {
-                    success = false;
-                    if (answer != null) {
-                        logger.warn("Failed to delete all snapshot for volume {} on secondary storage {}", volume, ssHost.getUri());
-                        logger.error(answer.getDetails());
+                for (SnapshotVO snapshot : snapshots) {
+                    for (SnapshotDataStoreVO ref : _snapshotStoreDao.listBySnapshotId(snapshot.getId())) {
+                        if (ref.getRole() != DataStoreRole.Image) { continue; }
+                        DataStore store = dataStoreMgr.getDataStore(ref.getDataStoreId(), DataStoreRole.Image);
+                        if (store == null) {
+                            if (ref.getState() != ObjectInDataStoreStateMachine.State.Destroyed) { settled = false; }
+                        } else { stores.put(store.getId(), store); }
+                    }
+                    try {
+                        // Share the lock, physical completion checks, accounting and
+                        // once-only usage publication with individual deletion.
+                        if (snapshot.getRemoved() == null && !deleteSnapshot(snapshot.getId(), null)) { settled = false; }
+                    } catch (Exception failed) {
+                        logger.warn("Account cleanup could not delete snapshot {}", snapshot.getUuid(), failed);
+                        settled = false;
                     }
                 }
-            }
-
-            // Either way delete the snapshots for this volume.
-            List<SnapshotVO> snapshots = listSnapsforVolume(volumeId);
-            for (SnapshotVO snapshot : snapshots) {
-                SnapshotStrategy snapshotStrategy = _storageStrategyFactory.getSnapshotStrategy(snapshot, SnapshotOperation.DELETE);
-                if (snapshotStrategy == null) {
-                    logger.error("Unable to find snapshot strategy to handle snapshot [{}]", snapshot);
-                    continue;
+                // A parent hidden for a dependent child is not safe for a directory
+                // sweep. Recheck after all children have had a deletion attempt.
+                for (SnapshotVO snapshot : snapshots) {
+                    if (_snapshotStoreDao.listBySnapshotId(snapshot.getId()).stream().anyMatch(ref ->
+                            ref.getState() != ObjectInDataStoreStateMachine.State.Destroyed)
+                            || !forcedSnapshotPending(snapshot.getId()).isEmpty()) { settled = false; }
                 }
-                List<SnapshotDataStoreVO> snapshotStoreRefs = _snapshotStoreDao.listReadyBySnapshot(snapshot.getId(), DataStoreRole.Image);
-
-                if (snapshotStrategy.deleteSnapshot(snapshot.getId(), null)) {
-                    if (Type.MANUAL == snapshot.getRecurringType()) {
-                        _resourceLimitMgr.decrementResourceCount(accountId, ResourceType.snapshot);
-                        for (SnapshotDataStoreVO snapshotStoreRef : snapshotStoreRefs) {
-                            _resourceLimitMgr.decrementResourceCount(accountId, ResourceType.secondary_storage, new Long(snapshotStoreRef.getPhysicalSize()));
+                if (!settled) { success = false; continue; }
+                for (DataStore store : stores.values()) {
+                    String directory = TemplateConstants.DEFAULT_SNAPSHOT_ROOT_DIR + "/" + account.getId() + "/" + volume.getId();
+                    DeleteSnapshotsDirCommand command = new DeleteSnapshotsDirCommand(store.getTO(), directory);
+                    try {
+                        EndPoint endpoint = _epSelector.select(store);
+                        Answer answer = endpoint == null ? null : endpoint.sendMessage(command);
+                        if (answer == null || !answer.getResult()) {
+                            logger.warn("Account snapshot directory cleanup failed for volume {} on store {}", volume.getId(), store.getId());
+                            success = false;
                         }
+                    } catch (Exception failed) {
+                        logger.warn("Account snapshot directory cleanup failed for volume {}", volume.getId(), failed);
+                        success = false;
                     }
-
-                    // Log event after successful deletion
-                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_DELETE, snapshot.getAccountId(), volume.getDataCenterId(), snapshot.getId(), snapshot.getName(),
-                            null, null, volume.getSize(), snapshot.getClass().getName(), snapshot.getUuid());
                 }
             }
+            return success;
+        } finally {
+            // Retries and already-deleted snapshots must never decrement twice.
+            _resourceLimitMgr.recalculateResourceCount(account.getId(), account.getDomainId(), ResourceType.snapshot.getOrdinal());
+            _resourceLimitMgr.recalculateResourceCount(account.getId(), account.getDomainId(), ResourceType.secondary_storage.getOrdinal());
         }
-
-        // Returns true if snapshotsDir has been deleted for all volumes.
-        return success;
     }
 
     protected void validatePolicyZones(List<Long> zoneIds, List<Long> poolIds, VolumeVO volume, Account caller) {

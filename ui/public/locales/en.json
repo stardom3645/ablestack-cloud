@@ -5170,6 +5170,7 @@
   "state.allocated": "Allocated",
   "state.free": "Available",
   "state.destroyed": "Deleted",
+  "state.missing": "Metadata missing",
   "message.vmsnapshot.submission.unknown": "Submission could not be confirmed. It may still be running. Check the server jobs and snapshot state before reloading the page; further actions on this VM remain blocked in this session.",
   "message.vmsnapshot.list.empty": "No VM snapshots registered in this scope.",
   "message.vmsnapshot.list.no.results": "No VM snapshots match the current search or filters.",

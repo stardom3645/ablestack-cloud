@@ -5554,6 +5554,19 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         return sendCommand;
     }
 
+    static AttachAnswer requireAttachAnswer(Answer response) {
+        if (!(response instanceof AttachAnswer)) {
+            String details = response == null ? "Agent returned no response" : response.getDetails();
+            throw new CloudRuntimeException("Unexpected attach response ("
+                    + (response == null ? "null" : response.getClass().getSimpleName()) + "): " + details);
+        }
+        AttachAnswer result = (AttachAnswer) response;
+        if (result.getResult() && result.getDisk() == null) {
+            throw new CloudRuntimeException("Successful attach response has no disk; inspect the VM before retrying");
+        }
+        return result;
+    }
+
     private VolumeVO sendAttachVolumeCommand(UserVmVO vm, VolumeVO volumeToAttach, Long deviceId) {
         String errorMsg = "Failed to attach volume " + volumeToAttach.getName() + " to VM " + vm.getHostName();
         boolean sendCommand = vm.getState() == State.Running;
@@ -5676,7 +5689,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 logger.debug("Attach volume {} on VM {} has controller info: {}", volumeToAttach, vm, controllerInfo);
 
                 try {
-                    answer = (AttachAnswer)_agentMgr.send(hostId, cmd);
+                    answer = requireAttachAnswer(_agentMgr.send(hostId, cmd));
                 } catch (AgentUnavailableException e) {
                     if (host != null) {
                         volService.revokeAccess(volFactory.getVolume(volumeToAttach.getId()), host, dataStore);

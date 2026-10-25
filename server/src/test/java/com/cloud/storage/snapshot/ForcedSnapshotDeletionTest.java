@@ -93,6 +93,7 @@ public class ForcedSnapshotDeletionTest {
     @Mock private SnapshotZoneDao snapshotZoneDao;
     @Mock private DataCenterDao dataCenterDao;
     @Mock private AnnotationDao annotationDao;
+    @Mock private org.apache.cloudstack.engine.subsystem.api.storage.EndPointSelector _epSelector;
     private SnapshotVO snapshot;
     private SnapshotDataStoreVO ref;
     private SnapshotInfo info;
@@ -160,6 +161,46 @@ public class ForcedSnapshotDeletionTest {
         assertEquals(State.Destroyed, ref.getState()); assertFalse(ref.isDisplay());
         assertEquals(Snapshot.State.Destroyed, global.get()); assertTrue(audit.isEmpty());
         verify(snapshotFactory).getSnapshotForStoreRef(7L, 11L);
+    }
+    @Test public void historicDestroyedReferenceWithoutPendingMarkerIsPhysicallyRechecked() {
+        ref.setState(State.Destroyed); ref.setDisplay(false); global.set(Snapshot.State.Destroyed);
+        doReturn(true).when(snapshotSrv).deleteSnapshot(info);
+        assertEquals(1, manager.forcedSnapshotScope(7L, null).size());
+        SnapshotDeletionResponse result = run(null);
+        assertTrue(result.isPhysicalCleanupComplete()); assertTrue(audit.isEmpty());
+        verify(snapshotSrv).deleteSnapshot(info); usage.verifyNoInteractions();
+        org.mockito.Mockito.verify(_snapshotStoreDao, org.mockito.Mockito.never()).update(anyLong(), any(SnapshotDataStoreVO.class));
+        org.mockito.Mockito.verify(_snapshotDao, org.mockito.Mockito.never()).update(anyLong(), any(SnapshotVO.class));
+    }
+    private org.apache.cloudstack.engine.subsystem.api.storage.EndPoint nfsEndpoint() {
+        org.apache.cloudstack.engine.subsystem.api.storage.DataStore store = mock(org.apache.cloudstack.engine.subsystem.api.storage.DataStore.class);
+        lenient().when(store.getTO()).thenReturn(mock(com.cloud.agent.api.to.NfsTO.class));
+        when(dataStoreMgr.getDataStore(1L, DataStoreRole.Image)).thenReturn(store);
+        org.apache.cloudstack.engine.subsystem.api.storage.EndPoint endpoint = mock(org.apache.cloudstack.engine.subsystem.api.storage.EndPoint.class);
+        lenient().when(_epSelector.select(store)).thenReturn(endpoint);
+        return endpoint;
+    }
+    @Test public void missingReferenceCanRetryItsRetainedNfsAddressWithoutRecreatingMetadata() {
+        refs.clear(); global.set(Snapshot.State.Destroyed);
+        audit.put("snapshot.force-delete.pending.11", "{\"referenceid\":11,\"snapshotuuid\":\"snapshot-uuid\",\"storeid\":1,\"role\":\"Image\",\"path\":\"snapshots/2/9/backup\",\"volumeid\":9}");
+        org.apache.cloudstack.engine.subsystem.api.storage.EndPoint endpoint = nfsEndpoint();
+        when(endpoint.sendMessage(any(org.apache.cloudstack.storage.command.DeleteCommand.class))).thenReturn(new com.cloud.agent.api.Answer(null, true, null));
+        assertTrue(run(null).isPhysicalCleanupComplete()); assertTrue(audit.isEmpty());
+        org.mockito.ArgumentCaptor<org.apache.cloudstack.storage.command.DeleteCommand> command = org.mockito.ArgumentCaptor.forClass(org.apache.cloudstack.storage.command.DeleteCommand.class);
+        verify(endpoint).sendMessage(command.capture()); assertEquals("snapshots/2/9/backup", command.getValue().getData().getPath());
+        verifyNoInteractions(snapshotSrv); usage.verifyNoInteractions();
+        org.mockito.Mockito.verify(_snapshotStoreDao, org.mockito.Mockito.never()).persist(any(SnapshotDataStoreVO.class));
+    }
+    @Test public void nullAgentReplyRetainsMissingReferenceAddressForRetry() {
+        refs.clear(); global.set(Snapshot.State.Destroyed);
+        audit.put("snapshot.force-delete.pending.11", "{\"referenceid\":11,\"snapshotuuid\":\"snapshot-uuid\",\"storeid\":1,\"role\":\"Image\",\"path\":\"snapshots/2/9/backup\",\"volumeid\":9}");
+        nfsEndpoint(); assertFalse(run(null).isPhysicalCleanupComplete()); assertEquals(1, audit.size());
+    }
+    @Test public void terminalNfsReferenceUsesPhysicalRecoveryWithoutStateMachineReplay() {
+        ref.setRole(DataStoreRole.Image); ref.setInstallPath("snapshots/2/9/backup"); ref.setState(State.Destroyed); ref.setDisplay(false); global.set(Snapshot.State.Destroyed);
+        org.apache.cloudstack.engine.subsystem.api.storage.EndPoint endpoint = nfsEndpoint();
+        when(endpoint.sendMessage(any(org.apache.cloudstack.storage.command.DeleteCommand.class))).thenReturn(new com.cloud.agent.api.Answer(null, true, null));
+        assertTrue(run(null).isPhysicalCleanupComplete()); verifyNoInteractions(snapshotSrv); usage.verifyNoInteractions();
     }
     @Test public void missingPathAllowsExplicitDatabaseCleanupAndRetainsRetryAddress() {
         ref.setInstallPath(null);

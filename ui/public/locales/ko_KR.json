@@ -5138,6 +5138,7 @@
   "state.allocated": "할당 됨",
   "state.free": "가능",
   "state.destroyed": "삭제됨",
+  "state.missing": "정보 누락",
   "message.vmsnapshot.submission.unknown": "요청 접수 여부를 확인하지 못했습니다. 서버에서 작업이 진행 중일 수 있습니다. 작업 목록과 스냅샷 상태를 확인한 뒤 화면을 새로고침하세요. 현재 화면에서는 이 VM의 추가 작업을 차단합니다.",
   "message.vmsnapshot.list.empty": "현재 범위에 등록된 VM 스냅샷이 없습니다.",
   "message.vmsnapshot.list.no.results": "검색 또는 필터 조건에 맞는 VM 스냅샷이 없습니다.",

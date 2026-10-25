@@ -50,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.naming.ConfigurationException;
 
@@ -2061,58 +2059,90 @@ public class NfsSecondaryStorageResource extends ServerResourceBase implements S
         return path;
     }
 
+    protected Path resolveSnapshotStoreFile(String parent, String supplied, String tree, int minimumParts, String storeUrl) throws IOException {
+        if (supplied == null || supplied.isBlank() || supplied.indexOf('\\') >= 0
+                || supplied.indexOf('*') >= 0 || supplied.indexOf('?') >= 0) {
+            throw new IOException("Missing or ambiguous snapshot path");
+        }
+        Path root = new File(parent).getCanonicalFile().toPath();
+        Path input = Paths.get(supplied);
+        for (Path component : input) {
+            if (component.toString().equals("..")) { throw new IOException("Snapshot path contains parent traversal"); }
+        }
+        Path target;
+        if (supplied.startsWith("/" + tree + "/")) {
+            // Legacy paths rooted at the export, rather than the SSVM mount.
+            target = root.resolve(supplied.substring(1));
+        } else { target = input.isAbsolute() ? input : root.resolve(input); }
+        // KVM and SSVM intentionally use different mount UUID recipes. Accept
+        // the KVM alias only when its UUID proves the exact same store URL.
+        // Never strip an arbitrary /mnt prefix or search for a matching file.
+        if (input.isAbsolute() && !target.startsWith(root) && storeUrl != null) {
+            URI source = URI.create(storeUrl);
+            if (source.getHost() != null && source.getPath() != null && "nfs".equalsIgnoreCase(source.getScheme())) {
+                String seed = source.getHost() + source.getPath().replace("//", "/");
+                String alias = "/mnt/" + UuidUtils.nameUUIDFromBytes(seed.getBytes(java.nio.charset.StandardCharsets.UTF_8)) + "/";
+                if (supplied.startsWith(alias + tree + "/")) { target = root.resolve(supplied.substring(alias.length())); }
+            }
+        }
+        Path lexical = target.toAbsolutePath().normalize();
+        if (!lexical.startsWith(root)) { throw new IOException("Snapshot path is outside its mounted store"); }
+        for (Path component = lexical; !component.equals(root); component = component.getParent()) {
+            if (Files.isSymbolicLink(component)) { throw new IOException("Snapshot path contains a symbolic link"); }
+        }
+        target = lexical.toFile().getCanonicalFile().toPath();
+        if (!target.startsWith(root)) { throw new IOException("Snapshot path is outside its mounted store"); }
+        Path relative = root.relativize(target);
+        if (relative.getNameCount() < minimumParts || !relative.getName(0).toString().equals(tree)) {
+            throw new IOException("Snapshot path does not identify a file in " + tree);
+        }
+        return target;
+    }
+
     protected Answer deleteSnapshot(final DeleteCommand cmd) {
         DataTO obj = cmd.getData();
         DataStoreTO dstore = obj.getDataStore();
         if (dstore instanceof NfsTO) {
             NfsTO nfs = (NfsTO)dstore;
             String parent = getRootDir(nfs.getUrl(), _nfsVersion);
-            if (!parent.endsWith(File.separator)) {
-                parent += File.separator;
-            }
-            String snapshotPath = obj.getPath();
-            if (snapshotPath.startsWith(File.separator)) {
-                snapshotPath = snapshotPath.substring(1);
-            }
-            // check if the passed snapshot path is a directory or not. For ImageCache, path is stored as a directory instead of
-            // snapshot file name. If so, since backupSnapshot process has already deleted snapshot in cache, so we just do nothing
-            // and return true.
-            String fullSnapPath = parent + snapshotPath;
-            File snapshotFile = new File(fullSnapPath);
-            if (snapshotFile.exists() && snapshotFile.isDirectory()) {
-                logger.debug("Snapshot path {} is a directory, already deleted during backup Snapshot, so no need to delete", snapshotPath);
+            try {
+                Path target = resolveSnapshotStoreFile(parent, obj.getPath(), TemplateConstants.DEFAULT_SNAPSHOT_ROOT_DIR, 4, nfs.getUrl());
+                if (Files.isDirectory(target)) {
+                    if (nfs.getRole() == DataStoreRole.ImageCache) {
+                        return new Answer(cmd, true, "Snapshot cache directory already handled by backup");
+                    }
+                    return new Answer(cmd, false, "Snapshot path identifies a directory instead of a file");
+                }
+                // Resolve every address before deleting anything. Never turn an
+                // invalid absolute address into success at an unrelated ENOENT.
+                Path checkpoint = null;
+                if (obj instanceof SnapshotObjectTO && ((SnapshotObjectTO)obj).getCheckpointPath() != null) {
+                    checkpoint = resolveSnapshotStoreFile(parent, ((SnapshotObjectTO)obj).getCheckpointPath(), CHECKPOINT_ROOT_DIR, 3, nfs.getUrl());
+                }
+                Files.deleteIfExists(target);
+                // VMware backups can store the descriptor and disk under a
+                // common basename. Match only that basename plus an extension.
+                if (Files.isDirectory(target.getParent())) {
+                    try (java.nio.file.DirectoryStream<Path> siblings = Files.newDirectoryStream(target.getParent())) {
+                        for (Path companion : siblings) {
+                            if (!companion.getFileName().toString().startsWith(target.getFileName() + ".")) { continue; }
+                            Path safe = resolveSnapshotStoreFile(parent, companion.toString(), TemplateConstants.DEFAULT_SNAPSHOT_ROOT_DIR, 4, nfs.getUrl());
+                            if (Files.isDirectory(safe)) { throw new IOException("Snapshot companion is a directory"); }
+                            Files.deleteIfExists(safe);
+                        }
+                    }
+                }
+                if (checkpoint != null) { Files.deleteIfExists(checkpoint); }
+                if (Files.isDirectory(target.getParent())) {
+                    try (java.nio.file.DirectoryStream<Path> remaining = Files.newDirectoryStream(target.getParent())) {
+                        if (!remaining.iterator().hasNext()) { Files.deleteIfExists(target.getParent()); }
+                    }
+                }
                 return new Answer(cmd, true, null);
+            } catch (IOException | IllegalArgumentException failed) {
+                logger.warn("Could not safely delete snapshot at {}", obj.getPath(), failed);
+                return new Answer(cmd, false, failed.getMessage());
             }
-            // check if snapshot directory exists
-            String absoluteSnapshotDirPath = snapshotFile.getParent();
-            File snapshotDir = new File(absoluteSnapshotDirPath);
-            String details;
-            if (!snapshotDir.exists()) {
-                details = "snapshot directory " + snapshotDir.getName() + " doesn't exist";
-                logger.debug(details);
-                return new Answer(cmd, true, details);
-            }
-            // delete snapshot in the directory if exists
-            String lPath = absoluteSnapshotDirPath + "/*" + snapshotFile.getName() + "*";
-            String snapshotDeleteResult = deleteLocalFile(lPath);
-            String checkpointDeleteResult = null;
-            if (obj instanceof SnapshotObjectTO) {
-                checkpointDeleteResult = deleteCheckpointIfExists(obj, parent);
-            }
-
-            if (snapshotDeleteResult != null || checkpointDeleteResult != null) {
-                details = String.format("Failed to delete Snapshot [%s]. Snapshot delete result = [%s], Checkpoint delete result = [%s].", lPath, snapshotDeleteResult, checkpointDeleteResult);
-                logger.warn(details);
-                return new Answer(cmd, false, details);
-            }
-
-            // delete the directory if it is empty
-            if (snapshotDir.isDirectory() && snapshotDir.list().length == 0 && !snapshotDir.delete()) {
-                details = String.format("Unable to delete directory [%s] at path [%s].", snapshotDir.getName(), snapshotPath);
-                logger.debug(details);
-                return new Answer(cmd, false, details);
-            }
-            return new Answer(cmd, true, null);
         } else if (dstore instanceof S3TO) {
             final S3TO s3 = (S3TO)dstore;
             final String path = obj.getPath();
@@ -2203,19 +2233,6 @@ public class NfsSecondaryStorageResource extends ServerResourceBase implements S
             return true;
         }
         return dir.delete();
-    }
-
-    private String deleteCheckpointIfExists(DataTO obj, String parent) {
-        SnapshotObjectTO snapshotObjectTO = (SnapshotObjectTO) obj;
-        String checkpointPath = snapshotObjectTO.getCheckpointPath();
-
-        if (checkpointPath == null) {
-            return null;
-        }
-
-        checkpointPath = checkpointPath.substring(checkpointPath.indexOf(CHECKPOINT_ROOT_DIR));
-
-        return deleteLocalFile(parent + checkpointPath);
     }
 
     private Map<String, TemplateProp> swiftListTemplate(SwiftTO swift) {
@@ -3780,28 +3797,26 @@ public class NfsSecondaryStorageResource extends ServerResourceBase implements S
         SnapshotObjectTO snapshot = cmd.getSnapshot();
         String parentPath = getRootDir(snapshot.getDataStore().getUrl(), _nfsVersion);
         String path = snapshot.getPath();
-        File snapFile = new File(parentPath + File.separator + path);
-        if (snapFile.exists() && !snapFile.isDirectory()) {
-            return new QuerySnapshotZoneCopyAnswer(cmd, List.of(path));
-        }
-        int index = path.lastIndexOf(File.separator);
-        String snapDir = path.substring(0, index);
-        List<String> files = new ArrayList<>();
-        try (Stream<Path> stream = Files.list(Paths.get(parentPath + File.separator + snapDir))) {
-            List<String> fileNames = stream
-                    .filter(file -> !Files.isDirectory(file))
-                    .map(Path::getFileName)
-                    .map(Path::toString)
-                    .collect(Collectors.toList());
-            for (String file : fileNames) {
-                file = snapDir + "/" + file;
-                logger.debug(String.format("Found snapshot file %s", file));
-                files.add(file);
+        try {
+            Path target = resolveSnapshotStoreFile(parentPath, path, TemplateConstants.DEFAULT_SNAPSHOT_ROOT_DIR, 4, snapshot.getDataStore().getUrl());
+            Path root = new File(parentPath).getCanonicalFile().toPath();
+            String relative = root.relativize(target).toString();
+            // Transfer URLs are rooted at the export, never at /mnt on the SSVM.
+            if (Files.isRegularFile(target)) { return new QuerySnapshotZoneCopyAnswer(cmd, List.of(relative)); }
+            if (Files.isDirectory(target)) { return new QuerySnapshotZoneCopyAnswer(cmd, "Snapshot path identifies a directory"); }
+            List<String> files = new ArrayList<>();
+            try (java.nio.file.DirectoryStream<Path> siblings = Files.newDirectoryStream(target.getParent())) {
+                for (Path companion : siblings) {
+                    if (Files.isDirectory(companion) || !companion.getFileName().toString().startsWith(target.getFileName() + ".")) { continue; }
+                    Path safe = resolveSnapshotStoreFile(parentPath, companion.toString(), TemplateConstants.DEFAULT_SNAPSHOT_ROOT_DIR, 4, snapshot.getDataStore().getUrl());
+                    files.add(root.relativize(safe).toString());
+                }
             }
-        } catch (IOException ioe) {
-            logger.error("Error preparing file list for snapshot copy", ioe);
+            return new QuerySnapshotZoneCopyAnswer(cmd, files);
+        } catch (IOException | IllegalArgumentException failed) {
+            logger.warn("Could not resolve snapshot copy source {}", path, failed);
+            return new QuerySnapshotZoneCopyAnswer(cmd, failed.getMessage());
         }
-        return new QuerySnapshotZoneCopyAnswer(cmd, files);
     }
 
 }

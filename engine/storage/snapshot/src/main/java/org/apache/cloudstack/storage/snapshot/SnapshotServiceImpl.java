@@ -475,11 +475,17 @@ public class SnapshotServiceImpl implements SnapshotService {
             return false;
         }
         Answer answer = endpoint.sendMessage(new QuerySnapshotZoneCopyCommand((SnapshotObjectTO)snapshot.getTO()));
-        // The legacy command may list sibling files when the exact path is absent.
-        // Only the exact recorded file is proof of this copy; a directory listing is not.
-        return answer instanceof QuerySnapshotZoneCopyAnswer && answer.getResult()
-                && ((QuerySnapshotZoneCopyAnswer)answer).getFiles() != null
-                && ((QuerySnapshotZoneCopyAnswer)answer).getFiles().contains(snapshot.getPath());
+        // The legacy command may list siblings when the exact file is absent.
+        // New NFS agents validate the original path against the store, and return
+        // export-relative paths suitable for transfer URLs, including for KVM
+        // absolute mount aliases. Match only the exact normalized snapshot file.
+        if (!(answer instanceof QuerySnapshotZoneCopyAnswer) || !answer.getResult()) { return false; }
+        List<String> files = ((QuerySnapshotZoneCopyAnswer)answer).getFiles();
+        if (files == null) { return false; }
+        if (files.contains(snapshot.getPath())) { return true; }
+        if (!(snapshot.getDataStore().getTO() instanceof com.cloud.agent.api.to.NfsTO)) { return false; }
+        int exportRoot = snapshot.getPath().indexOf("/" + TemplateConstants.DEFAULT_SNAPSHOT_ROOT_DIR + "/");
+        return exportRoot >= 0 && files.contains(snapshot.getPath().substring(exportRoot + 1));
     }
 
     protected SnapshotInfo archiveDestination(SnapshotInfo snapshot) {
