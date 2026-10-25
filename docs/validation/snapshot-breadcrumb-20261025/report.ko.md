@@ -37,7 +37,7 @@
 
 ## 검사·배포·보존
 
-- 집중 검사 **5묶음/84개**, 변경 파일 lint, production UI build 통과. 실제 AntForm의 네이티브 submit 회귀 검사를 포함한다. [검사 로그](logs/tests.log) · [lint](logs/lint.log) · [빌드](logs/build.log).
+- 집중 검사 **5묶음/84개**, 변경 파일 lint, production UI build 통과. 실제 AntForm의 네이티브 submit 회귀 검사를 포함한다. [검사 로그](logs/tests.txt) · [lint](logs/lint.txt) · [빌드](logs/build.txt).
 - 최종 정적 자산 **922개**의 SHA-256을 31·32에서 전부 대조했다. WEB-INF/META-INF·설정·관리 JAR·대용량 파일을 보존하고 Mold active, `/client/` HTTP 200을 확인했다. 활성 webapp 루트 전체 교체나 삭제 동기화는 사용하지 않았다. [31](31-ui-deploy.json) · [32](32-ui-deploy.json) · [자산 해시](asset-manifest.json).
 - 스냅샷·사본 참조·볼륨 전체 DB 투영의 행수와 SHA-256이 검증 전후 동일하다. Windows/WSL의 기존 dirty FT 작업 HEAD·status·diff 해시도 동일하다. 검증을 위해 제품 업무 데이터를 보정하거나 기존 데이터를 정리하지 않았다.
 - Java·업무 API·DB 스키마 변경, 전체 Cloud/Maven 빌드, Actions dispatch는 없다. 집중/실환경 검증은 전체 Cloud CI 통과를 뜻하지 않는다. Epic #1473과 PR #1492는 열림/미병합으로 유지한다. #1489 통합 회귀는 별도 후속 작업이다.
