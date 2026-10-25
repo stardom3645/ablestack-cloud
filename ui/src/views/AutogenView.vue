@@ -22,30 +22,7 @@
       :offsetTop="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 103 : 78"
     >
       <a-card class="breadcrumb-card" style="z-index: 10">
-        <template v-if="isSnapshotList">
-          <breadcrumb :resource="resource" />
-          <div class="snapshot-list-toolbar" data-testid="snapshot-list-toolbar">
-            <div class="snapshot-list-toolbar-actions">
-              <a-tooltip :title="$t('message.snapshot.list.create.volume')">
-                <a-button v-if="'createSnapshot' in $store.getters.apis && 'listVolumes' in $store.getters.apis" type="primary" shape="round" @click="$router.push(snapshotSourceVolumeRoute($route))">
-                  <plus-outlined /> {{ $t('label.snapshot.list.create') }}
-                </a-button>
-              </a-tooltip>
-              <action-button
-                v-if="visibleListActions.length"
-:actions="visibleListActions"
-:selectedRowKeys="selectedRowKeys"
-:selectedItems="selectedItems"
-:resource="resource"
-:dataView="false"
-                @exec-action="(action) => execAction(action, action.groupAction)" />
-              <a-switch v-if="!projectView && hasProjectId" :checked-children="$t('label.projects')" :un-checked-children="$t('label.projects')" :checked="$store.getters.listAllProjects" @change="checked => $store.dispatch('SetListAllProjects', checked)" />
-              <a-button shape="round" :loading="listRequestPending" :disabled="listRequestPending" @click="fetchData({ irefresh: true })"><reload-outlined /> {{ $t('label.refresh') }}</a-button>
-            </div>
-            <div class="snapshot-list-toolbar-search"><search-view :searchFilters="searchFilters" :searchParams="searchParams" :apiName="apiName" @search="onSearch" @change-filter="changeFilter" /></div>
-          </div>
-        </template>
-        <a-row v-else>
+        <a-row>
           <a-col
             :span="device === 'mobile' ? 24 : 12"
             style="padding-left: 12px; margin-top: 10px"
@@ -53,7 +30,8 @@
             <breadcrumb :resource="resource">
               <template #end>
                 <a-button
-                  :loading="loading || ($route.meta?.name === 'vmgroup' && listRequestPending)"
+                  :loading="loading || (($route.meta?.name === 'vmgroup' || isSnapshotList) && listRequestPending)"
+                  :disabled="isSnapshotList && listRequestPending"
                   style="margin-bottom: 5px"
                   shape="round"
                   size="small"
@@ -122,10 +100,16 @@
           </a-col>
           <a-col
             class="autogen-toolbar-actions"
+            :class="{ 'snapshot-list-actions': isSnapshotList }"
             :span="device === 'mobile' ? 24 : 12"
             :style="device === 'mobile' ? { float: 'right', 'margin-top': '12px', 'margin-bottom': '-6px', display: 'table' } : { float: 'right', display: 'table', 'margin-top': '6px' }" >
             <slot name="action" v-if="dataView && $route.path.startsWith('/publicip') && $slots.action"></slot>
             <template v-else>
+              <a-tooltip v-if="isSnapshotList && 'createSnapshot' in $store.getters.apis && 'listVolumes' in $store.getters.apis" :title="$t('message.snapshot.list.create.volume')">
+                <a-button type="primary" shape="round" @click="$router.push(snapshotSourceVolumeRoute($route))">
+                  <plus-outlined /> {{ $t('label.snapshot.list.create') }}
+                </a-button>
+              </a-tooltip>
               <div
                 v-if="dataView && visibleDataViewActions.length > 0"
                 class="autogen-action-dropdown__trigger"
@@ -3584,14 +3568,12 @@ export default {
 }
 
 .snapshot-list-page { min-width: 0; max-width: 100%; }
-.snapshot-list-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 12px; min-width: 0; }
-.snapshot-list-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
-.snapshot-list-toolbar-actions :deep(.row-action-button) { display: inline-flex !important; align-items: center; gap: 8px; margin: 0 !important; }
-.snapshot-list-toolbar-actions :deep(.ant-btn) { margin: 0; }
-.snapshot-list-toolbar-search { flex: 1 1 280px; max-width: 400px; margin-left: auto; min-width: 0; }
+.snapshot-list-actions { display: flex !important; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.snapshot-list-actions :deep(.row-action-button) { display: inline-flex !important; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 !important; }
+.snapshot-list-actions :deep(.ant-btn) { margin: 0; }
+.snapshot-list-actions :deep(.snapshot-search-control) { flex: 1 1 180px; min-width: 0; }
 .snapshot-list-page :deep(.ant-pagination) { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 @media (max-width: 767px) {
-  .snapshot-list-toolbar-search { flex-basis: 100%; max-width: none; width: 100%; }
   .snapshot-list-page .breadcrumb-card { margin-left: -12px; margin-right: -12px; }
 }
 

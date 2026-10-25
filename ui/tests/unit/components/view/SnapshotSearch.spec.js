@@ -12,8 +12,19 @@ jest.mock('@/api', () => ({ getAPI: jest.fn() }))
 const flush = async () => { for (let i = 0; i < 12; i++) { await Promise.resolve(); await nextTick() } }
 const volume = i => ({ id: 'volume-' + i, name: 'Volume ' + i, account: 'owner', domainid: 'domain', zoneid: 'zone' })
 let wrappers; let store; let route
-function render () {
-  const w = shallowMount(SnapshotSearch, { global: { renderStubDefaultSlot: true, mocks: { $store: store, $route: route, $t: key => key }, directives: { 'ctrl-enter': {} } } })
+function render (options = {}) {
+  const w = shallowMount(SnapshotSearch, {
+    global: {
+      renderStubDefaultSlot: true,
+      mocks: { $store: store, $route: route, $t: key => key },
+      directives: { 'ctrl-enter': {} },
+      stubs: {
+        AForm: !options.realForm,
+        AInputSearch: { name: 'AInputSearch', template: '<div><slot name="addonBefore" /></div>' },
+        APopover: { name: 'APopover', props: ['visible', 'placement'], template: '<div><slot /><slot v-if="visible" name="content" /></div>' }
+      }
+    }
+  })
   wrappers.push(w); return w
 }
 beforeEach(() => {
@@ -50,14 +61,15 @@ test('storage URLs cannot silently become unfiltered for a restricted user', () 
   expect(search.snapshotSearchPermissionError({ storageid: 'pool' }, { userInfo: { roletype: 'User' }, apis: { listStoragePools: {} } })).toBe('storage.permission')
   expect(search.snapshotSearchPermissionError({ imagestoreid: 'image' }, store.getters)).toBe('storage.permission')
 })
-test('candidate paging requests 20 + 4 within owner/Zone; md common dialog and UUID retention', async () => {
+test('candidate paging requests 20 + 4 within owner/Zone; VM filter popover and UUID retention', async () => {
   route.query.volumeid = 'deleted-volume'
   getAPI.mockResolvedValueOnce({ listvolumesresponse: { count: 24, volume: Array.from({ length: 20 }, (_, i) => volume(i)) } }).mockResolvedValueOnce({ listvolumesresponse: { count: 24, volume: Array.from({ length: 4 }, (_, i) => volume(i + 20)) } })
   const w = render(); w.vm.open(); await flush()
   const field = w.vm.pickers[0]; await w.vm.load(field, false); await flush()
   expect(w.vm.candidates.volumeid.rows).toHaveLength(24)
   expect(getAPI.mock.calls[1]).toEqual(['listVolumes', { listall: true, page: 2, pagesize: 20, account: 'owner', domainid: 'domain', ignoreproject: true, zoneid: 'zone' }, { preserveOnFailure: true, timeout: 20000 }])
-  expect(w.findComponent({ name: 'MoldDialog' }).props('size')).toBe('md')
+  expect(w.findComponent({ name: 'APopover' }).props('placement')).toBe('bottomRight')
+  expect(w.findComponent({ name: 'MoldDialog' }).exists()).toBe(false)
   expect(w.vm.form.volumeid).toBe('deleted-volume')
   expect(w.vm.blocked).toBe(false)
 })
@@ -111,4 +123,13 @@ test('dependent filters normalize and reset emits only explicit reset', async ()
   w.vm.form.intervaltype = 'DAILY'; w.vm.change('intervaltype'); expect(w.vm.form.snapshottype).toBe('RECURRING')
   w.vm.apply(); expect(w.emitted('search')[0][0].snapshotSearch.intervaltype).toBe('DAILY')
   w.vm.reset(); expect(w.emitted('search')[1][0]).toEqual({ snapshotSearch: {} })
+})
+
+test('native search form submit applies the current filters once and closes the popover', async () => {
+  const w = render({ realForm: true }); w.vm.open(); await flush()
+  w.vm.form.name = 'exact-snapshot'; w.vm.form.snapshottype = 'MANUAL'
+  await w.find('form').trigger('submit'); await flush()
+  expect(w.emitted('search')).toHaveLength(1)
+  expect(w.emitted('search')[0][0].snapshotSearch).toMatchObject({ name: 'exact-snapshot', snapshottype: 'MANUAL' })
+  expect(w.vm.visible).toBe(false)
 })
