@@ -14,17 +14,20 @@ limitations under the License.
 -->
 <template>
   <MoldDialog
+    focus-guard
     :visible="!closed"
-    :size="isStandard ? 'md' : 'lg'"
+    :size="targets.length > 1 ? 'lg' : 'md'"
     :class="{ 'snapshot-standard-dialog': isStandard }"
-    :title="$t(actionLabel)"
+    :title="$t(isDelete && zoneScope ? 'label.snapshot.dialog.delete.zone' : actionLabel)"
     :closable="!busy"
     :keyboard="!busy"
     :mask-closable="false"
     :form-actions="true"
     @cancel="close">
-    <div :class="{ 'snapshot-restore-content': isStandard }">
-      <a-alert v-if="!isStandard" type="warning" show-icon :message="$t(actionMessage)" />
+    <div class="snapshot-restore-content">
+      <p v-if="isDownload || isArchive" class="snapshot-dialog-target" data-testid="snapshot-dialog-target">{{ $t('label.snapshot.name') }}: {{ targets[0]?.record.name || targets[0]?.id }}</p>
+      <StorageSnapshotDialogTargets v-if="isDelete" :targets="targets" :contexts="contexts" />
+      <a-alert v-if="isDelete" type="warning" show-icon :message="$t(zoneScope ? 'message.snapshot.dialog.delete.zone' : 'message.snapshot.dialog.delete.all')" />
       <a-alert v-if="error && (!isStandard || !contexts.length)" type="error" show-icon role="alert" :message="error">
         <template v-if="isStandard" #description><a-button type="link" size="small" :disabled="busy" @click="refresh">{{ $t('label.retry') }}</a-button></template>
       </a-alert>
@@ -32,7 +35,7 @@ limitations under the License.
         v-for="(context, i) in contexts"
         :key="targets[i].id + targets[i].zoneId"
         :context="context"
-        :compact="isStandard && contexts.length === 1"
+        :compact="true"
         :recovery-message="isDownload ? 'message.snapshot.download.source.absent' : undefined"
         :error="isStandard && i === 0 ? error : undefined"
         :loading="busy"
@@ -43,31 +46,38 @@ limitations under the License.
       <a-alert v-if="isDownload" type="info" show-icon :message="$t('message.snapshot.download.prepare')" :description="$t('message.snapshot.download.replace')" />
       <p v-if="!contexts.length && !error" role="status">{{ $t('message.snapshot.action.validating') }}</p>
       <a-checkbox v-if="!isDownload" v-model:checked="acknowledged" :disabled="busy || blocked">{{ $t(isRestore ? 'message.snapshot.restore.acknowledge' : isArchive ? 'message.snapshot.archive.acknowledge' : 'message.snapshot.action.acknowledge') }}</a-checkbox>
-      <p v-for="result in results" :key="result.id">{{ result.target.name || result.target.id }} · {{ $t('label.snapshot.action.status.' + result.status) }} · {{ result.jobid }}</p>
+      <template v-if="results.length">
+        <a-alert type="info" show-icon :message="$t('message.snapshot.dialog.batch.results')" />
+        <a-table size="small" row-key="id" :pagination="false" :data-source="results" :columns="resultColumns" :scroll="{ x: 500 }">
+          <template #bodyCell="{ column, record }"><span v-if="column.key === 'name'">{{ record.target.name || record.target.id }}</span><span v-else>{{ $t('label.snapshot.action.status.' + record.status) }}</span></template>
+        </a-table>
+      </template>
     </div>
     <template #footer>
-      <a-button :disabled="busy" @click="close">{{ $t(isStandard ? 'label.cancel' : 'label.close') }}</a-button>
-      <a-button v-if="!isStandard" :disabled="busy" @click="refresh">{{ $t('label.snapshot.action.refresh') }}</a-button>
+      <a-button :disabled="busy" @click="close">{{ $t('label.cancel') }}</a-button>
       <a-button type="primary" :danger="!isDownload && !isArchive" :loading="busy" :disabled="busy || blocked || (!isDownload && !acknowledged)" @click="submit">{{ $t(isDownload ? 'label.snapshot.download.prepare' : isRestore ? 'label.restore' : actionLabel) }}</a-button>
     </template>
   </MoldDialog>
 </template>
 <script>
 import MoldDialog from '@/components/view/MoldDialog.vue'
+import StorageSnapshotDialogTargets from './StorageSnapshotDialogTargets.vue'
 import StorageSnapshotSafety from '@/components/view/StorageSnapshotSafety.vue'
 import { freezeSnapshotTarget, freshStorageSnapshotContext, snapshotSecurityScope, snapshotActionParams, snapshotResourceKeys } from '@/utils/storageSnapshotContext'
 import { submitSnapshotOperation, snapshotOperationBusy } from '@/utils/storageSnapshotOperations'
 export default {
   name: 'StorageSnapshotActionDialog',
-  components: { MoldDialog, StorageSnapshotSafety },
+  components: { MoldDialog, StorageSnapshotSafety, StorageSnapshotDialogTargets },
   emits: ['close-action', 'refresh-data'],
   props: { resource: { type: Object, default: () => ({}) }, currentAction: { type: Object, default: () => ({}) } },
-  data () { return { targets: [], contexts: [], results: [], acknowledged: false, busy: false, error: '', closed: false, active: true, originPath: '', actionApi: '', actionLabel: '', actionMessage: '', security: '', sequence: 0 } },
+  data () { return { targets: [], contexts: [], results: [], acknowledged: false, busy: false, error: '', closed: false, active: true, originPath: '', actionApi: '', actionLabel: '', actionMessage: '', zoneScope: false, security: '', sequence: 0 } },
   computed: {
+    isDelete () { return this.actionApi === 'deleteSnapshot' },
+    resultColumns () { return [{ key: 'name', title: this.$t('label.name'), width: 300 }, { key: 'status', title: this.$t('label.state'), width: 200 }] },
     isRestore () { return this.actionApi === 'revertSnapshot' },
     isDownload () { return this.actionApi === 'extractSnapshot' },
     isArchive () { return this.actionApi === 'archiveSnapshot' },
-    isStandard () { return this.isRestore || this.isDownload || this.isArchive },
+    isStandard () { return true },
     restoreDescription () {
       const context = this.contexts[0]
       if (this.targets.length !== 1) return this.$t('message.snapshot.restore.targets', [this.targets.length])
@@ -78,6 +88,7 @@ export default {
   },
   created () {
     this.actionApi = this.currentAction.api
+    this.zoneScope = !!this.currentAction.zoneScope
     this.actionLabel = this.currentAction.label || (this.isRestore ? 'label.action.revert.snapshot' : 'label.action.delete.snapshot')
     this.actionMessage = this.currentAction.message || 'message.action.delete.snapshot'
     this.originPath = this.$route.path; this.security = snapshotSecurityScope(this.$store)
@@ -132,7 +143,7 @@ export default {
 }
 </script>
 <style scoped>
-.snapshot-restore-content { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.snapshot-restore-content { display: flex; flex-direction: column; gap: 24px; min-width: 0; overflow-wrap: anywhere; }
 .snapshot-restore-content > .snapshot-safety-compact { margin: 0; }
 .snapshot-restore-content > p { margin: 0; }
 .snapshot-restore-content :deep(.ant-checkbox-wrapper) { display: flex; align-items: flex-start; margin: 0; white-space: normal; }

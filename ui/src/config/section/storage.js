@@ -222,6 +222,8 @@ export default {
           disabled: isFastCloneFlattenActive,
           tooltip: (record) => isFastCloneFlattenActive(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.take.snapshot',
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/TakeSnapshot.vue')))
         },
         {
@@ -336,6 +338,8 @@ export default {
           disabled: record => !!allocationIntent(record) || isFastCloneFlattenActive(record),
           tooltip: (record) => allocationIntent(record) ? 'message.allocation.lifecycle.unsupported' : isFastCloneFlattenActive(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.create.template.from.volume',
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateTemplate.vue')))
         },
         {
@@ -447,6 +451,8 @@ export default {
           label: 'label.snapshot.recovery',
           listView: true,
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotDeletionRecovery.vue')))
         },
         {
@@ -456,6 +462,8 @@ export default {
           dataView: true,
           show: (record) => { return record.state === 'BackedUp' },
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateTemplate.vue')))
         },
         {

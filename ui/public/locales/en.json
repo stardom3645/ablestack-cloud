@@ -9745,5 +9745,13 @@
   "label.snapshot.copy.not.required": "Not required",
   "label.snapshot.copy.abandoned": "Abandoned",
   "snapshot.extract": "Snapshot download",
-  "snapshot.copy": "Snapshot copy"
+  "snapshot.copy": "Snapshot copy",
+  "label.snapshot.dialog.delete.zone": "Delete Zone snapshot copies",
+  "label.snapshot.dialog.scope": "Deletion scope",
+  "message.snapshot.dialog.lookup.failed": "Required options could not be loaded. Your inputs are retained. Retry the lookup.",
+  "message.snapshot.dialog.copy.source": "Snapshot \"{0}\" · Source Zone {1} / {2}",
+  "message.snapshot.dialog.delete.all": "Delete this snapshot and all its copies across all Zones. The source volume is retained.",
+  "message.snapshot.dialog.delete.zone": "Delete all copies in the selected Zones, including other pages. This deletes the entire Zone scope, not an individual storage copy.",
+  "message.snapshot.dialog.target.count": "Review {0} fixed targets",
+  "message.snapshot.dialog.batch.results": "Completed targets are retained in notifications. If a target failed, close this dialog and select only the remaining targets after checking the job result."
 }

@@ -18,7 +18,7 @@
 <template>
   <div class="snapshot-deletion-recovery">
     <a-alert type="warning" :message="$t('message.snapshot.recovery.scope')" show-icon />
-    <a-form layout="vertical" style="margin-top: 16px">
+    <a-form layout="vertical" class="snapshot-dialog-form">
       <a-form-item :label="$t('label.snapshot.id')">
         <a-input v-model:value="snapshotId" :disabled="busy || !!pendingJob" data-testid="recovery-snapshot-id" />
       </a-form-item>
@@ -36,7 +36,7 @@
       <a-alert v-if="completed" :type="dbOnlyResult ? 'warning' : 'success'" :message="$t(dbOnlyResult ? 'message.snapshot.force.db.complete' : 'message.snapshot.recovery.complete')" style="margin-top: 16px" />
       <ul v-if="executionResult && force" data-testid="force-cleanup-results">
         <li v-for="(result, index) in (executionResult.cleanupresult || [])" :key="index">
-          {{ result.role }} #{{ result.referenceid }}: {{ $t(result.action === 'PHYSICAL_DELETED' ? 'label.snapshot.force.physical.deleted' : 'label.snapshot.force.db.only') }}
+          {{ referenceRole(result.role) }} #{{ result.referenceid }}: {{ $t(result.action === 'PHYSICAL_DELETED' ? 'label.snapshot.force.physical.deleted' : 'label.snapshot.force.db.only') }}
         </li>
       </ul>
       <p v-if="executionResult && executionResult.pendingcleanup">{{ $t('label.snapshot.force.pending') }}: {{ executionResult.pendingcleanup }}</p>
@@ -44,17 +44,17 @@
         <a-descriptions :column="1" bordered size="small">
           <a-descriptions-item :label="$t('label.name')">{{ preview.name }}</a-descriptions-item>
           <a-descriptions-item :label="$t('label.snapshot.id')">{{ preview.snapshotid }}</a-descriptions-item>
-          <a-descriptions-item :label="$t('label.state')">{{ preview.state }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.state')">{{ preview.state ? $t('state.' + preview.state.toLowerCase()) : $t('label.snapshot.list.unknown') }}</a-descriptions-item>
           <a-descriptions-item :label="$t('label.zone')">{{ preview.zoneid || $t('label.snapshot.recovery.allzones') }}</a-descriptions-item>
         </a-descriptions>
         <ul data-testid="recovery-references">
           <li v-for="ref in (preview.reference || [])" :key="ref.referenceid">
-            #{{ ref.referenceid }} · {{ ref.storename }} · {{ ref.role }} · {{ ref.state }} · {{ ref.zoneid }}
+            #{{ ref.referenceid }} · {{ ref.storename }} · {{ referenceRole(ref.role) }} · {{ ref.state ? $t('state.' + ref.state.toLowerCase()) : $t('label.snapshot.list.unknown') }} · {{ ref.zoneid }}
           </li>
         </ul>
         <ul v-if="force && !completed" data-testid="force-cleanup-plan">
           <li v-for="(result, index) in (preview.cleanupresult || [])" :key="index">
-            {{ result.role }} #{{ result.referenceid }}: {{ $t(result.action === 'DB_ONLY' ? 'label.snapshot.force.db.plan' : 'label.snapshot.force.physical.plan') }}
+            {{ referenceRole(result.role) }} #{{ result.referenceid }}: {{ $t(result.action === 'DB_ONLY' ? 'label.snapshot.force.db.plan' : 'label.snapshot.force.physical.plan') }}
           </li>
         </ul>
         <p v-if="!(preview.reference || []).length">{{ $t(force && unmappedPlan ? 'message.snapshot.force.no.references' : 'message.snapshot.recovery.no.references') }}</p>
@@ -65,7 +65,7 @@
       <p v-if="pendingJob">{{ $t('label.job.id') }}: {{ pendingJob }}</p>
       <a-button v-if="pendingJob && !busy" @click="checkResult">{{ $t('label.snapshot.recovery.check.result') }}</a-button>
       <MoldDialogActions :busy="busy">
-        <a-button :disabled="busy" @click="$emit('close-action')">{{ $t('label.close') }}</a-button>
+        <a-button :disabled="busy" @click="$emit('close-action')">{{ $t(completed ? 'label.close' : 'label.cancel') }}</a-button>
         <a-button type="primary" danger :loading="busy" :disabled="!canRecover" @click="recover">
           {{ $t(force ? 'label.snapshot.force.execute' : 'label.snapshot.recovery.execute') }}
         </a-button>
@@ -103,6 +103,7 @@ export default {
     zoneId () { this.invalidate() }
   },
   methods: {
+    referenceRole (role) { return this.$t(role === 'Primary' ? 'label.snapshot.copy.primary' : role === 'Image' ? 'label.snapshot.copy.secondary' : 'label.snapshot.list.unknown') },
     invalidate () { this.sequence++; this.preview = null; this.previewScope = null; this.acknowledged = false; this.completed = false; this.executionResult = null },
     async waitForJob (jobId, sequence) {
       for (let i = 0; i < 120; i++) {
@@ -222,6 +223,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.snapshot-deletion-recovery { width: 85vw; max-width: 680px; }
+.snapshot-deletion-recovery { width: 100%; max-width: 100%; }
+.snapshot-deletion-recovery > .ant-alert { margin-bottom: 24px; }
 .recovery-preview { overflow-wrap: anywhere; }
 </style>

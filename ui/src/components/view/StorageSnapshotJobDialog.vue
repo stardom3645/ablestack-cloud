@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <MoldDialog v-if="entry" size="md" :title="$t('label.snapshot.job.details')" @cancel="close">
+  <MoldDialog focus-guard v-if="entry" size="md" class="snapshot-standard-dialog" :title="$t('label.snapshot.job.details')" @cancel="close">
     <section class="snapshot-job-details" data-testid="snapshot-job-details">
       <a-descriptions :column="1" bordered size="small">
         <a-descriptions-item :label="$t('label.action')">{{ $t(operationLabel) }}</a-descriptions-item>

@@ -16,16 +16,16 @@
 // under the License.
 
 <template>
-  <div class="take-snapshot" v-ctrl-enter="handleSubmit">
+  <div class="take-snapshot snapshot-dialog-content" @keydown.ctrl.enter.prevent="handleSubmit">
     <a-spin :spinning="loading || actionLoading">
-    <StorageSnapshotSafety v-if="snapshotSafetyTarget" :context="snapshotSafetyContext" :loading="snapshotSafetyLoading" :error="snapshotSafetyError" @refresh="refreshSnapshotSafety" />
-      <a-alert type="warning">
+    <StorageSnapshotSafety compact :pending="snapshotSafetyPending" v-if="snapshotSafetyTarget" :context="snapshotSafetyContext" :loading="snapshotSafetyLoading" :error="snapshotSafetyError" @refresh="refreshSnapshotSafety" />
+      <a-alert type="info" show-icon>
         <template #message>
           <div v-html="$t('label.header.volume.take.snapshot')" />
         </template>
       </a-alert>
       <a-form
-        class="form"
+        class="form snapshot-dialog-form"
         :ref="formRef"
         :model="form"
         :rules="rules"
@@ -85,7 +85,7 @@
         <div class="tagsTitle">{{ $t('label.tags') }}</div>
         <div>
           <div v-for="(tag, index) in tags" :key="index">
-            <a-tag :key="index" :closable="true">
+            <a-tag :key="index" :closable="!actionLoading" @close="removeTag(index)">
               {{ tag.key }} = {{ tag.value }}
             </a-tag>
           </div>
@@ -93,8 +93,8 @@
             <a-input-group
               type="text"
               size="small"
-              @blur="handleInputConfirm"
-              @keyup.enter="handleInputConfirm"
+              class="snapshot-dialog-tag-input"
+              @keydown.enter.prevent.stop="handleInputConfirm"
               compact>
               <a-input ref="input" :value="inputKey" @change="handleKeyChange" style="width: 100px; text-align: center" :placeholder="$t('label.key')" />
               <a-input
@@ -104,16 +104,16 @@
                 disabled />
               <a-input :value="inputValue" @change="handleValueChange" style="width: 100px; text-align: center; border-left: 0" :placeholder="$t('label.value')" />
               <tooltip-button :tooltip="$t('label.ok')" icon="check-outlined" size="small" @onClick="handleInputConfirm" />
-              <tooltip-button :tooltip="$t('label.cancel')" icon="close-outlined" size="small" @onClick="inputVisible=false" />
+              <tooltip-button :tooltip="$t('label.cancel')" icon="close-outlined" size="small" @onClick="cancelTagInput" />
             </a-input-group>
           </div>
-          <a-tag v-else @click="showInput" class="btn-add-tag" style="borderStyle: dashed;">
+          <a-button v-else ref="tagAdd" type="dashed" size="small" @click="showInput" class="btn-add-tag">
             <plus-outlined /> {{ $t('label.new.tag') }}
-          </a-tag>
+          </a-button>
         </div>
         <MoldDialogActions :span="24" :busy="actionLoading">
           <a-button
-            :loading="actionLoading"
+            :disabled="actionLoading"
             @click="closeAction">
             {{ $t('label.cancel') }}
           </a-button>
@@ -124,7 +124,7 @@
             type="primary"
             ref="submit"
             @click="handleSubmit">
-            {{ $t('label.ok') }}
+            {{ $t('label.action.take.snapshot') }}
           </a-button>
         </MoldDialogActions>
       </a-form>
@@ -297,6 +297,7 @@ export default {
       this.inputValue = e.target.value
     },
     handleInputConfirm () {
+      if (this.actionLoading || !this.inputKey.trim()) return
       this.tags.push({
         key: this.inputKey,
         value: this.inputValue
@@ -304,7 +305,17 @@ export default {
       this.inputVisible = false
       this.inputKey = ''
       this.inputValue = ''
+      this.focusTagAdd()
     },
+    focusTagAdd () {
+      this.$nextTick(() => {
+        if (!this.dialogCurrent()) return
+        const target = this.$refs.tagAdd?.$el
+        if (target) target.focus({ preventScroll: true })
+      })
+    },
+    removeTag (index) { this.tags.splice(index, 1); this.focusTagAdd() },
+    cancelTagInput () { this.inputVisible = false; this.focusTagAdd() },
     showInput () {
       this.inputVisible = true
       this.$nextTick(function () {

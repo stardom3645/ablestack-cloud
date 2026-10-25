@@ -19,7 +19,7 @@
   <div class="snapshot-zones" data-testid="snapshot-zones">
     <div class="detail-tab-toolbar">
       <a-button v-if="deleteApi in $store.getters.apis" danger :disabled="actionsBlocked || !selectedRowKeys.length" @click="bulkActionConfirmation"><template #icon><delete-outlined /></template>{{ $t('label.snapshot.copy.delete.zones') }}</a-button>
-      <a-button :loading="fetchLoading || listRefreshing > 0" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
+      <a-button ref="zoneRefresh" :loading="fetchLoading || listRefreshing > 0" @click="fetchData"><template #icon><reload-outlined /></template>{{ $t('label.refresh') }}</a-button>
       <a-dropdown :trigger="['click']"><a-button :aria-label="$t('label.select.columns')"><template #icon><setting-outlined /></template>{{ $t('label.select.columns') }}</a-button>
         <template #overlay><a-menu><a-menu-item v-for="key in columnKeys" :key="key" @click="toggleColumn(key)"><a-checkbox :checked="visibleColumns.includes(key)" /> {{ $t(columnLabel(key)) }}</a-menu-item></a-menu></template>
       </a-dropdown>
@@ -96,7 +96,7 @@ showQuickJumper />
 
     <SnapshotCopyDialog v-if="copyRecord" :resource="resource" :source-zone="copyRecord" @close-action="onCloseModal" @refresh-data="fetchData" />
 
-    <StorageSnapshotActionDialog v-if="safetyDeleteAction" :key="deleteGeneration" :resource="resource" :current-action="safetyDeleteAction" @refresh-data="fetchData" @close-action="safetyDeleteAction = null; resetSelection(); fetchData()" />
+    <StorageSnapshotActionDialog v-if="safetyDeleteAction" :key="deleteGeneration" :resource="resource" :current-action="safetyDeleteAction" @refresh-data="fetchData" @close-action="closeDeleteDialog" />
   </div>
 </template>
 
@@ -319,15 +319,28 @@ export default {
     },
     showCopySnapshot (record) {
       if (!record?.zoneid || this.actionsBlocked) return
+      this.captureDialogFocus()
       this.copyRecord = Object.freeze({ zoneid: record.zoneid, zonename: record.zonename })
     },
     onShowDeleteModal (record, bulk = false) {
       if (!record?.zoneid || this.actionsBlocked) return
       const targets = bulk ? this.selectedItems : [record]
+      this.captureDialogFocus()
       this.deleteGeneration++
       this.safetyDeleteAction = { api: 'deleteSnapshot', label: 'label.action.delete.snapshot', message: 'message.action.delete.snapshot', zoneScope: true, storageSnapshotTargets: targets.map(row => Object.freeze({ ...this.resource, ...row })) }
     },
+    captureDialogFocus () { this.snapshotDialogTrigger = document.activeElement; this.snapshotDialogScope = this.copySecurityScope },
+    restoreDialogFocus () {
+      const trigger = this.snapshotDialogTrigger; const scope = this.snapshotDialogScope
+      this.$nextTick(() => {
+        if (scope !== this.copySecurityScope || this.copyRecord || this.safetyDeleteAction) return
+        const target = trigger?.isConnected && !trigger.disabled ? trigger : this.$refs.zoneRefresh?.$el
+        if (target) target.focus({ preventScroll: true })
+      })
+    },
+    closeDeleteDialog () { this.safetyDeleteAction = null; this.resetSelection(); this.fetchData(); this.restoreDialogFocus() },
     onCloseModal () {
+      this.restoreDialogFocus()
       this.copySequence++; this.copyRecord = null
       this.showConfirmationAction = false; this.selectedRowKeys = []
     }

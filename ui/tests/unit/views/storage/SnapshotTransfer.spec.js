@@ -73,3 +73,13 @@ test('malformed, mixed-source and duplicate destination contracts fail closed', 
   expect(readSnapshotCopyTargets({ listsnapshotcopytargetsresponse: { snapshotcopytargets: plan() } }, target).destinations).toHaveLength(1)
   for (const bad of [{ ...plan(), snapshotid: 'other' }, { ...plan(), scopehash: 'missing' }, { ...plan(), destinations: [row, row] }, { ...plan(), destinations: [{ ...row, protocol: 'rbd' }] }, { ...plan(), eligible: false }]) expect(() => readSnapshotCopyTargets({ listsnapshotcopytargetsresponse: { snapshotcopytargets: bad } }, target)).toThrow('message.snapshot.action.incomplete')
 })
+
+test('Ctrl+Enter submits from the copy selector without relying on a footer keyup listener', async () => {
+  const vm = await mount(); vm.selected = ['dest']; let accept
+  postAPI.mockReturnValue(new Promise(resolve => { accept = resolve }))
+  await wrapper.find('.snapshot-transfer-content').trigger('keydown', { key: 'Enter', ctrlKey: true }); await flushPromises()
+  await wrapper.find('.snapshot-transfer-content').trigger('keydown', { key: 'Enter', ctrlKey: true }); await flushPromises()
+  expect(postAPI).toHaveBeenCalledTimes(1)
+  accept({ copysnapshotresponse: { jobid: 'keyboard-job' } }); await flushPromises()
+  expect(wrapper.emitted('close-action')).toHaveLength(1)
+})

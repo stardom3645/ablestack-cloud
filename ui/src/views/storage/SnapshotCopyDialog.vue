@@ -14,20 +14,22 @@ limitations under the License.
 -->
 <template>
   <MoldDialog
+    focus-guard
 :visible="!closed"
 size="md"
+class="snapshot-standard-dialog"
 form-actions
 :title="$t('label.action.copy.snapshot')"
 :closable="!busy"
     :keyboard="!busy"
 :mask-closable="false"
 @cancel="close">
-    <div class="snapshot-transfer-content" v-ctrl-enter="submit">
+    <div class="snapshot-transfer-content" @keydown.ctrl.enter.prevent="submit">
       <StorageSnapshotSafety compact :context="context" :error="error" :loading="busy" :pending="pending" @refresh="refresh" />
       <a-alert type="info" show-icon :message="$t('message.snapshot.transfer.keep.source')" :description="sourceDescription" />
       <a-alert v-if="context && !context.reason && !destinations.length && !error" type="info" show-icon :message="$t('message.snapshot.transfer.empty')" />
       <a-alert v-else-if="context && !context.reason && destinations.length && !available.length && !error" type="warning" show-icon :message="$t('message.snapshot.transfer.none.eligible')" />
-      <a-form layout="vertical" class="snapshot-transfer-form">
+      <a-form layout="vertical" class="snapshot-transfer-form snapshot-dialog-form">
         <a-form-item :label="$t('label.snapshot.transfer.destinations')" required>
           <a-select
 id="snapshot-copy-destinations"
@@ -77,7 +79,7 @@ export default {
     blocked () { return this.busy || !!this.error || !this.context || !!this.context.reason || this.pending || !this.current() || !this.selected.length || this.selected.some(id => !this.available.some(row => row.zoneid === id)) },
     sourceDescription () {
       const plan = this.context?.copyplan
-      return plan ? this.$t('message.snapshot.transfer.source', [plan.sourcezonename || this.target.zoneId, plan.sourcestorename || this.$t('label.snapshot.transfer.secondary.auto')]) : ''
+      return plan ? this.$t('message.snapshot.dialog.copy.source', [this.target.record.name || this.target.id, plan.sourcezonename || this.target.zoneId, plan.sourcestorename || this.$t('label.snapshot.transfer.secondary.auto')]) : ''
     },
     securityScope () { return snapshotSecurityScope(this.$store) }
   },

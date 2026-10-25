@@ -216,6 +216,8 @@
           :confirmLoading="actionLoading"
           :footer="standardActionDialog ? undefined : null"
           :form-actions="standardActionDialog"
+          :focus-guard="!!currentAction.snapshotStandardDialog"
+          :after-close="restoreClosedActionFocus"
           :width="currentAction.dialogWidth || 'auto'"
         >
           <template #title>
@@ -1048,6 +1050,7 @@ export default {
       selectedRowKeys: [],
       currentAction: {},
       actionTrigger: null,
+      actionFocusReturn: null,
       showAction: false,
       dataView: false,
       projectView: false,
@@ -1462,7 +1465,11 @@ export default {
       // scrolling the window. Recreate Affix's cached placeholder width.
       this.storageHeaderObserver = new ResizeObserver(entries => {
         const width = Math.round(entries[0]?.contentRect.width || 0)
-        if (width > 0) this.storageHeaderWidth = width
+        if (width > 0) {
+          this.storageHeaderWidth = width
+          // Affix is keyed by header width, so closing the modal may replace its button.
+          this.restoreClosedActionFocus()
+        }
       })
       this.storageHeaderObserver.observe(this.$el)
     },
@@ -2321,14 +2328,29 @@ export default {
       if (deletedSshDetail) this.$router.push('/ssh')
       if (deletedUserDataDetail) this.$router.push('/userdata')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.
-      this.$nextTick(() => {
+      const generation = this.storageActionGeneration
+      const scope = this.listScope?.()
+      const restoreFocus = () => {
+        if (snapshotDialog && (generation !== this.storageActionGeneration || scope !== this.listScope?.() || originPath !== this.$route?.path)) return
         const replacement = (this.isStorageUi || snapshotDialog) && originPath === this.$route?.path
           ? (this.$refs?.detailActionsTrigger?.$el || (triggerLabel && Array.from(this.$el?.querySelectorAll('.autogen-toolbar-actions button') || []).find(button => button.getAttribute('aria-label') === triggerLabel)))
           : null
-        const target = trigger?.isConnected ? trigger : replacement
+        // A portal menu item may remain connected but hidden after its dropdown closes.
+        // Snapshot dialogs return to the stable toolbar/detail button in the current route.
+        const target = snapshotDialog && replacement?.isConnected ? replacement : trigger?.isConnected ? trigger : replacement
         if (!this.showAction && target?.isConnected && target !== document.body) {
           target.focus({ preventScroll: true })
         }
+      }
+      this.actionFocusReturn = snapshotDialog ? { restore: restoreFocus } : null
+      this.$nextTick(restoreFocus)
+    },
+    restoreClosedActionFocus () {
+      const pending = this.actionFocusReturn
+      if (!pending || this.showAction) return
+      this.$nextTick(() => {
+        // Never steal focus from another control, a new dialog, or a different scope.
+        if (this.actionFocusReturn === pending && !this.showAction && document.activeElement === document.body) pending.restore()
       })
     },
     cancelAction () {
@@ -2381,6 +2403,7 @@ export default {
       if ((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route)) && this.storageActionReady === false) return
       if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       this.storageActionGeneration++
+      this.actionFocusReturn = null
       if (action.storageSnapshotMode) {
         this.actionTrigger = this.$refs?.detailActionsTrigger?.$el || document.activeElement
         this.actionTriggerLabel = this.actionTrigger?.getAttribute('aria-label')
