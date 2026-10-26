@@ -300,7 +300,11 @@ public class SnapshotSchedulerImpl extends ManagerBase implements SnapshotSchedu
         logger.trace("Generating a CreateSnapshotCmd for snapshot [{}] with parameters: [{}].", snapshotToBeExecuted, params.toString());
         final CreateSnapshotCmd cmd = new CreateSnapshotCmd();
         ComponentContext.inject(cmd);
-        _dispatcher.dispatchCreateCmd(cmd, params);
+        try {
+            _dispatcher.dispatchCreateCmd(cmd, params);
+        } catch (Exception e) {
+            throw new CloudRuntimeException("Unable to allocate a scheduled snapshot", e);
+        }
         params.put("id", "" + cmd.getEntityId());
         params.put("ctxStartEventId", "1");
 

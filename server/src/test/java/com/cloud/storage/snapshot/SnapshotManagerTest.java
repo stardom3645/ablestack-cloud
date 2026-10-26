@@ -525,7 +525,11 @@ public class SnapshotManagerTest {
     }
 
     private void testPersistSnapshotPolicyLockAcquired(boolean forUpdate) {
-        try (MockedStatic<GlobalLock> ignored = Mockito.mockStatic(GlobalLock.class)) {
+        try (MockedStatic<com.cloud.utils.db.Transaction> tx = Mockito.mockStatic(com.cloud.utils.db.Transaction.class);
+             MockedStatic<GlobalLock> ignored = Mockito.mockStatic(GlobalLock.class)) {
+            tx.when(() -> com.cloud.utils.db.Transaction.execute(Mockito.any(com.cloud.utils.db.TransactionCallback.class)))
+                    .thenAnswer(i -> ((com.cloud.utils.db.TransactionCallback<?>) i.getArgument(0)).doInTransaction(null));
+            Mockito.lenient().when(snapshotPolicyDaoMock.lockRow(Mockito.anyLong(), Mockito.eq(true))).thenAnswer(i -> snapshotPolicyVoInstance);
 
             BDDMockito.given(GlobalLock.getInternLock(Mockito.anyString())).willReturn(globalLockMock);
             Mockito.doReturn(true).when(globalLockMock).lock(Mockito.anyInt());
