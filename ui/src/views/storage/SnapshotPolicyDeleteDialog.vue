@@ -4,7 +4,15 @@ Licensed under the Apache License, Version 2.0 (the "License");
 http://www.apache.org/licenses/LICENSE-2.0 . Distributed AS IS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
 <template>
-  <MoldDialog :visible="!closed" :title="$t('label.delete.snapshot.policy')" size="md" form-actions focus-guard :closable="!busy" :keyboard="!busy" @cancel="close">
+  <MoldDialog
+:visible="!closed"
+:title="$t('label.delete.snapshot.policy')"
+size="md"
+form-actions
+focus-guard
+:closable="!busy"
+:keyboard="!busy"
+@cancel="close">
     <a-spin :spinning="busy">
       <div class="policy-delete-target" data-testid="policy-delete-target">
         <strong>{{ target?.volume.name || resource.volumename || identity.volumeid }}</strong>
