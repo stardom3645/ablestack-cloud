@@ -100,6 +100,11 @@ export default {
       if (!this.allowed) throw new Error(this.$t('message.snapshot.policy.context.changed'))
       const latest = await freshPolicy(getAPI, this.resource, () => this.allowed)
       if (policyFingerprint(latest) !== policyFingerprint(this.policy)) throw new Error(this.$t('message.snapshot.policy.changed'))
+      const json = await getAPI('listVolumes', { id: latest.volumeid, listall: true }, { timeout: 20000 })
+      if (!this.allowed) throw new Error(this.$t('message.snapshot.policy.context.changed'))
+      const volume = json.listvolumesresponse?.volume?.find(v => v.id === latest.volumeid)
+      const owner = v => JSON.stringify([v?.id, v?.account, v?.domainid, v?.projectid, v?.zoneid])
+      if (!volume || owner(volume) !== owner(this.volume)) throw new Error(this.$t('message.snapshot.policy.changed'))
     },
     completed () { this.$emit('refresh-data'); if (this.isEdit) { this.formBusy = false; this.closed = true; this.$emit('close-action') } },
     close () { if (this.busy) return; this.closed = true; this.$emit('close-action') },

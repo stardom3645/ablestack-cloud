@@ -76,6 +76,18 @@ test('a changed server policy rejects the draft preflight without writing or cle
   const w = render(base(), jest.fn().mockRejectedValue(new Error('changed'))); await flushPromises(); w.vm.form.time = 59; await w.vm.handleSubmit()
   expect(postAPI).not.toHaveBeenCalled(); expect(w.vm.form.time).toBe(59); expect(w.vm.tags).toHaveLength(2)
 })
+test('inputs stay disabled during preflight and revoked tag permission prevents the captured tag draft from posting', async () => {
+  let finish; const preflight = jest.fn(() => new Promise(resolve => { finish = resolve })); const w = render(base(), preflight); await flushPromises()
+  w.vm.tags.push({ key: 'draft', value: 'not-authorized-after-revoke' }); const pending = w.vm.handleSubmit(); await flushPromises()
+  expect(w.findAll('input.ant-input-number-input').every(input => input.attributes('disabled') !== undefined)).toBe(true)
+  delete store.getters.apis.createTags; await flushPromises(); finish(); await pending
+  expect(postAPI).not.toHaveBeenCalled(); expect(w.vm.tags.map(t => t.key)).toEqual(['keep', 'remove']); expect(w.vm.$notifyError).toHaveBeenCalled()
+})
+test('an ownership change during an open edit is detected before writing', async () => {
+  const w = dialog('edit'); await flushPromises()
+  getAPI.mockImplementation(cmd => Promise.resolve(cmd === 'listSnapshotPolicies' ? { listsnapshotpoliciesresponse: { snapshotpolicy: [base()] } } : { listvolumesresponse: { volume: [{ ...volume, account: 'new-owner' }] } }))
+  await expect(w.vm.validateEdit()).rejects.toThrow('message.snapshot.policy.changed'); expect(postAPI).not.toHaveBeenCalled()
+})
 test('a readonly caller makes no dialog reads or mutations', async () => {
   delete store.getters.apis.createSnapshotPolicy; const w = dialog('edit'); await flushPromises(); expect(w.vm.allowed).toBe(false); expect(getAPI).not.toHaveBeenCalled(); expect(postAPI).not.toHaveBeenCalled()
 })

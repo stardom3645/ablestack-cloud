@@ -37,6 +37,7 @@
               <a-form-item :label="$t('label.intervaltype')" name="intervaltype" ref="intervaltype">
                 <a-radio-group
                   v-model:value="form.intervaltype"
+                  :disabled="actionLoading || disabled"
                   buttonStyle="solid"
                   @change="handleChangeIntervalType">
                   <a-radio-button value="hourly" :disabled="isIntervalDisabled('hourly')">
@@ -61,7 +62,7 @@
                   :title="$t('label.minute.past.hour')">
                   <a-input-number
                     style="width: 100%"
-                    :disabled="isIntervalDisabled(form.intervaltype)"
+                    :disabled="isIntervalDisabled(form.intervaltype) || actionLoading || disabled"
                     v-model:value="form.time"
                     :step="1"
                     v-focus="true" />
@@ -78,7 +79,7 @@
                 <a-time-picker
                   use12Hours
                   format="h:mm A"
-                  :disabled="isIntervalDisabled(form.intervaltype)"
+                  :disabled="isIntervalDisabled(form.intervaltype) || actionLoading || disabled"
                   v-model:value="form.timeSelect"
                   style="width: 100%;" />
               </a-form-item>
@@ -88,7 +89,7 @@
                 <a-select
                   v-model:value="form['day-of-week']"
                   showSearch
-                  :disabled="isIntervalDisabled(form.intervaltype)"
+                  :disabled="isIntervalDisabled(form.intervaltype) || actionLoading || disabled"
                   optionFilterProp="label"
                   :filterOption="(input, option) => {
                     return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
@@ -104,7 +105,7 @@
                 <a-select
                   v-model:value="form['day-of-month']"
                   showSearch
-                  :disabled="isIntervalDisabled(form.intervaltype)"
+                  :disabled="isIntervalDisabled(form.intervaltype) || actionLoading || disabled"
                   optionFilterProp="value"
                   :filterOption="(input, option) => {
                     return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
@@ -123,6 +124,7 @@
                   <a-input-number
                     style="width: 100%"
                     v-model:value="form.maxsnaps"
+                    :disabled="actionLoading || disabled"
                     :step="1" />
                 </a-tooltip>
                 <template #extra>
@@ -146,6 +148,7 @@
               <a-form-item :label="$t('label.timezone')" ref="timezone" name="timezone">
                 <a-select
                   v-model:value="form.timezone"
+                  :disabled="actionLoading || disabled"
                   :loading="fetching"
                   showSearch
                   optionFilterProp="label"
@@ -178,7 +181,7 @@
                     return  option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }"
                   :loading="zoneLoading"
-                  :disabled="zoneLoading || zoneError"
+                  :disabled="zoneLoading || zoneError || actionLoading || disabled"
                   :notFoundContent="$t('message.snapshot.zones.empty')"
                   :placeholder="''">
                   <a-select-option v-for="opt in policyZoneOptions" :key="opt.id" :label="opt.name || opt.description" :disabled="opt.unavailable">
@@ -569,7 +572,8 @@ export default {
           params.zoneids = values.zoneids.join()
         }
         params.schedule = encodePolicySchedule(values)
-        const tags = this.tagPermission || this.isEditing ? this.tags : []
+        const tagPermission = this.tagPermission
+        const tags = tagPermission || this.isEditing ? this.tags : []
         for (let i = 0; i < tags.length; i++) {
           const formattedTagData = {}
           const tag = tags[i]
@@ -580,7 +584,8 @@ export default {
         this.actionLoading = true
         try {
           if (this.isEditing && this.validateEdit) await this.validateEdit()
-          if (!this.dialogCurrent() || this.disabled || !('createSnapshotPolicy' in this.$store.getters.apis)) return
+          if (!this.dialogCurrent() || this.disabled || this.limitsLoading || !('createSnapshotPolicy' in this.$store.getters.apis)) return
+          if (tagPermission !== this.tagPermission) throw new Error(this.$t('message.snapshot.policy.context.changed'))
           const json = await postAPI('createSnapshotPolicy', params, { preserveOnFailure: true })
           if (!this.dialogCurrent()) return
           if (this.isEditing && json.createsnapshotpolicyresponse?.snapshotpolicy?.id !== this.policy.id) throw new Error(this.$t('message.snapshot.policy.changed'))
