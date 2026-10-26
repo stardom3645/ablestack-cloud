@@ -380,11 +380,11 @@ export default {
         timezone: undefined
       })
       this.rules = reactive({
-        time: [{ validator: () => this.validatePolicyField('time') }],
+        time: [{ required: true, validator: () => this.validatePolicyField('time') }],
         timeSelect: [{ type: 'object', required: true, message: this.$t('message.error.time') }],
-        'day-of-week': [{ validator: () => this.validatePolicyField('day-of-week') }],
-        'day-of-month': [{ validator: () => this.validatePolicyField('day-of-month') }],
-        maxsnaps: [{ validator: () => this.validatePolicyField('maxsnaps') }],
+        'day-of-week': [{ required: true, validator: () => this.validatePolicyField('day-of-week') }],
+        'day-of-month': [{ required: true, validator: () => this.validatePolicyField('day-of-month') }],
+        maxsnaps: [{ required: true, validator: () => this.validatePolicyField('maxsnaps') }],
         timezone: [{ required: true, message: `${this.$t('message.error.select')}` }]
       })
       if (this.resourceType === 'Volume') {

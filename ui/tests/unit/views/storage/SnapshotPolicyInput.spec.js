@@ -33,6 +33,7 @@ afterEach(async () => { wrappers.forEach(w => w.unmount()); await flushPromises(
 
 test('zero survives a real input blur and posts schedule=0', async () => {
   const w = render(); await fill(w)
+  expect(w.findAll('.ant-form-item-required')).toHaveLength(3)
   await w.find('input.ant-input-number-input').setValue('0'); await w.find('input.ant-input-number-input').trigger('blur')
   expect(w.vm.form.time).toBe(0); await w.vm.handleSubmit()
   expect(postAPI).toHaveBeenCalledWith('createSnapshotPolicy', expect.objectContaining({ schedule: 0 }), { preserveOnFailure: true })
