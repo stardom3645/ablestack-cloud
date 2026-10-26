@@ -1854,9 +1854,11 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
         IntervalType intvType = DateUtil.IntervalType.getIntervalType(intervalType);
         if (intvType == null) {
-            throw new InvalidParameterValueException("Unsupported interval type " + intervalType);
+            throw new InvalidParameterValueException("intervaltype must be HOURLY, DAILY, WEEKLY or MONTHLY.");
         }
         Type type = getSnapshotType(intvType);
+        SnapshotPolicyInputValidator.validateSchedule(intvType, cmd.getSchedule());
+        SnapshotPolicyInputValidator.validateRetention(cmd.getMaxSnaps(), type.getMax(), intvType);
         String cmdTimezone = cmd.getTimezone();
 
         TimeZone timeZone = TimeZone.getTimeZone(cmdTimezone);
@@ -1870,33 +1872,20 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         try {
             DateUtil.getNextRunTime(intvType, schedule, timezoneId, null);
         } catch (Exception e) {
-            throw new InvalidParameterValueException(String.format("%s has an invalid schedule [%s] for interval type [%s].",
-                    volume, schedule, intervalType));
+            throw new InvalidParameterValueException("Unable to calculate the next snapshot time. Check the schedule and timezone.");
         }
 
         int maxSnaps = cmd.getMaxSnaps();
-
-        if (maxSnaps <= 0) {
-            throw new InvalidParameterValueException(String.format("maxSnaps [%s] for volume %s should be greater than 0.", maxSnaps, volume));
-        }
-
-        int intervalMaxSnaps = type.getMax();
-        if (maxSnaps > intervalMaxSnaps) {
-            throw new InvalidParameterValueException(String.format("maxSnaps [%s] for volume %s exceeds limit [%s] for interval type [%s].", maxSnaps, volume,
-              intervalMaxSnaps, intervalType));
-        }
 
         // Verify that max doesn't exceed domain and account snapshot limits in case display is on
         if (display) {
             long accountLimit = _resourceLimitMgr.findCorrectResourceLimitForAccount(owner, ResourceType.snapshot, null);
             long domainLimit = _resourceLimitMgr.findCorrectResourceLimitForDomain(_domainMgr.getDomain(owner.getDomainId()), ResourceType.snapshot, null);
             if (!_accountMgr.isRootAdmin(owner.getId()) && ((accountLimit != -1 && maxSnaps > accountLimit) || (domainLimit != -1 && maxSnaps > domainLimit))) {
-                String message = "domain/account";
-                if (owner.getType() == Account.Type.PROJECT) {
-                    message = "domain/project";
-                }
-
-                throw new InvalidParameterValueException("Max number of snapshots shouldn't exceed the " + message + " level snapshot limit");
+                String ownerLabel = owner.getType() == Account.Type.PROJECT ? "project" : "account";
+                throw new InvalidParameterValueException("maxsnaps exceeds the " + ownerLabel + " or domain snapshot limit ("
+                        + ownerLabel + ": " + (accountLimit == -1 ? "unlimited" : accountLimit) + ", domain: "
+                        + (domainLimit == -1 ? "unlimited" : domainLimit) + "). Choose a lower retention count.");
             }
         }
 
