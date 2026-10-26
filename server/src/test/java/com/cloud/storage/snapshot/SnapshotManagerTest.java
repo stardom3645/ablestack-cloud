@@ -478,7 +478,7 @@ public class SnapshotManagerTest {
     @Test
     public void validateUpdateSnapshotPolicy(){
         Mockito.doReturn(true).when(snapshotPolicyDaoMock).update(anyLong(), any());
-        Mockito.doNothing().when(snapshotSchedulerMock).scheduleOrCancelNextSnapshotJobOnDisplayChange(any(), Mockito.anyBoolean());
+
         Mockito.doReturn(true).when(taggedResourceServiceMock).deleteTags(any(), any(), any());
 
         SnapshotPolicyVO snapshotPolicyVo = new SnapshotPolicyVO(TEST_VOLUME_ID, TEST_SNAPSHOT_POLICY_SCHEDULE, TEST_SNAPSHOT_POLICY_TIMEZONE, TEST_SNAPSHOT_POLICY_INTERVAL,
