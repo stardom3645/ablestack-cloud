@@ -3,7 +3,7 @@
 
  DONE  Build complete. The dist directory is ready to be deployed.
  INFO  Check out deployment instructions at https://cli.vuejs.org/guide/deployment.html
-      
+
 
 > cloudstack-ui@4.22.0 postbuild
 > ./postbuild.sh
