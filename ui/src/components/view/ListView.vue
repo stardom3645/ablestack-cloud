@@ -16,14 +16,14 @@
 // under the License.
 
 <template>
-  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup' }" @contextmenu="handleGlobalContextMenu">
+  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup', 'snapshot-list-table': $route.name === 'snapshot' }" @contextmenu="handleGlobalContextMenu">
     <a-table
       size="middle"
       :loading="loading"
       :locale="emptyText ? { emptyText } : undefined"
       :columns="isOrderUpdatable() ? columns : columns.filter(x => x.dataIndex !== 'order')"
       :dataSource="items"
-      :scroll="['autoscalevmgroup', 'affinitygroup'].includes($route.name) ? { x: 980 } : undefined"
+      :scroll="tableScroll || ($route.name === 'snapshot' ? { x: 1400 } : ['autoscalevmgroup', 'affinitygroup'].includes($route.name) ? { x: 980 } : undefined)"
       :rowKey="listRowKey"
       :pagination="false"
       :rowSelection="explicitlyAllowRowSelection || enableGroupAction() || $route.name === 'event' ? {selectedRowKeys: selectedRowKeys, onChange: onSelectChange, getCheckboxProps: record => ({ disabled: selectionDisabled(record) }), columnWidth: 30} : null"
@@ -54,7 +54,9 @@
       </div>
     </template>
     <template #bodyCell="{ column, text, record }">
-      <AffinityGroupPolicy v-if="$route.meta?.name === 'affinitygroup' && column.key === 'type'" :type="record.type" compact />
+      <span v-if="$route.name === 'snapshot' && column.key === 'copy'">{{ $t(record.copy?.role === 'Primary' ? 'label.primary.storage' : record.copy?.role === 'Image' ? 'label.secondary.storage' : 'label.unknown') }}</span>
+      <span v-else-if="$route.name === 'snapshot' && column.key === 'datastorename'">{{ record.datastorename || $t('message.snapshot.search.store.unavailable') }}</span>
+      <AffinityGroupPolicy v-else-if="$route.meta?.name === 'affinitygroup' && column.key === 'type'" :type="record.type" compact />
       <span v-else-if="$route.meta?.name === 'affinitygroup' && column.key === 'description'">{{ text || '—' }}</span>
       <template v-else-if="$route.name === 'autoscalevmgroup' && ['availablevirtualmachinecount', 'associatednetworkname', 'lastcheckedat', 'account', 'zonename'].includes(column.key)">
         <auto-scale-list-cell :resource="record" :column="column.key" />
@@ -261,6 +263,7 @@
         >{{ translateEventType(text) }}</span>
         <span v-else>{{ translateEventType(text) }}</span>
       </template>
+      <template v-if="$route.name === 'snapshot' && column.key === 'intervaltype'"><span>{{ $t(snapshotListInterval(text)) }}</span></template>
       <template v-if="column.key === 'schedule'">
         <div v-if="['/snapshotpolicy', '/backupschedule'].some(path => $route.path.endsWith(path))">
           <label class="interval-content">
@@ -408,8 +411,8 @@
         {{ text }}
       </template>
       <template v-if="column.key === 'vmname'">
-        <router-link :to="{ path: createPathBasedOnVmType(record.vmtype, record.virtualmachineid) }">{{ text
-          }}</router-link>
+        <router-link v-if="volumeVmPath(record, $router)" :to="{ path: volumeVmPath(record, $router) }">{{ text || record.virtualmachineid }}</router-link>
+        <span v-else>{{ text || '—' }}</span>
       </template>
       <template v-if="column.key === 'virtualmachinename'">
         <router-link v-if="record.virtualmachineid" :to="{ path: getVmRouteUsingType(record) + record.virtualmachineid }">{{ text }}</router-link>
@@ -436,7 +439,8 @@
           >
       </template>
       <template v-else-if="['size', 'virtualsize'].includes(column.key)">
-        <span v-if="$route.meta.name === 'buckets' && text !== undefined && text !== null">
+        <span v-if="$route.name === 'snapshot'">{{ snapshotListSize(snapshotListSizeValue(record, column.key)) ?? $t('label.snapshot.list.unknown') }}</span>
+        <span v-else-if="$route.meta.name === 'buckets' && text !== undefined && text !== null">
           {{ convertKB(text) }}
         </span>
         <span v-else-if="text && $route.path === '/kubernetes'">
@@ -450,7 +454,8 @@
         <span>{{ text }} GiB</span>
       </template>
       <template v-if="column.key === 'physicalsize'">
-        <span v-if="text">
+        <span v-if="$route.name === 'snapshot'">{{ snapshotListSize(snapshotListSizeValue(record, column.key)) ?? $t('label.snapshot.list.unknown') }}</span>
+        <span v-else-if="text">
           {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
         </span>
       </template>
@@ -697,8 +702,7 @@
         <span v-else>{{ text }}</span>
       </template>
       <template v-if="column.key === 'diskofferingname'">
-        <router-link v-if="record.diskofferingname && record.diskofferingcomputeonly !== true" :to="{ path: '/diskoffering/' + record.diskofferingid }">{{ text }}</router-link>
-        <span v-else>{{ text }}</span>
+        <LinkedDiskOffering :resource="record" />
       </template>
       <template v-for="(value, name) in thresholdMapping" :key="name">
         <template v-if="column.key === name">
@@ -1195,7 +1199,9 @@
 <script>
 import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import InstanceGroupSummary from '@/views/compute/InstanceGroupSummary'
+import { snapshotListSize, snapshotListInterval, snapshotListSizeValue } from '@/utils/storageSnapshotPresentation'
 import { listRowKey } from '@/utils/listRefresh'
+import { snapshotCopyList } from '@/utils/storageSnapshotSearch'
 import { sshKeyPairLink } from '@/utils/sshKeyPairIdentity'
 import { getAPI, postAPI } from '@/api'
 import OsLogo from '@/components/widgets/OsLogo'
@@ -1207,11 +1213,13 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import CopyLabel from '@/components/widgets/CopyLabel'
 import { cniDetailLink } from '@/utils/cniDeletion'
 import AffinityGroupPolicy from '@/views/compute/AffinityGroupPolicy'
+import LinkedDiskOffering from '@/components/offering/LinkedDiskOffering'
 import GuestNetworkSummary from '@/components/view/GuestNetworkSummary'
 import ResourceLabel from '@/components/widgets/ResourceLabel'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import { createPathBasedOnVmType } from '@/utils/plugins'
 import { validateLinks } from '@/utils/links'
+import { volumeVmPath } from '@/utils/storageUi'
 import cronstrue from 'cronstrue/i18n'
 import moment from 'moment-timezone'
 import { timeZoneName } from '@/utils/timezone'
@@ -1220,6 +1228,7 @@ import { FileTextOutlined } from '@ant-design/icons-vue'
 export default {
   name: 'ListView',
   components: {
+    LinkedDiskOffering,
     AffinityGroupPolicy,
     AutoScaleListCell,
     InstanceGroupSummary,
@@ -1235,6 +1244,7 @@ export default {
     FileTextOutlined
   },
   props: {
+    tableScroll: { type: Object, default: null },
     resourcePath: { type: String, default: '' },
     selectionDisabled: { type: Function, default: () => false },
     keyboardContextMenu: { type: Boolean, default: false },
@@ -1338,6 +1348,7 @@ export default {
     }
   },
   watch: {
+    actions () { if (this.$route.name === 'snapshot') this.closeContextQuickView() },
     items: {
       deep: true,
       handler (newData, oldData) {
@@ -1425,6 +1436,10 @@ export default {
     }
   },
   methods: {
+    snapshotListSize,
+    snapshotListSizeValue,
+    snapshotListInterval,
+    volumeVmPath,
     cniDetailLink,
     sshKeyPairLink,
     canLinkProject (record) {
@@ -1445,7 +1460,7 @@ export default {
         }
       }
     },
-    listRowKey,
+    listRowKey (record) { return snapshotCopyList(this.$route) ? (record.copy?.id || listRowKey(record)) : listRowKey(record) },
     translateEventType (type) {
       if (!type || typeof type !== 'string') {
         return type
@@ -1501,7 +1516,7 @@ export default {
       }
       event.preventDefault()
       event.stopPropagation()
-      this.contextQuickViewRecord = this.$route.name === 'vmsnapshot' ? Object.freeze({ ...record }) : record
+      this.contextQuickViewRecord = ['vmsnapshot', 'snapshot'].includes(this.$route.name) ? Object.freeze({ ...record }) : record
       this.contextQuickViewPosition = {
         x: event.clientX,
         y: event.clientY
@@ -1545,6 +1560,7 @@ export default {
           .test(this.$route.path)
     },
     enableGroupAction () {
+      if (snapshotCopyList(this.$route)) return false
       if (this.resourcePath) return this.explicitlyAllowRowSelection
       return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'cniconfiguration', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
         'vmsnapshot', 'backup', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway', 'vnfapp',
@@ -2099,4 +2115,11 @@ export default {
     }
   }
 
+</style>
+
+<style scoped>
+.snapshot-list-table { max-width: 100%; min-width: 0; }
+.snapshot-list-table :deep(th) { white-space: nowrap; }
+.snapshot-list-table :deep(.ant-table-container) { overflow-x: auto; }
+.snapshot-list-table :deep(tr:focus-visible) { outline: 2px solid var(--ui-link, #1890ff); outline-offset: -2px; }
 </style>

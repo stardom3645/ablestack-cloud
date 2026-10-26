@@ -541,6 +541,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer cloneVolumeFromBaseTemplate(final CopyCommand cmd) {
+        Answer allocation = copyAllocatedTemplate(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final DataTO destData = cmd.getDestTO();
         final TemplateObjectTO template = (TemplateObjectTO)srcData;
@@ -626,6 +630,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer copyVolumeFromImageCacheToPrimary(final CopyCommand cmd) {
+        Answer allocation = copyAllocatedTemplate(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final DataTO destData = cmd.getDestTO();
         final DataStoreTO srcStore = srcData.getDataStore();
@@ -1866,6 +1874,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                 diskdef.setPhysicalBlockIOSize(attachingPool.getSupportedPhysicalBlockSize());
                 diskdef.setLogicalBlockIOSize(attachingPool.getSupportedLogicalBlockSize());
                 attachingPool.customizeLibvirtDiskDef(diskdef);
+                Gfs2VolumeAllocation.configurePhysicalFileDisk(diskdef, attachingDisk);
                 resource.setQcow2FullMetadataCache(diskdef, attachingDisk);
             }
 
@@ -1932,6 +1941,7 @@ public class KVMStorageProcessor implements StorageProcessor {
             storagePoolMgr.connectPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath(), disk.getDetails());
 
             final KVMPhysicalDisk phyDisk = storagePoolMgr.getPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath());
+            Gfs2VolumeAllocation.prepareRawPhysicalFile(phyDisk, vol);
             final String volCacheMode = vol.getCacheMode() == null ? null : vol.getCacheMode().toString();
             logger.debug(String.format("Attaching physical disk %s with format %s", phyDisk.getPath(), phyDisk.getFormat()));
 
@@ -2159,6 +2169,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer createVolume(final CreateObjectCommand cmd) {
+        Answer allocation = createAllocatedVolume(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final VolumeObjectTO volume = (VolumeObjectTO)cmd.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)volume.getDataStore();
 
@@ -2225,6 +2239,111 @@ public class KVMStorageProcessor implements StorageProcessor {
         } finally {
             volume.clearPassphrase();
         }
+    }
+
+    private Answer createAllocatedVolume(CreateObjectCommand command) {
+        VolumeObjectTO volume = (VolumeObjectTO) command.getData();
+        PrimaryDataStoreTO store = (PrimaryDataStoreTO) volume.getDataStore();
+        try {
+            if (volume.getAllocation().isEmpty()) {
+                if (store.getPoolType() == StoragePoolType.RBD) {
+                    com.cloud.storage.VolumeAllocationPolicy.requireRbdLegacyThin(volume.getProvisioningType());
+                }
+                return null;
+            }
+            KVMStoragePool pool = storagePoolMgr.getStoragePool(store.getPoolType(), store.getUuid());
+            return new CreateObjectAnswer(pool.getType() == StoragePoolType.SharedMountPoint ?
+                    new Gfs2VolumeAllocation().create(volume, pool, null, (long) command.getWait() * 1000) :
+                    new RbdVolumeAllocation().create(volume, pool, null, (long) command.getWait() * 1000));
+        } catch (Exception failure) {
+            return new CreateObjectAnswer(failure.getMessage());
+        } finally {
+            if (!volume.getAllocation().isEmpty()) {
+                volume.clearPassphrase();
+            }
+        }
+    }
+
+    private Answer copyAllocatedTemplate(CopyCommand command) {
+        VolumeObjectTO volume = (VolumeObjectTO) command.getDestTO();
+        PrimaryDataStoreTO store = (PrimaryDataStoreTO) volume.getDataStore();
+        KVMStoragePool secondary = null;
+        try {
+            if (volume.getAllocation().isEmpty()) {
+                if (store.getPoolType() == StoragePoolType.RBD) {
+                    com.cloud.storage.VolumeAllocationPolicy.requireRbdLegacyThin(volume.getProvisioningType());
+                }
+                return null;
+            }
+            if (store.getPoolType() != StoragePoolType.RBD && store.getPoolType() != StoragePoolType.SharedMountPoint) {
+                throw new CloudRuntimeException("ALLOCATION_BACKEND_UNSUPPORTED: qualified GFS2/RBD materialized copy only");
+            }
+            KVMStoragePool pool = storagePoolMgr.getStoragePool(store.getPoolType(), store.getUuid());
+            DataTO source = command.getSrcTO();
+            KVMPhysicalDisk disk;
+            if (source instanceof TemplateObjectTO && source.getDataStore() instanceof PrimaryDataStoreTO &&
+                    store.getUuid().equals(((PrimaryDataStoreTO) source.getDataStore()).getUuid())) {
+                disk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), source.getPath());
+            } else if (source instanceof VolumeObjectTO && source.getDataStore() instanceof NfsTO &&
+                    !((VolumeObjectTO) source).requiresEncryption()) {
+                String path = source.getPath();
+                int split = path.lastIndexOf('/');
+                if (split < 0) {
+                    throw new CloudRuntimeException("RBD_ALLOCATION_SOURCE_UNSUPPORTED: image-cache directory missing");
+                }
+                secondary = storagePoolMgr.getStoragePoolByURI(((NfsTO) source.getDataStore()).getUrl() + "/" + path.substring(0, split));
+                String name = path.substring(split + 1);
+                ImageFormat format = ((VolumeObjectTO) source).getFormat();
+                if (format == ImageFormat.QCOW2 && !name.endsWith(".qcow2")) {
+                    name += ".qcow2";
+                }
+                disk = secondary.getPhysicalDisk(name);
+                if (disk != null) {
+                    disk.setFormat(PhysicalDiskFormat.valueOf(format.toString()));
+                }
+            } else {
+                throw new CloudRuntimeException("RBD_ALLOCATION_SOURCE_UNSUPPORTED: materialized primary template or unencrypted image-cache file required");
+            }
+            if (disk == null) {
+                throw new CloudRuntimeException("RBD_ALLOCATION_SOURCE_MISSING: template cannot be replaced with an empty image");
+            }
+            volume.setPath(volume.getUuid());
+            resource.createOrUpdateLogFileForCommand(command, Command.State.PROCESSING_IN_BACKEND);
+            VolumeObjectTO result = pool.getType() == StoragePoolType.SharedMountPoint ?
+                    new Gfs2VolumeAllocation().create(volume, pool, disk, command.getWaitInMillSeconds()) :
+                    new RbdVolumeAllocation().create(volume, pool, disk, command.getWaitInMillSeconds());
+            resource.createOrUpdateLogFileForCommand(command, Command.State.COMPLETED);
+            return new CopyCmdAnswer(result);
+        } catch (Exception failure) {
+            return new CopyCmdAnswer(failure.getMessage());
+        } finally {
+            if (secondary != null) {
+                secondary.delete();
+            }
+            if (!volume.getAllocation().isEmpty()) {
+                volume.clearPassphrase();
+            }
+        }
+    }
+
+    private Answer rejectUnqualifiedAllocationCopy(CopyCommand command) {
+        if (command.getSrcTO() instanceof VolumeObjectTO && !((VolumeObjectTO) command.getSrcTO()).getAllocation().isEmpty()) {
+            return new CopyCmdAnswer("ALLOCATION_OPERATION_UNSUPPORTED: migration is not qualified for explicit allocation");
+        }
+        if (command.getDestTO() instanceof VolumeObjectTO) {
+            VolumeObjectTO volume = (VolumeObjectTO) command.getDestTO();
+            if (!volume.getAllocation().isEmpty()) {
+                return new CopyCmdAnswer("ALLOCATION_OPERATION_UNSUPPORTED: snapshot restore and migration are not qualified for explicit allocation");
+            }
+            if (volume.getDataStore() instanceof PrimaryDataStoreTO && ((PrimaryDataStoreTO) volume.getDataStore()).getPoolType() == StoragePoolType.RBD) {
+                try {
+                    com.cloud.storage.VolumeAllocationPolicy.requireRbdLegacyThin(volume.getProvisioningType());
+                } catch (com.cloud.exception.InvalidParameterValueException unsupported) {
+                    return new CopyCmdAnswer(unsupported.getMessage());
+                }
+            }
+        }
+        return null;
     }
 
     KVMPhysicalDisk createBlankVolume(VolumeObjectTO volume, KVMStoragePool pool, PhysicalDiskFormat format, long size) {
@@ -3346,6 +3465,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer createVolumeFromSnapshot(final CopyCommand cmd) {
+        Answer allocation = rejectUnqualifiedAllocationCopy(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final SnapshotObjectTO snapshot = (SnapshotObjectTO)srcData;
         final VolumeObjectTO volume = snapshot.getVolume();
@@ -3439,10 +3562,16 @@ public class KVMStorageProcessor implements StorageProcessor {
         NfsTO nfsImageStore = (NfsTO)imageStore;
         KVMStoragePool secondaryPool = storagePoolMgr.getStoragePoolByURI(nfsImageStore.getUrl() + File.separator + snapshotPath);
         KVMPhysicalDisk snapshotDisk = secondaryPool.getPhysicalDisk(snapshotName);
-        if (volume.getFormat() == ImageFormat.RAW) {
-            snapshotDisk.setFormat(PhysicalDiskFormat.RAW);
-        } else if (volume.getFormat() == ImageFormat.QCOW2) {
-            snapshotDisk.setFormat(PhysicalDiskFormat.QCOW2);
+        try {
+            SnapshotObjectTO snapshot = (SnapshotObjectTO)cmd.getSrcTO();
+            org.apache.cloudstack.storage.formatinspector.SnapshotImageMetadata metadata =
+                    org.apache.cloudstack.storage.formatinspector.SnapshotImageMetadata.inspect(new File(snapshotDisk.getPath()), snapshot.getSize());
+            snapshotDisk.setFormat(PhysicalDiskFormat.valueOf(metadata.getFormat().name()));
+            snapshotDisk.setVirtualSize(metadata.getVirtualSize());
+            snapshotDisk.setSize(metadata.getFileSize());
+        } catch (IOException e) {
+            secondaryPool.delete();
+            throw new CloudRuntimeException("Unable to verify snapshot backup image: " + e.getMessage(), e);
         }
 
         final String primaryUuid = pool.getUuid();
@@ -4332,16 +4461,8 @@ public class KVMStorageProcessor implements StorageProcessor {
                 RbdImage image = rbd.open(disk.getName());
                 try {
                     logger.info("Attempting to remove RBD snapshot " + snapshotFullName);
-                    if (image.snapIsProtected(snapshotName)) {
-                        logger.debug("Unprotecting RBD snapshot " + snapshotFullName);
-                        image.snapUnprotect(snapshotName);
-                    }
-                    image.snapRemove(snapshotName);
-                    logger.info("Snapshot " + snapshotFullName + " successfully removed from " +
-                            primaryPool.getType().toString() + "  pool.");
-                } catch (RbdException e) {
-                    logger.error("Failed to remove snapshot " + snapshotFullName + ", with exception: " + e.toString() +
-                        ", RBD error: " + ErrorCode.getErrorMessage(e.getReturnValue()));
+                    removeRbdSnapshot(image, snapshotName);
+                    logger.info("Snapshot " + snapshotFullName + " removed or already absent.");
                 } finally {
                     rbd.close(image);
                     r.ioCtxDestroy(io);
@@ -4391,6 +4512,20 @@ public class KVMStorageProcessor implements StorageProcessor {
             return new Answer(cmd, false, "Failed to remove snapshot " + snapshotFullName);
         } finally {
             volume.clearPassphrase();
+        }
+    }
+
+    protected void removeRbdSnapshot(RbdImage image, String snapshotName) throws RbdException {
+        try {
+            if (image.snapIsProtected(snapshotName)) {
+                image.snapUnprotect(snapshotName);
+            }
+            image.snapRemove(snapshotName);
+        } catch (RbdException error) {
+            if (Math.abs(error.getReturnValue()) != 2) {
+                throw error;
+            }
+            logger.debug("RBD snapshot {} is already absent", snapshotName);
         }
     }
 
@@ -4529,6 +4664,10 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer copyVolumeFromPrimaryToPrimary(CopyCommand cmd) {
+        Answer allocation = rejectUnqualifiedAllocationCopy(cmd);
+        if (allocation != null) {
+            return allocation;
+        }
         final DataTO srcData = cmd.getSrcTO();
         final DataTO destData = cmd.getDestTO();
         final VolumeObjectTO srcVol = (VolumeObjectTO)srcData;

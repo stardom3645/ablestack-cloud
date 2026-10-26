@@ -19,18 +19,14 @@ import { shallowRef, defineAsyncComponent } from 'vue'
 import store from '@/store'
 import { isZoneCreated } from '@/utils/zone'
 import { isAdmin } from '@/role'
+import { allocationIntent } from '@/utils/volumeAllocation'
+import { canDeleteVolume, volumeDeleteReason } from '@/utils/volumeEdit'
+import { assignmentReason } from '@/utils/storageManagement'
 
 const activeFastCloneFlattenStatuses = ['pending', 'running']
-const runningFastCloneFlattenStatuses = ['running']
 
 const isFastCloneFlattenActive = (record) => {
   return activeFastCloneFlattenStatuses.includes(
-    String(record?.clonefastflattenstatus || record?.details?.['clone.fast.flatten.status'] || '').toLowerCase()
-  )
-}
-
-const isFastCloneFlattenRunning = (record) => {
-  return runningFastCloneFlattenStatuses.includes(
     String(record?.clonefastflattenstatus || record?.details?.['clone.fast.flatten.status'] || '').toLowerCase()
   )
 }
@@ -93,10 +89,20 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
         },
         {
+          name: 'snapshots',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageRelatedResources.vue'))),
+          show: () => 'listSnapshots' in store.getters.apis
+        },
+        {
+          name: 'recurringsnapshots',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/VolumeSnapshotPolicies.vue'))),
+          show: () => 'listSnapshotPolicies' in store.getters.apis
+        },
+        {
           name: 'metrics',
           resourceType: 'Volume',
           component: shallowRef(defineAsyncComponent(() => import('@/components/view/StatsTab.vue'))),
-          show: (record) => { return store.getters.features.instancesdisksstatsretentionenabled }
+          show: (record) => { return store.getters.features.instancesdisksstatsretentionenabled && 'listVolumesUsageHistory' in store.getters.apis }
         },
         {
           name: 'events',
@@ -106,7 +112,8 @@ export default {
         },
         {
           name: 'comments',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue'))),
+          show: () => 'listAnnotations' in store.getters.apis
         }
       ],
       searchFilters: () => {
@@ -171,21 +178,24 @@ export default {
           }
         },
         {
+          api: 'assignVolume',
+          icon: 'swap-outlined',
+          label: 'label.volume.assign',
+          dataView: true,
+          popup: true,
+          show: () => ['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype),
+          disabled: record => !!assignmentReason(record, store.getters.userInfo.roletype),
+          tooltip: record => assignmentReason(record, store.getters.userInfo.roletype) || 'label.volume.assign',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/AssignVolume.vue')))
+        },
+        {
           api: 'updateVolume',
           icon: 'edit-outlined',
           label: 'label.edit',
           dataView: true,
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/UpdateVolume.vue'))),
-          args: ['name', 'deleteprotection'],
-          mapping: {
-            account: {
-              value: (record) => { return record.account }
-            },
-            domainid: {
-              value: (record) => { return record.domainid }
-            }
-          }
+          args: ['name', 'deleteprotection']
         },
         {
           api: 'updateCompressDedup',
@@ -212,6 +222,8 @@ export default {
           disabled: isFastCloneFlattenActive,
           tooltip: (record) => isFastCloneFlattenActive(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.take.snapshot',
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/TakeSnapshot.vue')))
         },
         {
@@ -302,8 +314,8 @@ export default {
           message: 'message.download.volume.confirm',
           dataView: true,
           show: (record) => { return record.state === 'Ready' && (record.vmstate === 'Stopped' || !record.virtualmachineid) },
-          disabled: isFastCloneFlattenActive,
-          tooltip: (record) => isFastCloneFlattenActive(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.download.volume',
+          disabled: record => !!allocationIntent(record) || isFastCloneFlattenActive(record),
+          tooltip: (record) => allocationIntent(record) ? 'message.allocation.lifecycle.unsupported' : isFastCloneFlattenActive(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.download.volume',
           args: ['zoneid', 'mode'],
           mapping: {
             zoneid: {
@@ -323,9 +335,11 @@ export default {
           show: (record) => {
             return record.state === 'Ready' && (record.vmstate === 'Stopped' || !record.virtualmachineid)
           },
-          disabled: isFastCloneFlattenActive,
-          tooltip: (record) => isFastCloneFlattenActive(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.create.template.from.volume',
+          disabled: record => !!allocationIntent(record) || isFastCloneFlattenActive(record),
+          tooltip: (record) => allocationIntent(record) ? 'message.allocation.lifecycle.unsupported' : isFastCloneFlattenActive(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.create.template.from.volume',
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateTemplate.vue')))
         },
         {
@@ -352,8 +366,8 @@ export default {
             return !['Destroy', 'Destroyed', 'Expunging', 'Expunged', 'Migrating', 'Uploading', 'UploadError', 'Creating', 'Allocated', 'Uploaded'].includes(record.state) &&
               record.type !== 'ROOT' && !record.virtualmachineid
           },
-          disabled: isFastCloneFlattenRunning,
-          tooltip: (record) => isFastCloneFlattenRunning(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.destroy.volume'
+          disabled: (record, store, selection) => !!volumeDeleteReason(selection?.length ? selection : [record], store, 'destroyVolume'),
+          tooltip: (record, store, selection) => volumeDeleteReason(selection?.length ? selection : [record], store, 'destroyVolume') || 'label.action.destroy.volume'
         },
         {
           api: 'deleteVolume',
@@ -361,19 +375,11 @@ export default {
           label: 'label.action.delete.volume',
           message: 'message.action.delete.volume',
           dataView: true,
-          show: (record, store) => {
-            const isDetached = !record.virtualmachineid
-            const isDetachedAllocatedRoot = record.state === 'Allocated' && record.type === 'ROOT' && isDetached
-            return ['Expunging', 'Expunged', 'UploadError'].includes(record.state) ||
-              ['Allocated', 'Uploaded'].includes(record.state) && record.type !== 'ROOT' && isDetached ||
-              (record.state === 'Ready' && record.type !== 'ROOT' && isDetached) ||
-              isDetachedAllocatedRoot ||
-              ((['Admin', 'DomainAdmin'].includes(store.userInfo.roletype) || store.features.allowuserexpungerecovervolume) && record.state === 'Destroy')
-          },
+          show: canDeleteVolume,
           groupAction: true,
           popup: true,
-          disabled: isFastCloneFlattenRunning,
-          tooltip: (record) => isFastCloneFlattenRunning(record) ? 'message.sharedmountpoint.clone.flatten.in.progress' : 'label.action.delete.volume',
+          disabled: (record, store, selection) => !!volumeDeleteReason(selection?.length ? selection : [record], store),
+          tooltip: (record, store, selection) => volumeDeleteReason(selection?.length ? selection : [record], store) || 'label.action.delete.volume',
           groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
         }
       ]
@@ -385,8 +391,9 @@ export default {
       docHelp: 'adminguide/storage.html#working-with-volume-snapshots',
       permission: ['listSnapshots'],
       resourceType: 'Snapshot',
-      columns: () => {
-        const fields = ['name', 'state', 'volumename', 'intervaltype', 'physicalsize', 'created']
+      columns: (getters, route) => {
+        const fields = ['name', 'state', 'volumename', 'intervaltype', 'physicalsize', 'virtualsize', 'created']
+        if (route?.query.showunique === 'false') fields.splice(1, 0, { field: 'copy', customTitle: 'snapshot.search.location' }, { field: 'datastorename', customTitle: 'storage' })
         if (store.getters.features.snapshotshowchainsize) {
           fields.splice(fields.indexOf('created'), 0, 'chainsize', 'parentname')
         }
@@ -412,7 +419,7 @@ export default {
       tabs: [
         {
           name: 'details',
-          component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotDetails.vue')))
         },
         {
           name: 'zones',
@@ -430,7 +437,7 @@ export default {
         }
       ],
       searchFilters: () => {
-        const filters = ['name', 'domainid', 'account', 'tags', 'zoneid']
+        const filters = ['name', 'volumeid', 'snapshottype', 'intervaltype', 'showunique', 'locationtype', 'domainid', 'account', 'tags', 'zoneid']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
           filters.push('storageid')
           filters.push('imagestoreid')
@@ -439,12 +446,24 @@ export default {
       },
       actions: [
         {
+          api: 'deleteSnapshot',
+          icon: 'tool-outlined',
+          label: 'label.snapshot.recovery',
+          listView: true,
+          popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotDeletionRecovery.vue')))
+        },
+        {
           api: 'createTemplate',
           icon: 'picture-outlined',
           label: 'label.create.template',
           dataView: true,
           show: (record) => { return record.state === 'BackedUp' },
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateTemplate.vue')))
         },
         {
@@ -454,10 +473,15 @@ export default {
           dataView: true,
           show: (record) => { return record.state === 'BackedUp' },
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateVolume.vue')))
         },
         {
           api: 'revertSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
           icon: 'sync-outlined',
           label: 'label.action.revert.snapshot',
           message: 'message.action.revert.snapshot',
@@ -465,7 +489,20 @@ export default {
           show: (record) => { return record.state === 'BackedUp' && record.revertable }
         },
         {
+          api: 'archiveSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
+          icon: 'inbox-outlined',
+          label: 'label.action.archive.snapshot',
+          dataView: true,
+          show: record => ['BackedUp', 'CreatedOnPrimary', 'Error'].includes(record.state)
+        },
+        {
           api: 'extractSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
           icon: 'cloud-download-outlined',
           label: 'label.action.download.snapshot',
           message: 'message.action.download.snapshot',
@@ -475,19 +512,16 @@ export default {
               ((record.domainid === store.userInfo.domainid && record.account === store.userInfo.account) ||
                 (record.domainid === store.userInfo.domainid && record.projectid && store.project && store.project.id && record.projectid === store.project.id))) &&
               record.state === 'BackedUp'
-          },
-          args: ['zoneid'],
-          mapping: {
-            zoneid: {
-              value: (record) => { return record.zoneid }
-            }
-          },
-          response: (result) => { return `Please click <a href="${result.snapshot.url}" target="_blank">${result.snapshot.url}</a> to download.` }
+          }
         },
         {
           api: 'deleteSnapshot',
+          storageSnapshotMode: true,
+          selfManagedDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/StorageSnapshotActionDialog.vue'))),
           icon: 'delete-outlined',
           label: 'label.action.delete.snapshot',
+          toolbarLabel: 'label.action.delete.snapshot',
           message: 'message.action.delete.snapshot',
           dataView: true,
           show: (record) => { return record.state !== 'Destroyed' },

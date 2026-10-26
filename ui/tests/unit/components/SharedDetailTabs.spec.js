@@ -58,7 +58,7 @@ function listContext (component) {
     itemCount: 21,
     listRequestToken: jest.fn(() => ({ loaded: true })),
     isListRequestCurrent: jest.fn(() => true),
-    $store: { getters: { apis: { listAnnotations: {} } } },
+    $store: { getters: { apis: { listAnnotations: {}, listEvents: {} } } },
     $notifyError: jest.fn()
   }
 }
@@ -73,7 +73,7 @@ describe('shared detail refresh behavior', () => {
     expect(vm.loaded).toBe(true)
     expect(vm.chartLabels).toEqual(['previous'])
     expect(vm.showResourceInfoModal).toBe(true)
-    expect(getAPI).toHaveBeenCalledWith(vm.resourceStatsApi, { id: 'resource-1' })
+    expect(getAPI).toHaveBeenCalledWith(vm.resourceStatsApi, { id: 'resource-1' }, { preserveOnFailure: true })
     complete({ response: 'current' })
     await pending
     expect(vm.handleStatsResponse).toHaveBeenCalledWith({ response: 'current' })
@@ -137,11 +137,11 @@ describe('shared detail refresh behavior', () => {
     expect(vm.loadingAnnotations).toBe(false)
     expect(vm.notes[0].id).toBe('old')
     expect(vm.annotation).toBe('unsent draft')
-    expect(getAPI).toHaveBeenCalledWith('listAnnotations', expect.objectContaining({ entitytype: 'VOLUME', page: 2 }))
+    expect(getAPI).toHaveBeenCalledWith('listAnnotations', expect.objectContaining({ entitytype: 'VOLUME', page: 2 }), { preserveOnFailure: true, timeout: 20000 })
     complete({ listannotationsresponse: {} }); await pending
     expect(vm.itemCount).toBe(0)
     expect(vm.notes).toEqual([])
-    expect(vm.page).toBe(2)
+    expect(vm.page).toBe(1)
     expect(vm.annotation).toBe('unsent draft')
   })
   it('retains events and the selected page after a refresh failure', async () => {
