@@ -98,8 +98,10 @@ test('unmount cancels debounce and discards in-flight rows', async () => {
   const w = render(); await flushPromises(); const vm = w.vm; w.unmount(); wrappers = []; finish(response([row('late')])); await flushPromises(); expect(vm.rows).toEqual([])
 })
 test('SearchView applies and resets the selected UUID while isencrypted stays a boolean without a lookup', async () => {
+  route.meta.params = { listall: true }
   const w = render({ apiName: 'listSnapshotPolicies', searchFilters: ['volumeid'] }, Search)
   w.vm.visibleFilter = true; await flushPromises()
+  expect(route.query).toEqual({})
   const picker = w.findComponent(Select); picker.vm.select({ value: 'b' }); await flushPromises(); w.vm.handleSubmit(); await flushPromises()
   expect(w.emitted('search').at(-1)).toEqual([{ volumeid: 'b' }])
   await w.vm.onClear(); await flushPromises(); expect(w.emitted('search').at(-1)).toEqual([{}]); expect(w.vm.form.volumeid).toBeUndefined()

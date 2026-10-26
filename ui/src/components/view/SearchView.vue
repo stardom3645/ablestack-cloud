@@ -1057,7 +1057,7 @@ export default {
     fillFormFieldValues () {
       this.fieldValues = {}
       if (Object.keys(this.$route.query).length > 0) {
-        this.fieldValues = this.$route.query
+        this.fieldValues = { ...this.$route.query }
       }
       if (this.$route.meta.params) {
         Object.assign(this.fieldValues, this.$route.meta.params)
