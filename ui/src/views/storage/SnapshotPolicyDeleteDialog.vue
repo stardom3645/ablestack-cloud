@@ -14,8 +14,8 @@ focus-guard
 :keyboard="!busy"
 @cancel="close">
     <a-spin :spinning="busy">
-      <div class="policy-delete-target" data-testid="policy-delete-target">
-        <strong>{{ target?.volume.name || resource.volumename || identity.volumeid }}</strong>
+      <div v-if="target && allowed" class="policy-delete-target" data-testid="policy-delete-target">
+        <strong>{{ target.volume.name }}</strong>
         <span>{{ $t('label.id') }}: {{ identity.id }}</span>
       </div>
       <a-alert v-if="error" type="error" show-icon :message="error" />

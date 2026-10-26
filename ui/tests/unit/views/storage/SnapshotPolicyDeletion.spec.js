@@ -66,7 +66,7 @@ test.each(['permission', 'project', 'route', 'token', 'user', 'role', 'target'])
   if (change === 'user') store.getters.userInfo.id = 'another'
   if (change === 'role') store.getters.userInfo.roletype = 'Admin'
   if (change === 'target') await w.setProps({ resource: { ...base(), id: 'another' } })
-  await flushPromises(); release({ listvolumesresponse: { volume: [volume] } }); await pending; expect(postAPI).not.toHaveBeenCalled(); expect(w.vm.target).toBeNull()
+  await flushPromises(); release({ listvolumesresponse: { volume: [volume] } }); await pending; expect(postAPI).not.toHaveBeenCalled(); expect(w.vm.target).toBeNull(); expect(w.find('[data-testid="policy-delete-target"]').exists()).toBe(false)
 })
 test('late initial reads cannot refill a different project', async () => {
   let release; getAPI.mockImplementationOnce(() => new Promise(resolve => { release = resolve })); const w = render(); store.getters.project.id = 'other'; await flushPromises(); release({ listvolumesresponse: { volume: [volume] } }); await flushPromises(); expect(w.vm.target).toBeNull(); expect(w.vm.allowed).toBe(false)
