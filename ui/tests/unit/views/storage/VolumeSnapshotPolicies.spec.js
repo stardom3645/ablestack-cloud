@@ -119,7 +119,7 @@ test('policy row actions require both permission and exact volume ownership', ()
 test('after a deleted row disappears, focus waits for refresh and returns to the volume toolbar', () => {
   const section = document.createElement('section'); section.className = 'volume-policy-tab'; section.innerHTML = '<div class="detail-tab-toolbar"><button>refresh</button></div><div class="list-schedule"><button>delete</button></div>'; document.body.append(section)
   const row = { id: 'policy', volumeid: 'first' }; const list = section.querySelector('.list-schedule'); const trigger = list.querySelector('button'); trigger.focus()
-  const vm = { ...Table.methods, $el: list, $nextTick: fn => fn(), resource: { id: 'first' }, dataSource: [row], ownerScope: 'owner', canDelete: true, disposed: false, policyTarget: null }
+  const vm = { ...Table.methods, $el: list, $nextTick (fn) { fn.call(this) }, resource: { id: 'first' }, dataSource: [row], ownerScope: 'owner', canDelete: true, disposed: false, policyTarget: null }
   vm.handleClickDelete(row); trigger.remove(); vm.disabled = true; vm.closePolicyDelete(); expect(vm.pendingDeleteFocus).toBe(true)
   vm.disabled = false; Table.watch.disabled.call(vm, false); expect(document.activeElement).toBe(section.querySelector('button')); expect(vm.pendingDeleteFocus).toBe(false); section.remove()
 })
