@@ -144,6 +144,26 @@ public class SnapshotPolicySchedulingTest {
         assertEquals(Long.valueOf(40), schedule.getAsyncJobId());
     }
 
+    @Test public void existingPolicyMayBeEditedWhileItsVolumeIsSnapshotting() {
+        VolumeVO volume = mock(VolumeVO.class);
+        when(volume.getState()).thenReturn(com.cloud.storage.Volume.State.Snapshotting);
+        manager.validatePolicyVolumeState(volume, true, true);
+    }
+
+    @Test(expected = InvalidParameterValueException.class)
+    public void newPolicyIsStillRejectedWhileVolumeIsSnapshotting() {
+        VolumeVO volume = mock(VolumeVO.class);
+        when(volume.getState()).thenReturn(com.cloud.storage.Volume.State.Snapshotting);
+        manager.validatePolicyVolumeState(volume, false, true);
+    }
+
+    @Test(expected = InvalidParameterValueException.class)
+    public void editingPolicyDoesNotPermitDestroyedVolume() {
+        VolumeVO volume = mock(VolumeVO.class);
+        when(volume.getState()).thenReturn(com.cloud.storage.Volume.State.Destroy);
+        manager.validatePolicyVolumeState(volume, true, true);
+    }
+
     @Test public void successfulCompletionUsesLatestPolicy() {
         running(JobInfo.Status.SUCCEEDED);
         policy.setSchedule("25");

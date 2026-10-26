@@ -1821,10 +1821,8 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         final Account caller = CallContext.current().getCallingAccount();
         _accountMgr.checkAccess(caller, null, true, volume);
 
-        // If display is false we don't actually schedule snapshots.
-        if (volume.getState() != Volume.State.Ready && display) {
-            throw new InvalidParameterValueException(String.format("Volume: %s is not in %s state but %s. Cannot take snapshot.", volume, Volume.State.Ready, volume.getState()));
-        }
+        // Volume-state validation is performed under the upsert lock once we know whether
+        // this is an existing policy edit. Editing does not allocate a snapshot.
 
         if (volume.getTemplateId() != null) {
             VMTemplateVO template = _templateDao.findById(volume.getTemplateId());
@@ -1928,6 +1926,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                     if (policy != null) {
                         policy = _snapshotPolicyDao.lockRow(policy.getId(), true);
                     }
+                    validatePolicyVolumeState(_volsDao.findById(volumeId), policy != null, display);
                     if (policy == null) {
                         policy = createSnapshotPolicy(volumeId, schedule, timezone, intervalType, maxSnaps, display, zoneIds, poolIds);
                         // The constructor defaults to active; honour an explicitly inactive create/copy.
@@ -1946,6 +1945,17 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             }
         } finally {
             createSnapshotPolicyLock.releaseRef();
+        }
+    }
+
+    protected void validatePolicyVolumeState(VolumeVO volume, boolean existingPolicy, boolean display) {
+        if (volume == null) {
+            throw new InvalidParameterValueException("Snapshot policy volume does not exist");
+        }
+        if (display && volume.getState() != Volume.State.Ready
+                && !(existingPolicy && volume.getState() == Volume.State.Snapshotting)) {
+            throw new InvalidParameterValueException(String.format("Volume: %s is not in %s state but %s. Cannot create snapshot policy.",
+                    volume, Volume.State.Ready, volume.getState()));
         }
     }
 

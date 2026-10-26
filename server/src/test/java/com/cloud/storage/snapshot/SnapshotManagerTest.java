@@ -534,6 +534,7 @@ public class SnapshotManagerTest {
             BDDMockito.given(GlobalLock.getInternLock(Mockito.anyString())).willReturn(globalLockMock);
             Mockito.doReturn(true).when(globalLockMock).lock(Mockito.anyInt());
             List<SnapshotPolicyVO> persistedPolicies = new ArrayList<>();
+            Mockito.when(volumeMock.getState()).thenReturn(Volume.State.Ready);
             List<SnapshotPolicyVO> updatedPolicies = new ArrayList<>();
             Mockito.when(snapshotPolicyDaoMock.persist(Mockito.any(SnapshotPolicyVO.class))).thenAnswer((Answer<SnapshotPolicyVO>) invocation -> {
                 SnapshotPolicyVO policy = (SnapshotPolicyVO)invocation.getArguments()[0];
