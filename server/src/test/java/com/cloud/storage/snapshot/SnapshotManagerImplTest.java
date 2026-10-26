@@ -550,7 +550,6 @@ public class SnapshotManagerImplTest {
         CallContext.register(Mockito.mock(User.class), caller);
 
         SnapshotPolicyVO policyVO = Mockito.mock(SnapshotPolicyVO.class);
-        Mockito.when(policyVO.getId()).thenReturn(policyId);
         Mockito.when(policyVO.getVolumeId()).thenReturn(volumeId);
         Mockito.when(policyVO.getUuid()).thenReturn("policy-uuid");
         Mockito.when(snapshotPolicyDao.findById(policyId)).thenReturn(policyVO);
