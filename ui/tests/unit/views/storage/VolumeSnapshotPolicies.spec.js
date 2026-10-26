@@ -26,6 +26,12 @@ jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: { features: {}, apis: {}, userInfo: {} } }))
 beforeEach(() => { getAPI.mockReset(); postAPI.mockReset() })
 
+test('policy editing and scheduling use their target dialog instead of the generic create API route', () => {
+  const actions = storage.children.find(child => child.name === 'snapshotpolicy').actions.filter(action => action.policyMode)
+  expect(actions.map(action => action.policyMode)).toEqual(['edit', 'pause', 'resume'])
+  for (const action of actions) { expect(action.popup).toBe(true); expect(action.selfManagedDialog).toBe(true); expect(action.dataView).toBe(true) }
+})
+
 const reader = () => ({ ...Policies.methods, resource: { id: 'first' }, active: true, canRead: true, loading: false, pending: false, disposed: false, ownerScope: 'user/project/first', version: 0, rows: [{ id: 'kept' }], loaded: true, error: false })
 
 test('policies are an independently permission-gated volume detail tab', () => {

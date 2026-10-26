@@ -553,6 +553,7 @@ export default {
           dataView: true,
           show: record => !!record.id && canEditPolicy(store.getters.apis || {}),
           selfManagedDialog: true,
+          popup: true,
           policyMode: 'edit',
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyActionDialog.vue')))
         },
@@ -563,6 +564,7 @@ export default {
           dataView: true,
           show: record => record.fordisplay === true && canManagePolicy(store.getters),
           selfManagedDialog: true,
+          popup: true,
           policyMode: 'pause',
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyActionDialog.vue')))
         },
@@ -573,6 +575,7 @@ export default {
           dataView: true,
           show: record => record.fordisplay === false && canManagePolicy(store.getters),
           selfManagedDialog: true,
+          popup: true,
           policyMode: 'resume',
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyActionDialog.vue')))
         },
