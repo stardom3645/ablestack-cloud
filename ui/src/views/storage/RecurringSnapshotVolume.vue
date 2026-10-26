@@ -27,17 +27,20 @@
             v-model:value="selectedVolumeId"
             :placeholder="$t('label.select.volume')"
             :loading="volumesLoading"
+            :disabled="volumesLoading || !!volumesError"
+            :options="volumeOptions"
+            option-label-prop="label"
+            dropdown-class-name="snapshot-policy-volume-dropdown"
             show-search
             :filter-option="filterOption"
             @change="onVolumeChange"
           >
-            <a-select-option
-              v-for="volume in volumes"
-              :key="volume.id"
-              :value="volume.id"
-            >
-              {{ volume.name }} ({{ (volume.size / 1024 / 1024 / 1024).toFixed(2) }} GB)
-            </a-select-option>
+            <template #option="{ label, description }">
+              <div class="snapshot-policy-volume-option">
+                <div>{{ label }}</div>
+                <div class="operation-secondary">{{ description }}</div>
+              </div>
+            </template>
           </a-select>
         </a-form-item>
       </a-form>
@@ -45,11 +48,12 @@
     <div v-if="currentVolumeResource?.id" class="volume-operation-target">
       <hdd-outlined aria-hidden="true" /><span>{{ currentVolumeResource.name }}</span><span class="operation-secondary">{{ currentVolumeResource.type }}</span>
     </div>
+    <p v-if="!isVolumeResource && selectedVolume" class="selected-volume-description">{{ volumeDescription(selectedVolume) }}</p>
     <FormSchedule
       v-if="currentVolumeResource?.id"
       :key="currentVolumeResource.id"
       :loading="loading"
-      :disabled="loading || !!policyError"
+      :disabled="loading || !!policyError || (!isVolumeResource && (volumesLoading || !!volumesError))"
       :resource="currentVolumeResource"
       :dataSource="dataSource"
       resourceType="Volume"
@@ -101,6 +105,19 @@ export default {
   },
   computed: {
     ownerContext () { return JSON.stringify([this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id]) },
+    volumeOptions () {
+      return this.volumes.map(volume => {
+        const description = this.volumeDescription(volume)
+        const size = volume.size == null ? NaN : Number(volume.size)
+        const label = `${volume.name || volume.id} (${Number.isFinite(size) && size >= 0 ? (size / 1024 / 1024 / 1024).toFixed(2) + ' GiB' : '—'})`
+        return {
+          value: volume.id,
+          label,
+          description,
+          searchText: [label, description, volume.vmname, volume.vmdisplayname].filter(value => value != null).join(' ')
+        }
+      })
+    },
     resourceType () {
       if (!this.resource) return 'none'
       if (this.resource.type === 'ROOT' || this.resource.type === 'DATADISK' ||
@@ -166,12 +183,13 @@ export default {
     },
     onVolumeChange (volumeId) {
       const volume = this.volumes.find(v => v.id === volumeId)
-      if (volume) {
-        this.selectedVolume = volume
-        this.selectedVolumeId = volumeId
-        this.dataSource = []
-        this.fetchData()
-      }
+      this.policyVersion++
+      this.selectedVolume = volume || null
+      this.selectedVolumeId = volume?.id || null
+      this.dataSource = []
+      this.policyError = ''
+      this.loading = false
+      if (volume) this.fetchData()
     },
     failureText (error) { return Object.values(error?.response?.data || {}).find(value => value?.errortext)?.errortext || error?.message || this.$t('message.request.failed') },
     async fetchData () {
@@ -203,7 +221,21 @@ export default {
       this.$emit('close-action')
     },
     filterOption (input, option) {
-      return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+      return String(option?.searchText ?? option?.label ?? '').toLowerCase().includes(String(input ?? '').trim().toLowerCase())
+    },
+    volumeDescription (volume) {
+      const vm = volume.vmdisplayname || volume.vmname || volume.virtualmachineid
+      const project = volume.project || volume.projectid
+      const owner = project || volume.account
+      const domain = volume.domain || volume.domainid
+      const zone = volume.zonename || volume.zoneid
+      return [
+        vm && `${this.$t('label.virtualmachine')}: ${vm}`,
+        owner && `${this.$t(project ? 'label.project' : 'label.account')}: ${owner}`,
+        domain && `${this.$t('label.domain')}: ${domain}`,
+        zone && `${this.$t('label.zone')}: ${zone}`,
+        `${this.$t('label.id')}: ${volume.id}`
+      ].filter(Boolean).join(' · ')
     }
   }
 }
@@ -238,6 +270,24 @@ export default {
   .no-volume-selected {
     text-align: center;
     padding: 40px 20px;
+  }
+
+  .selected-volume-description {
+    overflow-wrap: anywhere;
+    margin-bottom: 16px;
+    color: var(--ui-text-secondary);
+  }
+}
+</style>
+
+<style lang="scss">
+.snapshot-policy-volume-dropdown .snapshot-policy-volume-option {
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  .operation-secondary {
+    font-size: 12px;
+    color: var(--ui-text-secondary);
   }
 }
 </style>
