@@ -1889,7 +1889,10 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             }
         }
 
-        final List<Long> zoneIds = cmd.getZoneIds();
+        if (cmd.isClearZoneIds() && (cmd.getId() == null || CollectionUtils.isNotEmpty(cmd.getZoneIds()))) {
+            throw new InvalidParameterValueException("clearzoneids requires an existing policy id and cannot be combined with zoneids.");
+        }
+        final List<Long> zoneIds = cmd.isClearZoneIds() ? Collections.emptyList() : cmd.getZoneIds();
         VolumeInfo volumeInfo = volFactory.getVolume(volumeId);
         final List<Long> poolIds = snapshotHelper.addStoragePoolsForCopyToPrimary(volumeInfo, zoneIds, cmd.getStoragePoolIds(), cmd.useStorageReplication());
 
@@ -1898,10 +1901,14 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         Map<String, String> tags = cmd.getTags();
         boolean active = true;
 
-        return persistSnapshotPolicy(volume, schedule, timezoneId, intvType, maxSnaps, display, active, tags, zoneIds, poolIds);
+        return persistSnapshotPolicy(volume, schedule, timezoneId, intvType, maxSnaps, display, active, tags, zoneIds, poolIds, cmd.getId());
     }
 
     protected SnapshotPolicyVO persistSnapshotPolicy(VolumeVO volume, String schedule, String timezone, IntervalType intervalType, int maxSnaps, boolean display, boolean active, Map<String, String> tags, List<Long> zoneIds, List<Long> poolIds) {
+        return persistSnapshotPolicy(volume, schedule, timezone, intervalType, maxSnaps, display, active, tags, zoneIds, poolIds, null);
+    }
+
+    protected SnapshotPolicyVO persistSnapshotPolicy(VolumeVO volume, String schedule, String timezone, IntervalType intervalType, int maxSnaps, boolean display, boolean active, Map<String, String> tags, List<Long> zoneIds, List<Long> poolIds, Long expectedPolicyId) {
         long volumeId = volume.getId();
 
         GlobalLock createSnapshotPolicyLock = GlobalLock.getInternLock("createSnapshotPolicy_" + volumeId);
@@ -1915,6 +1922,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                     if (policy != null) {
                         policy = _snapshotPolicyDao.lockRow(policy.getId(), true);
                     }
+                    validateExpectedPolicy(policy, expectedPolicyId);
                     validatePolicyVolumeState(_volsDao.findById(volumeId), policy != null, display);
                     if (policy == null) {
                         policy = createSnapshotPolicy(volumeId, schedule, timezone, intervalType, maxSnaps, display, zoneIds, poolIds);
@@ -1945,6 +1953,12 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                 && !(existingPolicy && volume.getState() == Volume.State.Snapshotting)) {
             throw new InvalidParameterValueException(String.format("Volume: %s is not in %s state but %s. Cannot create snapshot policy.",
                     volume, Volume.State.Ready, volume.getState()));
+        }
+    }
+
+    protected void validateExpectedPolicy(SnapshotPolicyVO policy, Long expectedPolicyId) {
+        if (expectedPolicyId != null && (policy == null || policy.getId() != expectedPolicyId.longValue())) {
+            throw new InvalidParameterValueException("The snapshot policy was removed or changed. Reload the policy before editing.");
         }
     }
 
@@ -1984,7 +1998,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         if (!_snapshotPolicyDao.update(policy.getId(), policy)) {
             throw new CloudRuntimeException("Unable to update snapshot policy");
         }
-        if (CollectionUtils.isNotEmpty(zoneIds)) {
+        if (zoneIds != null) {
             List<SnapshotPolicyDetailVO> details = snapshotPolicyDetailsDao.listDetails(policy.getId());
             details = details.stream().filter(d -> !ApiConstants.ZONE_ID.equals(d.getName())).collect(Collectors.toList());
             for (Long zoneId : zoneIds) {
