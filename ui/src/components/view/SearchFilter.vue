@@ -31,7 +31,7 @@
           @close="() => $emit('removeFilter', filter)"
         >
           <a-tooltip
-            :title="retrieveFieldLabel(filter.key) + ': ' + filter.value + (filter.key === 'affinitygroupid' && filter.rawValue !== filter.value ? ' (' + filter.rawValue + ')' : '')"
+            :title="retrieveFieldLabel(filter.key) + ': ' + filter.value + (['affinitygroupid', 'volumeid'].includes(filter.key) && filter.rawValue !== filter.value ? ' (' + filter.rawValue + ')' : '')"
             placement="bottom"
           >
             {{ retrieveFieldLabel(filter.key) }} : {{ getTrimmedText(filter.value, 20) }}
@@ -296,7 +296,7 @@ export default {
       let formattedValue = ''
 
       if (this.apiName === 'listSnapshots' && key === 'account') return value
-      if (this.apiName === 'listSnapshots' && key === 'volumeid') {
+      if (['listSnapshots', 'listSnapshotPolicies'].includes(this.apiName) && key === 'volumeid') {
         if (!this.$store.getters.apis?.listVolumes) return value
         const query = this.$route.query
         const project = query.projectid || this.$store.getters.project?.id || (this.$store.getters.listAllProjects ? '-1' : '')
