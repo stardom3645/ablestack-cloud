@@ -9691,6 +9691,8 @@
   "message.tags.storage.failed": "작업 접수 기록을 보존할 수 없어 제출하지 않았습니다. 브라우저 저장소를 확인하고 다시 시도하세요.",
   "message.tags.job.failed": "태그 작업이 실패했습니다. 현재 태그를 확인한 뒤 명시적으로 재시도할 수 있습니다.",
   "message.tags.fields.required": "태그 키와 값을 입력하세요.",
+  "message.snapshot.policy.tag.duplicate": "이미 추가한 태그 키입니다. 기존 태그를 삭제한 후 새 값을 추가하십시오.",
+  "message.snapshot.policy.tags.draft": "정책 확인 시 입력 중인 태그도 함께 저장됩니다. 제외하려면 태그 입력을 취소하십시오.",
   "message.tags.empty": "태그가 없습니다.",
   "message.detail.tab.read.failed": "탭 데이터를 조회하지 못했습니다. 다시 조회하세요.",
   "message.detail.tab.incomplete": "탭 응답이 불완전하거나 다른 자원의 정보가 포함돼 있습니다. 다시 조회하세요.",

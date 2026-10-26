@@ -182,34 +182,26 @@
           </a-row>
           <a-divider/>
           <div class="tagsTitle">{{ $t('label.tags') }}</div>
-          <div>
-            <div v-for="(tag, index) in tags" :key="index">
-              <a-tag :key="index" :closable="'deleteTags' in $store.getters.apis" @close="() => handleDeleteTag(tag)">
+          <section class="snapshot-policy-tags" data-testid="snapshot-policy-tags">
+            <div class="policy-tag-list">
+              <a-tag v-for="tag in tags" :key="tag.key" :closable="canEditTags" @close.prevent="handleDeleteTag(tag)">
                 {{ tag.key }} = {{ tag.value }}
               </a-tag>
             </div>
-            <div v-if="inputVisible">
-              <a-input-group
-                type="text"
-                size="small"
-                @blur="handleInputConfirm"
-                @keyup.enter="handleInputConfirm"
-                compact>
-                <a-input ref="input" :value="inputKey" @change="handleKeyChange" style="width: 100px; text-align: center" :placeholder="$t('label.key')" />
-                <a-input
-                  class="tag-disabled-input"
-                  style=" width: 30px; border-left: 0; pointer-events: none; text-align: center"
-                  placeholder="="
-                  disabled />
-                <a-input :value="inputValue" @change="handleValueChange" style="width: 100px; text-align: center; border-left: 0" :placeholder="$t('label.value')" />
-                <tooltip-button :tooltip="$t('label.ok')" icon="check-outlined" size="small" @onClick="handleInputConfirm" />
-                <tooltip-button :tooltip="$t('label.cancel')" icon="close-outlined" size="small" @onClick="inputVisible=false" />
-              </a-input-group>
+            <div v-if="inputVisible && tagPermission" class="policy-tag-editor" @keydown.enter.prevent.stop="handleInputConfirm" @keydown.esc.prevent.stop="cancelTagInput">
+              <a-input ref="input" v-model:value="inputKey" :aria-label="$t('label.key')" :placeholder="$t('label.key')" :maxlength="255" :disabled="!canEditTags" />
+              <a-input ref="tagValue" v-model:value="inputValue" :aria-label="$t('label.value')" :placeholder="$t('label.value')" :maxlength="255" :disabled="!canEditTags" />
+              <div class="policy-tag-editor-actions">
+                <a-button :aria-label="$t('label.ok')" :disabled="!canEditTags" @click="handleInputConfirm"><check-outlined /></a-button>
+                <a-button :aria-label="$t('label.cancel')" :disabled="!canEditTags" @click="cancelTagInput"><close-outlined /></a-button>
+              </div>
             </div>
-            <a-tag v-else @click="showInput" class="btn-add-tag" style="borderStyle: dashed;">
+            <a-button v-else-if="tagPermission" ref="tagAdd" type="dashed" size="small" :disabled="!canEditTags" @click="showInput">
               <plus-outlined /> {{ $t('label.new.tag') }}
-            </a-tag>
-          </div>
+            </a-button>
+            <div v-if="tagError" role="alert" class="policy-tag-error">{{ $t(tagError) }}</div>
+            <div v-if="tagPermission" class="policy-tag-hint">{{ $t('message.snapshot.policy.tags.draft') }}</div>
+          </section>
           <MoldDialogActions v-if="actionsVisible" :span="24" :busy="actionLoading">
             <a-button
               :loading="actionLoading"
@@ -237,7 +229,6 @@ import MoldDialogActions from '@/components/view/MoldDialogActions'
 import snapshotZones from '@/utils/snapshotZones'
 import { ref, reactive, toRaw } from 'vue'
 import { postAPI } from '@/api'
-import TooltipButton from '@/components/widgets/TooltipButton'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import { timeZone } from '@/utils/timezone'
 import { mixinForm } from '@/utils/mixin'
@@ -249,7 +240,6 @@ export default {
   mixins: [mixinForm, storageDialogContext, snapshotZones],
   components: {
     MoldDialogActions,
-    TooltipButton,
     TooltipLabel
   },
   props: {
@@ -279,8 +269,9 @@ export default {
       actionLoading: false,
       volumeId: '',
       inputKey: '',
-      inputVisible: '',
+      inputVisible: false,
       inputValue: '',
+      tagError: '',
       intervalType: 'hourly',
       intervalValue: 0,
       tags: [],
@@ -309,11 +300,20 @@ export default {
     }
   },
   computed: {
+    tagPermission () {
+      return 'createSnapshotPolicy' in this.$store.getters.apis && 'createTags' in this.$store.getters.apis
+    },
+    canEditTags () {
+      return this.tagPermission && !this.actionLoading && !this.disabled && this.dialogCurrent()
+    },
     formattedAdditionalZoneMessage () {
       return `${this.$t('message.snapshot.additional.zones').replace('%x', this.resource.zonename)}`
     }
   },
   watch: {
+    tagPermission (allowed) {
+      if (!allowed) { this.tags = []; this.clearTagInput() }
+    },
     dataSource: {
       handler () {
         if (this.form.intervaltype && this.getNextAvailableIntervalType && this.isIntervalDisabled(this.form.intervaltype)) {
@@ -437,27 +437,51 @@ export default {
       }
       return true
     },
-    handleKeyChange (e) {
-      this.inputKey = e.target.value
-    },
-    handleValueChange (e) {
-      this.inputValue = e.target.value
-    },
-    handleInputConfirm () {
-      this.tags.push({
-        key: this.inputKey,
-        value: this.inputValue
-      })
+    clearTagInput () {
       this.inputVisible = false
       this.inputKey = ''
       this.inputValue = ''
+      this.tagError = ''
+    },
+    handleInputConfirm (event, focus = true) {
+      if (!this.canEditTags || !this.inputVisible || event?.isComposing || event?.keyCode === 229) return false
+      const key = this.inputKey.trim()
+      if (!key || !this.inputValue.trim()) {
+        this.tagError = 'message.tags.fields.required'
+        this.$nextTick(() => (key ? this.$refs.tagValue : this.$refs.input)?.focus())
+        return false
+      }
+      if (this.tags.some(tag => tag.key === key)) {
+        this.tagError = 'message.snapshot.policy.tag.duplicate'
+        this.$nextTick(() => this.$refs.input?.focus())
+        return false
+      }
+      this.tags.push({ key, value: this.inputValue })
+      this.clearTagInput()
+      if (focus) this.focusTagAdd()
+      return true
     },
     handleDeleteTag (tag) {
+      if (!this.canEditTags) return
+      this.tags = this.tags.filter(item => item.key !== tag.key)
+      this.focusTagAdd()
+    },
+    focusTagAdd () {
+      this.$nextTick(() => {
+        if (this.canEditTags) this.$refs.tagAdd?.$el?.focus({ preventScroll: true })
+      })
+    },
+    cancelTagInput () {
+      if (!this.canEditTags) return
+      this.clearTagInput()
+      this.focusTagAdd()
     },
     handleSubmit (e) {
-      if (this.actionLoading || this.disabled || !this.dialogCurrent()) return
-      this.formRef.value.validate().then(() => {
-        if (this.actionLoading || this.disabled || !this.dialogCurrent()) return
+      if (this.actionLoading || this.disabled || !this.dialogCurrent() || !('createSnapshotPolicy' in this.$store.getters.apis)) return
+      // Draft tags are part of this create request; they never call createTags/deleteTags.
+      if (this.inputVisible && !this.handleInputConfirm(undefined, false)) return
+      return this.formRef.value.validate().then(() => {
+        if (this.actionLoading || this.disabled || !this.dialogCurrent() || !('createSnapshotPolicy' in this.$store.getters.apis)) return
         const formRaw = toRaw(this.form)
         const values = this.handleRemoveFields(formRaw)
 
@@ -484,15 +508,16 @@ export default {
             params.schedule = [values.timeSelect.format('mm:HH'), values['day-of-month']].join(':')
             break
         }
-        for (let i = 0; i < this.tags.length; i++) {
+        const tags = this.tagPermission ? this.tags : []
+        for (let i = 0; i < tags.length; i++) {
           const formattedTagData = {}
-          const tag = this.tags[i]
+          const tag = tags[i]
           formattedTagData['tags[' + i + '].key'] = tag.key
           formattedTagData['tags[' + i + '].value'] = tag.value
           params = Object.assign({}, params, formattedTagData)
         }
         this.actionLoading = true
-        postAPI('createSnapshotPolicy', params, { preserveOnFailure: true }).then(json => {
+        return postAPI('createSnapshotPolicy', params, { preserveOnFailure: true }).then(json => {
           if (!this.dialogCurrent()) return
           this.$emit('refresh')
           this.$notification.success({
@@ -505,12 +530,14 @@ export default {
         }).finally(() => {
           this.actionLoading = false
         })
-      })
+      }).catch(() => {})
     },
     showInput () {
+      if (!this.canEditTags) return
+      this.clearTagInput()
       this.inputVisible = true
       this.$nextTick(function () {
-        this.$refs.input.focus()
+        if (this.canEditTags) this.$refs.input?.focus()
       })
     },
     resetForm () {
@@ -521,6 +548,7 @@ export default {
       this.form['day-of-week'] = undefined
       this.form['day-of-month'] = undefined
       this.tags = []
+      this.clearTagInput()
     },
     closeAction () {
       this.$emit('close-action')
@@ -552,4 +580,11 @@ export default {
   font-weight: 500;
   margin-bottom: 12px;
 }
+.policy-tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.policy-tag-list :deep(.ant-tag) { margin: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.policy-tag-list :deep(.ant-tag-close-icon) { color: inherit; }
+.policy-tag-editor { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.policy-tag-editor-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.policy-tag-error { color: var(--ant-error-color, #ff4d4f); margin-top: 6px; }
+.policy-tag-hint { color: var(--ui-text-secondary); font-size: 12px; margin-top: 6px; }
 </style>

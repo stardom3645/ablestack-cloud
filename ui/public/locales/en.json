@@ -9726,6 +9726,8 @@
   "message.tags.storage.failed": "The operation was not submitted because its receipt could not be saved. Check browser storage and try again.",
   "message.tags.job.failed": "The tag operation failed. Review the current tags before retrying explicitly.",
   "message.tags.fields.required": "Enter a tag key and value.",
+  "message.snapshot.policy.tag.duplicate": "This tag key already exists. Remove the existing tag before adding a new value.",
+  "message.snapshot.policy.tags.draft": "The current tag entry is also saved when you confirm the policy. Cancel the entry to exclude it.",
   "message.tags.empty": "No tags.",
   "message.detail.tab.read.failed": "Unable to load tab data. Retry the request.",
   "message.detail.tab.incomplete": "The tab response is incomplete or belongs to another resource. Retry the request.",
