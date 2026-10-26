@@ -97,11 +97,11 @@ test.each([true, false])('the existing Ready/KVM eligibility filter is preserved
 })
 
 test('loading and failed volume reads disable selection, expose retry and recover without losing the login', async () => {
-  let reject
-  getAPI.mockReturnValueOnce(new Promise((resolve, failure) => { reject = failure }))
+  let fail
+  getAPI.mockReturnValueOnce(new Promise((resolve, reject) => { fail = reject }))
   render(); await flushPromises()
   expect(wrapper.find('.ant-select-disabled').exists()).toBe(true)
-  reject(new Error('read failed')); await flushPromises()
+  fail(new Error('read failed')); await flushPromises()
   expect(wrapper.text()).toContain('read failed')
   expect(wrapper.find('.ant-select-disabled').exists()).toBe(true)
   getAPI.mockResolvedValueOnce(volumes([row('recovered')]))
