@@ -9792,5 +9792,13 @@
   "message.snapshot.dialog.delete.zone": "Delete all copies in the selected Zones, including other pages. This deletes the entire Zone scope, not an individual storage copy.",
   "message.snapshot.dialog.target.count": "Review {0} fixed targets",
   "message.snapshot.dialog.batch.results": "Completed targets are retained in notifications. If a target failed, close this dialog and select only the remaining targets after checking the job result.",
-  "message.volume.search.unavailable": "The selected volume could not be verified in the current scope. Clear the selection or select another volume."
+  "message.volume.search.unavailable": "The selected volume could not be verified in the current scope. Clear the selection or select another volume.",
+  "label.snapshot.policy.delete.reload": "Reload deletion target",
+  "label.snapshot.policy.delete.schedule": "Schedule",
+  "label.snapshot.policy.delete.personal": "Personal account scope",
+  "label.snapshot.policy.delete.check": "Check deletion result",
+  "message.snapshot.policy.delete.effect": "Delete this policy and its future schedule. Existing snapshots, their tags, and other interval policies are retained.",
+  "message.snapshot.policy.delete.ack": "I have reviewed this single policy and the impact of deletion.",
+  "message.snapshot.policy.delete.unknown": "The deletion result is not yet verified. Check whether the original policy exists without submitting deletion again.",
+  "message.snapshot.policy.delete.still.exists": "The policy remains in the current scope. Reload and confirm the target before trying deletion again."
 }

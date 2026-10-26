@@ -36,8 +36,8 @@
         <template v-if="column.key === 'scheduling'">{{ $t(typeof record.fordisplay !== 'boolean' ? 'message.snapshot.policy.limits.unknown' : record.fordisplay ? 'label.snapshot.policy.schedule.enabled' : 'label.snapshot.policy.schedule.paused') }}</template>
         <template v-if="column.key === 'actions'">
           <div class="policy-row-actions">
-          <tooltip-button v-if="canEdit" :tooltip="$t('label.snapshot.policy.edit')" icon="edit-outlined" size="small" :disabled="disabled || actionLoading" @onClick="openPolicy(record, 'edit')" />
-          <tooltip-button v-if="canManage && typeof record.fordisplay === 'boolean'" :tooltip="$t(record.fordisplay ? 'label.snapshot.policy.pause' : 'label.snapshot.policy.resume')" :icon="record.fordisplay ? 'pause-circle-outlined' : 'play-circle-outlined'" size="small" :disabled="disabled || actionLoading" @onClick="openPolicy(record, record.fordisplay ? 'pause' : 'resume')" />
+          <tooltip-button v-if="canEdit" :tooltip="$t('label.snapshot.policy.edit')" icon="edit-outlined" size="small" :disabled="disabled" @onClick="openPolicy(record, 'edit')" />
+          <tooltip-button v-if="canManage && typeof record.fordisplay === 'boolean'" :tooltip="$t(record.fordisplay ? 'label.snapshot.policy.pause' : 'label.snapshot.policy.resume')" :icon="record.fordisplay ? 'pause-circle-outlined' : 'play-circle-outlined'" size="small" :disabled="disabled" @onClick="openPolicy(record, record.fordisplay ? 'pause' : 'resume')" />
           <tooltip-button
             v-if="canDelete"
             :tooltip="$t('label.delete')"
@@ -45,31 +45,33 @@
             :danger="true"
             icon="close-outlined"
             size="small"
-            :loading="actionLoading"
-            :disabled="disabled || actionLoading"
+
+            :disabled="disabled"
             @onClick="handleClickDelete(record)" />
           </div>
         </template>
       </template>
     </a-table>
-    <SnapshotPolicyActionDialog v-if="policyTarget" :key="policyTarget.id + policyMode" :resource="policyTarget" :current-action="{ policyMode }" @refresh-data="$emit('refresh')" @close-action="policyTarget = null" />
+    <SnapshotPolicyDeleteDialog v-if="policyTarget && policyMode === 'delete'" :resource="policyTarget" @refresh-data="$emit('refresh')" @close-action="policyTarget = null" />
+    <SnapshotPolicyActionDialog v-else-if="policyTarget" :key="policyTarget.id + policyMode" :resource="policyTarget" :current-action="{ policyMode }" @refresh-data="$emit('refresh')" @close-action="policyTarget = null" />
   </div>
 </template>
 <script>
-import { postAPI } from '@/api'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import { timeZoneName } from '@/utils/timezone'
 import SnapshotPolicyActionDialog from './SnapshotPolicyActionDialog'
+import SnapshotPolicyDeleteDialog from './SnapshotPolicyDeleteDialog'
+import { canDeletePolicy } from '@/utils/snapshotPolicyDeletion'
 import { canEditPolicy, canManagePolicy } from '@/utils/snapshotPolicyEditing'
 
 export default {
   name: 'ScheduledSnapshots',
-  components: { TooltipButton, SnapshotPolicyActionDialog },
+  components: { TooltipButton, SnapshotPolicyActionDialog, SnapshotPolicyDeleteDialog },
   props: { loading: Boolean, disabled: Boolean, active: { type: Boolean, default: true }, dataSource: { type: Array, required: true }, resource: { type: Object, required: true } },
   emits: ['refresh'],
-  data () { return { policyTarget: null, policyMode: '', actionLoading: false, deleteVersion: 0, disposed: false, listDayOfWeek: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] } },
+  data () { return { policyTarget: null, policyMode: '', disposed: false, listDayOfWeek: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] } },
   computed: {
-    canDelete () { return 'deleteSnapshotPolicies' in this.$store.getters.apis },
+    canDelete () { return canDeletePolicy(this.$store.getters.apis) },
     canEdit () { return canEditPolicy(this.$store.getters.apis || {}) },
     canManage () { return canManagePolicy(this.$store.getters) },
     ownerScope () { return JSON.stringify([this.resource.id, this.$route?.path, this.$store.getters.userInfo?.id, this.$store.state?.user?.token, this.$store.getters.project?.id]) },
@@ -87,12 +89,12 @@ export default {
       ]
     }
   },
-  watch: { ownerScope () { this.deleteVersion++; this.actionLoading = false; this.policyTarget = null }, active (value) { if (!value) this.policyTarget = null } },
-  beforeUnmount () { this.disposed = true; this.deleteVersion++ },
+  watch: { ownerScope () { this.policyTarget = null }, active (value) { if (!value) this.policyTarget = null } },
+  beforeUnmount () { this.disposed = true },
   methods: {
     openPolicy (record, mode) {
-      if (this.disabled || this.actionLoading || this.disposed || !(mode === 'edit' ? this.canEdit : this.canManage) || !this.dataSource.some(row => row.id === record.id && row.volumeid === this.resource.id)) return
-      this.policyTarget = { ...record }; this.policyMode = mode
+      if (this.disabled || this.disposed || this.policyTarget || !(mode === 'delete' ? this.canDelete : mode === 'edit' ? this.canEdit : this.canManage) || !this.dataSource.some(row => row.id === record.id && row.volumeid === this.resource.id)) return
+      this.policyTarget = Object.freeze({ ...record }); this.policyMode = mode
     },
     intervalText (value) { const name = ['hourly', 'daily', 'weekly', 'monthly'][Number(value)]; return name ? this.$t('label.' + name) : '—' },
     scheduleTime (record) {
@@ -101,19 +103,7 @@ export default {
       if (Number(record.intervaltype) !== 0 && values.length < 2) return '—'
       return Number(record.intervaltype) === 0 ? record.schedule + this.$t('label.min.past.hour') : values[1].padStart(2, '0') + ':' + values[0].padStart(2, '0')
     },
-    async handleClickDelete (record) {
-      if (this.disposed || this.disabled || this.actionLoading || !this.canDelete || !this.dataSource.some(row => row.id === record.id && (!row.volumeid || row.volumeid === this.resource.id))) return
-      const version = ++this.deleteVersion; const scope = this.ownerScope
-      const current = () => !this.disposed && version === this.deleteVersion && scope === this.ownerScope
-      this.actionLoading = true
-      try {
-        const result = await postAPI('deleteSnapshotPolicies', { id: record.id }, { preserveOnFailure: true })
-        if (current() && result.deletesnapshotpoliciesresponse.success) {
-          this.$notification.success({ message: this.$t('label.delete.snapshot.policy'), description: this.$t('message.success.delete.snapshot.policy') })
-          this.$emit('refresh')
-        }
-      } catch (error) { if (current()) this.$notifyError(error) } finally { if (current()) this.actionLoading = false }
-    },
+    handleClickDelete (record) { this.openPolicy(record, 'delete') },
     getTimeZone (value) { return timeZoneName(value) }
   }
 }

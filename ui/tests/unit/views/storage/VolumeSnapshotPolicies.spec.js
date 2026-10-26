@@ -101,26 +101,18 @@ test('the recurring dialog retains creation state without a policy-list tab or t
   wrapper.unmount()
 })
 
-const deleter = () => ({ ...Table.methods, resource: { id: 'first' }, dataSource: [{ id: 'policy', volumeid: 'first' }], canDelete: true, ownerScope: 'first/user/project', disabled: false, actionLoading: false, disposed: false, deleteVersion: 0, $t: key => key, $emit: jest.fn(), $notifyError: jest.fn(), $notification: { success: jest.fn() } })
-
-test('policy deletion is permission/row/context gated and double submission posts only once', async () => {
-  const vm = deleter(); let release
-  postAPI.mockReturnValue(new Promise(resolve => { release = resolve }))
-  vm.canDelete = false; await vm.handleClickDelete({ id: 'policy' })
-  vm.canDelete = true; await vm.handleClickDelete({ id: 'not-owned' })
-  expect(postAPI).not.toHaveBeenCalled()
-  const pending = vm.handleClickDelete({ id: 'policy' }); await vm.handleClickDelete({ id: 'policy' })
-  expect(postAPI).toHaveBeenCalledTimes(1)
-  expect(postAPI).toHaveBeenCalledWith('deleteSnapshotPolicies', { id: 'policy' }, { preserveOnFailure: true })
-  vm.ownerScope = 'second/user/project'; release({ deletesnapshotpoliciesresponse: { success: true } }); await pending
-  expect(vm.$emit).not.toHaveBeenCalled()
+test('a volume delete opens a pinned confirmation without sending a request', () => {
+  const row = { id: 'policy', volumeid: 'first', intervaltype: 0 }
+  const vm = { ...Table.methods, resource: { id: 'first' }, dataSource: [row], canDelete: true, disposed: false, policyTarget: null }
+  vm.handleClickDelete(row); row.id = 'changed'; expect(vm.policyTarget.id).toBe('policy'); expect(vm.policyMode).toBe('delete'); expect(postAPI).not.toHaveBeenCalled()
+  vm.handleClickDelete({ id: 'other', volumeid: 'first' }); expect(vm.policyTarget.id).toBe('policy')
+  Table.watch.ownerScope.call(vm); expect(vm.policyTarget).toBeNull()
 })
 
-test('successful policy removal refreshes the detail table and interval labels include the cadence', async () => {
-  const vm = deleter(); postAPI.mockResolvedValue({ deletesnapshotpoliciesresponse: { success: true } })
-  await vm.handleClickDelete({ id: 'policy' }); expect(vm.$emit).toHaveBeenCalledWith('refresh')
+test('policy row actions require both permission and exact volume ownership', () => {
+  const vm = { ...Table.methods, resource: { id: 'first' }, dataSource: [{ id: 'policy', volumeid: 'first' }], canDelete: false, disposed: false, policyTarget: null }
+  vm.handleClickDelete(vm.dataSource[0]); expect(vm.policyTarget).toBeNull(); vm.canDelete = true; vm.handleClickDelete({ id: 'other', volumeid: 'second' }); expect(vm.policyTarget).toBeNull()
   expect(vm.scheduleTime({ intervaltype: 3, schedule: '5:9:28' })).toBe('09:05')
-  expect(vm.intervalText('3')).toBe('label.monthly')
   expect(Table.computed.columns.call({ $t: k => k, $store: { getters: { userInfo: { roletype: 'User' } } }, canDelete: false, canEdit: false, canManage: false }).some(c => c.key === 'actions')).toBe(false)
 })
 

@@ -938,6 +938,7 @@ import { snapshotDetailRoute, snapshotDetailParams, snapshotDetailPermissions, r
 import { snapshotListPage, snapshotSourceVolumeRoute, loadSnapshotListColumns, saveSnapshotListColumns } from '@/utils/storageSnapshotPresentation'
 import { storageSnapshotListQuery, storageSnapshotSortColumn, storageSnapshotSortQuery } from '@/utils/storageSnapshotList'
 import { normalizeSnapshotSearch, snapshotSearchError, snapshotSearchPermissionError, snapshotSearchQuery, snapshotCopyList, snapshotListRoute } from '@/utils/storageSnapshotSearch'
+import { canDeletePolicy } from '@/utils/snapshotPolicyDeletion'
 import { snapshotBusy, snapshotSubmissions, trackUnknownSnapshotSubmission } from '@/utils/vmSnapshotActions'
 import VmSnapshotSummary from '@/components/view/VmSnapshotSummary'
 import { mixinDevice } from '@/utils/mixin.js'
@@ -2278,6 +2279,7 @@ export default {
     },
     closeAction (result) {
       const snapshotDialog = this.currentAction?.storageSnapshotMode || this.currentAction?.snapshotStandardDialog
+      const policyDeleteDialog = this.currentAction?.policyDeleteDialog
       const cniAction = this.currentAction?.api === 'deleteCniConfiguration' && this.currentAction.cniListScope === this.listScope()
       const cniLocation = this.currentAction?.cniListLocation
       const deletedCniDetail = cniAction && this.dataView && result?.removed?.includes(this.resource?.id)
@@ -2316,9 +2318,10 @@ export default {
       const scope = this.listScope?.()
       const restoreFocus = () => {
         if (snapshotDialog && (generation !== this.storageActionGeneration || scope !== this.listScope?.() || originPath !== this.$route?.path)) return
-        const replacement = (this.isStorageUi || snapshotDialog) && originPath === this.$route?.path
+        let replacement = (this.isStorageUi || snapshotDialog) && originPath === this.$route?.path
           ? (this.$refs?.detailActionsTrigger?.$el || (triggerLabel && Array.from(this.$el?.querySelectorAll('.autogen-toolbar-actions button') || []).find(button => button.getAttribute('aria-label') === triggerLabel)))
           : null
+        if (policyDeleteDialog && !replacement && originPath === this.$route?.path) replacement = this.$el?.querySelector('.autogen-toolbar-actions button:not([disabled])')
         // A portal menu item may remain connected but hidden after its dropdown closes.
         // Snapshot dialogs return to the stable toolbar/detail button in the current route.
         const target = snapshotDialog && replacement?.isConnected ? replacement : trigger?.isConnected ? trigger : replacement
@@ -2401,6 +2404,13 @@ export default {
       this.actionTrigger = document.activeElement
       this.actionTriggerLabel = this.actionTrigger?.getAttribute('aria-label')
       this.actionOriginPath = this.$route?.path
+      if (action.policyDeleteDialog) {
+        if (!canDeletePolicy(this.$store.getters.apis) || !action.resource?.id || !action.resource.volumeid || isGroupAction) return
+        this.currentAction = { ...action, invokedAsGroupAction: false }
+        this.resource = Object.freeze({ ...action.resource })
+        this.showAction = true
+        return
+      }
       if (action.api === 'deleteAffinityGroup') {
         if (!['listAffinityGroups', 'deleteAffinityGroup'].every(api => api in this.$store.getters.apis)) return
         this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, affinityTargets: Object.freeze((isGroupAction ? this.selectedItems : [action.resource]).filter(Boolean).map(row => Object.freeze({ ...row }))) }

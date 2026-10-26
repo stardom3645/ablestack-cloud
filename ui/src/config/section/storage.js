@@ -23,6 +23,7 @@ import { allocationIntent } from '@/utils/volumeAllocation'
 import { canDeleteVolume, volumeDeleteReason } from '@/utils/volumeEdit'
 import { assignmentReason } from '@/utils/storageManagement'
 import { canEditPolicy, canManagePolicy } from '@/utils/snapshotPolicyEditing'
+import { canDeletePolicy } from '@/utils/snapshotPolicyDeletion'
 
 const activeFastCloneFlattenStatuses = ['pending', 'running']
 
@@ -598,15 +599,13 @@ export default {
           api: 'deleteSnapshotPolicies',
           icon: 'delete-outlined',
           label: 'label.delete.snapshot.policy',
-          message: 'message.action.delete.snapshot.policy',
           dataView: true,
-          show: (record) => true,
-          args: ['id'],
-          mapping: {
-            id: {
-              value: (record) => record.id
-            }
-          }
+          show: record => !!record.id && canDeletePolicy(store.getters.apis),
+          popup: true,
+          selfManagedDialog: true,
+          snapshotStandardDialog: true,
+          policyDeleteDialog: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyDeleteDialog.vue')))
         }
       ]
     },
