@@ -12,9 +12,19 @@ jest.mock('@/utils/timezone', () => ({ timeZone: () => Promise.resolve([]) }))
 let wrappers; let store; let route
 function render () {
   const w = mount(FormSchedule, {
-    props: { resource: { id: 'fixture-volume', zonename: 'Zone' }, dataSource: [] }, attachTo: document.body,
-    global: { mocks: { $store: store, $route: route, $t: key => key,
-      $getApiParams: () => [], $notifyError: jest.fn(), $notification: { success: jest.fn() } } }
+    props: { resource: { id: 'fixture-volume', zonename: 'Zone' }, dataSource: [] },
+    attachTo: document.body,
+    global: {
+      mocks: {
+        $store: store,
+        $route: route,
+        $t: key => key,
+        $getApiParams: () => [],
+        $notifyError: jest.fn(),
+        $notification: { success: jest.fn() }
+      },
+      stubs: { ResourceIcon: true }
+    }
   })
   wrappers.push(w); return w
 }

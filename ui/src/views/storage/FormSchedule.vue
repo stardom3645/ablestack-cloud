@@ -468,7 +468,8 @@ export default {
     },
     focusTagAdd () {
       this.$nextTick(() => {
-        if (this.canEditTags) this.$refs.tagAdd?.$el?.focus({ preventScroll: true })
+        const target = this.$refs.tagAdd?.$el
+        if (this.canEditTags && target) target.focus({ preventScroll: true })
       })
     },
     cancelTagInput () {
@@ -537,7 +538,7 @@ export default {
       this.clearTagInput()
       this.inputVisible = true
       this.$nextTick(function () {
-        if (this.canEditTags) this.$refs.input?.focus()
+        if (this.canEditTags && this.$refs.input) this.$refs.input.focus()
       })
     },
     resetForm () {
