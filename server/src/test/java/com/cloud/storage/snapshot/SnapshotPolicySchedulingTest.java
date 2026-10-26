@@ -85,7 +85,7 @@ public class SnapshotPolicySchedulingTest {
         when(schedules.lockRow(30L, true)).thenReturn(schedule);
         when(schedules.update(anyLong(), any())).thenReturn(true);
         when(schedules.expunge(anyLong())).thenReturn(true);
-        when(volumes.findById(10L)).thenReturn(new VolumeVO());
+        when(volumes.findById(10L)).thenReturn(mock(VolumeVO.class));
         doReturn(now).when(scheduler).schedulerTime();
     }
 
@@ -220,6 +220,27 @@ public class SnapshotPolicySchedulingTest {
         running(JobInfo.Status.IN_PROGRESS);
         scheduler.executeScheduledSnapshot(schedule, now);
         verify(scheduler, never()).submitSnapshotJob(any(), any());
+    }
+
+    @Test public void acceptedJobUsesDurableQueueAndKeepsSnapshotReference() throws Exception {
+        scheduler._dispatcher = mock(com.cloud.api.ApiDispatcher.class);
+        scheduler._asyncMgr = mock(org.apache.cloudstack.framework.jobs.AsyncJobManager.class);
+        scheduler._asyncDispatcher = mock(org.apache.cloudstack.framework.jobs.AsyncJobDispatcher.class);
+        scheduler.taggedResourceService = mock(TaggedResourceService.class);
+        when(scheduler._asyncDispatcher.getName()).thenReturn("ApiAsyncJobDispatcher");
+        doAnswer(i -> {
+            ((org.apache.cloudstack.api.command.user.snapshot.CreateSnapshotCmd) i.getArgument(0)).setEntityId(50L);
+            return null;
+        }).when(scheduler._dispatcher).dispatchCreateCmd(any(), anyMap());
+        when(scheduler._asyncMgr.submitAsyncJob(any(), eq("SnapshotPolicy"), eq(20L))).thenReturn(40L);
+        try (MockedStatic<com.cloud.utils.component.ComponentContext> components = mockStatic(com.cloud.utils.component.ComponentContext.class);
+             MockedStatic<com.cloud.event.ActionEventUtils> events = mockStatic(com.cloud.event.ActionEventUtils.class)) {
+            scheduler.submitSnapshotJob(schedule, mock(VolumeVO.class));
+        }
+        assertEquals(Long.valueOf(40), schedule.getAsyncJobId());
+        assertEquals(Long.valueOf(50), schedule.getSnapshotId());
+        verify(scheduler._asyncMgr, never()).submitAsyncJob(any());
+        verify(schedules).update(30L, schedule);
     }
 
     @Test(expected = InvalidParameterValueException.class)
