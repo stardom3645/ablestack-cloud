@@ -15,7 +15,13 @@ let store; let route; let wrappers; let policies; let volume
 const base = () => ({ id: 'fixed', volumeid: 'volume', intervaltype: 0, schedule: '0', timezone: 'UTC', maxsnaps: 2, tags: [{ key: 'keep', value: '한글' }] })
 const failure = code => Object.assign(new Error('server ' + code), { response: { status: code } })
 function render () {
-  const w = mount(Dialog, { props: { resource: { ...base() } }, global: { mocks: { $store: store, $route: route, $t: key => key, $notification: { success: jest.fn() } }, stubs: { MoldDialog: { template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } } })
+  const w = mount(Dialog, {
+    props: { resource: { ...base() } },
+    global: {
+      mocks: { $store: store, $route: route, $t: key => key, $notification: { success: jest.fn() } },
+      stubs: { MoldDialog: { template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } }
+    }
+  })
   wrappers.push(w); return w
 }
 beforeEach(() => {
