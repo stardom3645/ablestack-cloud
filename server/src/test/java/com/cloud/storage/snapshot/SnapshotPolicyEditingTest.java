@@ -23,7 +23,6 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.resourcedetail.SnapshotPolicyDetailVO;
 import org.apache.cloudstack.resourcedetail.dao.SnapshotPolicyDetailsDao;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -92,9 +91,10 @@ public class SnapshotPolicyEditingTest {
         when(manager.snapshotPolicyDetailsDao.listDetails(20L)).thenReturn(List.of(
                 new SnapshotPolicyDetailVO(20, ApiConstants.ZONE_ID, "2"), storage, other));
         manager.updateSnapshotPolicy(policy, "5", "UTC", IntervalType.HOURLY, 3, true, true, Collections.emptyList(), null);
-        ArgumentCaptor<List> saved = ArgumentCaptor.forClass(List.class);
-        verify(manager.snapshotPolicyDetailsDao).saveDetails(saved.capture());
-        assertEquals(List.of(storage, other), saved.getValue());
+        verify(manager.snapshotPolicyDetailsDao).removeDetail(20L, ApiConstants.ZONE_ID);
+        verify(manager.snapshotPolicyDetailsDao, never()).removeDetails(anyLong());
+        verify(manager.snapshotPolicyDetailsDao, never()).saveDetails(anyList());
+        verify(manager.snapshotPolicyDetailsDao, never()).persist(any());
         verifyNoInteractions(manager._snapSchedMgr);
     }
 

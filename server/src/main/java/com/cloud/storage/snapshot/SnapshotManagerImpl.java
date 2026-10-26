@@ -1999,12 +1999,10 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             throw new CloudRuntimeException("Unable to update snapshot policy");
         }
         if (zoneIds != null) {
-            List<SnapshotPolicyDetailVO> details = snapshotPolicyDetailsDao.listDetails(policy.getId());
-            details = details.stream().filter(d -> !ApiConstants.ZONE_ID.equals(d.getName())).collect(Collectors.toList());
+            snapshotPolicyDetailsDao.removeDetail(policy.getId(), ApiConstants.ZONE_ID);
             for (Long zoneId : zoneIds) {
-                details.add(new SnapshotPolicyDetailVO(policy.getId(), ApiConstants.ZONE_ID, String.valueOf(zoneId)));
+                snapshotPolicyDetailsDao.persist(new SnapshotPolicyDetailVO(policy.getId(), ApiConstants.ZONE_ID, String.valueOf(zoneId)));
             }
-            snapshotPolicyDetailsDao.saveDetails(details);
         }
         if (CollectionUtils.isNotEmpty(poolIds)) {
             List<SnapshotPolicyDetailVO> details = snapshotPolicyDetailsDao.listDetails(policy.getId());
