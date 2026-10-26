@@ -4,7 +4,15 @@ Licensed under the Apache License, Version 2.0 (the "License");
 http://www.apache.org/licenses/LICENSE-2.0 . Distributed AS IS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
 <template>
-  <MoldDialog :visible="!closed" :title="$t(title)" :size="isEdit ? 'lg' : 'md'" form-actions focus-guard :closable="!busy" :keyboard="!busy" @cancel="close">
+  <MoldDialog
+:visible="!closed"
+:title="$t(title)"
+:size="isEdit ? 'lg' : 'md'"
+form-actions
+focus-guard
+:closable="!busy"
+:keyboard="!busy"
+@cancel="close">
     <a-spin :spinning="loading">
       <div class="policy-target" data-testid="policy-action-target">
         <strong>{{ volume?.name || resource.volumename || resource.volumeid }}</strong>
@@ -12,7 +20,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
       </div>
       <a-alert v-if="error" type="error" show-icon :message="error" />
       <a-button class="policy-reload" :disabled="busy || !!jobId || !current()" @click="load">{{ $t(policy ? 'label.snapshot.policy.reload.values' : 'label.retry') }}</a-button>
-      <FormSchedule v-if="isEdit && policy && volume" :key="loadVersion" :resource="volume" :policy="policy" :validate-edit="validateEdit" :data-source="[policy]" resource-type="Volume" :disabled="!allowed || loading || !!error" @busy="formBusy = $event" @refresh="completed" @close-action="close" />
+      <FormSchedule
+v-if="isEdit && policy && volume"
+:key="loadVersion"
+:resource="volume"
+:policy="policy"
+:validate-edit="validateEdit"
+:data-source="[policy]"
+resource-type="Volume"
+:disabled="!allowed || loading || !!error"
+@busy="formBusy = $event"
+@refresh="completed"
+@close-action="close" />
       <template v-if="!isEdit && policy">
         <a-descriptions :column="1" size="small" bordered>
           <a-descriptions-item :label="$t('label.time')">{{ policy.schedule }}</a-descriptions-item>
@@ -51,8 +70,10 @@ export default {
     title () { return this.isEdit ? 'label.snapshot.policy.edit' : this.resume ? 'label.snapshot.policy.resume' : 'label.snapshot.policy.pause' },
     interval () { return intervals[Number(this.resource.intervaltype)] || 'unknown' },
     busy () { return this.loading || this.submitting || this.formBusy },
-    scope () { return JSON.stringify([this.$route.path, this.resource.id, this.resource.volumeid, this.resource.intervaltype, this.$store.getters.userInfo?.id, this.$store.getters.userInfo?.roletype, this.$store.state?.user?.token, this.$store.getters.project?.id,
-      ...['createSnapshotPolicy', 'updateSnapshotPolicy', 'listSnapshotPolicies', 'listVolumes', 'queryAsyncJobResult'].map(api => api in (this.$store.getters.apis || {}))]) },
+    scope () {
+      return JSON.stringify([this.$route.path, this.resource.id, this.resource.volumeid, this.resource.intervaltype, this.$store.getters.userInfo?.id, this.$store.getters.userInfo?.roletype, this.$store.state?.user?.token, this.$store.getters.project?.id,
+        ...['createSnapshotPolicy', 'updateSnapshotPolicy', 'listSnapshotPolicies', 'listVolumes', 'queryAsyncJobResult'].map(api => api in (this.$store.getters.apis || {}))])
+    },
     allowed () { return this.current() && (this.isEdit ? canEditPolicy(this.$store.getters.apis || {}) : canManagePolicy(this.$store.getters)) }
   },
   created () { this.origin = this.scope; this.load() },

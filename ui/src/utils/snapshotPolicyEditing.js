@@ -23,9 +23,15 @@ export function policyFormValues (policy) {
   if (!intervaltype || parts.length !== (intervaltype === 'hourly' ? 1 : intervaltype === 'daily' ? 2 : 3) || parts.some(v => !/^\d{1,2}$/.test(v))) throw new Error('message.snapshot.policy.unavailable')
   if (Number(parts[0]) > 59 || (parts.length > 1 && Number(parts[1]) > 23) ||
     (parts.length === 3 && (Number(parts[2]) < 1 || Number(parts[2]) > (intervaltype === 'weekly' ? 7 : 28)))) throw new Error('message.snapshot.policy.unavailable')
-  const form = { intervaltype, timezone: policy.timezone, maxsnaps: policy.maxsnaps,
-    time: Number(parts[0]), timeSelect: moment({ hour: Number(parts[1] || 0), minute: Number(parts[0]), second: 0, millisecond: 0 }),
-    'day-of-week': Number(parts[2]) - 1, 'day-of-month': Number(parts[2]) }
+  const form = {
+    intervaltype,
+    timezone: policy.timezone,
+    maxsnaps: policy.maxsnaps,
+    time: Number(parts[0]),
+    timeSelect: moment({ hour: Number(parts[1] || 0), minute: Number(parts[0]), second: 0, millisecond: 0 }),
+    'day-of-week': Number(parts[2]) - 1,
+    'day-of-month': Number(parts[2])
+  }
   if (!policy.timezone || policyFieldErrors(form).length) throw new Error('message.snapshot.policy.unavailable')
   return form
 }
