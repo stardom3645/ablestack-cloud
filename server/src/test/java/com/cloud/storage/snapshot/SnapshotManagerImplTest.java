@@ -105,6 +105,8 @@ public class SnapshotManagerImplTest {
     @Mock
     SnapshotPolicyDao snapshotPolicyDao;
     @Mock
+    com.cloud.storage.dao.SnapshotScheduleDao snapshotScheduleDao;
+    @Mock
     SnapshotScheduler snapshotScheduler;
     @Mock
     TaggedResourceService taggedResourceService;
@@ -552,6 +554,8 @@ public class SnapshotManagerImplTest {
         Mockito.when(policyVO.getVolumeId()).thenReturn(volumeId);
         Mockito.when(policyVO.getUuid()).thenReturn("policy-uuid");
         Mockito.when(snapshotPolicyDao.findById(policyId)).thenReturn(policyVO);
+        Mockito.when(snapshotPolicyDao.lockRow(policyId, true)).thenReturn(policyVO);
+        Mockito.when(snapshotScheduler.removeSchedule(volumeId, policyId)).thenReturn(true);
 
         // Volume is removed (expunged) but findByIdIncludingRemoved should still return it
         VolumeVO volumeVO = Mockito.mock(VolumeVO.class);
