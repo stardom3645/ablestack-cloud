@@ -115,7 +115,7 @@ test('successful policy removal refreshes the detail table and interval labels i
   await vm.handleClickDelete({ id: 'policy' }); expect(vm.$emit).toHaveBeenCalledWith('refresh')
   expect(vm.scheduleTime({ intervaltype: 3, schedule: '5:9:28' })).toBe('09:05')
   expect(vm.intervalText('3')).toBe('label.monthly')
-  expect(Table.computed.columns.call({ $t: k => k, canDelete: false }).some(c => c.key === 'actions')).toBe(false)
+  expect(Table.computed.columns.call({ $t: k => k, $store: { getters: { userInfo: { roletype: 'User' } } }, canDelete: false, canEdit: false, canManage: false }).some(c => c.key === 'actions')).toBe(false)
 })
 
 test('policy validation cannot post after context change and two validations create only one policy', async () => {

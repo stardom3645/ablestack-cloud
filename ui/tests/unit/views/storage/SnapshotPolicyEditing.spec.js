@@ -5,12 +5,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 import { mount, shallowMount, flushPromises } from '@vue/test-utils'
 import { reactive } from 'vue'
+import { webcrypto } from 'crypto'
 import Form from '@/views/storage/FormSchedule'
 import Dialog from '@/views/storage/SnapshotPolicyActionDialog'
 import { getAPI, postAPI } from '@/api'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 jest.mock('@/utils/timezone', () => ({ timeZone: () => Promise.resolve([]) }))
 let store; let route; let wrappers
+const originalCrypto = Object.getOwnPropertyDescriptor(global, 'crypto')
+beforeAll(() => Object.defineProperty(global, 'crypto', { configurable: true, value: webcrypto }))
+afterAll(() => { if (originalCrypto) Object.defineProperty(global, 'crypto', originalCrypto); else delete global.crypto })
 const volume = { id: 'volume', account: 'owner', domainid: 'domain', zoneid: 'primary', zonename: 'Zone', name: '시험 볼륨' }
 const base = () => ({ id: 'policy', volumeid: 'volume', intervaltype: 0, schedule: '0', timezone: 'UTC', maxsnaps: 3, fordisplay: false, zone: [{ id: 'primary' }, { id: 'extra', name: 'Extra' }], tags: [{ key: 'keep', value: '한글' }, { key: 'remove', value: 'yes' }] })
 function mocks () { return { $store: store, $route: route, $t: k => k, $getApiParams: () => [], $notifyError: jest.fn(), $notification: { success: jest.fn() } } }
