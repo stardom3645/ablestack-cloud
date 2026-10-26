@@ -20,7 +20,8 @@
     <div class="form-layout" v-ctrl-enter="handleSubmit">
       <a-alert type="warning">
         <template #message>
-          <div v-html="$t('label.header.volume.snapshot')"></div>
+          <div v-if="isEditing">{{ $t('message.snapshot.policy.edit.effect') }}</div>
+          <div v-else v-html="$t('label.header.volume.snapshot')"></div>
         </template>
       </a-alert>
       <div class="form">
@@ -180,7 +181,7 @@
                   :disabled="zoneLoading || zoneError"
                   :notFoundContent="$t('message.snapshot.zones.empty')"
                   :placeholder="''">
-                  <a-select-option v-for="opt in this.zones" :key="opt.id" :label="opt.name || opt.description">
+                  <a-select-option v-for="opt in policyZoneOptions" :key="opt.id" :label="opt.name || opt.description" :disabled="opt.unavailable">
                     <span>
                       <resource-icon v-if="opt.icon" :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
                       <global-outlined v-else style="margin-right: 5px"/>
@@ -230,7 +231,7 @@
               type="primary"
               ref="submit"
               @click="handleSubmit">
-              {{ $t('label.ok') }}
+              {{ $t(isEditing ? 'label.save' : 'label.ok') }}
             </a-button>
           </MoldDialogActions>
         </a-form>
@@ -251,6 +252,7 @@ import storageDialogContext from '@/utils/storageDialogContext'
 import debounce from 'lodash/debounce'
 import { getAPI } from '@/utils/storageApi'
 import { emptyPolicyLimits, readPolicyLimits, effectivePolicyMaximum, policyFieldErrors, encodePolicySchedule } from '@/utils/snapshotPolicyInput'
+import { policyFormValues, extraPolicyZones, editingZoneParams } from '@/utils/snapshotPolicyEditing'
 
 export default {
   name: 'FormSchedule',
@@ -260,6 +262,8 @@ export default {
     TooltipLabel
   },
   props: {
+    policy: { type: Object, default: null },
+    validateEdit: { type: Function, default: null },
     actionsVisible: { type: Boolean, default: true },
     disabled: { type: Boolean, default: false },
     loading: {
@@ -307,12 +311,17 @@ export default {
   },
   created () {
     this.initForm()
+    if (this.policy) {
+      Object.assign(this.form, policyFormValues(this.policy), { zoneids: extraPolicyZones(this.policy, this.resource) })
+      this.tags = (this.policy.tags || []).map(tag => ({ key: tag.key, value: tag.value }))
+      this.handleChangeIntervalType()
+    }
     this.volumeId = this.resource.id
     this.fetchTimeZone()
     this.fetchPolicyLimits()
   },
   mounted () {
-    if (this.form.intervaltype && this.isIntervalDisabled(this.form.intervaltype)) {
+    if (!this.isEditing && this.form.intervaltype && this.isIntervalDisabled(this.form.intervaltype)) {
       const nextAvailable = this.getNextAvailableIntervalType(this.form.intervaltype)
       if (nextAvailable) {
         this.form.intervaltype = nextAvailable
@@ -321,6 +330,12 @@ export default {
     }
   },
   computed: {
+    isEditing () { return !!this.policy },
+    preserveSnapshotZones () { return this.isEditing },
+    policyZoneOptions () {
+      const known = this.zones || []
+      return [...known, ...(this.policy?.zone || []).filter(zone => zone.id !== this.resource.zoneid && !known.some(item => item.id === zone.id)).map(zone => ({ ...zone, unavailable: true }))]
+    },
     policyLimitContext () {
       const apis = this.$store.getters.apis || {}
       return JSON.stringify([this.dialogScope(), this.resource.account, this.resource.domainid, this.resource.projectid,
@@ -342,12 +357,14 @@ export default {
     }
   },
   watch: {
+    actionLoading (busy) { this.$emit('busy', busy) },
     policyLimitContext () { this.fetchPolicyLimits() },
     tagPermission (allowed) {
-      if (!allowed) { this.tags = []; this.clearTagInput() }
+      if (!allowed) { this.tags = (this.policy?.tags || []).map(tag => ({ key: tag.key, value: tag.value })); this.clearTagInput() }
     },
     dataSource: {
       handler () {
+        if (this.isEditing) return
         if (this.form.intervaltype && this.getNextAvailableIntervalType && this.isIntervalDisabled(this.form.intervaltype)) {
           const nextAvailable = this.getNextAvailableIntervalType(this.form.intervaltype)
           if (nextAvailable) {
@@ -461,6 +478,7 @@ export default {
       return null
     },
     isIntervalDisabled (intervalType) {
+      if (this.isEditing) return this.getIntervalValue(intervalType) !== Number(this.policy.intervaltype)
       const intervalValue = this.getIntervalValue(intervalType)
       if (this.dataSource.length === 0) {
         return false
@@ -472,6 +490,7 @@ export default {
       return false
     },
     handleShowButton () {
+      if (this.isEditing) return true
       if (this.dataSource.length === 0) {
         return true
       }
@@ -525,7 +544,7 @@ export default {
       if (this.actionLoading || this.disabled || this.limitsLoading || !this.dialogCurrent() || !('createSnapshotPolicy' in this.$store.getters.apis)) return
       // Draft tags are part of this create request; they never call createTags/deleteTags.
       if (this.inputVisible && !this.handleInputConfirm(undefined, false)) return
-      return this.formRef.value.validate().then(() => {
+      return this.formRef.value.validate().then(async () => {
         if (this.actionLoading || this.disabled || this.limitsLoading || !this.dialogCurrent() || !('createSnapshotPolicy' in this.$store.getters.apis)) return
         const formRaw = toRaw(this.form)
         const errors = policyFieldErrors(formRaw, this.policyMaximum)
@@ -536,16 +555,21 @@ export default {
         const values = this.handleRemoveFields(formRaw)
 
         let params = {}
+        if (this.isEditing) {
+          params.id = this.policy.id
+          if (typeof this.policy.fordisplay === 'boolean' && this.$store.getters.userInfo?.roletype === 'Admin') params.fordisplay = this.policy.fordisplay
+          Object.assign(params, editingZoneParams(this.policy, this.resource, values.zoneids, this.zoneLoading || this.zoneError))
+        }
         params.volumeid = this.volumeId
         params.intervaltype = values.intervaltype
         params.timezone = values.timezone
         params.maxsnaps = values.maxsnaps
         params.useStorageReplication = false
-        if (values.zoneids && values.zoneids.length > 0) {
+        if (!this.isEditing && values.zoneids && values.zoneids.length > 0) {
           params.zoneids = values.zoneids.join()
         }
         params.schedule = encodePolicySchedule(values)
-        const tags = this.tagPermission ? this.tags : []
+        const tags = this.tagPermission || this.isEditing ? this.tags : []
         for (let i = 0; i < tags.length; i++) {
           const formattedTagData = {}
           const tag = tags[i]
@@ -554,20 +578,26 @@ export default {
           params = Object.assign({}, params, formattedTagData)
         }
         this.actionLoading = true
-        return postAPI('createSnapshotPolicy', params, { preserveOnFailure: true }).then(json => {
+        try {
+          if (this.isEditing && this.validateEdit) await this.validateEdit()
+          if (!this.dialogCurrent() || this.disabled || !('createSnapshotPolicy' in this.$store.getters.apis)) return
+          const json = await postAPI('createSnapshotPolicy', params, { preserveOnFailure: true })
           if (!this.dialogCurrent()) return
+          if (this.isEditing && json.createsnapshotpolicyresponse?.snapshotpolicy?.id !== this.policy.id) throw new Error(this.$t('message.snapshot.policy.changed'))
           this.$emit('refresh')
           this.$notification.success({
-            message: this.$t('label.action.recurring.snapshot'),
-            description: this.$t('message.success.recurring.snapshot')
+            message: this.$t(this.isEditing ? 'label.snapshot.policy.edit' : 'label.action.recurring.snapshot'),
+            description: this.$t(this.isEditing ? 'message.snapshot.policy.saved' : 'message.success.recurring.snapshot')
           })
-          this.resetForm()
-        }).catch(error => {
+          if (!this.isEditing) this.resetForm()
+        } catch (error) {
           if (this.dialogCurrent()) this.$notifyError(error)
-        }).finally(() => {
+        } finally {
           this.actionLoading = false
-        })
-      }).catch(() => {})
+        }
+      }).catch(error => {
+        if (error instanceof Error && this.dialogCurrent()) this.$notifyError(new Error(error.message.startsWith('message.') ? this.$t(error.message) : error.message))
+      })
     },
     showInput () {
       if (!this.canEditTags) return

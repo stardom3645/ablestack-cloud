@@ -22,6 +22,7 @@ import { isAdmin } from '@/role'
 import { allocationIntent } from '@/utils/volumeAllocation'
 import { canDeleteVolume, volumeDeleteReason } from '@/utils/volumeEdit'
 import { assignmentReason } from '@/utils/storageManagement'
+import { canEditPolicy, canManagePolicy } from '@/utils/snapshotPolicyEditing'
 
 const activeFastCloneFlattenStatuses = ['pending', 'running']
 
@@ -545,6 +546,24 @@ export default {
       },
       searchFilters: ['volumeid'],
       actions: [
+        {
+          api: 'createSnapshotPolicy', icon: 'edit-outlined', label: 'label.snapshot.policy.edit', dataView: true,
+          show: record => !!record.id && canEditPolicy(store.getters.apis || {}),
+          selfManagedDialog: true, policyMode: 'edit',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyActionDialog.vue')))
+        },
+        {
+          api: 'updateSnapshotPolicy', icon: 'pause-circle-outlined', label: 'label.snapshot.policy.pause', dataView: true,
+          show: record => record.fordisplay === true && canManagePolicy(store.getters),
+          selfManagedDialog: true, policyMode: 'pause',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyActionDialog.vue')))
+        },
+        {
+          api: 'updateSnapshotPolicy', icon: 'play-circle-outlined', label: 'label.snapshot.policy.resume', dataView: true,
+          show: record => record.fordisplay === false && canManagePolicy(store.getters),
+          selfManagedDialog: true, policyMode: 'resume',
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyActionDialog.vue')))
+        },
         {
           api: 'createSnapshotPolicy',
           icon: 'plus-outlined',
