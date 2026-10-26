@@ -17,7 +17,6 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { reactive } from 'vue'
 import Recurring from '@/views/storage/RecurringSnapshotVolume.vue'
 import { getAPI } from '@/api'
-const Antd = require('ant-design-vue').default || require('ant-design-vue')
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn() }))
 
 let wrapper
@@ -27,7 +26,7 @@ const volumes = (rows, count = rows.length) => ({ listvolumesresponse: { count, 
 const policies = rows => ({ listsnapshotpoliciesresponse: { count: rows.length, snapshotpolicy: rows } })
 const scheduleStub = { name: 'FormSchedule', props: ['resource', 'disabled', 'dataSource'], template: '<section data-testid="schedule">{{ resource.id }}</section>' }
 function render (resource) {
-  wrapper = mount(Recurring, { ...(resource ? { props: { resource } } : {}), attachTo: document.body, global: { plugins: [Antd], provide: { parentFetchData: jest.fn() }, mocks: { $t: key => key, $store: store }, stubs: { FormSchedule: scheduleStub } } })
+  wrapper = mount(Recurring, { ...(resource ? { props: { resource } } : {}), attachTo: document.body, global: { provide: { parentFetchData: jest.fn() }, mocks: { $t: key => key, $store: store }, stubs: { FormSchedule: scheduleStub } } })
   return wrapper
 }
 async function search (text) {
@@ -111,11 +110,13 @@ test('loading and failed volume reads disable selection, expose retry and recove
   expect(store.state.user.token).toBe('session')
 })
 
-test('late volume replies cannot restore another project or an unmounted dialog', async () => {
+test.each(['project', 'login'])('late volume replies cannot restore another %s or an unmounted dialog', async scope => {
   let release
   getAPI.mockReturnValueOnce(new Promise(resolve => { release = resolve })).mockResolvedValueOnce(volumes([row('new-project')]))
   render(); await flushPromises()
-  store.getters.project = { id: 'new-project' }; await flushPromises()
+  if (scope === 'project') store.getters.project = { id: 'new-project' }
+  else { store.getters.userInfo = { id: 'new-user' }; store.state.user.token = 'new-session' }
+  await flushPromises()
   release(volumes([row('old-private')])); await flushPromises()
   expect(wrapper.vm.volumes.map(item => item.id)).toEqual(['new-project'])
   expect(wrapper.vm.selectedVolumeId).toBe(null)
