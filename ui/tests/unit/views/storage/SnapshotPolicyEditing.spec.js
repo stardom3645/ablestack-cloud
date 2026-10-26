@@ -34,7 +34,7 @@ beforeEach(() => {
     listAccounts: { listaccountsresponse: { account: [{ name: 'owner', domainid: 'domain', accounttype: 1 }] } },
     listResourceLimits: { listresourcelimitsresponse: { resourcelimit: [] } },
     queryAsyncJobResult: { queryasyncjobresultresponse: { jobstatus: 1 } }
-  }[cmd] || {})))
+  }[cmd] || {}))
 })
 afterEach(async () => { wrappers.forEach(w => w.unmount()); await flushPromises(); document.body.innerHTML = '' })
 
