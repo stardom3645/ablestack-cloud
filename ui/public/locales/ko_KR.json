@@ -9765,5 +9765,6 @@
   "message.snapshot.policy.delete.effect": "이 정책과 미래 예약을 삭제합니다. 기존 스냅샷과 그 태그, 다른 주기 정책은 유지됩니다.",
   "message.snapshot.policy.delete.ack": "위 정책 1개의 삭제 대상과 영향을 확인했습니다.",
   "message.snapshot.policy.delete.unknown": "삭제 결과를 아직 확인하지 못했습니다. 다시 삭제하지 않고 원래 정책의 존재 여부만 확인합니다.",
-  "message.snapshot.policy.delete.still.exists": "정책이 현재 범위에 남아 있습니다. 삭제 대상을 다시 조회하고 확인한 뒤 재시도하십시오."
+  "message.snapshot.policy.delete.still.exists": "정책이 현재 범위에 남아 있습니다. 삭제 대상을 다시 조회하고 확인한 뒤 재시도하십시오.",
+  "message.snapshot.policy.delete.unverified": "원래 정책이 현재 목록에 보이지 않습니다. 삭제 응답을 확인하지 못했으므로 삭제와 표시·접근 권한 변경을 구분할 수 없습니다. 재삭제하지 말고 관리자에게 결과를 확인하십시오."
 }

@@ -54,7 +54,7 @@ export default {
   components: { MoldDialog, MoldDialogActions },
   props: { resource: { type: Object, required: true }, currentAction: { type: Object, default: () => ({}) } },
   emits: ['close-action', 'refresh-data'],
-  data () { return { identity: deletionIdentity(this.resource), target: null, busy: false, acknowledged: false, needsReload: true, uncertain: false, error: '', origin: '', closed: false, disposed: false, version: 0, intervals: policyIntervals } },
+  data () { return { identity: deletionIdentity(this.resource), target: null, busy: false, acknowledged: false, needsReload: true, uncertain: false, deleteAccepted: false, error: '', origin: '', closed: false, disposed: false, version: 0, intervals: policyIntervals } },
   computed: {
     schedule () { return this.target ? deletionSchedule(this.target.policy, this.$t) : '' },
     scope () { return JSON.stringify([this.$route.path, this.resource.id, this.resource.volumeid, this.resource.intervaltype, this.$store.getters.userInfo?.id, this.$store.getters.userInfo?.roletype, this.$store.getters.userInfo?.roleid, this.$store.state?.user?.token, this.$store.getters.project?.id, canDeletePolicy(this.$store.getters.apis)]) },
@@ -66,7 +66,7 @@ export default {
   methods: {
     current () { return !this.closed && !this.disposed && this.origin === this.scope },
     failure (error) { return error.message?.startsWith('message.') ? this.$t(error.message) : Object.values(error.response?.data || {}).find(v => v?.errortext)?.errortext || error.message || this.$t('message.request.failed') },
-    close () { if (this.busy) return; this.closed = true; this.$emit('close-action') },
+    close () { if (this.busy) return; this.closed = true; if (this.uncertain) this.$emit('refresh-data'); this.$emit('close-action') },
     async load () {
       if (this.busy || !this.allowed || this.uncertain) return
       const version = ++this.version; this.busy = true; this.error = ''; this.acknowledged = false; this.needsReload = true
@@ -81,7 +81,12 @@ export default {
       const latest = await readPolicyDeletionTarget(getAPI, this.identity, () => this.allowed, true)
       if (!this.allowed) return
       if (deletionOwner(latest.volume) !== deletionOwner(this.target.volume)) throw new Error('message.snapshot.policy.changed')
-      if (!latest.policy) { this.complete(); return }
+      if (!latest.policy) {
+        // User lists can also omit a hidden policy. Absence cannot replace a lost success response.
+        if (this.deleteAccepted) this.complete()
+        else this.error = this.$t('message.snapshot.policy.delete.unverified')
+        return
+      }
       this.uncertain = false; this.needsReload = true; this.acknowledged = false
       this.error = this.$t('message.snapshot.policy.delete.still.exists')
     },
@@ -93,10 +98,11 @@ export default {
         const latest = await readPolicyDeletionTarget(getAPI, this.identity, () => this.allowed)
         if (!this.allowed) return
         if (deletionFingerprint(latest) !== deletionFingerprint(this.target)) throw new Error('message.snapshot.policy.changed')
-        this.uncertain = true
+        this.deleteAccepted = false; this.uncertain = true
         try {
           const response = await postAPI('deleteSnapshotPolicies', { ids: this.identity.id }, { preserveOnFailure: true, timeout: 30000 })
           if (response.deletesnapshotpoliciesresponse?.success !== true) throw new Error('message.snapshot.policy.delete.unknown')
+          this.deleteAccepted = true
         } catch (error) {
           if (error.response?.status >= 400 && error.response?.status < 500) this.uncertain = false
           throw error
