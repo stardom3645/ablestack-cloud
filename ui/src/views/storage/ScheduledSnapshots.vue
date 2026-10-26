@@ -52,7 +52,7 @@
         </template>
       </template>
     </a-table>
-    <SnapshotPolicyDeleteDialog v-if="policyTarget && policyMode === 'delete'" :resource="policyTarget" @refresh-data="$emit('refresh')" @close-action="policyTarget = null" />
+    <SnapshotPolicyDeleteDialog v-if="policyTarget && policyMode === 'delete'" :resource="policyTarget" @refresh-data="$emit('refresh')" @close-action="closePolicyDelete" />
     <SnapshotPolicyActionDialog v-else-if="policyTarget" :key="policyTarget.id + policyMode" :resource="policyTarget" :current-action="{ policyMode }" @refresh-data="$emit('refresh')" @close-action="policyTarget = null" />
   </div>
 </template>
@@ -69,7 +69,7 @@ export default {
   components: { TooltipButton, SnapshotPolicyActionDialog, SnapshotPolicyDeleteDialog },
   props: { loading: Boolean, disabled: Boolean, active: { type: Boolean, default: true }, dataSource: { type: Array, required: true }, resource: { type: Object, required: true } },
   emits: ['refresh'],
-  data () { return { policyTarget: null, policyMode: '', disposed: false, listDayOfWeek: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] } },
+  data () { return { policyTarget: null, policyMode: '', deleteTrigger: null, deleteFocusScope: '', pendingDeleteFocus: false, disposed: false, listDayOfWeek: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] } },
   computed: {
     canDelete () { return canDeletePolicy(this.$store.getters.apis) },
     canEdit () { return canEditPolicy(this.$store.getters.apis || {}) },
@@ -89,12 +89,24 @@ export default {
       ]
     }
   },
-  watch: { ownerScope () { this.policyTarget = null }, active (value) { if (!value) this.policyTarget = null } },
+  watch: {
+    ownerScope () { this.policyTarget = null; this.pendingDeleteFocus = false; this.deleteTrigger = null },
+    active (value) { if (!value) { this.policyTarget = null; this.pendingDeleteFocus = false } },
+    disabled (value) { if (!value) this.$nextTick(this.restorePolicyFocus) }
+  },
   beforeUnmount () { this.disposed = true },
   methods: {
     openPolicy (record, mode) {
       if (this.disabled || this.disposed || this.policyTarget || !(mode === 'delete' ? this.canDelete : mode === 'edit' ? this.canEdit : this.canManage) || !this.dataSource.some(row => row.id === record.id && row.volumeid === this.resource.id)) return
+      if (mode === 'delete') { this.deleteTrigger = document.activeElement; this.deleteFocusScope = this.ownerScope; this.pendingDeleteFocus = false }
       this.policyTarget = Object.freeze({ ...record }); this.policyMode = mode
+    },
+    closePolicyDelete () { this.policyTarget = null; this.pendingDeleteFocus = true; this.$nextTick(this.restorePolicyFocus) },
+    restorePolicyFocus () {
+      if (!this.pendingDeleteFocus || this.disposed || this.disabled || this.policyTarget || this.deleteFocusScope !== this.ownerScope) return
+      if (document.activeElement !== document.body) { this.pendingDeleteFocus = false; return }
+      const trigger = this.deleteTrigger?.isConnected && !this.deleteTrigger.disabled ? this.deleteTrigger : this.$el?.closest('.volume-policy-tab')?.querySelector('.detail-tab-toolbar button:not([disabled])')
+      if (trigger) { trigger.focus({ preventScroll: true }); this.pendingDeleteFocus = false }
     },
     intervalText (value) { const name = ['hourly', 'daily', 'weekly', 'monthly'][Number(value)]; return name ? this.$t('label.' + name) : '—' },
     scheduleTime (record) {
