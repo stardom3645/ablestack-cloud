@@ -14,7 +14,7 @@ export function policyFieldErrors (form, maximum) {
   if (!policyIntervals.includes(form.intervaltype)) add('intervaltype', 'message.snapshot.policy.interval.invalid')
   if (form.intervaltype === 'hourly') {
     if (!integer(form.time) || Number(form.time) > 59) add('time', 'message.snapshot.policy.minute.range')
-  } else if (policyIntervals.includes(form.intervaltype) && (!form.timeSelect?.isValid?.() ||
+  } else if (policyIntervals.includes(form.intervaltype) && (typeof form.timeSelect?.isValid !== 'function' || typeof form.timeSelect?.format !== 'function' || !form.timeSelect.isValid() ||
     !integer(Number(form.timeSelect.format('mm'))) || Number(form.timeSelect.format('mm')) > 59 ||
     !integer(Number(form.timeSelect.format('HH'))) || Number(form.timeSelect.format('HH')) > 23)) {
     add('timeSelect', 'message.error.time')
@@ -59,14 +59,16 @@ export async function readPolicyLimits (request, apis, resource) {
     ? Promise.resolve().then(() => { result.exempt = false })
     : resource.account && resource.domainid
       ? attempt('listAccounts', { name: resource.account, domainid: resource.domainid, listall: true }).then(json => {
-        const account = json?.listaccountsresponse?.account?.find(a => a.name === resource.account && a.domainid === resource.domainid)
+        const rows = json?.listaccountsresponse?.account
+        const account = (Array.isArray(rows) ? rows : []).find(a => a.name === resource.account && a.domainid === resource.domainid)
         if (account && integer(account.accounttype)) result.exempt = Number(account.accounttype) === 1
       }) : Promise.resolve()
   const scope = resource.projectid ? { projectid: resource.projectid } : resource.account && resource.domainid ? { account: resource.account, domainid: resource.domainid } : null
   const read = async (params, owner) => {
     if (!params) return null
     const json = await attempt('listResourceLimits', { ...params, resourcetype: 3 })
-    const limit = json?.listresourcelimitsresponse?.resourcelimit?.find(row => String(row.resourcetype) === '3' && !row.tag &&
+    const rows = json?.listresourcelimitsresponse?.resourcelimit
+    const limit = (Array.isArray(rows) ? rows : []).find(row => String(row.resourcetype) === '3' && !row.tag &&
       (owner ? resource.projectid ? row.projectid === resource.projectid : row.account === resource.account && row.domainid === resource.domainid && !row.projectid
         : row.domainid === resource.domainid && !row.account && !row.projectid))
     return limit && (limit.max === -1 || limit.max === '-1' || integer(limit.max)) ? Number(limit.max) : null

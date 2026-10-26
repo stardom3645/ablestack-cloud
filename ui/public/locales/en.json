@@ -9732,7 +9732,7 @@
   "message.snapshot.policy.weekday.range": "Select a day from Sunday to Saturday.",
   "message.snapshot.policy.monthday.range": "Select a whole day from 1 to 28.",
   "message.snapshot.policy.interval.invalid": "Select hourly, daily, weekly or monthly.",
-  "message.snapshot.policy.interval.disabled": "This interval is disabled by the server. Select another interval or contact an administrator.",
+  "message.snapshot.policy.interval.disabled": "The current retention limit is zero. Select another interval or ask an administrator to review the owner limits.",
   "message.snapshot.policy.keep.integer": "Enter a whole retention count of at least 1.",
   "message.snapshot.policy.keep.range": "The retention count must be between 1 and {max}.",
   "message.snapshot.policy.limits.loading": "Checking retention limits…",

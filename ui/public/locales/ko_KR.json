@@ -9697,7 +9697,7 @@
   "message.snapshot.policy.weekday.range": "일요일부터 토요일 사이의 요일을 선택하십시오.",
   "message.snapshot.policy.monthday.range": "1~28 사이의 정수 일자를 선택하십시오.",
   "message.snapshot.policy.interval.invalid": "매시간·매일·매주·매월 중 하나를 선택하십시오.",
-  "message.snapshot.policy.interval.disabled": "서버에서 이 주기를 비활성화했습니다. 다른 주기를 선택하거나 관리자에게 문의하십시오.",
+  "message.snapshot.policy.interval.disabled": "현재 보관 한도가 0입니다. 다른 주기를 선택하거나 관리자에게 소유 범위의 한도를 확인하십시오.",
   "message.snapshot.policy.keep.integer": "보관 수는 1 이상의 정수로 입력하십시오.",
   "message.snapshot.policy.keep.range": "보관 수는 1~{max} 사이로 입력하십시오.",
   "message.snapshot.policy.limits.loading": "보관 한도를 확인하는 중입니다…",

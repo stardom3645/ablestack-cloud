@@ -121,6 +121,7 @@ test('successful policy removal refreshes the detail table and interval labels i
 test('policy validation cannot post after context change and two validations create only one policy', async () => {
   let release; const validated = new Promise(resolve => { release = resolve }); let current = true
   const vm = { actionLoading: false, disabled: false, dialogCurrent: () => current, formRef: { value: { validate: () => validated } }, form: { intervaltype: 'hourly', time: 59, timezone: 'UTC', maxsnaps: 2 }, handleRemoveFields: v => ({ ...v }), volumeId: 'first', tags: [], $emit: jest.fn(), $t: k => k, $notification: { success: jest.fn() }, resetForm: jest.fn(), $notifyError: jest.fn() }
+  vm.$store = { getters: { apis: { createSnapshotPolicy: {} } } }
   Schedule.methods.handleSubmit.call(vm); current = false; release(); await flushPromises()
   expect(postAPI).not.toHaveBeenCalled()
   current = true; vm.formRef.value.validate = () => Promise.resolve(); postAPI.mockReturnValue(new Promise(() => {}))
