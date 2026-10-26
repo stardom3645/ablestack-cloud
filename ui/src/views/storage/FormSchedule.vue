@@ -530,7 +530,7 @@ export default {
         const formRaw = toRaw(this.form)
         const errors = policyFieldErrors(formRaw, this.policyMaximum)
         if (errors.length) {
-          this.formRef.value.setFields?.(errors.map(error => ({ name: error.name, errors: [this.$t(error.key, error.params)] })))
+          if (this.formRef.value.setFields) this.formRef.value.setFields(errors.map(error => ({ name: error.name, errors: [this.$t(error.key, error.params)] })))
           return
         }
         const values = this.handleRemoveFields(formRaw)

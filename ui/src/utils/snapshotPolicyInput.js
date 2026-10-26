@@ -60,7 +60,7 @@ export async function readPolicyLimits (request, apis, resource) {
     : resource.account && resource.domainid
       ? attempt('listAccounts', { name: resource.account, domainid: resource.domainid, listall: true }).then(json => {
         const rows = json?.listaccountsresponse?.account
-        const account = (Array.isArray(rows) ? rows : []).find(a => a.name === resource.account && a.domainid === resource.domainid)
+        const account = (Array.isArray(rows) ? rows : []).find(a => a && a.name === resource.account && a.domainid === resource.domainid)
         if (account && integer(account.accounttype)) result.exempt = Number(account.accounttype) === 1
       }) : Promise.resolve()
   const scope = resource.projectid ? { projectid: resource.projectid } : resource.account && resource.domainid ? { account: resource.account, domainid: resource.domainid } : null
@@ -68,7 +68,7 @@ export async function readPolicyLimits (request, apis, resource) {
     if (!params) return null
     const json = await attempt('listResourceLimits', { ...params, resourcetype: 3 })
     const rows = json?.listresourcelimitsresponse?.resourcelimit
-    const limit = (Array.isArray(rows) ? rows : []).find(row => String(row.resourcetype) === '3' && !row.tag &&
+    const limit = (Array.isArray(rows) ? rows : []).find(row => row && String(row.resourcetype) === '3' && !row.tag &&
       (owner ? resource.projectid ? row.projectid === resource.projectid : row.account === resource.account && row.domainid === resource.domainid && !row.projectid
         : row.domainid === resource.domainid && !row.account && !row.projectid))
     return limit && (limit.max === -1 || limit.max === '-1' || integer(limit.max)) ? Number(limit.max) : null

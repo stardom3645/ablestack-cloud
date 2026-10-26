@@ -12,8 +12,11 @@ jest.mock('lodash/debounce', () => fn => fn)
 jest.mock('@/utils/timezone', () => ({ timeZone: () => Promise.resolve([{ id: 'UTC', name: 'UTC' }]) }))
 let wrappers; let store
 function render () {
-  const wrapper = mount(FormSchedule, { attachTo: document.body, props: { resource: { id: 'v', account: 'owner', domainid: 'domain' }, dataSource: [] },
-    global: { mocks: { $store: store, $route: { path: '/snapshotpolicy' }, $t: (k, p) => k + (p?.max != null ? ` ${p.max}` : ''), $getApiParams: () => [], $notifyError: jest.fn(), $notification: { success: jest.fn() } } } })
+  const wrapper = mount(FormSchedule, {
+    attachTo: document.body,
+    props: { resource: { id: 'v', account: 'owner', domainid: 'domain' }, dataSource: [] },
+    global: { mocks: { $store: store, $route: { path: '/snapshotpolicy' }, $t: (k, p) => k + (p?.max != null ? ` ${p.max}` : ''), $getApiParams: () => [], $notifyError: jest.fn(), $notification: { success: jest.fn() } } }
+  })
   wrappers.push(wrapper); return wrapper
 }
 const fill = async w => { Object.assign(w.vm.form, { time: 0, maxsnaps: 1, timezone: 'UTC' }); await flushPromises() }

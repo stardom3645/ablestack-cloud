@@ -62,3 +62,9 @@ test('missing, denied and malformed metadata never becomes a fabricated limit', 
   request.mockResolvedValue({ listcapabilitiesresponse: { capability: { snapshotpolicymax: { hourly: null, daily: '', weekly: false, monthly: 1.5 } } } })
   expect((await readPolicyLimits(request, apis, volume)).maxima).toEqual({})
 })
+test('malformed account and limit arrays finish as unavailable instead of leaving loading stuck', async () => {
+  const request = jest.fn().mockResolvedValue({ listaccountsresponse: { account: {} }, listresourcelimitsresponse: { resourcelimit: {} } })
+  expect(await readPolicyLimits(request, apis, volume)).toEqual(emptyPolicyLimits())
+  request.mockResolvedValue({ listaccountsresponse: { account: [null] }, listresourcelimitsresponse: { resourcelimit: [null] } })
+  expect(await readPolicyLimits(request, apis, volume)).toEqual(emptyPolicyLimits())
+})
