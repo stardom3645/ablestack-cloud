@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // http://www.apache.org/licenses/LICENSE-2.0 . Distributed AS IS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
-import { policySearchError, policySearchQuery, policySearchParams, policyListPage } from '@/utils/snapshotPolicySearch'
+import { normalizePolicySearch, policySearchError, policySearchQuery, policySearchParams, policyListPage } from '@/utils/snapshotPolicySearch'
 const id = '11111111-1111-4111-8111-111111111111'; const volume = '22222222-2222-4222-8222-222222222222'; const project = '33333333-3333-4333-8333-333333333333'
 const root = { userInfo: { roletype: 'Admin' } }
 test('personal scope is explicit, project markers never reach the API and sorting is retained', () => {
@@ -24,6 +24,7 @@ test('owner and project filters are unambiguous and role-gated', () => {
 const params = { page: 1, pagesize: 20, ignoreproject: true, fordisplay: 'false' }
 const row = { id, volumeid: volume, schedulingenabled: false }
 const reply = rows => ({ listsnapshotpoliciesresponse: { count: 1, snapshotpolicy: rows } })
+test('a malformed keyword alias cannot silently broaden the query', () => { expect(policySearchError(normalizePolicySearch({ q: ['private', 'scope'] }), root)).toBe('invalid') })
 test('server count, scope, UUIDs and requested scheduling flag must be trustworthy', () => {
   expect(policyListPage(reply([row]), params)).toEqual({ count: 1, rows: [row] })
   for (const rows of [[], [row, row], [{ ...row, projectid: project }], [{ ...row, schedulingenabled: true }], [{ ...row, id: 'bad' }]]) expect(() => policyListPage(reply(rows), params)).toThrow()

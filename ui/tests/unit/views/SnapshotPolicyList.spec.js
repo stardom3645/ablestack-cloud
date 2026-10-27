@@ -95,6 +95,17 @@ test('last-page deletion shrinks to the real last page with current sort and sea
   expect(ctx.items).toEqual([])
 })
 
+test('a zero-result API envelope without count returns to page one and retains filters', async () => {
+  ctx.$route.query = snapshotPolicyListQuery({ projectid: '0', id: a, page: '2' }); ctx.$route.fullPath += '&empty'
+  getAPI.mockResolvedValue({ listsnapshotpoliciesresponse: {} }); await ctx.fetchData()
+  expect(ctx.$router.replace).toHaveBeenCalledWith({ query: { ...ctx.$route.query, page: '1' } })
+})
+
+test('canonical URL replacement immediately discards prior rows and outstanding requests', async () => {
+  await ctx.fetchData(); const version = ctx.listRequestVersion; ctx.$route.query = { ...ctx.$route.query, sortkey: 'not-a-key' }; await ctx.fetchData()
+  expect(ctx.items).toEqual([]); expect(ctx.listLoadedScope).toBeNull(); expect(ctx.listRequestVersion).toBeGreaterThan(version)
+})
+
 test('same-scope 503 retains rows and query, retry recovers, permission denial clears rows', async () => {
   await ctx.fetchData(); const rows = ctx.items; const query = { ...ctx.$route.query }
   getAPI.mockRejectedValueOnce({ response: { status: 503 } }); await ctx.fetchData()

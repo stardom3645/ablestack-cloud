@@ -1648,7 +1648,11 @@ export default {
     fetchData (params = {}) {
       if (snapshotPolicyListRoute(this.$route)) {
         const clean = snapshotPolicyListQuery(normalizePolicySearch({ ...this.$route.query, projectid: policyProjectScope(this.$route, this.$store.getters) }), this.pageSize)
-        if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) return this.$router.replace({ query: clean })
+        if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) {
+          this.listRequestVersion++; this.listRequestPending = false; this.listLoadedScope = null
+          this.items = []; this.resource = {}; this.itemCount = 0; this.loading = false; this.resetSelection()
+          return this.$router.replace({ query: clean })
+        }
         this.policySearchFailure = policySearchError(clean, this.$store.getters)
         if (this.policySearchFailure) {
           this.listRequestVersion++; this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null
@@ -2143,7 +2147,7 @@ export default {
           return
         }
 
-        if (!this.dataView && Object.prototype.hasOwnProperty.call(json[responseName], 'count')) {
+        if (!this.dataView && (policyPage || Object.prototype.hasOwnProperty.call(json[responseName], 'count'))) {
           const lastPage = Math.max(1, Math.ceil(apiItemCount / this.pageSize))
           if (this.page > lastPage) {
             this.$router.replace({ query: { ...this.$route.query, page: String(lastPage) } })

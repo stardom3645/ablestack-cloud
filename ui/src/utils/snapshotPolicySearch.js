@@ -11,7 +11,7 @@ export function normalizePolicySearch (query) {
   const clean = { ...query }
   for (const key of ['fordisplay', 'isrecursive']) if (typeof clean[key] === 'string') clean[key] = clean[key].toLowerCase()
   const keyword = clean.keyword ?? clean.q
-  if (typeof keyword === 'string' && keyword) { clean.keyword = keyword; clean.q = keyword } else { delete clean.keyword; delete clean.q }
+  if (typeof keyword === 'string' && keyword) { clean.keyword = keyword; clean.q = keyword } else if (keyword === undefined || keyword === '') { delete clean.keyword; delete clean.q } else { clean.keyword = keyword; delete clean.q }
   return clean
 }
 export function policySearchError (query, getters = {}) {
