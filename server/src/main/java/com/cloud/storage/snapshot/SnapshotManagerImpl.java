@@ -2148,6 +2148,35 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
     }
 
     @Override
+    public java.util.Map<String, Object> getSnapshotPolicyContext(long policyId) {
+        SnapshotPolicyVO policy = _snapshotPolicyDao.findById(policyId);
+        if (policy == null) { throw new InvalidParameterValueException("Snapshot policy is unavailable"); }
+        Account caller = CallContext.current().getCallingAccount();
+        _accountMgr.checkAccess(caller, null, true, policy);
+        VolumeVO volume = _volsDao.findById(policy.getVolumeId());
+        if (volume == null || volume.getAccountId() != policy.getAccountId() || volume.getDomainId() != policy.getDomainId()) {
+            throw new InvalidParameterValueException("Snapshot policy source owner is unavailable");
+        }
+        _accountMgr.checkAccess(caller, null, true, volume);
+        SnapshotScheduleVO schedule = _snapshotScheduleDao.findOneByVolumePolicy(volume.getId(), policyId);
+        SearchBuilder<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> sb = snapshotAsyncJobDao.createSearchBuilder();
+        sb.and("owner", sb.entity().getAccountId(), SearchCriteria.Op.EQ);
+        sb.and("command", sb.entity().getCmd(), SearchCriteria.Op.EQ);
+        sb.and("policy", sb.entity().getCmdInfo(), SearchCriteria.Op.LIKE);
+        sb.done();
+        SearchCriteria<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> sc = sb.create();
+        sc.setParameters("owner", policy.getAccountId());
+        sc.setParameters("command", org.apache.cloudstack.api.command.user.snapshot.CreateSnapshotCmd.class.getName());
+        sc.setParameters("policy", "%\"policyid\":\"" + policyId + "\"%");
+        List<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> jobs = snapshotAsyncJobDao.search(sc,
+            new Filter(org.apache.cloudstack.framework.jobs.impl.AsyncJobVO.class, "id", false, 0L, 50L));
+        org.apache.cloudstack.framework.jobs.impl.AsyncJobVO current = schedule != null && schedule.getAsyncJobId() != null
+            ? snapshotAsyncJobDao.findByIdIncludingRemoved(schedule.getAsyncJobId()) : null;
+        return SnapshotPolicyContext.read(policy, volume, schedule, current, jobs, _snapshotDao,
+            com.cloud.utils.NumbersUtil.parseInt(_configDao.getValue("snapshot.poll.interval"), 300), new Date());
+    }
+
+    @Override
     public List<SnapshotScheduleVO> findRecurringSnapshotSchedule(ListRecurringSnapshotScheduleCmd cmd) {
         Long volumeId = cmd.getVolumeId();
         Long policyId = cmd.getSnapshotPolicyId();

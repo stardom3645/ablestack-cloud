@@ -90,4 +90,23 @@ public class ListSnapshotPoliciesCmdTest {
         Assert.assertNotNull(response);
         Assert.assertTrue(response.getResponses().isEmpty());
     }
+
+    @Test
+    public void operationalFactsAreOptInAndOnlyForAuthorizedListResults() throws Exception {
+        SnapshotPolicy policy = Mockito.mock(SnapshotPolicy.class);
+        Mockito.when(policy.getId()).thenReturn(7L);
+        SnapshotPolicyResponse policyResponse = new SnapshotPolicyResponse();
+        Mockito.when(snapshotService.listSnapshotPolicies(cmd)).thenReturn(new Pair<>(java.util.Collections.singletonList(policy), 1));
+        Mockito.when(responseGenerator.createSnapshotPolicyResponse(policy)).thenReturn(policyResponse);
+        cmd.execute();
+        Mockito.verify(snapshotService, Mockito.never()).getSnapshotPolicyContext(Mockito.anyLong());
+        Assert.assertNull(policyResponse.getPolicyContext());
+        java.lang.reflect.Field field = ListSnapshotPoliciesCmd.class.getDeclaredField("includePolicyContext");
+        field.setAccessible(true); field.set(cmd, true);
+        java.util.Map<String, Object> context = java.util.Collections.singletonMap("version", 1);
+        Mockito.when(snapshotService.getSnapshotPolicyContext(7L)).thenReturn(context);
+        cmd.execute(); Assert.assertEquals(context, policyResponse.getPolicyContext());
+        Mockito.when(snapshotService.listSnapshotPolicies(cmd)).thenReturn(new Pair<>(new ArrayList<>(), 0));
+        cmd.execute(); Mockito.verify(snapshotService, Mockito.times(1)).getSnapshotPolicyContext(7L);
+    }
 }

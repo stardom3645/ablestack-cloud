@@ -56,6 +56,11 @@ public class ListSnapshotPoliciesCmd extends BaseListProjectAndAccountResourcesC
     @Parameter(name = "sortorder", type = CommandType.STRING, description = "Sort direction: asc or desc (default). Equal values use policy ID in the same direction.")
     private String sortOrder;
 
+    @Parameter(name = "includepolicycontext", type = CommandType.BOOLEAN, description = "Include ACL-checked next schedule and retained scheduler job facts. Defaults to false; not a complete execution history.")
+    private Boolean includePolicyContext;
+
+    public boolean isIncludePolicyContext() { return Boolean.TRUE.equals(includePolicyContext); }
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -91,6 +96,9 @@ public class ListSnapshotPoliciesCmd extends BaseListProjectAndAccountResourcesC
         List<SnapshotPolicyResponse> policyResponses = new ArrayList<SnapshotPolicyResponse>();
         for (SnapshotPolicy policy : result.first()) {
             SnapshotPolicyResponse policyResponse = _responseGenerator.createSnapshotPolicyResponse(policy);
+            if (isIncludePolicyContext()) {
+                policyResponse.setPolicyContext(_snapshotService.getSnapshotPolicyContext(policy.getId()));
+            }
             policyResponse.setObjectName("snapshotpolicy");
             policyResponses.add(policyResponse);
         }

@@ -593,7 +593,7 @@ export default {
           this.$emit('refresh')
           this.$notification.success({
             message: this.$t(this.isEditing ? 'label.snapshot.policy.edit' : 'label.action.recurring.snapshot'),
-            description: this.$t(this.isEditing ? 'message.snapshot.policy.saved' : 'message.success.recurring.snapshot')
+            description: this.$t(this.isEditing ? 'message.snapshot.policy.saved' : 'message.snapshot.policy.created')
           })
           if (!this.isEditing) this.resetForm()
         } catch (error) {

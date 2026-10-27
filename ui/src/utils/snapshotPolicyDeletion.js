@@ -3,7 +3,8 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // http://www.apache.org/licenses/LICENSE-2.0 . Distributed AS IS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
-import { policyFingerprint, policyFormValues } from './snapshotPolicyEditing'
+import { policySchedule } from './snapshotPolicyPresentation'
+import { policyFingerprint } from './snapshotPolicyEditing'
 import { readAllocationList } from './volumeAllocation'
 
 export const canDeletePolicy = apis => ['deleteSnapshotPolicies', 'listSnapshotPolicies', 'listVolumes'].every(api => api in (apis || {}))
@@ -11,14 +12,7 @@ export const deletionIdentity = policy => Object.freeze({ id: policy.id, volumei
 export const deletionOwner = volume => JSON.stringify([volume.id, volume.name, volume.account, volume.domainid, volume.domain, volume.projectid, volume.project, volume.zoneid])
 export const deletionFingerprint = target => JSON.stringify([policyFingerprint(target.policy), deletionOwner(target.volume)])
 
-export function deletionSchedule (policy, t) {
-  try { policyFormValues(policy) } catch { return String(policy.schedule || '—') }
-  const parts = String(policy.schedule).split(':'); const interval = Number(policy.intervaltype)
-  if (interval === 0) return parts[0] + t('label.min.past.hour')
-  const time = parts[1].padStart(2, '0') + ':' + parts[0].padStart(2, '0')
-  if (interval === 2) return time + ' · ' + t('label.every') + ' ' + t('label.' + ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][Number(parts[2]) - 1])
-  return interval === 3 ? time + ' · ' + t('label.snapshot.policy.month.day', { day: parts[2] }) : time
-}
+export const deletionSchedule = policySchedule
 
 // Do not apply creation-form validation: malformed legacy schedules must remain deletable.
 export async function readPolicyDeletionTarget (request, identity, current = () => true, presenceOnly = false) {

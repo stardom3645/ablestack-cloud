@@ -265,7 +265,8 @@
       </template>
       <template v-if="$route.name === 'snapshot' && column.key === 'intervaltype'"><span>{{ $t(snapshotListInterval(text)) }}</span></template>
       <template v-if="column.key === 'schedule'">
-        <div v-if="['/snapshotpolicy', '/backupschedule'].some(path => $route.path.endsWith(path))">
+        <span v-if="$route.meta?.name === 'snapshotpolicy'">{{ policySchedule(record, $t) }}</span>
+        <div v-else-if="$route.path.endsWith('/backupschedule')">
           <label class="interval-content">
             <span v-if="record.intervaltype===0 || record.intervaltype==='HOURLY'">{{ record.schedule + $t('label.min.past.hour') }}</span>
             <span v-else>{{ record.schedule.split(':')[1] + ':' + record.schedule.split(':')[0] }}</span>
@@ -303,8 +304,10 @@
         <span class="custom-icon icon-monthly" v-else-if="record.intervaltype===3">
           <calendar-outlined />
         </span>
-        {{ getIntervalTypeText(record.intervaltype) }}
+        <router-link v-if="$route.meta?.name === 'snapshotpolicy'" :to="{ path: '/snapshotpolicy/' + record.id, ...(record.projectid ? { query: { projectid: record.projectid } } : {}) }">{{ policyInterval(record.intervaltype, $t) }}</router-link>
+        <span v-else>{{ getIntervalTypeText(record.intervaltype) }}</span>
       </template>
+      <template v-if="column.key === 'schedulingenabled'">{{ policyScheduling(record, $t) }}</template>
       <template v-if="column.key === 'timezone'">
         <label>{{ getTimeZone(record.timezone) }}</label>
       </template>
@@ -1197,6 +1200,7 @@
 </template>
 
 <script>
+import { policyInterval, policySchedule, policyScheduling } from '@/utils/snapshotPolicyPresentation'
 import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import InstanceGroupSummary from '@/views/compute/InstanceGroupSummary'
 import { snapshotListSize, snapshotListInterval, snapshotListSizeValue } from '@/utils/storageSnapshotPresentation'
@@ -1436,6 +1440,7 @@ export default {
     }
   },
   methods: {
+    policyInterval, policySchedule, policyScheduling,
     snapshotListSize,
     snapshotListSizeValue,
     snapshotListInterval,

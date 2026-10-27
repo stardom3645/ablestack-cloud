@@ -540,9 +540,10 @@ export default {
       docHelp: 'adminguide/storage.html#working-with-volume-snapshots',
       permission: ['listSnapshotPolicies'],
       resourceType: 'SnapshotPolicy',
+      tabs: [{ name: 'details', component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyDetails.vue'))) }],
       params: { listall: true },
       columns: () => {
-        var fields = ['intervaltype', 'maxsnaps', 'schedule', 'timezone', 'volumename']
+        var fields = ['intervaltype', 'maxsnaps', 'schedule', 'timezone', 'volumename', 'schedulingenabled']
         return fields
       },
       searchFilters: ['volumeid'],

@@ -19,12 +19,8 @@
   <div class="list-schedule">
     <a-table size="small" :columns="columns" :dataSource="dataSource" :rowKey="record => record.id" :pagination="false" :loading="loading" :scroll="{ x: 880 }">
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'intervaltype'">{{ intervalText(record.intervaltype) }}</template>
-        <template v-if="column.key === 'time'">
-          <div>{{ scheduleTime(record) }}</div>
-          <div v-if="Number(record.intervaltype) === 2">{{ $t('label.every') }} {{ $t('label.' + listDayOfWeek[Number(record.schedule.split(':')[2]) - 1]) }}</div>
-          <div v-else-if="Number(record.intervaltype) === 3">{{ $t('label.snapshot.policy.month.day', { day: record.schedule.split(':')[2] }) }}</div>
-        </template>
+        <template v-if="column.key === 'intervaltype'"><router-link :to="{ path: '/snapshotpolicy/' + record.id, ...(record.projectid ? { query: { projectid: record.projectid } } : {}) }">{{ intervalText(record.intervaltype) }}</router-link></template>
+        <template v-if="column.key === 'time'">{{ scheduleText(record) }}</template>
         <template v-if="column.key === 'timezone'">{{ getTimeZone(record.timezone) }}</template>
         <template v-if="column.key === 'tags'"><a-tag v-for="(tag, index) in record.tags" :key="index">{{ tag.key + '=' + tag.value }}</a-tag></template>
         <template v-if="column.key === 'zones'">
@@ -33,7 +29,7 @@
         <template v-if="column.key === 'storage'">
           <div v-for="pool in record.storage" :key="pool.id"><router-link v-if="'listStoragePools' in $store.getters.apis" :to="{ path: '/storagepool/' + pool.id }">{{ pool.name }}</router-link><span v-else>{{ pool.name }}</span></div>
         </template>
-        <template v-if="column.key === 'scheduling'">{{ $t(typeof record.fordisplay !== 'boolean' ? 'message.snapshot.policy.limits.unknown' : record.fordisplay ? 'label.snapshot.policy.schedule.enabled' : 'label.snapshot.policy.schedule.paused') }}</template>
+        <template v-if="column.key === 'scheduling'">{{ schedulingText(record) }}</template>
         <template v-if="column.key === 'actions'">
           <div class="policy-row-actions">
           <tooltip-button v-if="canEdit" :tooltip="$t('label.snapshot.policy.edit')" icon="edit-outlined" size="small" :disabled="disabled" @onClick="openPolicy(record, 'edit')" />
@@ -61,6 +57,7 @@ import TooltipButton from '@/components/widgets/TooltipButton'
 import { timeZoneName } from '@/utils/timezone'
 import SnapshotPolicyActionDialog from './SnapshotPolicyActionDialog'
 import SnapshotPolicyDeleteDialog from './SnapshotPolicyDeleteDialog'
+import { policyInterval, policySchedule, policyScheduling } from '@/utils/snapshotPolicyPresentation'
 import { canDeletePolicy } from '@/utils/snapshotPolicyDeletion'
 import { canEditPolicy, canManagePolicy } from '@/utils/snapshotPolicyEditing'
 
@@ -84,7 +81,7 @@ export default {
         { key: 'zones', title: this.$t('label.zones'), dataIndex: 'zone' },
         { key: 'storage', title: this.$t('label.storage'), dataIndex: 'storage' },
         { key: 'tags', title: this.$t('label.tags'), dataIndex: 'tags' },
-        ...(this.$store.getters.userInfo?.roletype === 'Admin' ? [{ key: 'scheduling', title: this.$t('label.snapshot.policy.scheduling'), width: 120 }] : []),
+        { key: 'scheduling', title: this.$t('label.snapshot.policy.scheduling'), width: 120 },
         ...(this.canDelete || this.canEdit || this.canManage ? [{ key: 'actions', title: this.$t('label.actions'), width: 136 }] : [])
       ]
     }
@@ -108,7 +105,9 @@ export default {
       const trigger = this.deleteTrigger?.isConnected && !this.deleteTrigger.disabled ? this.deleteTrigger : this.$el?.closest('.volume-policy-tab')?.querySelector('.detail-tab-toolbar button:not([disabled])')
       if (trigger) { trigger.focus({ preventScroll: true }); this.pendingDeleteFocus = false }
     },
-    intervalText (value) { const name = ['hourly', 'daily', 'weekly', 'monthly'][Number(value)]; return name ? this.$t('label.' + name) : '—' },
+    intervalText (value) { return policyInterval(value, this.$t) },
+    scheduleText (record) { return policySchedule(record, this.$t) },
+    schedulingText (record) { return policyScheduling(record, this.$t) },
     scheduleTime (record) {
       if (!record.schedule) return '—'
       const values = String(record.schedule).split(':')

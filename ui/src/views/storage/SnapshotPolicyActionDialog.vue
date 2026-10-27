@@ -135,7 +135,7 @@ export default {
           if (job?.jobstatus === 1) {
             const latest = await freshPolicy(getAPI, this.resource, () => this.allowed)
             if (latest.fordisplay !== this.resume) throw new Error('message.snapshot.policy.changed')
-            this.jobId = ''; this.$notification.success({ message: this.$t(this.title) }); this.completed(); this.submitting = false; this.close(); return
+            this.jobId = ''; this.$notification.success({ message: this.$t(this.title), description: this.$t(this.resume ? 'message.snapshot.policy.resumed' : 'message.snapshot.policy.paused') }); this.completed(); this.submitting = false; this.close(); return
           }
           if (job?.jobstatus !== 0) throw new Error('message.snapshot.policy.job.unknown')
           await new Promise(resolve => setTimeout(resolve, 1500))
