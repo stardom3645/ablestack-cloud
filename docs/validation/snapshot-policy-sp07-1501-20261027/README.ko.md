@@ -78,7 +78,7 @@ job=1/BackedUp 완료 후 같은 창에서 재조회·재확인하여 정책을 
 
 [자연 예약·보존 통합 증거](evidence/32-natural-proof.json) · [보조 파일](evidence/32-secondary-preserved.json)
 
-![정책 삭제 후 유지된 스냅샷·태그](evidence/32-natural-snapshot-tags-preserved.jpg)
+![정책 삭제 후 유지된 스냅샷 상세 상단](evidence/32-natural-snapshot-tags-preserved.jpg)
 
 정상 API로 남은 정책 2개, 볼륨 4개, 자연 스냅샷 1개, 프로젝트/계정 1개씩을 정리했다. 스냅샷의 태그는 #1506의 미해결 자동 정리와 구분해 명시적 deleteTags로 먼저 정리했다. 정책 삭제 후 스냅샷 태그 보존 검증을 끝낸 뒤의 시험 청소이며 제품 자동 정리 성공으로 집계하지 않는다.
 
@@ -100,7 +100,9 @@ job=1/BackedUp 완료 뒤 같은 창의 재조회·재확인을 거쳐 정책 �
 
 [자연 예약·보존 통합 증거](evidence/31-natural-proof.json) · [삭제 전후 독립 대조](evidence/31-natural-completed-after-delete-preservation.json) · [보조 파일](evidence/31-secondary-preserved.json) · [스냅샷 상세 UI](evidence/31-snapshot-ui-preserved.json)
 
-![31번 정책 삭제 후 유지된 스냅샷·두 태그](evidence/31-natural-snapshot-tags-preserved.jpg)
+태그의 화면 데이터는 스크롤 하단 영역의 DOM/AX 및 독립 SQL로 대조했다. 아래 원본 이미지는 상세 상단의 상태·크기를 보여준다.
+
+![31번 정책 삭제 후 유지된 스냅샷 상세 상단](evidence/31-natural-snapshot-tags-preserved.jpg)
 
 검증 후 남은 정책 1개·전용 볼륨 4개·자연 스냅샷 1개·계정/프로젝트 각 1개를 정상 API로 정리했다. 32번과 같이 스냅샷의 deleteTags 시험 청소는 #1506의 제품 자동 정리와 구분했다. 활성 시험 자원·정책·예약·태그·상세·계정 제한·비종결 사본·대기 job **0**, 볼륨 이력 Expunged 4개, 스냅샷 Destroyed 1개, GFS2 볼륨 파일·보조 파일 잔여 0이다. 이전 대기 상태 증거는 이력이며 현재 잔여를 의미하지 않는다.
 
