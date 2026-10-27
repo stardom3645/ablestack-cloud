@@ -9825,7 +9825,7 @@
   "message.snapshot.policy.detail.next.scheduled": "Next occurrence unknown",
   "message.snapshot.policy.detail.poll": "The server checks every {seconds} seconds. Execution can start later than the scheduled occurrence; completion is not guaranteed. Times use the browser local timezone.",
   "message.snapshot.policy.detail.history.unknown": "No execution could be verified in retained records.",
-  "message.snapshot.policy.detail.history": "Checks the latest {limit} retained scheduler job candidates for this policy. This is not a complete execution history and expired jobs are excluded.",
+  "message.snapshot.policy.detail.history": "Checks this policy within the latest {limit} retained snapshot jobs of the source volume. Older or expired history is unknown; this is not a complete execution history.",
   "message.snapshot.policy.detail.failed": "Job failure code: {code}. Check management logs for details.",
   "message.snapshot.policy.detail.snapshot.unavailable": "No accessible snapshot link is available.",
   "message.snapshot.policy.detail.pause.meaning": "Pausing applies to future scheduling. It does not cancel an in-progress job or delete existing snapshots."

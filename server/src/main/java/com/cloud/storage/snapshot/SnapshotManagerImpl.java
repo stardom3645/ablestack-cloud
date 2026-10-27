@@ -2162,12 +2162,16 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         SearchBuilder<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> sb = snapshotAsyncJobDao.createSearchBuilder();
         sb.and("owner", sb.entity().getAccountId(), SearchCriteria.Op.EQ);
         sb.and("command", sb.entity().getCmd(), SearchCriteria.Op.EQ);
-        sb.and("policy", sb.entity().getCmdInfo(), SearchCriteria.Op.LIKE);
+        sb.and("resource", sb.entity().getInstanceType(), SearchCriteria.Op.EQ);
+        SearchBuilder<SnapshotVO> snapshotSearch = _snapshotDao.createSearchBuilder();
+        snapshotSearch.and("volume", snapshotSearch.entity().getVolumeId(), SearchCriteria.Op.EQ);
+        sb.join("policyVolume", snapshotSearch, sb.entity().getInstanceId(), snapshotSearch.entity().getId(), JoinBuilder.JoinType.INNER);
         sb.done();
         SearchCriteria<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> sc = sb.create();
         sc.setParameters("owner", policy.getAccountId());
         sc.setParameters("command", org.apache.cloudstack.api.command.user.snapshot.CreateSnapshotCmd.class.getName());
-        sc.setParameters("policy", "%\"policyid\":\"" + policyId + "\"%");
+        sc.setParameters("resource", "Snapshot");
+        sc.setJoinParameters("policyVolume", "volume", volume.getId());
         List<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> jobs = snapshotAsyncJobDao.search(sc,
             new Filter(org.apache.cloudstack.framework.jobs.impl.AsyncJobVO.class, "id", false, 0L, 50L));
         org.apache.cloudstack.framework.jobs.impl.AsyncJobVO current = schedule != null && schedule.getAsyncJobId() != null

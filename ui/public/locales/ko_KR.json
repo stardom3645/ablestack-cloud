@@ -9790,7 +9790,7 @@
   "message.snapshot.policy.detail.next.scheduled": "예약 시각 미확인",
   "message.snapshot.policy.detail.poll": "실행은 서버가 {seconds}초 간격으로 확인합니다. 예약 시각보다 늦게 시작할 수 있으며 완료를 보장하지 않습니다. 시각은 브라우저 현지 시간입니다.",
   "message.snapshot.policy.detail.history.unknown": "보존된 기록에서 실행을 확인하지 못했습니다.",
-  "message.snapshot.policy.detail.history": "해당 정책의 보존 중인 스케줄러 job 후보 최근 {limit}건을 확인합니다. 만료된 이력을 포함한 전체 실행 기록은 아닙니다.",
+  "message.snapshot.policy.detail.history": "원본 볼륨의 보존된 스냅샷 job 최근 {limit}건에서 같은 정책을 확인합니다. 오래되거나 만료된 이력은 미확인이며 전체 실행 기록은 아닙니다.",
   "message.snapshot.policy.detail.failed": "작업 실패 코드: {code}. 자세한 원인은 관리 로그에서 확인하세요.",
   "message.snapshot.policy.detail.snapshot.unavailable": "연결 가능한 스냅샷이 없거나 조회 권한이 없습니다.",
   "message.snapshot.policy.detail.pause.meaning": "예약 중지는 미래 예약에 적용됩니다. 이미 실행 중인 작업을 취소하거나 기존 스냅샷을 삭제하지 않습니다."
