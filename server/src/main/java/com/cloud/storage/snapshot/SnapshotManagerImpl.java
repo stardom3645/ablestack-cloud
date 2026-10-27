@@ -2172,8 +2172,9 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         sc.setParameters("command", org.apache.cloudstack.api.command.user.snapshot.CreateSnapshotCmd.class.getName());
         sc.setParameters("resource", "Snapshot");
         sc.setJoinParameters("policyVolume", "volume", volume.getId());
-        List<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> jobs = snapshotAsyncJobDao.search(sc,
-            new Filter(org.apache.cloudstack.framework.jobs.impl.AsyncJobVO.class, "id", false, 0L, 50L));
+        // Completed jobs receive a removed timestamp immediately, before their retained rows expire.
+        List<org.apache.cloudstack.framework.jobs.impl.AsyncJobVO> jobs = snapshotAsyncJobDao.searchIncludingRemoved(sc,
+            new Filter(org.apache.cloudstack.framework.jobs.impl.AsyncJobVO.class, "id", false, 0L, 50L), null, false);
         org.apache.cloudstack.framework.jobs.impl.AsyncJobVO current = schedule != null && schedule.getAsyncJobId() != null
             ? snapshotAsyncJobDao.findByIdIncludingRemoved(schedule.getAsyncJobId()) : null;
         return SnapshotPolicyContext.read(policy, volume, schedule, current, jobs, _snapshotDao,

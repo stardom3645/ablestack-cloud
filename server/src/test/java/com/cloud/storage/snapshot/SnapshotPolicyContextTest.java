@@ -88,4 +88,28 @@ public class SnapshotPolicyContextTest {
             try { manager.getSnapshotPolicyContext(7L); Assert.fail("changed owner accepted"); } catch(com.cloud.exception.InvalidParameterValueException expected) { verifyNoInteractions(manager.snapshotAsyncJobDao); }
         }
     }
+    @Test public void pausedPolicyReadsCompletedRetainedJobsWithoutSearchingEncryptedArguments() {
+        try(org.mockito.MockedStatic<org.apache.cloudstack.context.CallContext> ctx = mockStatic(org.apache.cloudstack.context.CallContext.class)) {
+            ctx.when(org.apache.cloudstack.context.CallContext::current).thenReturn(mock(org.apache.cloudstack.context.CallContext.class));
+            SnapshotManagerImpl manager = new SnapshotManagerImpl();
+            manager._snapshotPolicyDao = mock(com.cloud.storage.dao.SnapshotPolicyDao.class);
+            manager._volsDao = mock(com.cloud.storage.dao.VolumeDao.class);
+            manager._accountMgr = mock(com.cloud.user.AccountManager.class);
+            manager._snapshotScheduleDao = mock(com.cloud.storage.dao.SnapshotScheduleDao.class);
+            manager._snapshotDao = snapshots;
+            manager._configDao = mock(com.cloud.configuration.dao.ConfigurationDao.class);
+            manager.snapshotAsyncJobDao = mock(org.apache.cloudstack.framework.jobs.dao.AsyncJobDao.class);
+            com.cloud.storage.SnapshotPolicyVO p = mock(com.cloud.storage.SnapshotPolicyVO.class);
+            when(manager._snapshotPolicyDao.findById(7L)).thenReturn(p); when(p.getId()).thenReturn(7L); when(p.getAccountId()).thenReturn(9L); when(p.getVolumeId()).thenReturn(8L);
+            when(manager._volsDao.findById(8L)).thenReturn(volume); when(volume.getId()).thenReturn(8L); when(volume.getAccountId()).thenReturn(9L);
+            when(manager.snapshotAsyncJobDao.createSearchBuilder()).thenReturn(new com.cloud.utils.db.SearchBuilder<>(AsyncJobVO.class));
+            when(snapshots.createSearchBuilder()).thenReturn(new com.cloud.utils.db.SearchBuilder<>(SnapshotVO.class));
+            AsyncJobVO completed = job(12,JobInfo.Status.FAILED); when(completed.getRemoved()).thenReturn(new Date());
+            when(manager.snapshotAsyncJobDao.searchIncludingRemoved(any(),any(),isNull(),eq(false))).thenReturn(Collections.singletonList(completed));
+            Map<String,Object> r=manager.getSnapshotPolicyContext(7L);
+            Assert.assertEquals("FAILED",latest(r).get("status")); Assert.assertEquals("PAUSED",r.get("schedulestate"));
+            verify(manager.snapshotAsyncJobDao,never()).search(any(),any());
+            verify(manager.snapshotAsyncJobDao).searchIncludingRemoved(argThat(sc -> !sc.getWhereClause().contains("job_cmd_info")),any(),isNull(),eq(false));
+        }
+    }
 }
