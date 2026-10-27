@@ -111,7 +111,7 @@ test('a malformed or incomplete list is never accepted as proof of absence', asy
 test('menu deletion freezes the right-clicked row rather than the old selection and returns to a stable toolbar', () => {
   const row = base(); const root = document.createElement('div'); root.innerHTML = '<div class="autogen-toolbar-actions"><button>refresh</button></div>'; document.body.append(root)
   const action = storage.children.find(c => c.name === 'snapshotpolicy').actions.find(a => a.api === 'deleteSnapshotPolicies'); expect(action.popup && action.selfManagedDialog && action.policyDeleteDialog).toBe(true)
-  const view = { $route: route, $store: store, $el: root, storageActionReady: true, storageActionGeneration: 0, selectedItems: [{ id: 'old-selection' }], $nextTick: fn => fn() }
+  const view = { $route: route, $store: store, $el: root, listScope: () => 'fixed-scope', storageActionReady: true, storageActionGeneration: 0, selectedItems: [{ id: 'old-selection' }], $nextTick: fn => fn() }
   Autogen.methods.execAction.call(view, { ...action, resource: row }, false); row.id = 'mutated-row'; expect(view.resource.id).toBe('fixed'); expect(view.currentAction.invokedAsGroupAction).toBe(false)
   Autogen.methods.closeAction.call(view); expect(document.activeElement).toBe(root.querySelector('button')); expect(postAPI).not.toHaveBeenCalled()
 })

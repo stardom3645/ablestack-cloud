@@ -437,6 +437,9 @@ public class SnapshotManagerImplTest {
     public void testListSnapshotPolicies() {
         long volumeId = 42L;
         ListSnapshotPoliciesCmd cmd = Mockito.mock(ListSnapshotPoliciesCmd.class);
+        Mockito.when(cmd.getProjectId()).thenReturn(null);
+        Mockito.when(cmd.getDomainId()).thenReturn(null);
+        Mockito.when(cmd.getDisplay()).thenReturn(null);
         Mockito.when(cmd.getVolumeId()).thenReturn(volumeId);
         Mockito.when(cmd.getId()).thenReturn(null);
         Mockito.when(cmd.getStartIndex()).thenReturn(0L);
@@ -479,6 +482,9 @@ public class SnapshotManagerImplTest {
     @Test
     public void testListSnapshotPolicies_NonRootAdmin() {
         ListSnapshotPoliciesCmd cmd = Mockito.mock(ListSnapshotPoliciesCmd.class);
+        Mockito.when(cmd.getProjectId()).thenReturn(null);
+        Mockito.when(cmd.getDomainId()).thenReturn(null);
+        Mockito.when(cmd.getDisplay()).thenReturn(null);
         Mockito.when(cmd.getVolumeId()).thenReturn(1L);
         Mockito.when(cmd.getId()).thenReturn(null);
         Mockito.when(cmd.getStartIndex()).thenReturn(0L);
@@ -514,6 +520,9 @@ public class SnapshotManagerImplTest {
     @Test
     public void testListSnapshotPolicies_RootAdmin() {
         ListSnapshotPoliciesCmd cmd = Mockito.mock(ListSnapshotPoliciesCmd.class);
+        Mockito.when(cmd.getProjectId()).thenReturn(null);
+        Mockito.when(cmd.getDomainId()).thenReturn(null);
+        Mockito.when(cmd.getDisplay()).thenReturn(null);
         Mockito.when(cmd.getVolumeId()).thenReturn(1L);
         Mockito.when(cmd.getId()).thenReturn(null);
         Mockito.when(cmd.getStartIndex()).thenReturn(0L);

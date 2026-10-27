@@ -6,6 +6,7 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { reactive } from 'vue'
 import Select from '@/components/view/VolumeSearchSelect'
+import PolicySearch from '@/components/view/SnapshotPolicySearch'
 import Search from '@/components/view/SearchView'
 import Filter from '@/components/view/SearchFilter'
 import { getAPI } from '@/api'
@@ -100,11 +101,13 @@ test('unmount cancels debounce and discards in-flight rows', async () => {
 test('SearchView applies and resets the selected UUID while isencrypted stays a boolean without a lookup', async () => {
   route.meta.params = { listall: true }
   const w = render({ apiName: 'listSnapshotPolicies', searchFilters: ['volumeid'] }, Search)
-  w.vm.visibleFilter = true; await flushPromises()
+  const selected = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+  getAPI.mockResolvedValue(response([row(selected)]))
+  const policySearch = w.findComponent(PolicySearch); policySearch.vm.open(); await flushPromises()
   expect(route.query).toEqual({})
-  const picker = w.findComponent(Select); picker.vm.select({ value: 'b' }); await flushPromises(); w.vm.handleSubmit(); await flushPromises()
-  expect(w.emitted('search').at(-1)).toEqual([{ volumeid: 'b' }])
-  await w.vm.onClear(); await flushPromises(); expect(w.emitted('search').at(-1)).toEqual([{}]); expect(w.vm.form.volumeid).toBeUndefined()
+  const picker = w.findComponent(Select); picker.vm.select({ value: selected }); await flushPromises(); policySearch.vm.apply(); await flushPromises()
+  expect(w.emitted('search').at(-1)).toEqual([{ policySearch: { volumeid: selected } }])
+  policySearch.vm.reset(); await flushPromises(); expect(w.emitted('search').at(-1)).toEqual([{ policySearch: {} }])
   const count = getAPI.mock.calls.length
   const bool = render({ apiName: 'listVolumes', searchFilters: ['isencrypted'] }, Search)
   bool.vm.visibleFilter = true; await flushPromises(); expect(getAPI.mock.calls.length).toBe(count)

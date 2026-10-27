@@ -111,6 +111,7 @@ test.each(['sortorder', 'page', 'keyword', 'role', 'session'])('late response ca
   if (change === 'role') store.getters.userInfo.roletype = 'User'
   else if (change === 'session') store.state.user.token = 'new-session'
   else { ctx.$route.query = { ...ctx.$route.query, [change]: change === 'page' ? '2' : change === 'sortorder' ? 'asc' : 'new' }; ctx.$route.fullPath += '&changed' }
+  if (change === 'keyword') ctx.$route.query.q = ctx.$route.query.keyword
   const fresh = ctx.fetchData(); expect(ctx.items).toEqual([])
   complete[0](reply([{ ...row, id: z }])); await old; expect(ctx.items).toEqual([])
   complete[1](reply([{ ...row, id: currentId }], change === 'page' ? 21 : 1)); await fresh
