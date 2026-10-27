@@ -305,6 +305,38 @@
       "height": 720,
       "sha256": "53014687ebf4d615469059668573885776666fe137c3cd68a0010d4ae64b4a73",
       "viewportMatched": false
+    },
+    {
+      "file": "31-natural-running-delete-431.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "sha256": "aada8796512336ecd02582280b02bcd283a4a77b8072eac97964b64245f3f46c",
+      "viewportMatched": true
+    },
+    {
+      "file": "31-natural-snapshot-preserved.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "sha256": "4c706b9767c3cdbd4e46193755bdd60d3be78035fb5c04010a3e62933de83096",
+      "viewportMatched": true
+    },
+    {
+      "file": "31-natural-snapshot-tags-preserved.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "sha256": "de8457d6b277a224425f8aed8fb8b7bcb79db7b765fa776be05baf7d027345e3",
+      "viewportMatched": true
+    },
+    {
+      "file": "31-cleaned-root.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "sha256": "f548ffe47ec17b5d399e0eb262d50386a97da854fb78b6a8e74322d765c505bd",
+      "viewportMatched": true
     }
   ]
 }

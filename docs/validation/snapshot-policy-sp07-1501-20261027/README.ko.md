@@ -1,6 +1,6 @@
 # SP-07 #1501 삭제 대상 확인 공통화와 안전한 결과 확인
 
-**구현·양쪽 배포 완료 / 31번 자연 예약 검증 재개 대기 — 2026-10-27 KST. #1501은 OPEN이다.** 32번 API·실제 UI·자연 예약·보존·정리는 완료했다. 31번의 비어 있지 않은 스냅샷/태그 보존·실행 중 삭제 거부·완료 후 삭제와 최종 시험 자원 정리는 아직 완료로 판정하지 않는다. 보조 스토리지가 기존 90% 임계값을 초과했으며, 기존 운영 파일과 전역 설정을 유지한 상태에서 별도 선택을 기다리고 있다.
+**구현·양쪽 API/실제 UI·자연 예약·보존·정리 완료 — 2026-10-27 KST. #1501의 완료 기준 5개를 충족했다.** 31번 공간 부족은 전역 임계값 **0.90을 유지**하고 기존 데이터 내용을 보존해 해결했다. 두 환경 모두 실행 중 UI 삭제 431→job 성공/BackedUp→정책 삭제 200→스냅샷/태그/다른 정책 보존과 최종 전용 자원·스토리지 잔여 0을 확인했다. SP-07을 포함해 Epic의 구현·검증 완료는 13개 중 7개이며 전체 Epic은 계속 OPEN이다.
 
 대상 [#1501](https://github.com/ablecloud-team/ablestack-cloud/issues/1501), 부모 [#1494](https://github.com/ablecloud-team/ablestack-cloud/issues/1494). 작업 브랜치 `dhslove/epic-1494-snapshot-policies`, 시작 기준 `35f3672cb67a9cbe5b728dc8e409c6af6736bbab`. [설계](../../design/snapshot-policy-1494/SP-07.ko.md).
 
@@ -48,11 +48,13 @@ WSL ext4 `/home/ablecloud/work/dhslove/cloud-snapshot-policy-1494`에서 UI만 �
 | 조회 전용 개인·프로젝트 | PASS | PASS | 최신 번들에서 작업 비노출 4개 화면, API 432 |
 | 다른 계정 삭제 | PASS 531 | PASS 531 | 독립 API 및 정책/예약 무변경 |
 | 비표시 정책의 불명확 결과 재조회 | PASS | PASS | DB에 남은 정책이 실제 목록에도 포함됨. 재삭제 없이 재조회·재확인 요구 |
-| 실제 자연 예약 진행 중 삭제 431 | **대기** | PASS | 아래 동일 job/snapshot 연결 |
-| 자연 예약 완료 후 정책 삭제·스냅샷/태그 보존 | **대기** | PASS | 비어 있지 않은 BackedUp 스냅샷/2개 태그/보조 파일 |
-| 최종 전용 자원·스토리지 정리 | **대기** | PASS | 31 자원은 아래와 같이 예약을 중지해 보존 |
+| 실제 자연 예약 진행 중 삭제 431 | PASS | PASS | 아래 동일 job/snapshot 연결 |
+| 자연 예약 완료 후 정책 삭제·스냅샷/태그 보존 | PASS | PASS | 비어 있지 않은 BackedUp 스냅샷/2개 태그/보조 파일 |
+| 최종 전용 자원·스토리지 정리 | PASS | PASS | 활성 시험 자원/태그/예약/job 및 GFS2/RBD/보조 잔여 0 |
 
 [최종 UI 확인 기록](evidence/ui-checks-final.json) · [31 네트워크](evidence/31-ui-network-final.json) · [32 네트워크](evidence/32-ui-network-final.json) · [최종 번들 식별](evidence/final-session.json) · [조회 전용 UI](evidence/acl-ui.json). 기록은 최종 배포 이후 시간으로 후보 기록과 분리했다. 초기 재로딩/장시간 대기 중 일부 네트워크 버퍼는 잘렸으므로 전체 네트워크 포착을 주장하지 않는다. 후속 개별 요청/응답과 독립 SQL을 함께 대조했고, 취소 16건은 별도의 무변경 SQL로 확인했다. 키보드 취소의 좁은 수집 구간에서도 삭제 요청이 없었다.
+
+31번 재개 후 [추가 UI 기록](evidence/31-ui-resumed.json)과 [별도 네트워크 구간](evidence/31-ui-network-resumed.json)에서 실제 431/200 응답을 완전하게 포착했다. 동일 최종 번들 `app.95671954.js`이며 재빌드/재배포하지 않았다. 총 66개 UI 상태 기록과 42개 원본 이미지로 구성한다. 기록 수를 독립 테스트 수나 전체 CI로 집계하지 않는다.
 
 [31 취소 무변경](evidence/31-cancellation-preservation.json) · [32 취소 무변경](evidence/32-cancellation-preservation.json) · [31 역할 경합](evidence/31-role-race-preservation.json) · [32 역할 경합](evidence/32-role-race-preservation.json). 삭제별 `*-after-preservation.json`은 대상 정책/예약/정책 태그·상세의 제거와 나머지 정책·예약·스냅샷·사본·원래 스냅샷 태그 행 ID의 유지를 검사한다.
 
@@ -82,15 +84,27 @@ job=1/BackedUp 완료 후 같은 창에서 재조회·재확인하여 정책을 
 
 활성 시험 볼륨·정책·예약·스냅샷·비종결 사본·태그·정책 상세·계정/프로젝트·자원 제한·대기 job **0**, 볼륨 이력 Expunged 4개, 스냅샷 Destroyed 1개, RBD 이미지/trash/보조 파일 잔여 0이다. 기존 Zone/스토리지/VM 51/볼륨 51/스냅샷 7/역할 10개와 핵심 속성을 보존했다. [독립 SQL](evidence/32-cleanup-check.json) · [RBD](evidence/32-primary-final.json) · [보조 파일](evidence/32-secondary-final.json) · [기존 자원](evidence/32-preservation-result.json).
 
-## 31번 재개 조건과 남은 자원
+## 31번 공간 확보·자연 예약·보존·정리 완료
 
-현재 보조 스토리지 사용량이 `secondary.storage.capacity.threshold=0.90`을 초과한다. 마지막 기록은 **338,140,594,176 / 375,626,137,600바이트(약 90.02%)**이다. 정수 퍼센트 표시만 보지 않고 원래 바이트와 실제 임계값을 대조했다. 새 자연 예약의 백업을 정상 완료로 판정할 수 없어 해당 단계를 시작하지 않았다. [실제 API와 설정](evidence/31-storage-capacity.json).
+처음에는 보조 스토리지가 90% 임계값을 초과해 자연 예약 검증을 대기했다. 사용자 선택에 따라 `secondary.storage.capacity.threshold=0.90`을 계속 유지했다. 유효한 템플릿·볼륨·스냅샷 파일은 삭제하지 않았다. [공간 확보 전](evidence/31-capacity-before-space.json) · [확보 후](evidence/31-capacity-after-space.json) · [최종 API·임계값](evidence/31-capacity-final.json).
 
-사용자에게 **시험 동안만 0.901로 변경 후 원복** 또는 **전역 설정 유지·공간 확보 후 검증**을 선택하도록 질문했다. 이 설정은 다른 스냅샷 작업에도 영향을 주므로 선택 전에는 변경하지 않는다. 기존 운영 파일을 삭제하지 않았다.
+Prometheus가 현재 쓰거나 열고 있지 않은 80시간 이상 지난 WAL 구간 **00000610~00000619 10개, 1,096,187,904바이트**를 여유 있는 루트 파일시스템에 보존했다. 복사본과 기존 경로의 SHA256·크기·mtime을 대조한 뒤 같은 이름에 연결 경로를 원자적으로 적용했다. 숫자 구간의 순서·파일 내용·권한을 유지했고 서비스/설정/보존 기간을 변경하거나 재시작하지 않았다. 설치된 [Prometheus v3.5.1의 파일 열기·구간 열거 구현](https://github.com/prometheus/prometheus/blob/v3.5.1/tsdb/wlog/wlog.go#L149)도 확인했다.
 
-전용 볼륨 4개와 시험 계정/프로젝트 각 1개는 재개를 위해 남아 있다. 남은 정책은 볼륨 탭의 HOURLY `100ab48c-73ce-474a-be98-c29553bbe13d`, WEEKLY `7c755cdb-30b4-44f8-b63f-cae37fbd7591` 두 개다. 모두 예약 중지했으며 **미래 예약 0·스냅샷 0·진행 작업 0**이다. [대기 상태](evidence/31-pending-natural-state.json) · [중지 결과](evidence/31-paused-owned.json). 이를 최종 정리 완료로 집계하지 않는다.
+NFS는 측정 시 약 **1.02GiB**가 확보됐고 Mold API 사용률은 **89.73%**로 내려갔다. Prometheus PID `2491742`·ready HTTP 200을 유지했고 고정한 최근/3일 전 시점의 `up` 조회 각각 50개 series 결과가 전후 일치했다. 최종 파일 해시와 새 sample 수집도 재확인했다. [보존 manifest·해시·조회](evidence/31-space-preservation.json) · [최종 검증](evidence/31-space-final.json).
 
-재개 후 HOURLY를 가까운 UTC 분으로 설정하고 실제 자연 예약의 진행 중 삭제 431→명시 해제→BackedUp/job 성공→정책 삭제 200→스냅샷/태그/다른 정책 보존을 확인한다. 이어 네 볼륨과 계정/프로젝트·정책/스냅샷/태그·GFS2/보조 파일 잔여를 정상 API와 독립 SQL로 정리한다. 임시 설정 변경을 선택했다면 원래 0.90으로 복원하고 확인한다.
+보존 위치는 `/var/lib/ablestack-space-preserved/sp07-1501-20261027/prometheus-wal`이며 기존 WAL 경로의 연결 대상이므로 유지한다. 조사 중 기존 **00000611의 WAL 손상으로 checkpoint/자동 정리가 반복 실패**하는 로그를 확인했다. 손상 파일도 원래 내용 그대로 보존했으며 복구나 재시작을 수행하지 않았다. 이 운영 정비는 SP-07 기능 수정과 구분한 후속이다. [기존 오류 근거](evidence/31-space-diagnosis.json).
+
+예정 시각 `2026-10-27 01:14:00 UTC`의 실제 스케줄러가 `01:16:20 UTC`에 스냅샷 `d7e91c9a-1b60-46f7-bda2-a0426d24b754`와 job `29863e3d-8c4e-4c84-8f20-069087350fe6`를 생성했다. Allocated/job=0에서 실제 UI 삭제 431을 확인했다. 90초 watchdog 내 **18.584초** 후 시험 행 잠금을 명시 해제했고 동일 job/snapshot/예정 시각을 유지했다. 수동 생성이나 SQL 상태 변경으로 실행을 대신하지 않았다.
+
+job=1/BackedUp 완료 뒤 같은 창의 재조회·재확인을 거쳐 정책 삭제 200을 확인했다. 기존 스냅샷과 두 태그 행 **665/666**, Ready Secondary 사본과 **196,624바이트 보조 파일**, 다른 WEEKLY 정책을 보존했다. 성공 뒤 초점은 볼륨 탭 업데이트 버튼으로 복귀했다. 실제 스냅샷 목록·상세에서 BackedUp/두 한글 태그/준비된 사본도 확인했다.
+
+[자연 예약·보존 통합 증거](evidence/31-natural-proof.json) · [삭제 전후 독립 대조](evidence/31-natural-completed-after-delete-preservation.json) · [보조 파일](evidence/31-secondary-preserved.json) · [스냅샷 상세 UI](evidence/31-snapshot-ui-preserved.json)
+
+![31번 정책 삭제 후 유지된 스냅샷·두 태그](evidence/31-natural-snapshot-tags-preserved.jpg)
+
+검증 후 남은 정책 1개·전용 볼륨 4개·자연 스냅샷 1개·계정/프로젝트 각 1개를 정상 API로 정리했다. 32번과 같이 스냅샷의 deleteTags 시험 청소는 #1506의 제품 자동 정리와 구분했다. 활성 시험 자원·정책·예약·태그·상세·계정 제한·비종결 사본·대기 job **0**, 볼륨 이력 Expunged 4개, 스냅샷 Destroyed 1개, GFS2 볼륨 파일·보조 파일 잔여 0이다. 이전 대기 상태 증거는 이력이며 현재 잔여를 의미하지 않는다.
+
+기존 Zone/스토리지/VM 116/볼륨 155/스냅샷 23/역할 11개와 핵심 속성을 보존했다. [독립 SQL](evidence/31-cleanup-check.json) · [GFS2](evidence/31-primary-final.json) · [보조 파일](evidence/31-secondary-final.json) · [기존 자원](evidence/31-preservation-result.json) · [정리 후 실제 UI](evidence/31-cleaned-root.jpg).
 
 Windows 기존 FT 작업 3개, WSL 기존 FT 작업 11개는 HEAD·브랜치·status·binary diff 해시가 모두 같다. [Windows](evidence/protected-windows-result.json) · [WSL](evidence/protected-wsl-result.json).
 
@@ -98,4 +112,4 @@ Windows 기존 FT 작업 3개, WSL 기존 FT 작업 11개는 HEAD·브랜치·st
 
 SP-11 선택 삭제는 이번 단일 삭제에 포함하지 않는다. 다중 Zone 실복사·DST·전체 역할/다중 노드 장애의 전체 회귀는 #1507 범위다. 기존 스냅샷 삭제 뒤 태그 자동 정리는 #1506이며 시험 정리의 명시적인 deleteTags를 제품 자동 정리로 집계하지 않는다.
 
-31번의 남은 검증·정리와 완료 기준 확인을 끝내기 전에는 #1501을 닫지 않는다. Epic은 현재 **6/13 완료·OPEN**을 유지한다. #1501 완료 후 다음 권장 작업은 **#1497(SP-03)** 월 일자 숫자 검색 오류 수정이다. 이후 #1503 정렬/페이지, #1504 운영 정보·문구, #1505 선택 삭제·범위 필터, #1506 스냅샷 태그 수명주기를 완료한 뒤 #1507 통합 회귀를 진행한다.
+완료 기준 5개를 충족해 #1501 종료 근거를 확보했다. Epic은 **7/13 완료·OPEN**이다. 다음 권장 작업은 **#1497(SP-03)** 월 일자 숫자 검색 오류 수정이다. 현재 `FormSchedule.vue`의 월 일자 필터가 숫자 `option.value`에 `toLowerCase()`를 호출하는 구현을 유지한다. 안전한 문자열 변환과 1~28일 검색·선택·키보드·오류 복구 및 양 클러스터 API/UI 인코딩을 검증해야 한다. 이후 #1503 정렬/페이지, #1504 운영 정보·문구, #1505 선택 삭제·범위 필터, #1506 스냅샷 태그 수명주기를 완료한 뒤 #1507 통합 회귀를 진행한다.

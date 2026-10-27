@@ -88,5 +88,13 @@
     "tag": "BUTTON",
     "text": "업데이트",
     "url": "http://10.10.32.10:8080/client/#/volume/f3df49b4-87b1-41b8-ab20-d9e57fc93694?tab=recurringsnapshots"
+  },
+  {
+    "cluster": 31,
+    "label": "natural-completed-policy-delete-focus",
+    "tag": "BUTTON",
+    "text": "업데이트",
+    "url": "http://10.10.31.10:8080/client/#/volume/bdc59561-9805-4b7c-9624-36c9267515cc?tab=recurringsnapshots",
+    "modal": false
   }
 ]

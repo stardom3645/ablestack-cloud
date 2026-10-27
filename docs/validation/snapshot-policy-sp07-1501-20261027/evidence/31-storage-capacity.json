@@ -13,7 +13,7 @@
         "scope": "ZONE",
         "readonly": false,
         "disksizetotal": 375626137600,
-        "disksizeused": 338140594176,
+        "disksizeused": 337079435264,
         "hasannotations": false
       }
     ]
@@ -26,9 +26,9 @@
         "name": "SECONDARY_STORAGE",
         "zoneid": "7013f5a1-de59-4cea-a596-f4f58815f31c",
         "zonename": "Zone",
-        "capacityused": 338140594176,
+        "capacityused": 337079435264,
         "capacitytotal": 375626137600,
-        "percentused": "90.02"
+        "percentused": "89.74"
       }
     ]
   },
