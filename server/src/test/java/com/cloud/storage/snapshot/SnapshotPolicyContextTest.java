@@ -109,7 +109,7 @@ public class SnapshotPolicyContextTest {
             Map<String,Object> r=manager.getSnapshotPolicyContext(7L);
             Assert.assertEquals("FAILED",latest(r).get("status")); Assert.assertEquals("PAUSED",r.get("schedulestate"));
             verify(manager.snapshotAsyncJobDao,never()).search(any(),any());
-            verify(manager.snapshotAsyncJobDao).searchIncludingRemoved(argThat(sc -> !sc.getWhereClause().contains("job_cmd_info")),any(),isNull(),eq(false));
+            verify(manager.snapshotAsyncJobDao).searchIncludingRemoved(argThat(sc -> !sc.getWhereClause("async_job").contains("job_cmd_info")),any(),isNull(),eq(false));
         }
     }
 }
