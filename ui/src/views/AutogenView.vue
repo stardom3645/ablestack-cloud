@@ -176,7 +176,7 @@
     <div v-show="showAction">
       <component
         v-if="showAction && currentAction.selfManagedDialog"
-        :key="currentAction.storageSnapshotMode ? storageActionGeneration : undefined"
+        :key="(currentAction.storageSnapshotMode || currentAction.policyDeleteDialog) ? storageActionGeneration : undefined"
         ref="selfManagedAction"
         :is="currentAction.component"
         :resource="resource"

@@ -14,12 +14,12 @@ jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn(), callAPI: jest
 let store; let route; let wrappers; let policies; let volume
 const base = () => ({ id: 'fixed', volumeid: 'volume', intervaltype: 0, schedule: '0', timezone: 'UTC', maxsnaps: 2, tags: [{ key: 'keep', value: '한글' }] })
 const failure = code => Object.assign(new Error('server ' + code), { response: { status: code } })
-function render () {
+function render (deferClose = false) {
   const w = mount(Dialog, {
     props: { resource: { ...base() } },
     global: {
       mocks: { $store: store, $route: route, $t: key => key, $notification: { success: jest.fn() } },
-      stubs: { MoldDialog: { template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } }
+      stubs: { MoldDialog: { props: ['visible', 'afterClose'], watch: { visible (value) { if (!value && !deferClose) this.afterClose?.() } }, template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } }
     }
   })
   wrappers.push(w); return w
@@ -43,6 +43,15 @@ test('one confirmed UUID is deleted and read back absent, while the other interv
   const w = render(); await flushPromises(); w.vm.acknowledged = true; await w.vm.submit()
   expect(postAPI).toHaveBeenCalledTimes(1); expect(postAPI).toHaveBeenCalledWith('deleteSnapshotPolicies', { ids: 'fixed' }, { preserveOnFailure: true, timeout: 30000 })
   expect(policies.map(p => p.id)).toEqual(['other']); expect(w.emitted('refresh-data')).toHaveLength(1); expect(w.emitted('close-action')[0][0]).toEqual({ removed: ['fixed'] })
+})
+test('parent teardown waits for the close animation and is emitted once', async () => {
+  const w = render(true); await flushPromises(); w.vm.close(); await flushPromises()
+  expect(w.emitted('close-action')).toBeUndefined(); w.vm.finishClose(); w.vm.finishClose(); expect(w.emitted('close-action')).toHaveLength(1)
+})
+test('a late close cannot remove rows in another scope or report after disposal', async () => {
+  const w = render(true); await flushPromises(); w.vm.complete(); store.getters.project = { id: 'changed' }; await flushPromises()
+  w.vm.finishClose(); expect(w.emitted('close-action')[0][0]).toBeUndefined()
+  const late = render(true); await flushPromises(); late.vm.close(); const finish = late.vm.finishClose; late.unmount(); finish(); expect(late.emitted('close-action')).toBeUndefined()
 })
 test.each(['schedule', 'tags'])('a changed %s requires reload and new acknowledgement', async field => {
   const w = render(); await flushPromises(); policies[0] = { ...policies[0], [field]: field === 'schedule' ? '59' : [] }; w.vm.acknowledged = true; await w.vm.submit()

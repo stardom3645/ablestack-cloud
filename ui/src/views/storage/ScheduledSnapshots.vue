@@ -52,7 +52,7 @@
         </template>
       </template>
     </a-table>
-    <SnapshotPolicyDeleteDialog v-if="policyTarget && policyMode === 'delete'" :resource="policyTarget" @refresh-data="$emit('refresh')" @close-action="closePolicyDelete" />
+    <SnapshotPolicyDeleteDialog v-if="policyTarget && policyMode === 'delete'" :key="policyTarget.id" :resource="policyTarget" @refresh-data="$emit('refresh')" @close-action="closePolicyDelete" />
     <SnapshotPolicyActionDialog v-else-if="policyTarget" :key="policyTarget.id + policyMode" :resource="policyTarget" :current-action="{ policyMode }" @refresh-data="$emit('refresh')" @close-action="policyTarget = null" />
   </div>
 </template>

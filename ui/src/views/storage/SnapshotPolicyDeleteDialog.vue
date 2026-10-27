@@ -12,6 +12,7 @@ form-actions
 focus-guard
 :closable="!busy"
 :keyboard="!busy"
+:after-close="finishClose"
 @cancel="close">
     <a-spin :spinning="busy">
       <div v-if="target && allowed" class="policy-delete-target" data-testid="policy-delete-target">
@@ -54,7 +55,7 @@ export default {
   components: { MoldDialog, MoldDialogActions },
   props: { resource: { type: Object, required: true }, currentAction: { type: Object, default: () => ({}) } },
   emits: ['close-action', 'refresh-data'],
-  data () { return { identity: deletionIdentity(this.resource), target: null, busy: false, acknowledged: false, needsReload: true, uncertain: false, deleteAccepted: false, error: '', origin: '', closed: false, disposed: false, version: 0, intervals: policyIntervals } },
+  data () { return { identity: deletionIdentity(this.resource), target: null, busy: false, acknowledged: false, needsReload: true, uncertain: false, deleteAccepted: false, error: '', origin: '', closed: false, closeResult: null, reportedClose: false, disposed: false, version: 0, intervals: policyIntervals } },
   computed: {
     schedule () { return this.target ? deletionSchedule(this.target.policy, this.$t) : '' },
     scope () { return JSON.stringify([this.$route.path, this.resource.id, this.resource.volumeid, this.resource.intervaltype, this.$store.getters.userInfo?.id, this.$store.getters.userInfo?.roletype, this.$store.getters.userInfo?.roleid, this.$store.state?.user?.token, this.$store.getters.project?.id, canDeletePolicy(this.$store.getters.apis)]) },
@@ -66,7 +67,12 @@ export default {
   methods: {
     current () { return !this.closed && !this.disposed && this.origin === this.scope },
     failure (error) { return error.message?.startsWith('message.') ? this.$t(error.message) : Object.values(error.response?.data || {}).find(v => v?.errortext)?.errortext || error.message || this.$t('message.request.failed') },
-    close () { if (this.busy) return; this.closed = true; if (this.uncertain) this.$emit('refresh-data'); this.$emit('close-action') },
+    close () { if (this.busy) return; this.closed = true; if (this.uncertain) this.$emit('refresh-data') },
+    finishClose () {
+      if (this.disposed || !this.closed || this.reportedClose) return
+      this.reportedClose = true
+      this.$emit('close-action', this.origin === this.scope ? this.closeResult || undefined : undefined)
+    },
     async load () {
       if (this.busy || !this.allowed || this.uncertain) return
       const version = ++this.version; this.busy = true; this.error = ''; this.acknowledged = false; this.needsReload = true
@@ -76,7 +82,7 @@ export default {
         this.target = target; this.needsReload = false
       } catch (error) { if (this.current()) { this.target = null; this.error = this.failure(error) } } finally { this.busy = false }
     },
-    complete () { this.$notification.success({ message: this.$t('label.delete.snapshot.policy'), description: this.$t('message.success.delete.snapshot.policy') }); this.closed = true; this.$emit('refresh-data'); this.$emit('close-action', { removed: [this.identity.id] }) },
+    complete () { this.$notification.success({ message: this.$t('label.delete.snapshot.policy'), description: this.$t('message.success.delete.snapshot.policy') }); this.closeResult = { removed: [this.identity.id] }; this.closed = true; this.$emit('refresh-data') },
     async reconcile () {
       const latest = await readPolicyDeletionTarget(getAPI, this.identity, () => this.allowed, true)
       if (!this.allowed) return
