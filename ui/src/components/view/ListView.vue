@@ -1440,7 +1440,9 @@ export default {
     }
   },
   methods: {
-    policyInterval, policySchedule, policyScheduling,
+    policyInterval,
+    policySchedule,
+    policyScheduling,
     snapshotListSize,
     snapshotListSizeValue,
     snapshotListInterval,

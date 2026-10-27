@@ -29,13 +29,13 @@ test.each([403, 531, 404])('permission or missing %s clears successful data', as
   await ctx.fetchData(); getAPI.mockRejectedValue({ response: { status } }); await ctx.fetchData(); expect(ctx.resource).toEqual({}); expect(ctx.storageActionReady).toBe(false)
 })
 test.each(['user', 'role', 'token', 'project', 'permissions'])('%s scope transition removes old data and discards late results', async change => {
-  await ctx.fetchData(); const first = ctx.listScope(); let resolve
-  getAPI.mockImplementationOnce(() => new Promise(r => { resolve = r })); const pending = ctx.fetchData(); await Promise.resolve()
+  await ctx.fetchData(); const first = ctx.listScope(); let complete
+  getAPI.mockImplementationOnce(() => new Promise(resolve => { complete = resolve })); const pending = ctx.fetchData(); await Promise.resolve()
   if (change === 'user') store.getters.userInfo.id = 'new'
   if (change === 'role') store.getters.userInfo.roleid = 'new'
   if (change === 'token') store.state.user.token = 'new'
   if (change === 'project') store.getters.project = { id }
   if (change === 'permissions') store.getters.apis.listVolumes = {}
   expect(ctx.listScope()).not.toBe(first); getAPI.mockResolvedValueOnce({ listsnapshotpoliciesresponse: {} }); const newer = ctx.fetchData(); expect(ctx.resource).toEqual({})
-  resolve(reply()); await pending; await newer; expect(ctx.resource).toEqual({})
+  complete(reply()); await pending; await newer; expect(ctx.resource).toEqual({})
 })
