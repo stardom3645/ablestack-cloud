@@ -47,6 +47,7 @@ public class SnapshotPolicyScopeTest {
         when(cmd.listAll()).thenReturn(true);
         CallContext context = mock(CallContext.class); Account caller = mock(Account.class);
         when(context.getCallingAccount()).thenReturn(caller); when(caller.getType()).thenReturn(type);
+        when(caller.getDomainId()).thenReturn(7L);
         try (MockedStatic<CallContext> current = mockStatic(CallContext.class)) {
             current.when(CallContext::current).thenReturn(context);
             manager.listSnapshotPolicies(cmd);
@@ -54,6 +55,7 @@ public class SnapshotPolicyScopeTest {
         if (display == null) verify(criteria, never()).setParameters(eq("display"), any(Object[].class));
         else verify(criteria).setParameters("display", display);
         if (ignoreProject) verify(manager._accountMgr).buildACLSearchBuilder(eq(builder), isNull(), eq(false), anyList(), eq(ListProjectResourcesCriteria.SkipProjectResources));
+        if (Long.valueOf(-1).equals(project) && type == Account.Type.DOMAIN_ADMIN) verify(manager._accountMgr).buildACLSearchBuilder(eq(builder), eq(7L), eq(true), eq(Collections.emptyList()), eq(ListProjectResourcesCriteria.ListAllIncludingProjectResources));
         verify(manager._snapshotPolicyDao).searchAndCount(eq(criteria), any());
     }
     @Test public void omittedDisplayKeepsBothAndPersonalScopeStillUsesAcl() { exercise(null, true, null, null, null, Account.Type.ADMIN); }
@@ -61,4 +63,5 @@ public class SnapshotPolicyScopeTest {
     @Test public void projectAndPersonalScopeConflict() { assertThrows(InvalidParameterValueException.class, () -> exercise(null, true, 9L, null, null, Account.Type.ADMIN)); }
     @Test public void projectAndOwnerFiltersConflict() { assertThrows(InvalidParameterValueException.class, () -> exercise(null, false, 9L, 7L, null, Account.Type.ADMIN)); assertThrows(InvalidParameterValueException.class, () -> exercise(null, false, 9L, null, "owner", Account.Type.ADMIN)); }
     @Test public void nonRootCannotFilterDisplay() { for (Account.Type type : new Account.Type[]{Account.Type.NORMAL, Account.Type.DOMAIN_ADMIN}) assertThrows(PermissionDeniedException.class, () -> exercise(false, false, null, null, null, type)); }
+    @Test public void domainAdminAllViewUsesOwnDomainBoundaryInsteadOfProjectMembershipUnion() { exercise(null, false, -1L, null, null, Account.Type.DOMAIN_ADMIN); }
 }

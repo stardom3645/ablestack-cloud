@@ -2102,6 +2102,14 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         if (cmd.isIgnoreProject()) {
             domainIdRecursiveListProject.third(ListProjectResourcesCriteria.SkipProjectResources);
         }
+        if (Long.valueOf(-1).equals(cmd.getProjectId()) && caller.getType() == Account.Type.DOMAIN_ADMIN) {
+            // Domain admins can access these project accounts without being individual members.
+            // The legacy helper's member-account union would otherwise hide domain resources.
+            permittedAccounts.clear();
+            domainIdRecursiveListProject.first(caller.getDomainId());
+            domainIdRecursiveListProject.second(true);
+            domainIdRecursiveListProject.third(ListProjectResourcesCriteria.ListAllIncludingProjectResources);
+        }
         Long domainId = domainIdRecursiveListProject.first();
         Boolean isRecursive = domainIdRecursiveListProject.second();
         ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
