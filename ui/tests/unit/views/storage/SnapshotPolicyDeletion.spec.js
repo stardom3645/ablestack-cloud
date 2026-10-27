@@ -19,7 +19,7 @@ function render (deferClose = false) {
     props: { resource: { ...base() } },
     global: {
       mocks: { $store: store, $route: route, $t: key => key, $notification: { success: jest.fn() } },
-      stubs: { MoldDialog: { props: ['visible', 'afterClose'], watch: { visible (value) { if (!value && !deferClose) this.afterClose?.() } }, template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } }
+      stubs: { MoldDialog: { props: ['visible', 'afterClose'], watch: { visible (value) { if (!value && !deferClose && this.afterClose) this.afterClose() } }, template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } }
     }
   })
   wrappers.push(w); return w
