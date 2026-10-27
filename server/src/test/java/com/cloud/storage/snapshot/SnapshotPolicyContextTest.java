@@ -102,8 +102,10 @@ public class SnapshotPolicyContextTest {
             com.cloud.storage.SnapshotPolicyVO p = mock(com.cloud.storage.SnapshotPolicyVO.class);
             when(manager._snapshotPolicyDao.findById(7L)).thenReturn(p); when(p.getId()).thenReturn(7L); when(p.getAccountId()).thenReturn(9L); when(p.getVolumeId()).thenReturn(8L);
             when(manager._volsDao.findById(8L)).thenReturn(volume); when(volume.getId()).thenReturn(8L); when(volume.getAccountId()).thenReturn(9L);
-            when(manager.snapshotAsyncJobDao.createSearchBuilder()).thenReturn(new com.cloud.utils.db.SearchBuilder<>(AsyncJobVO.class));
-            when(snapshots.createSearchBuilder()).thenReturn(new com.cloud.utils.db.SearchBuilder<>(SnapshotVO.class));
+            new org.apache.cloudstack.framework.jobs.dao.AsyncJobDaoImpl();
+            new com.cloud.storage.dao.SnapshotDaoImpl();
+            when(manager.snapshotAsyncJobDao.createSearchBuilder()).thenAnswer(invocation -> new com.cloud.utils.db.SearchBuilder<>(AsyncJobVO.class));
+            when(snapshots.createSearchBuilder()).thenAnswer(invocation -> new com.cloud.utils.db.SearchBuilder<>(SnapshotVO.class));
             AsyncJobVO completed = job(12,JobInfo.Status.FAILED); when(completed.getRemoved()).thenReturn(new Date());
             when(manager.snapshotAsyncJobDao.searchIncludingRemoved(any(),any(),isNull(),eq(false))).thenReturn(Collections.singletonList(completed));
             Map<String,Object> r=manager.getSnapshotPolicyContext(7L);
