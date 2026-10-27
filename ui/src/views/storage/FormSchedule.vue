@@ -107,10 +107,8 @@
                   showSearch
                   :disabled="isIntervalDisabled(form.intervaltype) || actionLoading || disabled"
                   optionFilterProp="value"
-                  :filterOption="(input, option) => {
-                    return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }" >
-                  <a-select-option v-for="opt in dayOfMonth" :key="opt.name">
+                  :filterOption="filterDayOfMonth" >
+                  <a-select-option v-for="opt in dayOfMonth" :key="opt.id" :value="opt.id" :label="String(opt.name)">
                     {{ opt.name }}
                   </a-select-option>
                 </a-select>
@@ -434,6 +432,9 @@ export default {
           name: this.$t('label.' + dayName)
         })
       }
+    },
+    filterDayOfMonth (input, option) {
+      return option?.value != null && String(option.value).includes(String(input ?? ''))
     },
     fetchDayOfMonth () {
       this.dayOfMonth = []
