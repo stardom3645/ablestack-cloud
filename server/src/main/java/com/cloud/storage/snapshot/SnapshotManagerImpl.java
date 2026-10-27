@@ -2072,6 +2072,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
     @Override
     public Pair<List<? extends SnapshotPolicy>, Integer> listSnapshotPolicies(ListSnapshotPoliciesCmd cmd) {
+        Filter searchFilter = SnapshotPolicyListOrdering.filter(cmd.getSortKey(), cmd.getSortOrder(), cmd.getStartIndex(), cmd.getPageSizeVal());
         Long volumeId = cmd.getVolumeId();
         Long id = cmd.getId();
         Account caller = CallContext.current().getCallingAccount();
@@ -2093,7 +2094,6 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         Boolean isRecursive = domainIdRecursiveListProject.second();
         ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
 
-        Filter searchFilter = new Filter(SnapshotPolicyVO.class, "id", false, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<SnapshotPolicyVO> policySearch = _snapshotPolicyDao.createSearchBuilder();
         _accountMgr.buildACLSearchBuilder(policySearch, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
 

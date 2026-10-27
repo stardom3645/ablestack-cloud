@@ -442,6 +442,9 @@ public class SnapshotManagerImplTest {
         Mockito.when(cmd.getStartIndex()).thenReturn(0L);
         Mockito.when(cmd.getPageSizeVal()).thenReturn(10L);
 
+        Mockito.when(cmd.getSortKey()).thenReturn("maxsnaps");
+        Mockito.when(cmd.getSortOrder()).thenReturn("asc");
+
         Account caller = Mockito.mock(Account.class);
         Mockito.when(caller.getId()).thenReturn(1L);
         CallContext.register(Mockito.mock(User.class), caller);
@@ -467,6 +470,10 @@ public class SnapshotManagerImplTest {
         Assert.assertEquals(2, result.first().size());
         Assert.assertEquals(Integer.valueOf(2), result.second());
         Assert.assertEquals(mockPolicies, result.first());
+        org.mockito.ArgumentCaptor<com.cloud.utils.db.Filter> filter = org.mockito.ArgumentCaptor.forClass(com.cloud.utils.db.Filter.class);
+        Mockito.verify(snapshotPolicyDao).searchAndCount(Mockito.eq(mockSearchCriteria), filter.capture());
+        Assert.assertEquals(" ORDER BY snapshot_policy.max_snaps ASC, snapshot_policy.id ASC", filter.getValue().getOrderBy());
+        Mockito.verify(mockSearchBuilder).join(Mockito.eq("volumeJoin"), Mockito.eq(mockVolumeSearchBuilder), Mockito.anyLong(), Mockito.anyLong(), Mockito.eq(com.cloud.utils.db.JoinBuilder.JoinType.INNER));
     }
 
     @Test

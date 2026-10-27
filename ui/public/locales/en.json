@@ -9801,5 +9801,6 @@
   "message.snapshot.policy.delete.ack": "I have reviewed this single policy and the impact of deletion.",
   "message.snapshot.policy.delete.unknown": "The deletion result is not yet verified. Check whether the original policy exists without submitting deletion again.",
   "message.snapshot.policy.delete.still.exists": "The policy remains in the current scope. Reload and confirm the target before trying deletion again.",
-  "message.snapshot.policy.delete.unverified": "The original policy is not visible in the current list. Without a successful deletion response, deletion cannot be distinguished from display or access changes. Do not submit deletion again; ask an administrator to verify the result."
+  "message.snapshot.policy.delete.unverified": "The original policy is not visible in the current list. Without a successful deletion response, deletion cannot be distinguished from display or access changes. Do not submit deletion again; ask an administrator to verify the result.",
+  "message.snapshot.policy.schedule.sort": "Sort all results by local hour/minute, interval, weekday/day, then policy ID. Hourly minutes use hour zero. This is not next execution time or UTC order across time zones."
 }

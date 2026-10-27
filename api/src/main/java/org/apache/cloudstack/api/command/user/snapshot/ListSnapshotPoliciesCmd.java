@@ -50,6 +50,12 @@ public class ListSnapshotPoliciesCmd extends BaseListProjectAndAccountResourcesC
     @Parameter(name = ApiConstants.FOR_DISPLAY, type = CommandType.BOOLEAN, description = "List resources by display flag; only ROOT admin is eligible to pass this parameter", since = "4.4", authorized = {RoleType.Admin})
     private Boolean display;
 
+    @Parameter(name = "sortkey", type = CommandType.STRING, description = "Server sort field: id (default), intervaltype, maxsnaps, schedule, timezone or volumename. Schedule uses local time of day (hourly minutes use hour zero), then interval and weekday/day. This is not next execution time.")
+    private String sortKey;
+
+    @Parameter(name = "sortorder", type = CommandType.STRING, description = "Sort direction: asc or desc (default). Equal values use policy ID in the same direction.")
+    private String sortOrder;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -69,6 +75,10 @@ public class ListSnapshotPoliciesCmd extends BaseListProjectAndAccountResourcesC
     public Long getId() {
         return id;
     }
+
+    public String getSortKey() { return sortKey; }
+
+    public String getSortOrder() { return sortOrder; }
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////

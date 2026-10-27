@@ -35,6 +35,20 @@ public class ListSnapshotPoliciesCmdTest {
     private SnapshotApiService snapshotService;
     private ResponseGenerator responseGenerator;
 
+    @Test
+    public void sortingParametersAreExposedWithoutInventingDefaults() throws Exception {
+        Assert.assertEquals("sortkey", ListSnapshotPoliciesCmd.class.getDeclaredField("sortKey").getAnnotation(org.apache.cloudstack.api.Parameter.class).name());
+        Assert.assertEquals("sortorder", ListSnapshotPoliciesCmd.class.getDeclaredField("sortOrder").getAnnotation(org.apache.cloudstack.api.Parameter.class).name());
+        Assert.assertNull(cmd.getSortKey());
+        Assert.assertNull(cmd.getSortOrder());
+        java.lang.reflect.Field key = ListSnapshotPoliciesCmd.class.getDeclaredField("sortKey");
+        key.setAccessible(true); key.set(cmd, "maxsnaps");
+        java.lang.reflect.Field order = ListSnapshotPoliciesCmd.class.getDeclaredField("sortOrder");
+        order.setAccessible(true); order.set(cmd, "asc");
+        Assert.assertEquals("maxsnaps", cmd.getSortKey());
+        Assert.assertEquals("asc", cmd.getSortOrder());
+    }
+
     @Before
     public void setUp() {
         cmd = new ListSnapshotPoliciesCmd();
