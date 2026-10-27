@@ -2103,7 +2103,7 @@ export default {
             break
           }
         }
-        let apiItemCount = 0
+        let apiItemCount = json[responseName]?.count || 0
         for (const key in json[responseName]) {
           if (key === 'count') {
             apiItemCount = json[responseName].count
