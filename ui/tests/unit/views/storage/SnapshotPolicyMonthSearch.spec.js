@@ -50,7 +50,7 @@ test.each([1, 28])('selecting day %s preserves its numeric value and schedule en
   const option = [...dropdown.querySelectorAll('.ant-select-item-option-content')].find(e => e.textContent === String(day))
   option.closest('.ant-select-item-option').click(); await flushPromises()
   expect(w.vm.form['day-of-month']).toBe(day); await w.vm.handleSubmit()
-  expect(postAPI).toHaveBeenCalledWith('createSnapshotPolicy', expect.objectContaining({ volumeid: 'volume', intervaltype: 'MONTHLY', schedule: '59:23:' + day }), { preserveOnFailure: true })
+  expect(postAPI).toHaveBeenCalledWith('createSnapshotPolicy', expect.objectContaining({ volumeid: 'volume', intervaltype: 'monthly', schedule: '59:23:' + day }), { preserveOnFailure: true })
 })
 test('a different display label cannot replace the selected numeric day', async () => {
   const w = await render(); w.vm.dayOfMonth[27].name = '28일'; await flushPromises(); const dropdown = await search(w, '28')
