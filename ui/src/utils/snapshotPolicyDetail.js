@@ -11,7 +11,14 @@ export async function readPolicyDetail (request, route, project, current = () =>
   if (!uuid(route.params.id)) fail('message.snapshot.policy.detail.missing', 404)
   const projectid = route.query?.projectid || project?.id
   if (projectid && !['0', '-1'].includes(projectid) && !uuid(projectid)) fail()
-  const json = await request('listSnapshotPolicies', { id: route.params.id, listall: true, page: 1, pagesize: 1, includepolicycontext: true, ...(projectid && projectid !== '0' ? { projectid } : {}), ...(projectid === '0' ? { ignoreproject: true } : {}) }, { preserveOnFailure: true, timeout: 20000 })
+  let json
+  try {
+    json = await request('listSnapshotPolicies', { id: route.params.id, listall: true, page: 1, pagesize: 1, includepolicycontext: true, ...(projectid && projectid !== '0' ? { projectid } : {}), ...(projectid === '0' ? { ignoreproject: true } : {}) }, { preserveOnFailure: true, timeout: 20000 })
+  } catch (error) {
+    const code = Number(Object.values(error?.response?.data || {}).find(data => data?.errorcode)?.errorcode || error?.response?.status)
+    if ([401, 403, 404, 431, 432, 531].includes(code)) fail('message.snapshot.policy.detail.missing', code)
+    throw error
+  }
   if (!current()) fail('message.snapshot.policy.context.changed')
   const data = json?.listsnapshotpoliciesresponse; const rows = data?.snapshotpolicy || []
   if (!data || !Array.isArray(rows) || Number(data.count ?? rows.length) !== rows.length || rows.length > 1) fail()

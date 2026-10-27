@@ -43,3 +43,7 @@ test('missing, invalid UUID, project change and late response cannot become succ
   await expect(readPolicyDetail(request, route, { id })).rejects.toThrow('message.snapshot.policy.detail.incomplete')
   await expect(readPolicyDetail(request, route, {}, () => false)).rejects.toThrow('message.snapshot.policy.context.changed')
 })
+test.each([401, 403, 404, 431, 432, 531])('API scope or absent UUID %s has a localized safe message', async code => {
+  const request = jest.fn().mockRejectedValue({ response: { status: code, data: { errorresponse: { errorcode: code, errortext: 'Internal API class and UUID resolver details' } } } })
+  await expect(readPolicyDetail(request, route, {})).rejects.toMatchObject({ message: 'message.snapshot.policy.detail.missing', response: { status: code } })
+})

@@ -34,7 +34,7 @@ resource-type="Volume"
 @close-action="close" />
       <template v-if="!isEdit && policy">
         <a-descriptions :column="1" size="small" bordered>
-          <a-descriptions-item :label="$t('label.time')">{{ policy.schedule }}</a-descriptions-item>
+          <a-descriptions-item :label="$t('label.time')">{{ schedule(policy) }}</a-descriptions-item>
           <a-descriptions-item :label="$t('label.timezone')">{{ policy.timezone }}</a-descriptions-item>
           <a-descriptions-item :label="$t('label.keep')">{{ policy.maxsnaps }}</a-descriptions-item>
         </a-descriptions>
@@ -57,6 +57,7 @@ import { getAPI } from '@/utils/storageApi'
 import { postAPI } from '@/api'
 import { canEditPolicy, canManagePolicy, freshPolicy, policyFingerprint, policyJobId } from '@/utils/snapshotPolicyEditing'
 import { policyIntervals as intervals } from '@/utils/snapshotPolicyInput'
+import { policySchedule } from '@/utils/snapshotPolicyPresentation'
 
 export default {
   name: 'SnapshotPolicyActionDialog',
@@ -80,6 +81,7 @@ export default {
   watch: { scope () { this.loadVersion++; this.policy = null; this.volume = null; this.loading = false; this.error = this.$t('message.snapshot.policy.context.changed') } },
   beforeUnmount () { this.disposed = true; this.loadVersion++ },
   methods: {
+    schedule (policy) { return policySchedule(policy, this.$t) },
     current () { return !this.disposed && !this.closed && this.origin === this.scope },
     failure (error) { return error.message?.startsWith('message.') ? this.$t(error.message) : Object.values(error.response?.data || {}).find(v => v?.errortext)?.errortext || error.message || this.$t('message.request.failed') },
     async load () {
