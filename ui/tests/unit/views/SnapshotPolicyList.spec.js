@@ -9,15 +9,17 @@ import store from '@/store'
 import { snapshotPolicyListRoute, snapshotPolicySortKeys, snapshotPolicyListQuery, snapshotPolicySortColumn, snapshotPolicySortQuery } from '@/utils/snapshotPolicyList'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn(), callAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: {}, state: { user: { token: 'session' } } }))
-const scope = { keyword: '한글', q: '한글', volumeid: 'volume', account: 'owner', domainid: 'domain', projectid: 'project', listall: 'true' }
-const row = { id: 'a', volumeid: 'volume', volumename: 'disk', intervaltype: 3, maxsnaps: 2, schedule: '59:23:28', timezone: 'UTC' }
+const volumeId = "22222222-2222-4222-8222-222222222222"; const domainId = "33333333-3333-4333-8333-333333333333"
+const a = "11111111-1111-4111-8111-111111111111"; const z = "99999999-9999-4999-8999-999999999999"; const currentId = "55555555-5555-4555-8555-555555555555"
+const scope = { keyword: '한글', q: '한글', volumeid: volumeId, account: 'owner', domainid: domainId, projectid: '0' }
+const row = { id: a, volumeid: volumeId, account: 'owner', domainid: domainId, volumename: 'disk', intervaltype: 3, maxsnaps: 2, schedule: '59:23:28', timezone: 'UTC' }
 const reply = (rows = [row], count = rows.length) => ({ listsnapshotpoliciesresponse: { snapshotpolicy: rows, count } })
 let ctx
 beforeEach(() => {
   jest.clearAllMocks()
   store.getters = { defaultListViewPageSize: 20, userInfo: { id: 'user', roletype: 'Admin' }, project: {}, apis: { listSnapshotPolicies: {}, createSnapshotPolicy: {} }, customColumns: {}, metrics: false, listAllProjects: false }
   store.state.user.token = 'session'
-  const query = snapshotPolicyListQuery({})
+  const query = snapshotPolicyListQuery({ projectid: '0' })
   ctx = { $store: store, $route: { name: 'snapshotpolicy', path: '/snapshotpolicy', fullPath: '/snapshotpolicy?' + new URLSearchParams(query), params: {}, query, meta: { name: 'snapshotpolicy', permission: ['listSnapshotPolicies'], columns: ['intervaltype', 'maxsnaps', 'schedule', 'timezone', 'volumename'], actions: [], searchFilters: ['volumeid'] } }, $router: { replace: jest.fn(), push: jest.fn() }, $refs: { listview: { resetSelection: jest.fn() } }, $emit: jest.fn(), $t: key => key, $showIcon: () => false, $i18n: { locale: 'ko_KR' }, $message: { info: jest.fn() }, $notifyError: jest.fn(), $nextTick: callback => callback() }
   Object.assign(ctx, Autogen.data.call(ctx))
   Object.entries(Autogen.methods).forEach(([key, fn]) => { ctx[key] = fn.bind(ctx) })
@@ -58,7 +60,7 @@ test.each(['한글', ''])('search keeps ownership, volume and sort and resets pa
   ctx.$route.query = { ...scope, page: '3', sortkey: 'maxsnaps', sortorder: 'asc' }
   ctx.onSearch({ searchQuery })
   const result = ctx.$router.push.mock.calls.at(-1)[0].query
-  expect(result).toMatchObject({ volumeid: 'volume', account: 'owner', domainid: 'domain', projectid: 'project', sortkey: 'maxsnaps', sortorder: 'asc', page: '1', pagesize: '20' })
+  expect(result).toMatchObject({ volumeid: volumeId, account: 'owner', domainid: domainId, projectid: '0', sortkey: 'maxsnaps', sortorder: 'asc', page: '1', pagesize: '20' })
   if (searchQuery) expect(result).toMatchObject({ keyword: searchQuery, q: searchQuery })
   else { expect(result.keyword).toBeUndefined(); expect(result.q).toBeUndefined() }
 })
@@ -74,11 +76,11 @@ test('ordinary paging keeps sort, while both size change events reset page', () 
 })
 
 test('real fetch forwards sorting and keeps server order/count; arrow changes when the cached schema is reused', async () => {
-  getAPI.mockResolvedValue(reply([{ ...row, id: 'z', maxsnaps: 1 }, row], 2))
-  ctx.$route.query = snapshotPolicyListQuery({ sortkey: 'maxsnaps', sortorder: 'asc' }); ctx.$route.fullPath = '/snapshotpolicy?' + new URLSearchParams(ctx.$route.query)
+  getAPI.mockResolvedValue(reply([{ ...row, id: z, maxsnaps: 1 }, row], 2))
+  ctx.$route.query = snapshotPolicyListQuery({ projectid: '0', sortkey: 'maxsnaps', sortorder: 'asc' }); ctx.$route.fullPath = '/snapshotpolicy?' + new URLSearchParams(ctx.$route.query)
   await ctx.fetchData()
   expect(getAPI).toHaveBeenCalledWith('listSnapshotPolicies', expect.objectContaining({ sortkey: 'maxsnaps', sortorder: 'asc', page: 1, pagesize: 20 }), { preserveOnFailure: true, timeout: 20000 })
-  expect(ctx.items.map(x => x.id)).toEqual(['z', 'a']); expect(ctx.itemCount).toBe(2)
+  expect(ctx.items.map(x => x.id)).toEqual([z, a]); expect(ctx.itemCount).toBe(2)
   expect(ctx.columns.find(x => x.key === 'maxsnaps')).toMatchObject({ sorter: true, sortOrder: 'ascend' })
   ctx.$route.query.sortorder = 'desc'; ctx.$route.fullPath += '&new'; await ctx.fetchData()
   expect(ctx.columns.find(x => x.key === 'maxsnaps').sortOrder).toBe('descend')
@@ -110,7 +112,7 @@ test.each(['sortorder', 'page', 'keyword', 'role', 'session'])('late response ca
   else if (change === 'session') store.state.user.token = 'new-session'
   else { ctx.$route.query = { ...ctx.$route.query, [change]: change === 'page' ? '2' : change === 'sortorder' ? 'asc' : 'new' }; ctx.$route.fullPath += '&changed' }
   const fresh = ctx.fetchData(); expect(ctx.items).toEqual([])
-  complete[0](reply([{ ...row, id: 'late' }])); await old; expect(ctx.items).toEqual([])
-  complete[1](reply([{ ...row, id: 'current' }], change === 'page' ? 21 : 1)); await fresh
-  expect(ctx.items[0].id).toBe('current')
+  complete[0](reply([{ ...row, id: z }])); await old; expect(ctx.items).toEqual([])
+  complete[1](reply([{ ...row, id: currentId }], change === 'page' ? 21 : 1)); await fresh
+  expect(ctx.items[0].id).toBe(currentId)
 })

@@ -215,6 +215,7 @@ export default {
       return (text.length <= length) ? text : (text.substring(0, length - 3) + '...')
     },
     retrieveFieldLabel (fieldName) {
+      if (this.apiName === 'listSnapshotPolicies' && fieldName === 'fordisplay') return this.$t('label.snapshot.policy.scheduling')
       if (this.apiName === 'listSnapshots') return this.$t(snapshotSearchLabel(fieldName))
       if (fieldName === 'affinitygroupid') return this.$t('label.affinitygroup')
       if (fieldName === 'groupid') {
@@ -244,6 +245,7 @@ export default {
       }
     },
     getStaticFieldValue (key, value) {
+      if (this.apiName === 'listSnapshotPolicies' && key === 'fordisplay') return this.$t(value === 'true' ? 'label.snapshot.policy.schedule.enabled' : 'label.snapshot.policy.schedule.paused')
       if (this.apiName === 'listSnapshots') {
         const label = snapshotSearchValue(key, value)
         if (label) return this.$t(label)
