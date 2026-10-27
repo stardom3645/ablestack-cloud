@@ -5,7 +5,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 import { readPolicyDetail } from '@/utils/snapshotPolicyDetail'
 import { policyInterval, policySchedule, policyScheduling } from '@/utils/snapshotPolicyPresentation'
-import ko from '../../../../public/locales/ko_KR.json'
+import ko from '../../../public/locales/ko_KR.json'
 const id = '12345678-1234-1234-1234-123456789abc'; const volumeid = '22345678-1234-1234-1234-123456789abc'
 const route = { params: { id }, query: {} }
 const record = () => ({ id, volumeid, intervaltype: 2, schedule: '5:3:2', timezone: 'UTC', schedulingenabled: true, account: 'owner', domainid: id, tags: [], zone: [], storage: [], policycontext: { version: 1, observedat: '2026-10-27T00:00:00Z', volumeid, schedulingenabled: true, schedulestate: 'SCHEDULED', pollintervalseconds: 300, historysource: 'RETAINED_SCHEDULER_JOBS', historylimit: 50, currentjobknown: false } })

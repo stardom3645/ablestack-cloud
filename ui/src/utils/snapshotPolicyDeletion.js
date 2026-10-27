@@ -4,7 +4,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0 . Distributed AS IS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 import { policySchedule } from './snapshotPolicyPresentation'
-import { policyFingerprint } from './snapshotPolicyEditing'
+import { policyFingerprint, policyFormValues } from './snapshotPolicyEditing'
 import { readAllocationList } from './volumeAllocation'
 
 export const canDeletePolicy = apis => ['deleteSnapshotPolicies', 'listSnapshotPolicies', 'listVolumes'].every(api => api in (apis || {}))
@@ -12,7 +12,10 @@ export const deletionIdentity = policy => Object.freeze({ id: policy.id, volumei
 export const deletionOwner = volume => JSON.stringify([volume.id, volume.name, volume.account, volume.domainid, volume.domain, volume.projectid, volume.project, volume.zoneid])
 export const deletionFingerprint = target => JSON.stringify([policyFingerprint(target.policy), deletionOwner(target.volume)])
 
-export const deletionSchedule = policySchedule
+export function deletionSchedule (policy, t) {
+  try { policyFormValues(policy) } catch { return String(policy.schedule || '—') }
+  return policySchedule(policy, t)
+}
 
 // Do not apply creation-form validation: malformed legacy schedules must remain deletable.
 export async function readPolicyDeletionTarget (request, identity, current = () => true, presenceOnly = false) {
