@@ -97,7 +97,7 @@ public class SnapshotPolicyContextTest {
             manager._accountMgr = mock(com.cloud.user.AccountManager.class);
             manager._snapshotScheduleDao = mock(com.cloud.storage.dao.SnapshotScheduleDao.class);
             manager._snapshotDao = snapshots;
-            manager._configDao = mock(com.cloud.configuration.dao.ConfigurationDao.class);
+            manager._configDao = mock(org.apache.cloudstack.framework.config.dao.ConfigurationDao.class);
             manager.snapshotAsyncJobDao = mock(org.apache.cloudstack.framework.jobs.dao.AsyncJobDao.class);
             com.cloud.storage.SnapshotPolicyVO p = mock(com.cloud.storage.SnapshotPolicyVO.class);
             when(manager._snapshotPolicyDao.findById(7L)).thenReturn(p); when(p.getId()).thenReturn(7L); when(p.getAccountId()).thenReturn(9L); when(p.getVolumeId()).thenReturn(8L);
