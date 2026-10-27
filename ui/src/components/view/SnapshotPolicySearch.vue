@@ -32,7 +32,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
                     </a-select>
                     <template #extra>
                       <a-alert v-if="candidates[field.key].error" type="error" show-icon :message="$t('error.fetching.data')"><template #description><a-button size="small" @click="load(field, true)">{{ $t('label.retry') }}</a-button></template></a-alert>
-                      <a-button v-if="candidates[field.key].rows.length < candidates[field.key].count" type="link" size="small" :disabled="candidates[field.key].loading || !!candidates[field.key].error" @click="load(field, false)">{{ $t('message.snapshot.search.more', [candidates[field.key].rows.length, candidates[field.key].count]) }}</a-button>
+                      <a-button v-if="candidates[field.key].seen.length < candidates[field.key].count" type="link" size="small" :disabled="candidates[field.key].loading || !!candidates[field.key].error" @click="load(field, false)">{{ $t('message.snapshot.search.more', [candidates[field.key].seen.length, candidates[field.key].count]) }}</a-button>
                     </template>
                   </a-form-item>
                   <a-form-item :label="$t('label.snapshot.search.recursive')"><a-switch :checked="form.isrecursive === 'true'" @change="form.isrecursive = $event ? 'true' : undefined; change('isrecursive')" /></a-form-item>
@@ -64,7 +64,7 @@ import { getAPI } from '@/utils/storageApi'
 import VolumeSearchSelect from './VolumeSearchSelect'
 import { policyProjectScope, policySearchForm, policySearchError } from '@/utils/snapshotPolicySearch'
 import { readSnapshotCandidatePage } from '@/utils/storageSnapshotSearch'
-const empty = () => ({ rows: [], count: 0, page: 0, keyword: '', loading: false, error: false, version: 0 })
+const empty = () => ({ rows: [], seen: [], count: 0, page: 0, keyword: '', loading: false, error: false, version: 0 })
 export default {
   name: 'SnapshotPolicySearch',
   components: { VolumeSearchSelect },
@@ -89,7 +89,7 @@ export default {
   methods: {
     value (field, row) { return field.key === 'account' ? row.name : row.id },
     open () { this.form = policySearchForm(this.$route.query); this.volumeBlocked = false; this.visible = true; if (this.ownerFilters && this.projectScope === '0') this.ownerFields.forEach(field => this.load(field, true, '')); this.$nextTick(() => this.$refs.keyword?.focus()) },
-    close (focus = false) { this.visible = false; Object.values(this.timers).forEach(clearTimeout); this.timers = {}; Object.values(this.candidates).forEach(c => { c.version++; c.rows = []; c.count = 0; c.loading = false; c.error = false }); if (focus) this.$nextTick(() => this.$refs.trigger?.$el?.focus()) },
+    close (focus = false) { this.visible = false; Object.values(this.timers).forEach(clearTimeout); this.timers = {}; Object.values(this.candidates).forEach(c => { c.version++; c.rows = []; c.seen = []; c.count = 0; c.loading = false; c.error = false }); if (focus) this.$nextTick(() => this.$refs.trigger?.$el?.focus()) },
     reset () { this.close(true); this.$emit('search', { policySearch: {} }) },
     apply () { if (this.blocked) return; const form = { ...this.form }; this.close(true); this.$emit('search', { policySearch: form }) },
     change (key) { this.form.volumeid = undefined; if (key === 'domainid') { this.form.account = undefined; const field = this.ownerFields.find(f => f.key === 'account'); if (field) this.load(field, true, '') } },
@@ -97,17 +97,19 @@ export default {
     async load (field, reset, keyword) {
       const c = this.candidates[field.key]; const version = ++c.version; const scope = this.securityScope
       if (keyword !== undefined) c.keyword = String(keyword || '')
-      if (reset) { c.rows = []; c.page = 0; c.count = 0 }
+      if (reset) { c.rows = []; c.seen = []; c.page = 0; c.count = 0 }
       c.error = false; c.loading = true
       if (field.key === 'account' && !this.form.domainid) { c.loading = false; return }
-      const params = { listall: true, page: c.page + 1, pagesize: 20, ...(c.keyword ? { keyword: c.keyword } : {}), ...(field.key === 'account' ? { domainid: this.form.domainid } : {}) }
+      const params = { listall: true, page: c.page + 1, pagesize: 20, ...(c.keyword ? { keyword: c.keyword } : {}), ...(field.key === 'account' ? { domainid: this.form.domainid, isrecursive: false } : {}) }
       try {
         const response = await getAPI(field.api, params, { timeout: 20000 })
         if (!this.visible || version !== c.version || scope !== this.securityScope) return
-        const result = readSnapshotCandidatePage(response, field.api, field.response, params)
-        const seen = new Set(c.rows.map(row => row.id)); const fresh = result.rows.filter(row => !seen.has(row.id))
-        if (!fresh.length && result.count > c.rows.length) throw new Error('Incomplete candidate page')
-        c.rows.push(...fresh); c.count = result.count; c.page = params.page
+        // Root listAccounts can return descendants despite isrecursive=false. Keep raw paging
+        // separate from eligible options so descendant-only pages do not stall the picker.
+        const result = readSnapshotCandidatePage(response, field.api, field.response, field.key === 'account' ? { ...params, domainid: undefined } : params)
+        const seen = new Set(c.seen); const fresh = result.rows.filter(row => !seen.has(row.id))
+        if (!fresh.length && result.count > c.seen.length) throw new Error('Incomplete candidate page')
+        c.seen.push(...fresh.map(row => row.id)); c.rows.push(...fresh.filter(row => field.key !== 'account' || row.domainid === this.form.domainid)); c.count = result.count; c.page = params.page
       } catch { if (this.visible && version === c.version && scope === this.securityScope) c.error = true } finally { if (version === c.version) c.loading = false }
     }
   }

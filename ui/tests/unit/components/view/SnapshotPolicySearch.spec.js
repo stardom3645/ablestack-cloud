@@ -36,3 +36,10 @@ test('lookup failures block application until explicit retry succeeds', async ()
 test('security transition closes the popover and rejects late owner lookup metadata', async () => {
   let release; getAPI.mockImplementationOnce(() => new Promise(resolve => { release = resolve })); const w = render(); w.vm.open(); store.state.user.token = 'changed'; await flushPromises(); release({ listdomainsresponse: { count: 1, domain: [{ id: domain, name: 'old' }] } }); await flushPromises(); expect(w.vm.visible).toBe(false); expect(w.vm.candidates.domainid.rows).toEqual([])
 })
+test('descendant account rows never enter the selected-domain picker or stall raw pagination', async () => {
+  const w = render(); w.vm.open(); await flushPromises(); w.vm.form.domainid = domain; const field = w.vm.ownerFields.find(f => f.key === 'account')
+  getAPI.mockResolvedValueOnce({ listaccountsresponse: { count: 21, account: Array.from({ length: 20 }, (_, i) => ({ id: 'child-' + i, name: 'child account ' + i, domainid: 'child-domain' })) } })
+  await w.vm.load(field, true); expect(w.vm.candidates.account.error).toBe(false); expect(w.vm.candidates.account.rows).toEqual([]); expect(w.vm.candidates.account.seen).toHaveLength(20)
+  getAPI.mockResolvedValueOnce({ listaccountsresponse: { count: 21, account: [{ id: 'owner', name: 'owner', domainid: domain }] } })
+  await w.vm.load(field, false); expect(w.vm.candidates.account.rows.map(r => r.name)).toEqual(['owner']); expect(w.vm.candidates.account.seen).toHaveLength(21); expect(getAPI.mock.calls.at(-1)[1]).toMatchObject({ domainid: domain, isrecursive: false, page: 2 })
+})
