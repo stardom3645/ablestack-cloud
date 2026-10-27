@@ -600,13 +600,16 @@ export default {
           api: 'deleteSnapshotPolicies',
           icon: 'delete-outlined',
           label: 'label.delete.snapshot.policy',
+          toolbarLabel: 'label.snapshot.policy.bulk.delete',
+          groupAction: true,
+          groupShow: (selection, getters) => selection.length > 0 && canDeletePolicy(getters.apis),
           dataView: true,
           show: record => !!record.id && canDeletePolicy(store.getters.apis),
           popup: true,
           selfManagedDialog: true,
           snapshotStandardDialog: true,
           policyDeleteDialog: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyDeleteDialog.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyDeleteAction.vue')))
         }
       ]
     },

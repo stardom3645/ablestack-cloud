@@ -17,6 +17,7 @@
 
 <template>
   <SnapshotSearch v-if="apiName === 'listSnapshots'" @search="$emit('search', $event)" />
+  <SnapshotPolicySearch v-else-if="apiName === 'listSnapshotPolicies'" @search="$emit('search', $event)" />
   <span v-else :style="styleSearch">
     <span v-if="!searchFilters || searchFilters.length === 0" style="display: flex;">
       <a-input-search
@@ -189,6 +190,7 @@ import TooltipButton from '@/components/widgets/TooltipButton'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import Status from '@/components/widgets/Status'
 import SnapshotSearch from '@/components/view/SnapshotSearch'
+import SnapshotPolicySearch from '@/components/view/SnapshotPolicySearch'
 import VolumeSearchSelect from '@/components/view/VolumeSearchSelect'
 import { i18n } from '@/locales'
 import { affinityOwnerOptions, affinityTypeOptions } from '@/utils/affinityGroupCreation'
@@ -200,6 +202,7 @@ export default {
     ResourceIcon,
     Status,
     SnapshotSearch,
+    SnapshotPolicySearch,
     VolumeSearchSelect
   },
   props: {

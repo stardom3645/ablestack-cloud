@@ -1567,6 +1567,7 @@ export default {
           .test(this.$route.path)
     },
     enableGroupAction () {
+      if (this.$route.name === 'snapshotpolicy') return this.actions.some(action => action.groupAction && action.api in this.$store.getters.apis)
       if (snapshotCopyList(this.$route)) return false
       if (this.resourcePath) return this.explicitlyAllowRowSelection
       return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'cniconfiguration', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',

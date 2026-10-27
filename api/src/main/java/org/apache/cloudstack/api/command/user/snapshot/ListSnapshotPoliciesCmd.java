@@ -50,6 +50,9 @@ public class ListSnapshotPoliciesCmd extends BaseListProjectAndAccountResourcesC
     @Parameter(name = ApiConstants.FOR_DISPLAY, type = CommandType.BOOLEAN, description = "List resources by display flag; only ROOT admin is eligible to pass this parameter", since = "4.4", authorized = {RoleType.Admin})
     private Boolean display;
 
+    @Parameter(name = "ignoreproject", type = CommandType.BOOLEAN, description = "Exclude project-owned policies, including ID lookups. Cannot be combined with projectid. Defaults to false.")
+    private Boolean ignoreProject;
+
     @Parameter(name = "sortkey", type = CommandType.STRING, description = "Server sort field: id (default), intervaltype, maxsnaps, schedule, timezone or volumename. Schedule uses local time of day (hourly minutes use hour zero), then interval and weekday/day. This is not next execution time.")
     private String sortKey;
 
@@ -80,6 +83,11 @@ public class ListSnapshotPoliciesCmd extends BaseListProjectAndAccountResourcesC
     public Long getId() {
         return id;
     }
+
+    @Override
+    public Boolean getDisplay() { return display; }
+
+    public boolean isIgnoreProject() { return Boolean.TRUE.equals(ignoreProject); }
 
     public String getSortKey() { return sortKey; }
 

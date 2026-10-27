@@ -2080,6 +2080,15 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         String keyword = cmd.getKeyword();
 
         // Verify parameters
+        if (cmd.isIgnoreProject() && cmd.getProjectId() != null) {
+            throw new InvalidParameterValueException("ignoreproject and projectid cannot be specified together");
+        }
+        if (cmd.getProjectId() != null && (cmd.getDomainId() != null || cmd.getAccountName() != null)) {
+            throw new InvalidParameterValueException("Project scope cannot be combined with account or domain filters");
+        }
+        if (cmd.getDisplay() != null && caller.getType() != Account.Type.ADMIN) {
+            throw new PermissionDeniedException("Only root administrators may filter snapshot policies by fordisplay");
+        }
         if (volumeId != null) {
             VolumeVO volume = _volsDao.findById(volumeId);
             if (volume != null) {
@@ -2090,6 +2099,9 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject =
                 new Ternary<>(cmd.getDomainId(), cmd.isRecursive(), null);
         _accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
+        if (cmd.isIgnoreProject()) {
+            domainIdRecursiveListProject.third(ListProjectResourcesCriteria.SkipProjectResources);
+        }
         Long domainId = domainIdRecursiveListProject.first();
         Boolean isRecursive = domainIdRecursiveListProject.second();
         ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
@@ -2099,6 +2111,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
         policySearch.and("id", policySearch.entity().getId(), SearchCriteria.Op.EQ);
         policySearch.and("volumeId", policySearch.entity().getVolumeId(), SearchCriteria.Op.EQ);
+        policySearch.and("display", policySearch.entity().isDisplay(), SearchCriteria.Op.EQ);
 
         SearchBuilder<VolumeVO> volumeSearch = _volsDao.createSearchBuilder();
         volumeSearch.and("name", volumeSearch.entity().getName(), SearchCriteria.Op.LIKE);
@@ -2112,6 +2125,9 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         }
         if (id != null) {
             sc.setParameters("id", id);
+        }
+        if (cmd.getDisplay() != null) {
+            sc.setParameters("display", cmd.getDisplay());
         }
         if (keyword != null) {
             sc.setJoinParameters("volumeJoin", "name", "%" + keyword + "%");

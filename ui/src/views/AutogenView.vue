@@ -833,6 +833,7 @@
         :retained="!!listLoadedScope"
         @retry="fetchData({ irefresh: true })" />
       <a-alert v-if="snapshotSearchFailure" class="storage-query-error" type="error" show-icon :message="$t('message.snapshot.search.' + snapshotSearchFailure)" />
+      <a-alert v-if="policySearchFailure" class="storage-query-error" type="error" show-icon :message="$t('message.snapshot.policy.search.' + policySearchFailure)" />
       <a-alert v-if="isSnapshotCopyList" class="storage-query-error" type="info" show-icon :message="$t('message.snapshot.search.copy.readonly')" />
       <a-alert v-if="(isStorageUi || isSnapshotReadView) && listRefreshError" class="storage-query-error" type="error" show-icon :message="$t(listLoadedScope ? 'message.list.refresh.stale' : 'error.fetching.data')">
         <template #description><p v-if="isSnapshotReadView && snapshotListError">{{ snapshotListError.startsWith('message.') ? $t(snapshotListError) : snapshotListError }}</p><a-button size="small" :disabled="listRequestPending" @click="fetchData({ irefresh: true })">{{ $t('label.retry') }}</a-button></template>
@@ -878,8 +879,8 @@
           :emptyText="$route.meta?.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
           :columns="columns"
           :items="items"
-          :actions="isSnapshotCopyList || snapshotSearchFailure || (isSnapshotList && !storageActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
-          :selectionDisabled="record => isSnapshotList && !storageActionReady"
+          :actions="isSnapshotCopyList || snapshotSearchFailure || policySearchFailure || ((isSnapshotList || isPolicyList) && !storageActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
+          :selectionDisabled="record => (isSnapshotList || isPolicyList) && !storageActionReady"
           :keyboardContextMenu="isSnapshotList"
           :currentPage="page"
           :pageSize="pageSize"
@@ -955,6 +956,7 @@ import MoldDialog from '@/components/view/MoldDialog'
 import { storageUiRoute, storageDialogSize, storageDetailRouteKey } from '@/utils/storageUi'
 import { policyDetailRoute, policyDetailPermissions, readPolicyDetail } from '@/utils/snapshotPolicyDetail'
 import { snapshotPolicyListRoute, snapshotPolicyListQuery, snapshotPolicySortColumn, snapshotPolicySortQuery } from '@/utils/snapshotPolicyList'
+import { normalizePolicySearch, policyProjectScope, policySearchError, policySearchQuery, policySearchParams, policyListPage } from '@/utils/snapshotPolicySearch'
 import ActionButton from '@/components/view/ActionButton'
 import { affinityGroupQuery } from '@/utils/affinityGroupCreation'
 import SearchView from '@/components/view/SearchView'
@@ -1066,6 +1068,7 @@ export default {
       listRefreshError: false,
       snapshotListError: '',
       snapshotSearchFailure: '',
+      policySearchFailure: '',
       listLastUpdated: null,
       storageHeaderWidth: 0,
       vmGroupContextScope: null,
@@ -1277,7 +1280,7 @@ export default {
       this.fetchData()
     },
     '$store.getters.listAllProjects' (enabled) {
-      if (snapshotListRoute(this.$route) && !this.$store.getters.project?.id) {
+      if ((snapshotListRoute(this.$route) || snapshotPolicyListRoute(this.$route)) && !this.$store.getters.project?.id) {
         const projectid = enabled ? '-1' : '0'
         if (this.$route.query.projectid !== projectid) return this.$router.push({ query: { ...this.$route.query, projectid, page: '1' } })
       }
@@ -1297,6 +1300,7 @@ export default {
     isSnapshotList () { return snapshotListRoute(this.$route) },
     isSnapshotDetail () { return snapshotDetailRoute(this.$route) },
     isPolicyDetail () { return policyDetailRoute(this.$route) },
+    isPolicyList () { return snapshotPolicyListRoute(this.$route) },
     isSnapshotReadView () { return this.isSnapshotList || this.isSnapshotDetail || this.isPolicyDetail || snapshotPolicyListRoute(this.$route) },
     isSnapshotCopyList () { return snapshotCopyList(this.$route) },
     standardActionDialog () { return this.isStorageUi || !!this.currentAction.standardDialogSize },
@@ -1414,7 +1418,7 @@ export default {
       })
     },
     visibleListActions () {
-      if (this.isSnapshotCopyList || this.snapshotSearchFailure || (this.isSnapshotList && !this.storageActionReady)) return []
+      if (this.isSnapshotCopyList || this.snapshotSearchFailure || this.policySearchFailure || ((this.isSnapshotList || this.isPolicyList) && !this.storageActionReady)) return []
       if (!this.actions || this.actions.length === 0 || this.dataView) {
         return []
       }
@@ -1617,14 +1621,14 @@ export default {
           project = json?.listprojectsresponse?.project?.find(item => item.id === projectId)
           if (!project) throw new Error(this.$t('message.snapshot.search.lookup.denied'))
         }
-        if (!snapshotListRoute(this.$route) || captured !== scope() || this.$route.query.projectid !== projectId) return
+        if (!(snapshotListRoute(this.$route) || snapshotPolicyListRoute(this.$route)) || captured !== scope() || this.$route.query.projectid !== projectId) return
         await this.$store.dispatch('SetProject', project)
         await this.$store.dispatch('SetListAllProjects', projectId === '-1')
         this.fetchData({ irefresh: true })
-      } catch (error) { if (snapshotListRoute(this.$route) && captured === scope()) this.$notifyError(error) }
+      } catch (error) { if ((snapshotListRoute(this.$route) || snapshotPolicyListRoute(this.$route)) && captured === scope()) this.$notifyError(error) }
     },
     switchProject (projectId) {
-      if (snapshotListRoute(this.$route)) return this.syncSnapshotProject(projectId)
+      if (snapshotListRoute(this.$route) || snapshotPolicyListRoute(this.$route)) return this.syncSnapshotProject(projectId)
       if (!projectId || !projectId.length || projectId.length !== 36) {
         return
       }
@@ -1643,8 +1647,16 @@ export default {
     },
     fetchData (params = {}) {
       if (snapshotPolicyListRoute(this.$route)) {
-        const clean = snapshotPolicyListQuery(this.$route.query, this.pageSize)
+        const clean = snapshotPolicyListQuery(normalizePolicySearch({ ...this.$route.query, projectid: policyProjectScope(this.$route, this.$store.getters) }), this.pageSize)
         if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) return this.$router.replace({ query: clean })
+        this.policySearchFailure = policySearchError(clean, this.$store.getters)
+        if (this.policySearchFailure) {
+          this.listRequestVersion++; this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null
+          this.listRequestPending = false; this.loading = false; this.listRefreshError = false; this.resetSelection()
+          return
+        }
+      } else {
+        this.policySearchFailure = ''
       }
       if (this.$route.name === 'snapshot' && !this.$route.params.id) {
         const projectId = this.$route.query.projectid || this.$store.getters.project?.id || (this.$store.getters.listAllProjects ? '-1' : '0')
@@ -1808,7 +1820,7 @@ export default {
       this.projectView = Boolean(store.getters.project && store.getters.project.id)
       this.hasProjectId = ['vm', 'vmgroup', 'ssh', 'affinitygroup', 'userdata', 'cniconfiguration', 'volume', 'snapshot', 'buckets', 'vmsnapshot', 'guestnetwork',
         'vpc', 'securitygroups', 'publicip', 'vpncustomergateway', 'template', 'iso', 'event', 'kubernetes', 'sharedfs',
-        'autoscalevmgroup', 'vnfapp', 'webhook', 'kmskey', 'hsmprofile'].includes(this.$route.name)
+        'autoscalevmgroup', 'vnfapp', 'webhook', 'kmskey', 'hsmprofile', 'snapshotpolicy'].includes(this.$route.name)
 
       if (this.dataView && !refreshed && !sameList) {
         this.resource = {}
@@ -2027,9 +2039,10 @@ export default {
       }
 
       if (this.$store.getters.listAllProjects && !this.projectView) {
-        params.projectid = (this.$route.meta?.name === 'affinitygroup' || snapshotListRoute(this.$route)) ? (this.$route.query.projectid || '-1') : '-1'
+        params.projectid = (this.$route.meta?.name === 'affinitygroup' || snapshotListRoute(this.$route) || snapshotPolicyListRoute(this.$route)) ? (this.$route.query.projectid || '-1') : '-1'
       }
       if (snapshotListRoute(this.$route) && params.projectid === '0') { delete params.projectid; params.ignoreproject = true }
+      if (snapshotPolicyListRoute(this.$route)) params = policySearchParams(params)
 
       params.page = this.page
       params.pagesize = this.pageSize
@@ -2084,6 +2097,7 @@ export default {
         if (version !== this.listRequestVersion || scope !== this.listScope()) return
         const groupResult = vmGroups ? vmGroupQueryRows(json) : null
         const snapshotPage = snapshotListRoute(this.$route) ? snapshotListPage(json, this.$route, this.page, this.pageSize) : null
+        const policyPage = snapshotPolicyListRoute(this.$route) ? policyListPage(json, params) : null
         this.snapshotListError = ''
         if (sshDetail) {
           const result = sshKeyPairDetailResult(json, sshTarget)
@@ -2118,6 +2132,7 @@ export default {
 
         if (groupResult) apiItemCount = groupResult.count
         if (snapshotPage) apiItemCount = snapshotPage.count
+        if (policyPage) apiItemCount = policyPage.count
 
         const idFromRouteMatchesApiParameter = this.$route.params.id === params.id ||
           this.apiName === 'quotaSummary' && this.$route.params.id === params.accountid ||
@@ -2135,7 +2150,7 @@ export default {
             return
           }
         }
-        let responseItems = snapshotPage ? snapshotPage.rows : groupResult ? groupResult.rows : json[responseName][objectName]
+        let responseItems = policyPage ? policyPage.rows : snapshotPage ? snapshotPage.rows : groupResult ? groupResult.rows : json[responseName][objectName]
         if (this.$route.name === 'autoscalevmgroup' && !this.dataView && this.selectedColumns.includes('zonename')) {
           responseItems = await autoScaleInfrastructureRows(getAPI, responseItems || [], 'listNetworks' in this.$store.getters.apis)
           if (version !== this.listRequestVersion || scope !== this.listScope()) return
@@ -2293,6 +2308,9 @@ export default {
     closeAction (result) {
       const snapshotDialog = this.currentAction?.storageSnapshotMode || this.currentAction?.snapshotStandardDialog
       const policyDeleteDialog = this.currentAction?.policyDeleteDialog
+      if (policyDeleteDialog && result?.clearSelection && this.currentAction.policyListScope === this.listScope()) {
+        this.resetSelection(); this.$refs.listview?.resetSelection()
+      }
       const cniAction = this.currentAction?.api === 'deleteCniConfiguration' && this.currentAction.cniListScope === this.listScope()
       const cniLocation = this.currentAction?.cniListLocation
       const deletedCniDetail = cniAction && this.dataView && result?.removed?.includes(this.resource?.id)
@@ -2370,6 +2388,7 @@ export default {
           if (filter.key === 'domainid') delete queryParams.account
         }
         if (this.$route.name === 'vmsnapshot' && filter.key === 'state') delete queryParams.filter
+        if (snapshotPolicyListRoute(this.$route) && filter.key === 'domainid') delete queryParams.account
       }
       queryParams.page = '1'
       queryParams.pagesize = String(this.pageSize)
@@ -2400,7 +2419,7 @@ export default {
       }
     },
     execAction (action, isGroupAction) {
-      if ((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route) || policyDetailRoute(this.$route)) && this.storageActionReady === false) return
+      if ((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route) || policyDetailRoute(this.$route) || snapshotPolicyListRoute(this.$route)) && this.storageActionReady === false) return
       if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       this.storageActionGeneration++
       this.actionFocusReturn = null
@@ -2418,9 +2437,10 @@ export default {
       this.actionTriggerLabel = this.actionTrigger?.getAttribute('aria-label')
       this.actionOriginPath = this.$route?.path
       if (action.policyDeleteDialog) {
-        if (!canDeletePolicy(this.$store.getters.apis) || !action.resource?.id || !action.resource.volumeid || isGroupAction) return
-        this.currentAction = { ...action, invokedAsGroupAction: false }
-        this.resource = Object.freeze({ ...action.resource })
+        const targets = isGroupAction ? this.selectedItems : [action.resource || this.resource]
+        if (!canDeletePolicy(this.$store.getters.apis) || !targets.length || targets.some(p => !p?.id || !p.volumeid)) return
+        this.currentAction = { ...action, invokedAsGroupAction: !!isGroupAction, policyListScope: this.listScope(), policyDeleteTargets: Object.freeze(targets.map(p => Object.freeze({ ...p }))) }
+        this.resource = Object.freeze({ ...targets[0] })
         this.showAction = true
         return
       }
@@ -3302,6 +3322,13 @@ export default {
       this.$router.push({ query })
     },
     onSearch (opts) {
+      if (snapshotPolicyListRoute(this.$route) && opts && Object.prototype.hasOwnProperty.call(opts, 'policySearch')) {
+        const query = snapshotPolicyListQuery(policySearchQuery(this.$route.query, opts.policySearch, this.pageSize))
+        this.searchParams = {}
+        if (JSON.stringify(query) === JSON.stringify(this.$route.query)) this.fetchData(query)
+        else this.$router.push({ query })
+        return
+      }
       if (this.$route.name === 'snapshot' && opts && Object.prototype.hasOwnProperty.call(opts, 'snapshotSearch')) {
         const query = storageSnapshotListQuery(snapshotSearchQuery(this.$route.query, opts.snapshotSearch, this.pageSize))
         this.searchParams = {}

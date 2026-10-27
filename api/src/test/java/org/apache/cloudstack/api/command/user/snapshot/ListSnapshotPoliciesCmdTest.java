@@ -36,6 +36,21 @@ public class ListSnapshotPoliciesCmdTest {
     private ResponseGenerator responseGenerator;
 
     @Test
+    public void displayIsNullableAndPersonalScopeIsExplicit() throws Exception {
+        Assert.assertNull(cmd.getDisplay());
+        Assert.assertTrue(cmd.isDisplay());
+        Assert.assertFalse(cmd.isIgnoreProject());
+        java.lang.reflect.Field display = ListSnapshotPoliciesCmd.class.getDeclaredField("display");
+        display.setAccessible(true); display.set(cmd, false);
+        Assert.assertEquals(Boolean.FALSE, cmd.getDisplay());
+        Assert.assertFalse(cmd.isDisplay());
+        java.lang.reflect.Field ignore = ListSnapshotPoliciesCmd.class.getDeclaredField("ignoreProject");
+        ignore.setAccessible(true); ignore.set(cmd, true);
+        Assert.assertTrue(cmd.isIgnoreProject());
+        Assert.assertEquals("ignoreproject", ignore.getAnnotation(org.apache.cloudstack.api.Parameter.class).name());
+    }
+
+    @Test
     public void sortingParametersAreExposedWithoutInventingDefaults() throws Exception {
         Assert.assertEquals("sortkey", ListSnapshotPoliciesCmd.class.getDeclaredField("sortKey").getAnnotation(org.apache.cloudstack.api.Parameter.class).name());
         Assert.assertEquals("sortorder", ListSnapshotPoliciesCmd.class.getDeclaredField("sortOrder").getAnnotation(org.apache.cloudstack.api.Parameter.class).name());
