@@ -26,7 +26,7 @@ public class SnapshotPolicyContextTest {
         policy = mock(SnapshotPolicy.class); volume = mock(VolumeVO.class); schedule = mock(SnapshotScheduleVO.class); snapshots = mock(SnapshotDao.class);
         when(policy.getId()).thenReturn(7L); when(policy.getVolumeId()).thenReturn(8L); when(policy.getAccountId()).thenReturn(9L);
         when(policy.isActive()).thenReturn(true); when(policy.isDisplay()).thenReturn(true);
-        when(volume.getUuid()).thenReturn("volume"); when(schedule.getScheduledTimestamp()).thenReturn(new Date(1000));
+        when(volume.getUuid()).thenReturn("volume"); when(schedule.getAsyncJobId()).thenReturn(null); when(schedule.getScheduledTimestamp()).thenReturn(new Date(1000));
     }
     AsyncJobVO job(long id, JobInfo.Status status) {
         AsyncJobVO job = mock(AsyncJobVO.class); when(job.getId()).thenReturn(id); when(job.getUuid()).thenReturn("job-"+id);

@@ -73,7 +73,7 @@ describe('ResourceView resource navigation', () => {
 
   it('isolates general detail by path and SSH or snapshot detail by verified identity scope', () => {
     const source = fs.readFileSync(path.resolve(__dirname, '../../../../src/views/AutogenView.vue'), 'utf8')
-    expect(source).toMatch(/<resource-view\s+v-else(?:-if="[^"]*")?\s+:key="isSshKeyPairDetail \|\| isSnapshotDetail \? listScope\(\) : \$route.path"/)
+    expect(source).toMatch(/<resource-view\s+v-else(?:-if="[^"]*")?\s+:key="isSshKeyPairDetail \|\| isSnapshotDetail \|\| isPolicyDetail \? listScope\(\) : \$route.path"/)
   })
 
   it.each([
