@@ -9,8 +9,8 @@ import store from '@/store'
 import { snapshotPolicyListRoute, snapshotPolicySortKeys, snapshotPolicyListQuery, snapshotPolicySortColumn, snapshotPolicySortQuery } from '@/utils/snapshotPolicyList'
 jest.mock('@/api', () => ({ getAPI: jest.fn(), postAPI: jest.fn(), callAPI: jest.fn() }))
 jest.mock('@/store', () => ({ getters: {}, state: { user: { token: 'session' } } }))
-const volumeId = "22222222-2222-4222-8222-222222222222"; const domainId = "33333333-3333-4333-8333-333333333333"
-const a = "11111111-1111-4111-8111-111111111111"; const z = "99999999-9999-4999-8999-999999999999"; const currentId = "55555555-5555-4555-8555-555555555555"
+const volumeId = '22222222-2222-4222-8222-222222222222'; const domainId = '33333333-3333-4333-8333-333333333333'
+const a = '11111111-1111-4111-8111-111111111111'; const z = '99999999-9999-4999-8999-999999999999'; const currentId = '55555555-5555-4555-8555-555555555555'
 const scope = { keyword: '한글', q: '한글', volumeid: volumeId, account: 'owner', domainid: domainId, projectid: '0' }
 const row = { id: a, volumeid: volumeId, account: 'owner', domainid: domainId, volumename: 'disk', intervaltype: 3, maxsnaps: 2, schedule: '59:23:28', timezone: 'UTC' }
 const reply = (rows = [row], count = rows.length) => ({ listsnapshotpoliciesresponse: { snapshotpolicy: rows, count } })

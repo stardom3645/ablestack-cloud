@@ -2309,7 +2309,7 @@ export default {
       const snapshotDialog = this.currentAction?.storageSnapshotMode || this.currentAction?.snapshotStandardDialog
       const policyDeleteDialog = this.currentAction?.policyDeleteDialog
       if (policyDeleteDialog && result?.clearSelection && this.currentAction.policyListScope === this.listScope()) {
-        this.resetSelection(); this.$refs.listview?.resetSelection()
+        this.resetSelection(); if (this.$refs.listview) this.$refs.listview.resetSelection()
       }
       const cniAction = this.currentAction?.api === 'deleteCniConfiguration' && this.currentAction.cniListScope === this.listScope()
       const cniLocation = this.currentAction?.cniListLocation

@@ -17,7 +17,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
                 <a-form-item :label="$t('label.id')" html-for="policy-search-id"><a-input id="policy-search-id" v-model:value="form.id" :placeholder="$t('label.snapshot.policy.search.id')" /></a-form-item>
                 <template v-if="ownerFilters && projectScope === '0'">
                   <a-form-item v-for="field in ownerFields" :key="field.key" :label="$t('label.' + field.label)" :html-for="'policy-search-' + field.key">
-                    <a-select :id="'policy-search-' + field.key" v-model:value="form[field.key]" allow-clear show-search :filter-option="false" :loading="candidates[field.key].loading" :disabled="field.key === 'account' && !form.domainid" @search="search(field, $event)" @change="change(field.key)">
+                    <a-select
+                      :id="'policy-search-' + field.key"
+                      v-model:value="form[field.key]"
+                      allow-clear
+                      show-search
+                      :filter-option="false"
+                      :loading="candidates[field.key].loading"
+                      :disabled="field.key === 'account' && !form.domainid"
+                      @search="search(field, $event)"
+                      @change="change(field.key)">
                       <a-select-option v-if="form[field.key] && !candidates[field.key].rows.some(row => value(field, row) === form[field.key])" :value="form[field.key]">{{ form[field.key] }}</a-select-option>
                       <a-select-option v-for="row in candidates[field.key].rows" :key="row.id" :value="value(field, row)">{{ row.path || row.name }} · {{ row.id.slice(0, 8) }}</a-select-option>
                     </a-select>
