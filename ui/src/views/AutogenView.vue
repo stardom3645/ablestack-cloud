@@ -1406,7 +1406,9 @@ export default {
       return 'self'
     },
     visibleDataViewActions () {
-      if ((this.isSnapshotDetail || this.isPolicyDetail) && !this.storageActionReady) return []
+      const policyBackgroundRead = this.isPolicyDetail && this.listRequestPending && !this.listRefreshError &&
+        !!this.resource?.id && this.listLoadedScope === this.listScope()
+      if ((this.isSnapshotDetail || this.isPolicyDetail) && !this.storageActionReady && !policyBackgroundRead) return []
       if (this.isStorageUi && !this.resource?.id) return []
       if (this.isSshKeyPairDetail && !this.sshKeyPairDetailActionReady) return []
       if (this.$route.meta?.name === 'vmgroup' && !this.vmGroupQueryReady) return []
@@ -1421,7 +1423,7 @@ export default {
           return false
         }
         return 'show' in action ? action.show(this.resource, this.$store.getters) : true
-      })
+      }).map(action => policyBackgroundRead ? { ...action, disabled: () => true } : action)
     },
     visibleListActions () {
       if (this.isSnapshotCopyList || this.snapshotSearchFailure || this.policySearchFailure || (this.isSnapshotList && !this.storageActionReady) || (this.isPolicyList && this.listLoadedScope !== this.listScope())) return []

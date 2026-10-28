@@ -540,7 +540,15 @@ export default {
       docHelp: 'adminguide/storage.html#working-with-volume-snapshots',
       permission: ['listSnapshotPolicies'],
       resourceType: 'SnapshotPolicy',
-      tabs: [{ name: 'details', component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyDetails.vue'))) }],
+      tabs: [
+        { name: 'details', component: shallowRef(defineAsyncComponent(() => import('@/views/storage/SnapshotPolicyDetails.vue'))) },
+        {
+          name: 'events',
+          resourceType: 'SnapshotPolicy',
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/EventsTab.vue'))),
+          show: () => { return 'listEvents' in store.getters.apis }
+        }
+      ],
       params: { listall: true },
       columns: () => {
         var fields = ['intervaltype', 'maxsnaps', 'schedule', 'timezone', 'volumename', 'schedulingenabled']

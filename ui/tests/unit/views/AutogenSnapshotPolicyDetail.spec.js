@@ -80,3 +80,30 @@ test('other self-managed dialogs retain their refresh arguments', () => {
   const options = { irefresh: true }; ctx.refreshActionData(options)
   expect(ctx.fetchData).toHaveBeenCalledWith(options)
 })
+
+test('same-policy background reads retain the actions trigger but cannot open a mutation', async () => {
+  store.getters.apis.createSnapshotPolicy = {}
+  await ctx.fetchData()
+  const action = { api: 'createSnapshotPolicy', dataView: true, popup: true, snapshotStandardDialog: true }
+  ctx.actions = [action]; ctx.dataView = true
+  expect(Autogen.computed.visibleDataViewActions.call(ctx)).toEqual([action])
+  let release
+  getAPI.mockReturnValueOnce(new Promise(resolve => { release = resolve }))
+  const pending = ctx.fetchData(); await Promise.resolve()
+  const visible = Autogen.computed.visibleDataViewActions.call(ctx)
+  expect(visible).toHaveLength(1); expect(visible[0].disabled()).toBe(true)
+  ctx.execAction(action, false); expect(ctx.showAction).toBe(false); expect(callAPI).not.toHaveBeenCalled()
+  release(reply()); await pending
+  expect(Autogen.computed.visibleDataViewActions.call(ctx)).toEqual([action])
+})
+
+test.each(['initial', 'error', 'scope', 'permission'])('policy detail actions remain unavailable for %s reads', async state => {
+  store.getters.apis.createSnapshotPolicy = {}
+  await ctx.fetchData()
+  ctx.actions = [{ api: 'createSnapshotPolicy', dataView: true }]; ctx.dataView = true; ctx.listRequestPending = true
+  if (state === 'initial') ctx.resource = {}
+  if (state === 'error') ctx.listRefreshError = true
+  if (state === 'scope') ctx.listLoadedScope = 'different-policy-scope'
+  if (state === 'permission') delete store.getters.apis.createSnapshotPolicy
+  expect(Autogen.computed.visibleDataViewActions.call(ctx)).toEqual([])
+})
