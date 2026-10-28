@@ -78,6 +78,7 @@
                 name="timeSelect"
                 ref="timeSelect">
                 <a-time-picker
+                  popupClassName="snapshot-policy-time-dropdown"
                   use12Hours
                   format="h:mm A"
                   :disabled="isIntervalDisabled(form.intervaltype) || actionLoading || disabled"

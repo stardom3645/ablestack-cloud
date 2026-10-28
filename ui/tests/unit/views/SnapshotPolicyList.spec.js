@@ -132,6 +132,39 @@ test('same-scope 503 retains rows and query, retry recovers, permission denial c
   expect(ctx.items).toEqual([]); expect(ctx.itemCount).toBe(0)
 })
 
+test('refresh keeps policy toolbar and selection geometry while disabling writes until the read succeeds', async () => {
+  const create = { api: 'createSnapshotPolicy', listView: true }
+  const remove = { api: 'deleteSnapshotPolicies', groupAction: true, toolbarLabel: 'remove' }
+  ctx.$route.meta.actions = [create, remove]; store.getters.apis.deleteSnapshotPolicies = {}
+  for (const key of ['isPolicyList', 'storageActionReady', 'policySelectionAvailable']) Object.defineProperty(ctx, key, { get: () => Autogen.computed[key].call(ctx) })
+  await ctx.fetchData(); ctx.selectedRowKeys = [row.id]; ctx.selectedItems = [row]
+  const visible = () => Autogen.computed.visibleListActions.call(ctx)
+  const ready = visible().map(action => action.api); const rows = ctx.items
+  expect(ready).toEqual([create.api, remove.api]); expect(ctx.policySelectionAvailable).toBe(true)
+  let release; getAPI.mockImplementationOnce(() => new Promise(resolve => { release = resolve }))
+  const pending = ctx.fetchData({ irefresh: true })
+  expect(ctx.items).toBe(rows); expect(ctx.loading).toBe(false); expect(ctx.policySelectionAvailable).toBe(true)
+  expect(visible().map(action => action.api)).toEqual(ready)
+  expect(visible().every(action => action.disabled())).toBe(true)
+  release(reply()); await pending
+  expect(visible()).toEqual([create, remove]); expect(ctx.storageActionReady).toBe(true)
+  getAPI.mockRejectedValueOnce({ response: { status: 503 } }); await ctx.fetchData()
+  expect(ctx.policySelectionAvailable).toBe(true); expect(visible().every(action => action.disabled())).toBe(true)
+  getAPI.mockRejectedValueOnce({ response: { status: 432 } }); await ctx.fetchData()
+  expect(visible()).toEqual([]); expect(ctx.items).toEqual([])
+})
+
+test('retaining policy layout cannot expose selection or actions after permissions or security scope change', async () => {
+  ctx.$route.meta.actions = [{ api: 'createSnapshotPolicy', listView: true }, { api: 'deleteSnapshotPolicies', groupAction: true }]
+  store.getters.apis.deleteSnapshotPolicies = {}
+  for (const key of ['isPolicyList', 'storageActionReady', 'policySelectionAvailable']) Object.defineProperty(ctx, key, { get: () => Autogen.computed[key].call(ctx) })
+  await ctx.fetchData(); expect(ctx.policySelectionAvailable).toBe(true)
+  store.getters.apis = { listSnapshotPolicies: {} }
+  expect(ctx.policySelectionAvailable).toBe(false); expect(Autogen.computed.visibleListActions.call(ctx)).toEqual([])
+  ctx.$route.query.keyword = 'new owner'; ctx.$route.query.q = 'new owner'
+  expect(Autogen.computed.visibleListActions.call(ctx)).toEqual([])
+})
+
 test.each(['sortorder', 'page', 'keyword', 'role', 'session'])('late response cannot replace newer %s scope', async change => {
   await ctx.fetchData()
   const complete = []; getAPI.mockImplementation(() => new Promise(resolve => complete.push(resolve)))

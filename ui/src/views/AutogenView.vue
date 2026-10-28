@@ -881,6 +881,7 @@
           :items="items"
           :actions="isSnapshotCopyList || snapshotSearchFailure || policySearchFailure || ((isSnapshotList || isPolicyList) && !storageActionReady) || ($route.meta?.name === 'vmgroup' && !vmGroupQueryReady) ? [] : actions"
           :selectionDisabled="record => (isSnapshotList || isPolicyList) && !storageActionReady"
+          :explicitlyAllowRowSelection="policySelectionAvailable"
           :keyboardContextMenu="isSnapshotList"
           :currentPage="page"
           :pageSize="pageSize"
@@ -1307,6 +1308,9 @@ export default {
     isSnapshotCopyList () { return snapshotCopyList(this.$route) },
     standardActionDialog () { return this.isStorageUi || !!this.currentAction.standardDialogSize },
     storageActionReady () { return !this.listRequestPending && !this.listRefreshError && this.listLoadedScope === this.listScope() },
+    policySelectionAvailable () {
+      return this.isPolicyList && !this.policySearchFailure && this.actions.some(action => action.groupAction && action.api in this.$store.getters.apis)
+    },
     isSshKeyPairDetail () { return isSshKeyPairDetailRoute(this.$route) },
     sshKeyPairDetailVisible () {
       return ['ready', 'refreshing'].includes(this.sshKeyPairDetailStatus) &&
@@ -1420,7 +1424,7 @@ export default {
       })
     },
     visibleListActions () {
-      if (this.isSnapshotCopyList || this.snapshotSearchFailure || this.policySearchFailure || ((this.isSnapshotList || this.isPolicyList) && !this.storageActionReady)) return []
+      if (this.isSnapshotCopyList || this.snapshotSearchFailure || this.policySearchFailure || (this.isSnapshotList && !this.storageActionReady) || (this.isPolicyList && this.listLoadedScope !== this.listScope())) return []
       if (!this.actions || this.actions.length === 0 || this.dataView) {
         return []
       }
@@ -1439,7 +1443,7 @@ export default {
         const showOnGroup = action.groupAction && selectionCount > 0 &&
           ('groupShow' in action ? action.groupShow(this.selectedItems, this.$store.getters) : true)
         return showOnList || showOnGroup
-      })
+      }).map(action => this.isPolicyList && !this.storageActionReady ? { ...action, disabled: () => true } : action)
     },
     requiresNameConfirmation () {
       return !!this.currentAction?.requireNameConfirmation &&
