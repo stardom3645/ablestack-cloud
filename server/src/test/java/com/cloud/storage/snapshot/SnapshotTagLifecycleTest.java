@@ -38,6 +38,7 @@ import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreVO;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -59,8 +60,10 @@ public class SnapshotTagLifecycleTest {
     private SnapshotDataStoreVO ref;
     private SnapshotStrategy strategy;
     private AtomicReference<Snapshot.State> state;
+    private org.mockito.MockedStatic<com.cloud.event.UsageEventUtils> usage;
 
     @Before public void setup() {
+        usage = mockStatic(com.cloud.event.UsageEventUtils.class);
         snapshot = mock(SnapshotVO.class); state = new AtomicReference<>(Snapshot.State.BackedUp);
         when(snapshot.getId()).thenReturn(7L); when(snapshot.getVolumeId()).thenReturn(9L);
         when(snapshot.getState()).thenAnswer(i -> state.get());
@@ -77,6 +80,7 @@ public class SnapshotTagLifecycleTest {
         strategy = mock(SnapshotStrategy.class);
         when(_storageStrategyFactory.getSnapshotStrategy(eq(snapshot), nullable(Long.class), eq(SnapshotOperation.DELETE))).thenReturn(strategy);
     }
+    @After public void close() { usage.close(); }
     private void terminate() { state.set(Snapshot.State.Destroyed); ref.setState(State.Destroyed); }
     private void noTagsRemoved() { verify(_resourceTagDao, never()).removeByIdAndType(anyLong(), any()); }
 
