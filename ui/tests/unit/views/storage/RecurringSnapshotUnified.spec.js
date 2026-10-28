@@ -26,6 +26,7 @@ test('one form shows the volume and all schedule fields before selection and can
   expect(w.find('#policy-create-volume').exists()).toBe(true)
   expect(w.findAll('.ant-radio-button-wrapper')).toHaveLength(4)
   expect(w.findAll('.ant-input-number')).toHaveLength(2)
+  expect(w.find('[data-testid="policy-retention-help"]').exists()).toBe(false)
   const form = w.findComponent(FormSchedule)
   Object.assign(form.vm.form, { time: 0, maxsnaps: 1, timezone: 'UTC' }); await form.vm.handleSubmit()
   expect(postAPI).not.toHaveBeenCalled()

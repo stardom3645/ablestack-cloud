@@ -127,7 +127,7 @@
                     :step="1" />
                 </a-tooltip>
                 <template #extra>
-                  <div class="policy-retention-help" role="status" aria-live="polite" data-testid="policy-retention-help">
+                  <div v-if="resource.id" class="policy-retention-help" role="status" aria-live="polite" data-testid="policy-retention-help">
                     <div v-if="limitsLoading">{{ $t('message.snapshot.policy.limits.loading') }}</div>
                     <template v-else>
                       <div>{{ $t('message.snapshot.policy.limits.interval', { max: limitText(policyLimits.maxima[form.intervaltype]) }) }}</div>
