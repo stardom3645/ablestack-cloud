@@ -1922,7 +1922,8 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         Map<String, String> tags = cmd.getTags();
         boolean active = true;
 
-        return persistSnapshotPolicy(volume, schedule, timezoneId, intvType, maxSnaps, display, active, tags, zoneIds, poolIds, cmd.getId());
+        return persistSnapshotPolicy(volume, schedule, timezoneId, intvType, maxSnaps, display, active, tags, zoneIds, poolIds, cmd.getId(),
+                !_accountMgr.isRootAdmin(caller.getId()));
     }
 
     protected SnapshotPolicyVO persistSnapshotPolicy(VolumeVO volume, String schedule, String timezone, IntervalType intervalType, int maxSnaps, boolean display, boolean active, Map<String, String> tags, List<Long> zoneIds, List<Long> poolIds) {
@@ -1930,6 +1931,10 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
     }
 
     protected SnapshotPolicyVO persistSnapshotPolicy(VolumeVO volume, String schedule, String timezone, IntervalType intervalType, int maxSnaps, boolean display, boolean active, Map<String, String> tags, List<Long> zoneIds, List<Long> poolIds, Long expectedPolicyId) {
+        return persistSnapshotPolicy(volume, schedule, timezone, intervalType, maxSnaps, display, active, tags, zoneIds, poolIds, expectedPolicyId, false);
+    }
+
+    protected SnapshotPolicyVO persistSnapshotPolicy(VolumeVO volume, String schedule, String timezone, IntervalType intervalType, int maxSnaps, boolean display, boolean active, Map<String, String> tags, List<Long> zoneIds, List<Long> poolIds, Long expectedPolicyId, boolean preserveExistingDisplay) {
         long volumeId = volume.getId();
 
         GlobalLock createSnapshotPolicyLock = GlobalLock.getInternLock("createSnapshotPolicy_" + volumeId);
@@ -1944,15 +1949,18 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                         policy = _snapshotPolicyDao.lockRow(policy.getId(), true);
                     }
                     validateExpectedPolicy(policy, expectedPolicyId);
-                    validatePolicyVolumeState(_volsDao.findById(volumeId), policy != null, display);
+                    // Non-root API callers cannot set fordisplay. Its create default must
+                    // not resume an administrator-paused policy when they edit it.
+                    boolean effectiveDisplay = policy != null && preserveExistingDisplay ? policy.isDisplay() : display;
+                    validatePolicyVolumeState(_volsDao.findById(volumeId), policy != null, effectiveDisplay);
                     if (policy == null) {
-                        policy = createSnapshotPolicy(volumeId, schedule, timezone, intervalType, maxSnaps, display, zoneIds, poolIds);
+                        policy = createSnapshotPolicy(volumeId, schedule, timezone, intervalType, maxSnaps, effectiveDisplay, zoneIds, poolIds);
                         // The constructor defaults to active; honour an explicitly inactive create/copy.
                         if (!active) {
-                            updateSnapshotPolicy(policy, schedule, timezone, intervalType, maxSnaps, false, display, zoneIds, poolIds);
+                            updateSnapshotPolicy(policy, schedule, timezone, intervalType, maxSnaps, false, effectiveDisplay, zoneIds, poolIds);
                         }
                     } else {
-                        updateSnapshotPolicy(policy, schedule, timezone, intervalType, maxSnaps, active, display, zoneIds, poolIds);
+                        updateSnapshotPolicy(policy, schedule, timezone, intervalType, maxSnaps, active, effectiveDisplay, zoneIds, poolIds);
                     }
                     createTagsForSnapshotPolicy(tags, policy);
                     CallContext.current().putContextParameter(SnapshotPolicy.class, policy.getUuid());

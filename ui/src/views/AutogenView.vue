@@ -1648,7 +1648,10 @@ export default {
       })
     },
     fetchData (params = {}) {
-      if ((snapshotPolicyListRoute(this.$route) || policyDetailRoute(this.$route)) && !('listSnapshotPolicies' in (this.$store.getters.apis || {}))) {
+      const policyRoute = snapshotPolicyListRoute(this.$route) || policyDetailRoute(this.$route)
+      // Apply the destination view before URL/permission guards can return early.
+      if (policyRoute) this.dataView = !!this.$route.params?.id
+      if (policyRoute && !('listSnapshotPolicies' in (this.$store.getters.apis || {}))) {
         // Logout/role discovery can clear permissions before this view leaves.
         // Invalidate pending reads without sending a new request with a revoked session.
         this.listRequestVersion++; this.listRequestPending = false; this.listRefreshQueued = false

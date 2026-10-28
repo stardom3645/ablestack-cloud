@@ -36,6 +36,13 @@ test('logout clears the policy list without an unauthenticated refresh and ignor
   release(reply()); await old; expect(ctx.items).toEqual([]); expect(ctx.$notifyError).not.toHaveBeenCalled()
 })
 
+test('detail to a forbidden list URL cannot retain an empty detail layout before the read guard', async () => {
+  ctx.dataView = true; ctx.resource = { ...row }; store.getters.userInfo.roletype = 'User'
+  ctx.$route.query = snapshotPolicyListQuery({ projectid: '0', fordisplay: 'false' })
+  await ctx.fetchData()
+  expect(ctx.dataView).toBe(false); expect(ctx.resource).toEqual({}); expect(getAPI).not.toHaveBeenCalled()
+})
+
 test.each(snapshotPolicySortKeys)('%s has a server sorter and both URL directions retain scope and reset page', key => {
   ctx.$route.query = { ...scope, page: '3' }
   for (const [order, direction] of [['ascend', 'asc'], ['descend', 'desc']]) {
