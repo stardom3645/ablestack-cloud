@@ -38,7 +38,7 @@ afterEach(() => {
 })
 
 test('unauthorized banner does not request or poll Wall or inventory APIs', async () => {
-  wrapper = shallowMount(AutoAlertBanner, { global: { mocks: { $t: key => key } } })
+  wrapper = shallowMount(AutoAlertBanner, { global: { mocks: { $t: key => key, $te: () => true } } })
   await flush()
   jest.advanceTimersByTime(120000)
   await flush()
@@ -46,24 +46,24 @@ test('unauthorized banner does not request or poll Wall or inventory APIs', asyn
 })
 
 test('authorized banner catches a 432 and remains mounted', async () => {
-  store.getters.apis = { listWallAlertRules: {} }
-  getAPI.mockRejectedValue(new Error('432 forbidden'))
-  wrapper = shallowMount(AutoAlertBanner, { global: { mocks: { $t: key => key } } })
+  store.getters.apis = { getWallAlertAvailability: {}, listWallAlertRules: {} }
+  getAPI.mockResolvedValueOnce({ getwallalertavailabilityresponse: { wallavailability: { state: 'Ready', available: true } } }).mockRejectedValue(new Error('432 forbidden'))
+  wrapper = shallowMount(AutoAlertBanner, { global: { mocks: { $t: key => key, $te: () => true } } })
   await flush()
   expect(wrapper.exists()).toBe(true)
-  expect(getAPI.mock.calls.map(call => call[0])).toEqual(['listWallAlertRules'])
+  expect(getAPI.mock.calls.map(call => call[0])).toEqual(['getWallAlertAvailability', 'listWallAlertRules'])
 })
 
 test('unmount during a pending request cannot resurrect polling', async () => {
-  store.getters.apis = { listWallAlertRules: {}, listHostsMetrics: {}, listVirtualMachines: {} }
+  store.getters.apis = { getWallAlertAvailability: {}, listWallAlertRules: {}, listHostsMetrics: {}, listVirtualMachines: {} }
   let finish
   getAPI.mockImplementation(() => new Promise(resolve => { finish = resolve }))
-  wrapper = shallowMount(AutoAlertBanner, { global: { mocks: { $t: key => key } } })
+  wrapper = shallowMount(AutoAlertBanner, { global: { mocks: { $t: key => key, $te: () => true } } })
   await flush()
   wrapper.unmount()
   wrapper = null
   store.state.user.discoveryGeneration++
-  finish({ listwallalertrulesresponse: { rule: [] } })
+  finish({ getwallalertavailabilityresponse: { wallavailability: { state: 'Ready', available: true } } })
   await flush()
   jest.advanceTimersByTime(120000)
   await flush()

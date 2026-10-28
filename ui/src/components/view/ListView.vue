@@ -1179,7 +1179,7 @@
     </template>
     <template #footer>
       <span v-if="hasSelected">
-        {{ $t('label.items.selected.count', [selectedRowKeys.length]) }}
+        {{ $route.name === 'alertRules' ? $t('message.wall.rules.selection', { count: selectedRowKeys.length }) : $t('label.items.selected.count', [selectedRowKeys.length]) }}
       </span>
     </template>
     </a-table>
@@ -1379,6 +1379,9 @@ export default {
   },
   computed: {
     isSshKeyPairList () { return this.resourcePath ? this.resourcePath === '/ssh' : /^\/ssh(?:\/|$)/.test(this.$route.path) },
+    selectedItems () {
+      return this.selectionList
+    },
     hasSelected () {
       return this.selectedRowKeys.length > 0
     },
@@ -1562,7 +1565,7 @@ export default {
     enableGroupAction () {
       if (snapshotCopyList(this.$route)) return false
       if (this.resourcePath) return this.explicitlyAllowRowSelection
-      return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'cniconfiguration', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
+      return ['vm', 'alert', 'alertRules', 'vmgroup', 'ssh', 'userdata', 'cniconfiguration', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
         'vmsnapshot', 'backup', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway', 'vnfapp',
         'project', 'account', 'systemvm', 'router', 'computeoffering', 'systemoffering',
         'diskoffering', 'backupoffering', 'networkoffering', 'vpcoffering', 'ilbvm', 'kubernetes', 'comment', 'buckets',

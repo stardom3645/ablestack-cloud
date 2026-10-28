@@ -28,7 +28,7 @@
           v-if="wallState !== 'Ready'"
           type="info"
           show-icon
-          :message="$t('message.wall.availability.unavailable') + ' ' + $t('label.wall.availability.' + wallState)" />
+          :message="wallAvailabilityMessage" />
         <a-alert
           v-if="wallState === 'Ready'"
           class="alert-summary"
@@ -178,125 +178,140 @@
                         class="drawer-item-meta-row"
                       >
                         <div v-if="drawerItemMetricLineText(it)" class="drawer-item-meta-left">
-                          <a-popover
-                            trigger="hover"
-                            placement="bottomLeft"
-                            :overlayStyle="{ zIndex: 2147483650 }"
-                            :getPopupContainer="getPopupParent"
-                          >
-                            <template #content>
-                              <div class="target-more-popover">
-                                <template v-if="breachedCountByKind(it, 'host') > 0">
-                                  <div
-                                    v-for="lnk in breachedLinksByKind(it, 'host')"
-                                    :key="lnk.key"
-                                    class="target-more-item"
-                                  >
-                                    <a
-                                      class="target-more-link"
-                                      href="#"
-                                      @click.prevent.stop="openEntityLink(lnk)"
+                          <span class="drawer-item-metric-hover">
+                            <a-popover
+                              trigger="hover"
+                              placement="bottomLeft"
+                              :overlayStyle="{ zIndex: 2147483650 }"
+                              :getPopupContainer="getPopupParent"
+                            >
+                              <template #content>
+                                <div class="target-more-popover">
+                                  <template v-if="breachedCountByKind(it, 'host') > 0">
+                                    <div
+                                      v-for="lnk in breachedLinksByKind(it, 'host')"
+                                      :key="lnk.key"
+                                      class="target-more-item"
                                     >
-                                      {{ lnk.label }}
-                                    </a>
-                                    <span v-if="lnk.valueText" class="target-value-metric">
-                                      {{ lnk.valueText }}
-                                    </span>
-                                  </div>
-                                </template>
+                                      <a
+                                        class="target-more-link"
+                                        href="#"
+                                        @click.prevent.stop="openEntityLink(lnk)"
+                                      >
+                                        {{ lnk.label }}
+                                      </a>
+                                      <span v-if="lnk.valueText" class="target-value-metric">
+                                        {{ lnk.valueText }}
+                                      </span>
+                                    </div>
+                                  </template>
 
-                                <template v-if="breachedCountByKind(it, 'vm') > 0">
-                                  <div
-                                    v-for="lnk in breachedLinksByKind(it, 'vm')"
-                                    :key="lnk.key"
-                                    class="target-more-item"
-                                  >
-                                    <a
-                                      class="target-more-link"
-                                      href="#"
-                                      @click.prevent.stop="openEntityLink(lnk)"
+                                  <template v-if="breachedCountByKind(it, 'vm') > 0">
+                                    <div
+                                      v-for="lnk in breachedLinksByKind(it, 'vm')"
+                                      :key="lnk.key"
+                                      class="target-more-item"
                                     >
-                                      {{ lnk.label }}
-                                    </a>
-                                    <span v-if="lnk.valueText" class="target-value-metric">
-                                      {{ lnk.valueText }}
-                                    </span>
-                                  </div>
-                                </template>
+                                      <a
+                                        class="target-more-link"
+                                        href="#"
+                                        @click.prevent.stop="openEntityLink(lnk)"
+                                      >
+                                        {{ lnk.label }}
+                                      </a>
+                                      <span v-if="lnk.valueText" class="target-value-metric">
+                                        {{ lnk.valueText }}
+                                      </span>
+                                    </div>
+                                  </template>
 
-                                <template v-if="breachedCountByKind(it, 'storage') > 0">
-                                  <div
-                                    v-for="lnk in breachedLinksByKind(it, 'storage')"
-                                    :key="lnk.key"
-                                    class="target-more-item"
-                                  >
-                                    <a
-                                      class="target-more-link"
-                                      href="#"
-                                      @click.prevent.stop="openEntityLink(lnk)"
+                                  <template v-if="breachedCountByKind(it, 'storage') > 0">
+                                    <div
+                                      v-for="lnk in breachedLinksByKind(it, 'storage')"
+                                      :key="lnk.key"
+                                      class="target-more-item"
                                     >
-                                      {{ lnk.label }}
-                                    </a>
-                                    <span v-if="lnk.valueText" class="target-value-metric">
-                                      {{ lnk.valueText }}
-                                    </span>
-                                  </div>
-                                </template>
+                                      <a
+                                        class="target-more-link"
+                                        href="#"
+                                        @click.prevent.stop="openEntityLink(lnk)"
+                                      >
+                                        {{ lnk.label }}
+                                      </a>
+                                      <span v-if="lnk.valueText" class="target-value-metric">
+                                        {{ lnk.valueText }}
+                                      </span>
+                                    </div>
+                                  </template>
 
-                                <template v-if="breachedCountByKind(it, 'cloud') > 0">
-                                  <div
-                                    v-for="lnk in breachedLinksByKind(it, 'cloud')"
-                                    :key="lnk.key"
-                                    class="target-more-item"
-                                  >
-                                    <a
-                                      class="target-more-link"
-                                      href="#"
-                                      @click.prevent.stop="openEntityLink(lnk)"
+                                  <template v-if="breachedCountByKind(it, 'cloud') > 0">
+                                    <div
+                                      v-for="lnk in breachedLinksByKind(it, 'cloud')"
+                                      :key="lnk.key"
+                                      class="target-more-item"
                                     >
-                                      {{ lnk.label }}
-                                    </a>
-                                    <span v-if="lnk.valueText" class="target-value-metric">
-                                      {{ lnk.valueText }}
-                                    </span>
-                                  </div>
-                                </template>
-                              </div>
-                            </template>
-
-                            <span class="drawer-item-metric-hover">
-                              <template v-if="drawerItemMetricUi(it).kind === 'binary'">
-                                <span class="metric-binary">
-                                  {{ drawerItemMetricUi(it).text }}
-                                </span>
+                                      <a
+                                        class="target-more-link"
+                                        href="#"
+                                        @click.prevent.stop="openEntityLink(lnk)"
+                                      >
+                                        {{ lnk.label }}
+                                      </a>
+                                      <span v-if="lnk.valueText" class="target-value-metric">
+                                        {{ lnk.valueText }}
+                                      </span>
+                                    </div>
+                                  </template>
+                                </div>
                               </template>
 
-                              <template v-else>
-                                <span v-if="drawerItemMetricUi(it).hasCur" class="metric-kv">
-                                  <span class="metric-k">
-                                    {{ tr('label.max') }}
+                              <span class="drawer-item-metric-value">
+                                <template v-if="drawerItemMetricUi(it).kind === 'binary'">
+                                  <span class="metric-binary">
+                                    {{ drawerItemMetricUi(it).text }}
                                   </span>
-                                  <span class="metric-v metric-current">
-                                    {{ drawerItemMetricUi(it).curText }}
-                                  </span>
-                                </span>
+                                </template>
 
-                                <span
-                                  v-if="drawerItemMetricUi(it).hasCur && drawerItemMetricUi(it).hasThr"
-                                  class="metric-sep"
-                                >·</span>
+                                <template v-else>
+                                  <span v-if="drawerItemMetricUi(it).hasCur" class="metric-kv">
+                                    <span class="metric-k">
+                                      {{ tr('label.max') }}
+                                    </span>
+                                    <span class="metric-v metric-current">
+                                      {{ drawerItemMetricUi(it).curText }}
+                                    </span>
+                                  </span>
+                                </template>
+                              </span>
+                            </a-popover>
+                            <a-tooltip
+                              v-if="vmCpuOver100(it)"
+                              :title="tr('message.alert.vm.cpu.over100')"
+                              :trigger="['hover', 'focus']"
+                              :overlayStyle="{ zIndex: 2147483650 }"
+                              :getPopupContainer="getPopupParent"
+                            >
+                              <span
+                                class="cpu-over100-icon"
+                                role="img"
+                                :aria-label="tr('label.alert.vm.cpu.over100')"
+                                tabindex="0"
+                              ><ExclamationCircleFilled /></span>
+                            </a-tooltip>
+                            <span
+                              v-if="drawerItemMetricUi(it).hasCur && drawerItemMetricUi(it).hasThr"
+                              class="metric-sep"
+                            >·</span>
 
-                                <span v-if="drawerItemMetricUi(it).hasThr" class="metric-kv">
-                                  <span class="metric-k">
-                                    {{ tr('label.threshold.value') }}
-                                  </span>
-                                  <span class="metric-v metric-threshold">
-                                    {{ drawerItemMetricUi(it).thrText }}
-                                  </span>
-                                </span>
-                              </template>
+                            <span v-if="drawerItemMetricUi(it).kind !== 'binary' && drawerItemMetricUi(it).hasThr" class="metric-kv">
+                              <span class="metric-k">
+                                {{ tr('label.threshold.value') }}
+                              </span>
+                              <span class="metric-v metric-threshold">
+                                {{ drawerItemMetricUi(it).thrText }}
+                              </span>
                             </span>
-                          </a-popover>
+                          </span>
                         </div>
                         <div v-if="drawerItemAgeText(it)" class="drawer-item-meta-right">
                           {{ drawerItemAgeText(it) }}
@@ -707,6 +722,13 @@ export default {
     return {
       solutionPopoverUid: '',
       solutionPopoverOverlayStyle: { zIndex: 2147483650 }
+    }
+  },
+  computed: {
+    wallAvailabilityMessage () {
+      const key = 'message.wall.availability.' + this.wallState
+      const reason = this.$te(key) ? this.$t(key) : this.$t('message.wall.availability.Unavailable')
+      return reason + ' ' + this.$t('message.wall.availability.impact')
     }
   },
   methods: {
@@ -1361,16 +1383,16 @@ export default {
       const a = it && Array.isArray(it.alerts) && it.alerts.length ? it.alerts[0] : null
       const r = it && it.rule ? it.rule : null
 
-      const n0 = pickNumberLike(it && (it.currentValue || it.current || it.value || it.lastValue))
+      const n0 = pickNumberLike(it && takeFirst(it.currentValue, it.current, it.value, it.lastValue))
       if (n0 != null) { return n0 }
 
-      const n1 = pickNumberLike(r && (r.currentValue || r.current || r.value || r.lastValue))
+      const n1 = pickNumberLike(r && takeFirst(r.currentValue, r.current, r.value, r.lastValue))
       if (n1 != null) { return n1 }
 
-      const n2 = pickNumberLike(a && (a.value || a.values || a.val || a.sample))
+      const n2 = pickNumberLike(a && takeFirst(a.value, a.values, a.val, a.sample))
       if (n2 != null) { return n2 }
 
-      const n3 = pickNumberLike(a && a.annotations && (a.annotations.current || a.annotations.value))
+      const n3 = pickNumberLike(a && a.annotations && takeFirst(a.annotations.current, a.annotations.value))
       if (n3 != null) { return n3 }
 
       return null
@@ -1390,6 +1412,10 @@ export default {
           }
         }
       }
+
+      // currentTargets and currentValue describe the same evaluation. Older
+      // alert annotations must not override a value from that snapshot.
+      if (max != null) return max
 
       const arr = Array.isArray(it && it.alerts) ? it.alerts : ruleInstances(it && it.rule)
       if (arr && arr.length > 0) {
@@ -1423,8 +1449,12 @@ export default {
       const r = it && it.rule ? it.rule : null
 
       const cand = takeFirst(
-        it && (it.thresholdValue || it.threshold || it.thresholdvalue),
-        r && (r.thresholdValue || r.threshold || r.thresholdvalue),
+        it && it.thresholdValue,
+        it && it.threshold,
+        it && it.thresholdvalue,
+        r && r.thresholdValue,
+        r && r.threshold,
+        r && r.thresholdvalue,
         r && r.thresholds,
         r && r.evaluatorParams,
         r && r.evaluator && r.evaluator.params,
@@ -1445,9 +1475,9 @@ export default {
     function formatMetric (n, unit) {
       if (n == null || !Number.isFinite(n)) { return '' }
 
-      let v = n
-      // 0~1 사이 비율(0.1533)을 %로 전달하는 케이스 보정합니다.
-      if (unit === '%' && v >= 0 && v <= 1) { v = v * 100 }
+      // Alert queries and thresholds already use percentage points (e.g.
+      // CPU rate / vCPU count * 100). The magnitude cannot identify a ratio.
+      const v = n
 
       // bytes/sec 계열은 값만 자동 축약하고, 제목의 원 단위는 그대로 둡니다.
       if (unit && /^(bytes?|b)(\/sec|\/s)$/i.test(String(unit).trim())) {
@@ -1511,6 +1541,14 @@ export default {
 
     const isDiscreteTargetRule = (it) => {
       return isBinaryTargetRule(it) || isStateLikeRule(it)
+    }
+
+    const vmCpuOver100 = (it) => {
+      const rule = it && it.rule ? it.rule : it
+      const title = String(takeFirst(it && it.title, rule && rule.name, rule && rule.title))
+      const vmRule = isVmKind(pickKindFromRule(rule)) || /사용자[_\s-]*vm|user[_\s-]*vm/i.test(title)
+      if (!vmRule || metricUnitOf(it) !== '%' || !/cpu.*(사용률|usage|utili[sz]ation)/i.test(title)) return false
+      return resolveCurrentMaxMetric(it) > 100 || resolveCurrentMetric(it) > 100
     }
 
     const drawerItemMetricInlineText = (it) => {
@@ -2425,7 +2463,9 @@ export default {
               }
             }
 
-            if (n == null) {
+            // A target absent from a current snapshot has no current value;
+            // showing its old alert value would mix different evaluations.
+            if (n == null && valueMap.size === 0) {
               const annCur = takeFirst(a.annotations && a.annotations.current, a.annotations && a.annotations.value, a.value, a.values)
               n = pickNumberLike(annCur)
             }
@@ -3012,6 +3052,7 @@ export default {
       drawerItemMetricInlineTitle,
       drawerItemMetricLineText,
       drawerItemMetricUi,
+      vmCpuOver100,
       drawerItemMetaText,
       hasSolutionUrl,
       openSolution,
@@ -3320,6 +3361,22 @@ export default {
   color: rgba(0, 0, 0, 0.55);
 }
 
+.cpu-over100-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: #e8c77d;
+  font-size: 14px;
+  line-height: 1;
+  cursor: help;
+}
+
+.cpu-over100-icon:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
 .drawer-item-meta-left {
   min-width: 0;
   flex: 1 1 auto;
@@ -3589,6 +3646,11 @@ body.dark-mode .wall-alert-drawer .drawer-item-meta-left,
 body.dark-mode .wall-alert-drawer .drawer-item-meta-right,
 body.dark-mode .wall-alert-drawer .drawer-item-meta-row * {
   color: rgba(255, 255, 255, 0.74) !important;
+}
+
+body.dark-mode .wall-alert-drawer .drawer-item-meta-row .cpu-over100-icon,
+body.dark-mode .wall-alert-drawer .drawer-item-meta-row .cpu-over100-icon * {
+  color: #d9bf86 !important;
 }
 
 /* 메트릭 값은 조금 더 선명하게 */

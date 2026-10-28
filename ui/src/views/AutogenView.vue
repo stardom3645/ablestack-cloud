@@ -181,6 +181,7 @@
         :is="currentAction.component"
         :resource="resource"
         :current-action="currentAction"
+        :selected-items="selectedItems"
         dialog-only
         @refresh-data="fetchData"
         @close-action="closeAction"
@@ -873,6 +874,13 @@
           <template #action><a-button size="small" @click="fetchData">{{ $t('label.refresh') }}</a-button></template>
         </a-alert>
         <p v-else-if="listRefreshError && !isStorageUi && !isSnapshotList && $route.meta?.name !== 'vmgroup'" role="status">{{ $t('message.list.refresh.stale') }}</p>
+        <wall-alert-rule-toolbar
+          v-if="$route.name === 'alertRules'"
+          :actions="actions"
+          :selected-items="selectedItems"
+          :loading="loading || listRefreshError"
+          @exec-action="action => execAction(action, true)"
+        />
         <list-view
           :loading="loading"
           :emptyText="$route.meta?.name === 'vmgroup' ? vmGroupEmptyText : snapshotEmptyText"
@@ -973,10 +981,12 @@ import { vmGroupLookupStatus } from '@/utils/vmGroupLookup'
 import { sshKeyPairDeleteTargets } from '@/utils/sshKeyPairDeletion'
 import { isSshKeyPairDetailRoute, sshKeyPairDetailScope, sshKeyPairDetailTarget, sshKeyPairDetailParams, sshKeyPairMatchesTarget, sshKeyPairDetailResult, sshKeyPairDetailFailure, sshKeyPairVmParams } from '@/utils/sshKeyPairIdentity'
 import { normalizeVmGroupName, isVmGroupNameAction, isVmGroupAction, vmGroupErrorKey, vmGroupDeleteTargets } from '@/utils/vmGroupNames'
+import WallAlertRuleToolbar from '@/views/infra/WallAlertRuleToolbar.vue'
 
 export default {
   name: 'Resource',
   components: {
+    WallAlertRuleToolbar,
     Breadcrumb,
     MoldDialog,
     ResourceView,
