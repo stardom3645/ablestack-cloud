@@ -1438,6 +1438,9 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                 }
             }
             int pending = forcedSnapshotPending(snapshotId).size();
+            if (physicalComplete && pending == 0) {
+                cleanupTerminatedSnapshotTags(snapshotId);
+            }
             response.setExecutionResult(physicalComplete && pending == 0, pending);
             return response;
         } finally {
@@ -1457,6 +1460,24 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
     protected boolean snapshotDeletionReferenceSettled(SnapshotDataStoreVO ref) {
         return ref == null || ref.getState() == ObjectInDataStoreStateMachine.State.Destroyed
                 || ref.getState() == ObjectInDataStoreStateMachine.State.Hidden;
+    }
+
+    /** Called under the snapshot deletion lock, only after successful storage work. */
+    protected void cleanupTerminatedSnapshotTags(long snapshotId) {
+        SnapshotVO current = _snapshotDao.findByIdIncludingRemoved(snapshotId);
+        if (current == null || (current.getRemoved() == null && current.getState() != Snapshot.State.Destroyed)) {
+            return;
+        }
+        // A zone-local success or forced database tombstone does not terminate
+        // the resource while any live or unverified physical target remains.
+        for (SnapshotDataStoreVO ref : _snapshotStoreDao.listBySnapshotId(snapshotId)) {
+            if (ref == null || !snapshotDeletionReferenceSettled(ref)) { return; }
+        }
+        if (!forcedSnapshotPending(snapshotId).isEmpty() || snapshotDetailsDao.findDetail(snapshotId, FORCE_DELETE_UNMAPPED) != null) { return; }
+        _resourceTagDao.removeByIdAndType(snapshotId, ResourceObjectType.Snapshot);
+        if (!_resourceTagDao.listBy(snapshotId, ResourceObjectType.Snapshot).isEmpty()) {
+            throw new CloudRuntimeException("Snapshot tag cleanup did not complete; retry deletion of this snapshot");
+        }
     }
 
     @Override
@@ -1505,6 +1526,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         }
         validateNoBackupActivityOrHistoryForVolumeSnapshot(snapshot.getVolumeId(), "delete");
         if (originalState == Snapshot.State.Destroyed && refs.stream().allMatch(this::snapshotDeletionReferenceSettled)) {
+            cleanupTerminatedSnapshotTags(snapshotId);
             return true;
         }
         SnapshotStrategy strategy = _storageStrategyFactory.getSnapshotStrategy(snapshot, zoneId, SnapshotOperation.DELETE);
@@ -1538,6 +1560,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         }
         SnapshotVO after = _snapshotDao.findById(snapshotId);
         if (result && (after == null || after.getState() == Snapshot.State.Destroyed)) {
+            cleanupTerminatedSnapshotTags(snapshotId);
             annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshot.getUuid());
         }
         // Historic invisible leftovers already reported logical deletion. A retry
