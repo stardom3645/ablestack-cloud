@@ -82,7 +82,7 @@ export default {
         this.target = target; this.needsReload = false
       } catch (error) { if (this.current()) { this.target = null; this.error = this.failure(error) } } finally { this.busy = false }
     },
-    complete () { this.$notification.success({ message: this.$t('label.delete.snapshot.policy'), description: this.$t('message.success.delete.snapshot.policy') }); this.closeResult = { removed: [this.identity.id] }; this.closed = true; this.$emit('refresh-data') },
+    complete () { this.$notification.success({ message: this.$t('label.delete.snapshot.policy'), description: this.$t('message.success.delete.snapshot.policy') }); this.closeResult = { removed: [this.identity.id] }; this.closed = true; this.$emit('refresh-data', this.closeResult) },
     async reconcile () {
       const latest = await readPolicyDeletionTarget(getAPI, this.identity, () => this.allowed, true)
       if (!this.allowed) return

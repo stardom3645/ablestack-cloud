@@ -48,3 +48,35 @@ test.each(['user', 'role', 'token', 'project', 'permissions'])('%s scope transit
   expect(ctx.listScope()).not.toBe(first); getAPI.mockResolvedValueOnce({ listsnapshotpoliciesresponse: {} }); const newer = ctx.fetchData(); expect(ctx.resource).toEqual({})
   complete(reply()); await pending; await newer; expect(ctx.resource).toEqual({})
 })
+
+test('confirmed policy detail deletion waits for close and returns to its filtered list without refetching the removed ID', async () => {
+  await ctx.fetchData()
+  ctx.$route.query = { projectid: id, keyword: 'disk', volumeid: id, id, tab: 'details', sortkey: 'maxsnaps', sortorder: 'asc', page: '2', pagesize: '50' }
+  ctx.currentAction = { policyDeleteDialog: true, policyListScope: ctx.listScope() }; ctx.showAction = true
+  ctx.fetchData = jest.fn()
+  ctx.refreshActionData({ removed: [id] }); expect(ctx.fetchData).not.toHaveBeenCalled()
+  ctx.closeAction({ removed: [id] })
+  expect(ctx.$router.replace).toHaveBeenCalledWith({ path: '/snapshotpolicy', query: { projectid: id, keyword: 'disk', q: 'disk', volumeid: id, sortkey: 'maxsnaps', sortorder: 'asc', page: '1', pagesize: '50' } })
+  expect(ctx.resource).toEqual({}); expect(ctx.showAction).toBe(false)
+})
+
+test('late detail response cannot restore a confirmed deleted policy', async () => {
+  await ctx.fetchData(); let release
+  getAPI.mockReturnValueOnce(new Promise(resolve => { release = resolve })); const pending = ctx.fetchData(); await Promise.resolve()
+  ctx.currentAction = { policyDeleteDialog: true, policyListScope: ctx.listScope() }; ctx.showAction = true
+  ctx.closeAction({ removed: [id] }); release(reply()); await pending
+  expect(ctx.resource).toEqual({}); expect(ctx.listRequestPending).toBe(false)
+  expect(ctx.$router.replace).toHaveBeenCalledWith(expect.objectContaining({ path: '/snapshotpolicy' }))
+})
+
+test('unconfirmed deletion still refreshes and a changed dialog scope cannot navigate away', async () => {
+  await ctx.fetchData(); ctx.currentAction = { policyDeleteDialog: true, policyListScope: 'old-scope' }
+  ctx.fetchData = jest.fn(); ctx.refreshActionData(); expect(ctx.fetchData).toHaveBeenCalledTimes(1)
+  ctx.closeAction({ removed: [id] }); expect(ctx.$router.replace).not.toHaveBeenCalled(); expect(ctx.resource.id).toBe(id)
+})
+
+test('other self-managed dialogs retain their refresh arguments', () => {
+  ctx.currentAction = { storageSnapshotMode: true }; ctx.fetchData = jest.fn()
+  const options = { irefresh: true }; ctx.refreshActionData(options)
+  expect(ctx.fetchData).toHaveBeenCalledWith(options)
+})

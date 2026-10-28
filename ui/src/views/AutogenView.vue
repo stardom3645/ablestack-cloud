@@ -182,7 +182,7 @@
         :resource="resource"
         :current-action="currentAction"
         dialog-only
-        @refresh-data="fetchData"
+        @refresh-data="refreshActionData"
         @close-action="closeAction"
       />
       <keep-alive :max="(isStorageUi || isPolicyUi) ? 1 : undefined" v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
@@ -956,7 +956,7 @@ import MoldDialog from '@/components/view/MoldDialog'
 import { storageUiRoute, storageDialogSize, storageDetailRouteKey } from '@/utils/storageUi'
 import { policyDetailRoute, policyDetailPermissions, readPolicyDetail } from '@/utils/snapshotPolicyDetail'
 import { snapshotPolicyListRoute, snapshotPolicyListQuery, snapshotPolicySortColumn, snapshotPolicySortQuery } from '@/utils/snapshotPolicyList'
-import { normalizePolicySearch, policyProjectScope, policySearchError, policySearchQuery, policySearchParams, policyListPage } from '@/utils/snapshotPolicySearch'
+import { normalizePolicySearch, policyProjectScope, policySearchError, policySearchForm, policySearchQuery, policySearchParams, policyListPage } from '@/utils/snapshotPolicySearch'
 import ActionButton from '@/components/view/ActionButton'
 import { affinityGroupQuery } from '@/utils/affinityGroupCreation'
 import SearchView from '@/components/view/SearchView'
@@ -2323,9 +2323,27 @@ export default {
       }
       return request
     },
+    refreshActionData (result) {
+      // A confirmed policy deletion must close before navigation. Refetching its
+      // detail here clears the dialog scope and loses the after-close result.
+      if (this.currentAction?.policyDeleteDialog) {
+        if (policyDetailRoute(this.$route) && result?.removed?.includes(this.$route.params?.id)) return
+        return this.fetchData()
+      }
+      return this.fetchData(result)
+    },
     closeAction (result) {
       const snapshotDialog = this.currentAction?.storageSnapshotMode || this.currentAction?.snapshotStandardDialog
       const policyDeleteDialog = this.currentAction?.policyDeleteDialog
+      const deletedPolicyDetail = policyDeleteDialog && policyDetailRoute(this.$route) && this.currentAction.policyListScope === this.listScope() && result?.removed?.includes(this.$route.params?.id)
+      let policyListLocation
+      if (deletedPolicyDetail) {
+        const query = snapshotPolicyListQuery(policySearchQuery(this.$route.query, policySearchForm(this.$route.query), this.$route.query.pagesize || this.pageSize || 20))
+        if (query.id === this.$route.params.id) delete query.id
+        policyListLocation = { path: '/snapshotpolicy', query }
+        this.listRequestVersion++; this.listRequestPending = false; this.listLoadedScope = null
+        this.resource = {}; this.items = []; this.itemCount = 0; this.snapshotListError = ''; this.listRefreshError = false
+      }
       if (policyDeleteDialog && result?.clearSelection && this.currentAction.policyListScope === this.listScope()) {
         this.resetSelection(); if (this.$refs.listview) this.$refs.listview.resetSelection()
       }
@@ -2360,6 +2378,7 @@ export default {
       this.currentAction = {}
       this.actionConfirmText = ''
       if (deletedCniDetail) this.$router.replace(cniLocation || { path: '/cniconfiguration' })
+      if (deletedPolicyDetail) this.$router.replace(policyListLocation)
       if (deletedSshDetail) this.$router.push('/ssh')
       if (deletedUserDataDetail) this.$router.push('/userdata')
       // Clearing currentAction unmounts the legacy modal before AntD can restore focus.

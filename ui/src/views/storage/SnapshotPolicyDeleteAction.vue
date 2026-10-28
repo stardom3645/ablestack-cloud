@@ -4,7 +4,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 http://www.apache.org/licenses/LICENSE-2.0 . Distributed AS IS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
 <template>
-  <component :is="currentAction.invokedAsGroupAction ? 'SnapshotPolicyBulkDeleteDialog' : 'SnapshotPolicyDeleteDialog'" :resource="resource" :current-action="currentAction" @close-action="$emit('close-action', $event)" @refresh-data="$emit('refresh-data')" />
+  <component :is="currentAction.invokedAsGroupAction ? 'SnapshotPolicyBulkDeleteDialog' : 'SnapshotPolicyDeleteDialog'" :resource="resource" :current-action="currentAction" @close-action="$emit('close-action', $event)" @refresh-data="$emit('refresh-data', $event)" />
 </template>
 <script>
 import SnapshotPolicyDeleteDialog from './SnapshotPolicyDeleteDialog'

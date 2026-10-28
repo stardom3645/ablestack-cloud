@@ -6,6 +6,7 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { reactive } from 'vue'
 import Dialog from '@/views/storage/SnapshotPolicyDeleteDialog'
+import DeleteAction from '@/views/storage/SnapshotPolicyDeleteAction'
 import Autogen from '@/views/AutogenView'
 import storage from '@/config/section/storage'
 import { getAPI, postAPI } from '@/api'
@@ -43,6 +44,21 @@ test('one confirmed UUID is deleted and read back absent, while the other interv
   const w = render(); await flushPromises(); w.vm.acknowledged = true; await w.vm.submit()
   expect(postAPI).toHaveBeenCalledTimes(1); expect(postAPI).toHaveBeenCalledWith('deleteSnapshotPolicies', { ids: 'fixed' }, { preserveOnFailure: true, timeout: 30000 })
   expect(policies.map(p => p.id)).toEqual(['other']); expect(w.emitted('refresh-data')).toHaveLength(1); expect(w.emitted('close-action')[0][0]).toEqual({ removed: ['fixed'] })
+})
+
+test('the action wrapper forwards confirmed deletion before the page can refetch and erase its closing scope', async () => {
+  Object.assign(route, { name: 'snapshotpolicy', meta: { name: 'snapshotpolicy' }, path: '/snapshotpolicy/fixed', params: { id: 'fixed' }, query: {} })
+  const action = { policyDeleteDialog: true, policyListScope: 'same' }
+  const view = { currentAction: action, $route: route, $refs: {}, $nextTick: f => f(), listScope: () => 'same', resource: base(), fetchData: jest.fn(), $router: { replace: jest.fn(), push: jest.fn() }, listRequestVersion: 0, showAction: true, pageSize: 20 }
+  const w = mount(DeleteAction, {
+    props: { resource: view.resource, currentAction: action, onRefreshData: result => Autogen.methods.refreshActionData.call(view, result), onCloseAction: result => Autogen.methods.closeAction.call(view, result) },
+    global: { mocks: { $store: store, $route: route, $t: k => k, $notification: { success: jest.fn() } }, stubs: { MoldDialog: { props: ['visible', 'afterClose'], watch: { visible (value) { if (!value && this.afterClose) this.afterClose() } }, template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } } }
+  })
+  wrappers.push(w); await flushPromises(); const child = w.findComponent(Dialog)
+  child.vm.acknowledged = true; await child.vm.submit(); await flushPromises()
+  expect(postAPI).toHaveBeenCalledTimes(1); expect(w.emitted('refresh-data')[0][0]).toEqual({ removed: ['fixed'] })
+  expect(view.fetchData).not.toHaveBeenCalled(); expect(view.resource).toEqual({})
+  expect(view.$router.replace).toHaveBeenCalledWith({ path: '/snapshotpolicy', query: { page: '1', pagesize: '20', sortkey: 'id', sortorder: 'desc' } })
 })
 test('parent teardown waits for the close animation and is emitted once', async () => {
   const w = render(true); await flushPromises(); w.vm.close(); await flushPromises()
