@@ -51,6 +51,7 @@ public class SnapshotTagLifecycleTest {
     @Mock private SnapshotDao _snapshotDao;
     @Mock private SnapshotDataStoreDao _snapshotStoreDao;
     @Mock private SnapshotDetailsDao snapshotDetailsDao;
+    @Mock private com.cloud.storage.dao.VolumeDao _volsDao;
     @Mock private ResourceTagDao _resourceTagDao;
     @Mock private StorageStrategyFactory _storageStrategyFactory;
     @Mock private AnnotationDao annotationDao;
@@ -72,7 +73,6 @@ public class SnapshotTagLifecycleTest {
         when(_resourceTagDao.listBy(7L, ResourceObjectType.Snapshot)).thenReturn(List.of());
         doReturn(snapshot).when(manager).validateSnapshotDeletion(7L);
         doReturn(new Pair<>(List.of(ref), List.of(1L))).when(manager).getStoreRefsAndZonesForSnapshotDelete(eq(7L), nullable(Long.class));
-        doNothing().when(manager).validateNoBackupActivityOrHistoryForVolumeSnapshot(anyLong(), anyString());
         doNothing().when(manager).recalculateSnapshotOwnerResourceCount(snapshot);
         strategy = mock(SnapshotStrategy.class);
         when(_storageStrategyFactory.getSnapshotStrategy(eq(snapshot), nullable(Long.class), eq(SnapshotOperation.DELETE))).thenReturn(strategy);
