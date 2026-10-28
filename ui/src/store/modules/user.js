@@ -511,7 +511,7 @@ const user = {
         getAPI('listUsers', { id: Cookies.get('userid'), showicon: true }).then(response => {
           const result = response.listusersresponse.user[0]
           if (!current()) return
-          applyCustomGuiTheme(result.accountid, result.domainid).catch(() => {})
+          applyCustomGuiTheme(result.accountid, result.domainid, 'listGuiThemes' in (store.getters.apis || {})).catch(() => {})
           commit('SET_INFO', result)
           commit('SET_NAME', result.firstname + ' ' + result.lastname)
           commit('SET_AVATAR', result.icon?.base64image || '')

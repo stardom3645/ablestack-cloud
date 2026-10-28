@@ -589,6 +589,8 @@ export default {
           listView: true,
           show: () => { return 'createSnapshotPolicy' in store.getters.apis },
           popup: true,
+          standardDialogSize: 'md',
+          snapshotStandardDialog: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/RecurringSnapshotVolume.vue'))),
           mapping: {
             intervaltype: {

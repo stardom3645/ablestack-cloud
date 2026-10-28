@@ -115,3 +115,8 @@ export default {
   }
 }
 </script>
+<style scoped lang="less">
+@import '~@/style/components/view/search-view.less';
+.snapshot-search-control { display: table-cell; width: 100%; line-height: 31px; }
+.storage-standard-search-form :deep(.ant-select) { width: 100%; }
+</style>

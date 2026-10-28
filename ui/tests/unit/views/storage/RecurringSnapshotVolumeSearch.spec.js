@@ -24,7 +24,7 @@ let store
 const row = (id, extra = {}) => ({ id, name: 'QA-한글-Volume', size: 1073741824, state: 'Ready', hypervisor: 'KVM', vmstate: 'Stopped', account: 'owner', domain: 'ROOT', zonename: 'zone-a', vmname: 'i-2-100-VM', vmdisplayname: '표시 VM', ...extra })
 const volumes = (rows, count = rows.length) => ({ listvolumesresponse: { count, volume: rows } })
 const policies = rows => ({ listsnapshotpoliciesresponse: { count: rows.length, snapshotpolicy: rows } })
-const scheduleStub = { name: 'FormSchedule', props: ['resource', 'disabled', 'dataSource'], template: '<section data-testid="schedule">{{ resource.id }}</section>' }
+const scheduleStub = { name: 'FormSchedule', props: ['resource', 'disabled', 'dataSource'], template: '<section data-testid="schedule"><slot name="resource-selection" />{{ resource.id }}</section>' }
 function render (resource) {
   wrapper = mount(Recurring, { ...(resource ? { props: { resource } } : {}), attachTo: document.body, global: { provide: { parentFetchData: jest.fn() }, mocks: { $t: key => key, $store: store }, stubs: { FormSchedule: scheduleStub } } })
   return wrapper
@@ -135,7 +135,8 @@ test('switching or clearing a selection invalidates pending policies and removes
   expect(wrapper.findComponent(scheduleStub).props('resource').id).toBe('second')
   expect(wrapper.vm.dataSource).toEqual([{ id: 'second-policy' }])
   wrapper.vm.onVolumeChange('missing'); await flushPromises()
-  expect(wrapper.findComponent(scheduleStub).exists()).toBe(false)
+  expect(wrapper.findComponent(scheduleStub).props('disabled')).toBe(true)
+  expect(wrapper.findComponent(scheduleStub).props('resource')).toEqual({})
   expect(wrapper.vm.selectedVolumeId).toBe(null)
   expect(wrapper.vm.dataSource).toEqual([])
 })

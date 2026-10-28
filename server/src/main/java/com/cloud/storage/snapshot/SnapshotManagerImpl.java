@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -1884,8 +1883,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         SnapshotPolicyInputValidator.validateRetention(cmd.getMaxSnaps(), type.getMax(), intvType);
         String cmdTimezone = cmd.getTimezone();
 
-        TimeZone timeZone = TimeZone.getTimeZone(cmdTimezone);
-        String timezoneId = timeZone.getID();
+        String timezoneId = SnapshotPolicyInputValidator.validateTimezone(cmdTimezone);
         if (!timezoneId.equals(cmdTimezone)) {
             logger.warn("Using timezone [{}] for running the snapshot policy [{}] for volume {}, as an equivalent of [{}].", timezoneId, intervalType, volume, cmdTimezone);
         }

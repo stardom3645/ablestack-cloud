@@ -1219,6 +1219,7 @@ export default {
       resourceType: '',
       showKeys: false,
       showUpload: false,
+      iconActive: true,
       images: {
         zone: '',
         template: '',
@@ -1270,6 +1271,7 @@ export default {
     })
     this.updateResourceAdditionalData()
   },
+  beforeUnmount () { this.iconActive = false },
   computed: {
     executionOsName () { return creationVmOsName(this.resource, this.$t) },
     kubernetesNodeTemplates () {
@@ -1441,7 +1443,8 @@ export default {
     fetchOsCategoryAndIcon () {
       const osId = this.resource.guestosid || this.resource.ostypeid
       if (osId && 'listOsTypes' in this.$store.getters.apis) {
-        getAPI('listOsTypes', { id: osId }).then(json => {
+        this.readIcon('listOsTypes', { id: osId }).then(json => {
+          if (!json) return
           this.osCategoryId = json?.listostypesresponse?.ostype?.[0]?.oscategoryid || null
           if (this.osCategoryId) {
             this.fetchResourceIcon(this.osCategoryId, 'guestoscategory')
@@ -1483,35 +1486,42 @@ export default {
       }
     },
     fetchAccount () {
-      return new Promise((resolve, reject) => {
-        getAPI('listAccounts', {
-          name: this.resource.account,
-          domainid: this.resource.domainid,
-          showicon: true
-        }).then(async json => {
-          const response = json?.listaccountsresponse?.account || []
-          if (response?.[0]?.icon) {
-            this.images.account = response[0].icon.base64image
-          }
-        })
+      return this.readIcon('listAccounts', {
+        name: this.resource.account,
+        domainid: this.resource.domainid,
+        showicon: true
+      }).then(json => {
+        const response = json?.listaccountsresponse?.account || []
+        if (response?.[0]?.icon) {
+          this.images.account = response[0].icon.base64image
+        }
       })
+    },
+    iconScope () {
+      return JSON.stringify([this.$route.fullPath, this.resource.id, this.$store.getters.userInfo?.id,
+        this.$store.getters.project?.id, this.$store.state?.user?.token])
+    },
+    async readIcon (command, params) {
+      if (!(command in this.$store.getters.apis)) return
+      const scope = this.iconScope()
+      try {
+        const result = await getAPI(command, params, { preserveOnFailure: true })
+        if (this.iconActive && scope === this.iconScope()) return result
+      } catch { /* Optional decoration may be canceled by navigation. */ }
     },
     fetchResourceIcon (resourceid, type) {
       if (resourceid) {
-        return new Promise((resolve, reject) => {
-          getAPI('listResourceIcon', {
-            resourceids: resourceid,
-            resourcetype: type
-          }).then(json => {
-            const response = json.listresourceiconresponse.icon || []
-            this.images[type] = response?.[0]?.base64image || null
-            resolve(this.images)
-          }).catch(error => {
-            reject(error)
-          })
+        return this.readIcon('listResourceIcon', {
+          resourceids: resourceid,
+          resourcetype: type
+        }).then(json => {
+          if (!json) return
+          const response = json.listresourceiconresponse.icon || []
+          this.images[type] = response?.[0]?.base64image || null
+          return this.images
         })
       } else {
-        this.images.type = null
+        this.images[type] = null
       }
     },
     setData () {

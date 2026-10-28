@@ -20,14 +20,27 @@
     <a-alert v-if="volumesError || policyError" type="error" :message="volumesError || policyError" show-icon />
     <a-button v-if="volumesError" @click="fetchVolumes">{{ $t('label.retry') }}</a-button>
     <a-button v-if="policyError" @click="fetchData">{{ $t('label.retry') }}</a-button>
-    <div v-if="!isVolumeResource" class="volume-selection">
-      <a-form layout="vertical">
-        <a-form-item :label="$t('label.volume')" required>
+    <div v-if="isVolumeResource" class="volume-operation-target">
+      <hdd-outlined aria-hidden="true" /><span>{{ currentVolumeResource.name }}</span><span class="operation-secondary">{{ currentVolumeResource.type }}</span>
+    </div>
+    <FormSchedule
+      :key="currentVolumeResource?.id || 'unselected'"
+      :loading="loading"
+      :disabled="!currentVolumeResource?.id || loading || !!policyError || (!isVolumeResource && (volumesLoading || !!volumesError))"
+      :resource="currentVolumeResource || {}"
+      :dataSource="dataSource"
+      resourceType="Volume"
+      @busy="busy = $event"
+      @close-action="closeAction"
+      @refresh="handleRefresh">
+      <template v-if="!isVolumeResource" #resource-selection>
+        <a-form-item :label="$t('label.volume')" html-for="policy-create-volume" required>
           <a-select
+            id="policy-create-volume"
             v-model:value="selectedVolumeId"
             :placeholder="$t('label.select.volume')"
             :loading="volumesLoading"
-            :disabled="volumesLoading || !!volumesError"
+            :disabled="busy || volumesLoading || !!volumesError"
             :options="volumeOptions"
             option-label-prop="label"
             dropdown-class-name="snapshot-policy-volume-dropdown"
@@ -42,34 +55,14 @@
               </div>
             </template>
           </a-select>
+          <template v-if="selectedVolume" #extra><p class="selected-volume-description">{{ volumeDescription(selectedVolume) }}</p></template>
         </a-form-item>
-      </a-form>
-    </div>
-    <div v-if="currentVolumeResource?.id" class="volume-operation-target">
-      <hdd-outlined aria-hidden="true" /><span>{{ currentVolumeResource.name }}</span><span class="operation-secondary">{{ currentVolumeResource.type }}</span>
-    </div>
-    <p v-if="!isVolumeResource && selectedVolume" class="selected-volume-description">{{ volumeDescription(selectedVolume) }}</p>
-    <FormSchedule
-      v-if="currentVolumeResource?.id"
-      :key="currentVolumeResource.id"
-      :loading="loading"
-      :disabled="loading || !!policyError || (!isVolumeResource && (volumesLoading || !!volumesError))"
-      :resource="currentVolumeResource"
-      :dataSource="dataSource"
-      resourceType="Volume"
-      @close-action="closeAction"
-      @refresh="handleRefresh" />
-    <MoldDialogActions v-else><a-button @click="closeAction">{{ $t('label.close') }}</a-button></MoldDialogActions>
-    <div v-if="!currentVolumeResource || !currentVolumeResource.id" class="no-volume-selected">
-      <div class="empty-state">
-        <p>{{ $t('message.select.volume.to.continue') }}</p>
-      </div>
-    </div>
+      </template>
+    </FormSchedule>
   </div>
 </template>
 
 <script>
-import MoldDialogActions from '@/components/view/MoldDialogActions'
 import { getAPI } from '@/utils/storageApi'
 import { readAllocationList } from '@/utils/volumeAllocation'
 import FormSchedule from '@/views/storage/FormSchedule'
@@ -77,7 +70,6 @@ import FormSchedule from '@/views/storage/FormSchedule'
 export default {
   name: 'RecurringSnapshotVolume',
   components: {
-    MoldDialogActions,
     FormSchedule
   },
   props: {
@@ -91,6 +83,7 @@ export default {
   data () {
     return {
       loading: false,
+      busy: false,
       dataSource: [],
       volumes: [],
       volumesLoading: false,
@@ -182,6 +175,7 @@ export default {
       }
     },
     onVolumeChange (volumeId) {
+      if (this.busy) return
       const volume = this.volumes.find(v => v.id === volumeId)
       this.policyVersion++
       this.selectedVolume = volume || null
@@ -248,33 +242,9 @@ export default {
   min-width: 0;
   max-width: 100%;
 
-  .volume-selection {
-    margin-bottom: 20px;
-    padding: 16px;
-    border: 1px solid var(--ui-border);
-    border-radius: 6px;
-    background: var(--ui-bg-surface);
-    .ant-form-item {
-      margin-bottom: 0;
-      .ant-select {
-        width: 100%;
-        min-width: 0;
-      }
-    }
-  }
-
-  .current-volume-info {
-    margin-bottom: 16px;
-  }
-
-  .no-volume-selected {
-    text-align: center;
-    padding: 40px 20px;
-  }
-
   .selected-volume-description {
     overflow-wrap: anywhere;
-    margin-bottom: 16px;
+    margin: 0;
     color: var(--ui-text-secondary);
   }
 }

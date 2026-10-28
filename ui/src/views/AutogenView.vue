@@ -18,7 +18,7 @@
 <template>
   <div :class="{ 'autoscale-screen': $route.meta?.name === 'autoscalevmgroup', 'userdata-library': $route.meta?.name === 'userdata', 'affinity-library': $route.meta?.name === 'affinitygroup', 'snapshot-list-page': isSnapshotList }">
     <a-affix
-      :key="'affix-' + showSearchFilters + ((isStorageUi || isSnapshotList) ? '-' + storageHeaderWidth + '-' + device : ($route.meta?.name === 'userdata' ? '-' + device + '-' + selectedRowKeys.length : ''))"
+      :key="'affix-' + showSearchFilters + ((isStorageUi || isSnapshotList || isPolicyUi) ? '-' + storageHeaderWidth + '-' + device : ($route.meta?.name === 'userdata' ? '-' + device + '-' + selectedRowKeys.length : ''))"
       :offsetTop="this.$store.getters.maintenanceInitiated || this.$store.getters.shutdownTriggered ? 103 : 78"
     >
       <a-card class="breadcrumb-card" style="z-index: 10">
@@ -185,7 +185,7 @@
         @refresh-data="fetchData"
         @close-action="closeAction"
       />
-      <keep-alive :max="isStorageUi ? 1 : undefined" v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
+      <keep-alive :max="(isStorageUi || isPolicyUi) ? 1 : undefined" v-else-if="currentAction.component && (!currentAction.invokedAsGroupAction || currentAction.api === 'destroyVirtualMachine')">
         <component
           :is="standardActionDialog ? 'MoldDialog' : 'a-modal'"
           :size="currentAction.standardDialogSize || (isStorageUi ? storageDialogSize(currentAction.api) : undefined)"
@@ -217,9 +217,9 @@
               <question-circle-outlined />
             </a>
           </template>
-          <keep-alive :max="isStorageUi ? 1 : undefined">
+          <keep-alive :max="(isStorageUi || isPolicyUi) ? 1 : undefined">
             <component
-              :key="isStorageUi ? storageActionGeneration : undefined"
+              :key="(isStorageUi || isPolicyUi) ? storageActionGeneration : undefined"
               :is="currentAction.component"
               :resource="resource"
               :loading="loading"
@@ -1232,6 +1232,7 @@ export default {
     },
     isStorageUi () { this.observeStorageHeader() },
     isSnapshotList () { this.observeStorageHeader() },
+    isPolicyUi () { this.observeStorageHeader() },
     snapshotSecurityScope () {
       if (this.$route.meta?.name === 'vmgroup' || this.isSshKeyPairDetail || this.$route.name === 'snapshot' || snapshotDetailRoute(this.$route) || policyDetailRoute(this.$route) || snapshotPolicyListRoute(this.$route)) this.fetchData()
       if (['createVMSnapshot', 'revertToVMSnapshot', 'deleteVMSnapshot', 'createSnapshotFromVMSnapshot'].includes(this.currentAction.api)) this.closeAction()
@@ -1301,6 +1302,7 @@ export default {
     isSnapshotDetail () { return snapshotDetailRoute(this.$route) },
     isPolicyDetail () { return policyDetailRoute(this.$route) },
     isPolicyList () { return snapshotPolicyListRoute(this.$route) },
+    isPolicyUi () { return this.isPolicyList || this.isPolicyDetail },
     isSnapshotReadView () { return this.isSnapshotList || this.isSnapshotDetail || this.isPolicyDetail || snapshotPolicyListRoute(this.$route) },
     isSnapshotCopyList () { return snapshotCopyList(this.$route) },
     standardActionDialog () { return this.isStorageUi || !!this.currentAction.standardDialogSize },
@@ -1452,7 +1454,7 @@ export default {
   methods: {
     observeStorageHeader () {
       if (this.storageHeaderObserver) this.storageHeaderObserver.disconnect()
-      if ((!this.isStorageUi && !this.isSnapshotList) || !this.$el || typeof ResizeObserver === 'undefined') return
+      if ((!this.isStorageUi && !this.isSnapshotList && !this.isPolicyUi) || !this.$el || typeof ResizeObserver === 'undefined') return
       // The sidebar and embedded browser can resize the container without
       // scrolling the window. Recreate Affix's cached placeholder width.
       this.storageHeaderObserver = new ResizeObserver(entries => {
@@ -1549,7 +1551,7 @@ export default {
         this.$store.getters.userInfo?.id, this.$store.getters.metrics, this.$store.getters.listAllProjects])
     },
     getStyle () {
-      if (['snapshot', 'vmsnapshot', 'publicip'].includes(this.$route.name)) {
+      if (['snapshot', 'snapshotpolicy', 'vmsnapshot', 'publicip'].includes(this.$route.name)) {
         return 'table-cell'
       }
       return 'inline-flex'

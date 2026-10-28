@@ -14,11 +14,24 @@
 // under the License.
 package com.cloud.storage.snapshot;
 
+import java.util.TimeZone;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.utils.DateUtil.IntervalType;
 
 public final class SnapshotPolicyInputValidator {
     private SnapshotPolicyInputValidator() { }
+
+    public static String validateTimezone(String timezone) {
+        if (timezone == null || timezone.isEmpty()) {
+            throw new InvalidParameterValueException("timezone must identify a supported time zone.");
+        }
+        String normalized = TimeZone.getTimeZone(timezone).getID();
+        // Java silently returns GMT for unknown IDs and malformed custom offsets.
+        if ("GMT".equals(normalized) && !"GMT".equals(timezone)) {
+            throw new InvalidParameterValueException("timezone must identify a supported time zone.");
+        }
+        return normalized;
+    }
 
     public static void validateSchedule(IntervalType interval, String schedule) {
         if (interval == null) {

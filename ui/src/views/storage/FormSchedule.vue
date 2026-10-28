@@ -32,6 +32,7 @@
           layout="vertical"
           @finish="handleSubmit"
          >
+          <slot name="resource-selection" />
           <a-row :gutter="12">
             <a-col :xs="24" :md="24" :lg="24">
               <a-form-item :label="$t('label.intervaltype')" name="intervaltype" ref="intervaltype">
@@ -164,7 +165,7 @@
                 <template #label>
                   <tooltip-label :title="$t('label.zones')" :tooltip="''"/>
                 </template>
-                <a-alert type="info" style="margin-bottom: 2%">
+                <a-alert v-if="resource.id" type="info" style="margin-bottom: 2%">
                   <template #message>
                     <div v-html="formattedAdditionalZoneMessage"/>
                   </template>
@@ -381,7 +382,9 @@ export default {
     limitText (value) { return value == null ? this.$t('message.snapshot.policy.limits.unknown') : value === -1 ? this.$t('label.unlimited') : String(value) },
     async fetchPolicyLimits () {
       const version = ++this.limitsVersion; const context = this.policyLimitContext
-      this.policyLimits = emptyPolicyLimits(); this.limitsLoading = true
+      this.policyLimits = emptyPolicyLimits(); this.limitsLoading = false
+      if (!this.resource.id) return
+      this.limitsLoading = true
       const result = await readPolicyLimits(getAPI, this.$store.getters.apis || {}, { ...this.resource })
       if (version !== this.limitsVersion || context !== this.policyLimitContext || !this.dialogCurrent()) return
       this.policyLimits = result; this.limitsLoading = false
@@ -405,7 +408,7 @@ export default {
         maxsnaps: [{ required: true, validator: () => this.validatePolicyField('maxsnaps') }],
         timezone: [{ required: true, message: `${this.$t('message.error.select')}` }]
       })
-      if (this.resourceType === 'Volume') {
+      if (this.resourceType === 'Volume' && this.resource.id) {
         this.fetchZoneData()
       }
     },
@@ -545,7 +548,7 @@ export default {
       this.focusTagAdd()
     },
     handleSubmit (e) {
-      if (this.actionLoading || this.disabled || this.limitsLoading || !this.dialogCurrent() || !('createSnapshotPolicy' in this.$store.getters.apis)) return
+      if (!this.volumeId || this.actionLoading || this.disabled || this.limitsLoading || !this.dialogCurrent() || !('createSnapshotPolicy' in this.$store.getters.apis)) return
       // Draft tags are part of this create request; they never call createTags/deleteTags.
       if (this.inputVisible && !this.handleInputConfirm(undefined, false)) return
       return this.formRef.value.validate().then(async () => {
