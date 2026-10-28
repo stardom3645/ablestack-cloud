@@ -87,6 +87,9 @@ export default {
     async load () {
       if (this.busy || !this.allowed || this.jobId) return
       const version = ++this.loadVersion; this.loading = true; this.error = ''; this.acknowledged = false
+      // An explicit reload discards the draft. Mount the replacement form only
+      // after its policy and volume have both arrived, never from old props.
+      this.policy = null; this.volume = null
       const current = () => this.current() && version === this.loadVersion && this.allowed
       try {
         const policy = await freshPolicy(getAPI, this.resource, current)

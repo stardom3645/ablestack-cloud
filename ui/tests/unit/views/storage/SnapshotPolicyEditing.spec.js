@@ -91,6 +91,24 @@ test('an ownership change during an open edit is detected before writing', async
 test('a readonly caller makes no dialog reads or mutations', async () => {
   delete store.getters.apis.createSnapshotPolicy; const w = dialog('edit'); await flushPromises(); expect(w.vm.allowed).toBe(false); expect(getAPI).not.toHaveBeenCalled(); expect(postAPI).not.toHaveBeenCalled()
 })
+
+test('explicit reload after an ambiguous save mounts a form from the completed fresh response', async () => {
+  const w = mount(Dialog, { props: { resource: base(), currentAction: { policyMode: 'edit' } }, global: { mocks: mocks(), stubs: { ResourceIcon: true, MoldDialog: { template: '<div><slot /></div>' }, MoldDialogActions: { template: '<div><slot /></div>' } } } })
+  wrappers.push(w); await flushPromises()
+  expect(w.findComponent(Form).vm.form.maxsnaps).toBe(3)
+  w.findComponent(Form).vm.form.maxsnaps = 7
+  let finish
+  getAPI.mockImplementation(cmd => cmd === 'listSnapshotPolicies'
+    ? new Promise(resolve => { finish = resolve })
+    : Promise.resolve(cmd === 'listVolumes' ? { listvolumesresponse: { volume: [volume] } } : {}))
+  const reload = w.vm.load(); await flushPromises()
+  expect(w.findComponent(Form).exists()).toBe(false)
+  finish({ listsnapshotpoliciesresponse: { snapshotpolicy: [{ ...base(), maxsnaps: 5, tags: [{ key: 'fresh', value: 'committed' }] }] } })
+  await reload; await flushPromises()
+  expect(w.findComponent(Form).vm.form.maxsnaps).toBe(5)
+  expect(w.findComponent(Form).vm.tags).toEqual([{ key: 'fresh', value: 'committed' }])
+  expect(postAPI).not.toHaveBeenCalled()
+})
 test('latest-context rejection and failed reads are recoverable without using a previous volume', async () => {
   const w = dialog('edit'); await flushPromises(); expect(w.vm.policy.id).toBe('policy'); store.getters.project = { id: 'other' }; await flushPromises()
   expect(w.vm.policy).toBeNull(); expect(w.vm.allowed).toBe(false); await w.vm.load(); expect(w.vm.error).toBe('message.snapshot.policy.context.changed')
