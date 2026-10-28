@@ -1648,6 +1648,15 @@ export default {
       })
     },
     fetchData (params = {}) {
+      if ((snapshotPolicyListRoute(this.$route) || policyDetailRoute(this.$route)) && !('listSnapshotPolicies' in (this.$store.getters.apis || {}))) {
+        // Logout/role discovery can clear permissions before this view leaves.
+        // Invalidate pending reads without sending a new request with a revoked session.
+        this.listRequestVersion++; this.listRequestPending = false; this.listRefreshQueued = false
+        this.items = []; this.resource = {}; this.itemCount = 0; this.listLoadedScope = null; this.loading = false
+        this.listRefreshError = true; this.snapshotListError = 'message.snapshot.policy.detail.missing'
+        this.resetSelection(); this.$emit('change-resource', this.resource)
+        return
+      }
       if (snapshotPolicyListRoute(this.$route)) {
         const clean = snapshotPolicyListQuery(normalizePolicySearch({ ...this.$route.query, projectid: policyProjectScope(this.$route, this.$store.getters) }), this.pageSize)
         if (JSON.stringify(clean) !== JSON.stringify(this.$route.query)) {

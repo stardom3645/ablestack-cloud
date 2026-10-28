@@ -20,7 +20,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
             </div><span v-if="!resource[item.key]?.length">{{ $t('label.snapshot.list.unknown') }}</span>
           </template>
           <template v-else-if="item.key === 'tags'"><a-tag v-for="tag in resource.tags" :key="tag.key">{{ tag.key }}={{ tag.value }}</a-tag><span v-if="!resource.tags?.length">—</span></template>
-          <router-link v-else-if="item.key === 'volumename' && allowed('listVolumes')" :to="path('/volume/' + resource.volumeid)">{{ resource.volumename || resource.volumeid }}</router-link>
+          <router-link v-else-if="item.key === 'volumename' && volumePath" :to="volumePath">{{ resource.volumename || resource.volumeid }}</router-link>
           <span v-else>{{ resource[item.key] ?? '—' }}</span>
         </div></a-list-item>
       </template>
@@ -50,10 +50,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. -->
 </template>
 <script>
 import { policyInterval, policySchedule, policyScheduling } from '@/utils/snapshotPolicyPresentation'
+import { policyVolumePath } from '@/utils/snapshotPolicyDetail'
 export default {
   name: 'SnapshotPolicyDetails',
   props: { resource: { type: Object, required: true }, loading: Boolean },
   computed: {
+    volumePath () { return policyVolumePath(this.resource, this.$store.getters.apis) },
     context () { return this.resource.policycontext || {} },
     job () { return this.context.latestjob },
     operationalFields () { return ['next', 'latest', 'snapshot', 'observed'] },

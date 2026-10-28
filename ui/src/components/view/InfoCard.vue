@@ -719,7 +719,7 @@
               <div class="resource-detail-item__label">{{ $t('label.volume') }}</div>
               <div class="resource-detail-item__details">
                 <hdd-outlined />
-                <router-link v-if="validLinks.volume" :to="{ path: '/volume/' + resource.volumeid }">{{ resource.volumename || resource.volume || resource.volumeid }} </router-link>
+                <router-link v-if="validLinks.volume && ($route.meta?.name !== 'snapshotpolicy' || policyVolumePath(resource, $store.getters.apis))" :to="$route.meta?.name === 'snapshotpolicy' ? policyVolumePath(resource, $store.getters.apis) : { path: '/volume/' + resource.volumeid }">{{ resource.volumename || resource.volume || resource.volumeid }} </router-link>
                 <span v-else>{{ resource.volumename || resource.volume || resource.volumeid }}</span>
               </div>
             </div>
@@ -1134,6 +1134,7 @@
 
 <script>
 import { volumeVmPath } from '@/utils/storageUi'
+import { policyVolumePath } from '@/utils/snapshotPolicyDetail'
 import { creationVmOsName } from '@/utils/creationVmPresentation'
 import AffinityGroupPolicy from '@/views/compute/AffinityGroupPolicy'
 import { sshKeyPairNameLink, sshKeyPairVmQuery } from '@/utils/sshKeyPairIdentity'
@@ -1370,6 +1371,7 @@ export default {
     }
   },
   methods: {
+    policyVolumePath,
     volumeVmPath,
     sshKeyPairNameLink,
     createPathBasedOnVmType: createPathBasedOnVmType,

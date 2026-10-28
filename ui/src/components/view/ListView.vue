@@ -423,8 +423,8 @@
       </template>
       <template v-if="column.key === 'volumename'">
         <router-link
-          v-if="resourceIdToValidLinksMap[record.id]?.volume"
-          :to="{ path: '/volume/' + record.volumeid }"
+          v-if="resourceIdToValidLinksMap[record.id]?.volume && ($route.meta?.name !== 'snapshotpolicy' || policyVolumePath(record, $store.getters.apis))"
+          :to="$route.meta?.name === 'snapshotpolicy' ? policyVolumePath(record, $store.getters.apis) : { path: '/volume/' + record.volumeid }"
         >{{ text }}</router-link>
         <span v-else>{{ text }}</span>
       </template>
@@ -1201,6 +1201,7 @@
 
 <script>
 import { policyInterval, policySchedule, policyScheduling } from '@/utils/snapshotPolicyPresentation'
+import { policyVolumePath } from '@/utils/snapshotPolicyDetail'
 import AutoScaleListCell from '@/views/compute/AutoScaleListCell'
 import InstanceGroupSummary from '@/views/compute/InstanceGroupSummary'
 import { snapshotListSize, snapshotListInterval, snapshotListSizeValue } from '@/utils/storageSnapshotPresentation'
@@ -1440,6 +1441,7 @@ export default {
     }
   },
   methods: {
+    policyVolumePath,
     policyInterval,
     policySchedule,
     policyScheduling,

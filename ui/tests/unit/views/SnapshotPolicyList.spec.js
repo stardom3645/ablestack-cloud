@@ -26,6 +26,16 @@ beforeEach(() => {
   ctx.updateSelectedColumns = jest.fn(); getAPI.mockResolvedValue(reply())
 })
 
+test('logout clears the policy list without an unauthenticated refresh and ignores its old response', async () => {
+  await ctx.fetchData(); let release
+  getAPI.mockReturnValueOnce(new Promise(resolve => { release = resolve })); const old = ctx.fetchData()
+  const count = getAPI.mock.calls.length; store.state.user.token = ''; store.getters.apis = {}
+  await ctx.fetchData()
+  expect(getAPI).toHaveBeenCalledTimes(count); expect(ctx.items).toEqual([]); expect(ctx.resource).toEqual({})
+  expect(ctx.listLoadedScope).toBeNull(); expect(ctx.listRequestPending).toBe(false)
+  release(reply()); await old; expect(ctx.items).toEqual([]); expect(ctx.$notifyError).not.toHaveBeenCalled()
+})
+
 test.each(snapshotPolicySortKeys)('%s has a server sorter and both URL directions retain scope and reset page', key => {
   ctx.$route.query = { ...scope, page: '3' }
   for (const [order, direction] of [['ascend', 'asc'], ['descend', 'desc']]) {

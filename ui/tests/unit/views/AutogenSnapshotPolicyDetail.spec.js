@@ -25,6 +25,15 @@ test('detail failure and incomplete refresh preserve last data/time and block ac
   getAPI.mockResolvedValueOnce(reply({ ...row(), policycontext: undefined })); await ctx.fetchData(); expect(ctx.resource).toBe(old); expect(ctx.snapshotListError).toBe('message.snapshot.policy.detail.incomplete')
   getAPI.mockResolvedValue(reply()); await ctx.fetchData(); expect(ctx.storageActionReady).toBe(true); expect(callAPI).not.toHaveBeenCalled()
 })
+
+test('revoked policy permission clears detail without another request or a late private response', async () => {
+  await ctx.fetchData(); let release
+  getAPI.mockReturnValueOnce(new Promise(resolve => { release = resolve })); const old = ctx.fetchData(); await Promise.resolve()
+  const count = getAPI.mock.calls.length; store.getters.apis = {}; store.state.user.token = ''
+  await ctx.fetchData(); expect(getAPI).toHaveBeenCalledTimes(count); expect(ctx.resource).toEqual({})
+  release(reply()); await old; expect(ctx.resource).toEqual({}); expect(ctx.storageActionReady).toBe(false)
+  expect(ctx.$notifyError).not.toHaveBeenCalled()
+})
 test.each([403, 531, 404])('permission or missing %s clears successful data', async status => {
   await ctx.fetchData(); getAPI.mockRejectedValue({ response: { status } }); await ctx.fetchData(); expect(ctx.resource).toEqual({}); expect(ctx.storageActionReady).toBe(false)
 })

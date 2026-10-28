@@ -4,6 +4,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0 . Distributed AS IS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 export const policyDetailRoute = route => (route?.meta?.name || route?.name) === 'snapshotpolicy' && !!route?.params?.id
+// The volume route requires listVolumesMetrics, independently of policy/volume API read access.
+export const policyVolumePath = (record, apis = {}) => record?.volumeid && 'listVolumesMetrics' in apis
+  ? { path: '/volume/' + record.volumeid, ...(record.projectid ? { query: { projectid: record.projectid } } : {}) } : null
 const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(value)
 const fail = (message = 'message.snapshot.policy.detail.incomplete', status) => { const error = new Error(message); if (status) error.response = { status }; throw error }
 export const policyDetailPermissions = getters => ['listSnapshotPolicies', 'listSnapshots', 'listVolumes', 'listZones', 'listStoragePools', 'listAccounts', 'listDomains', 'listProjects'].map(api => api in (getters.apis || {}))
