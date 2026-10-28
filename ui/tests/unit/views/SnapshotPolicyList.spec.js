@@ -132,10 +132,10 @@ test('same-scope 503 retains rows and query, retry recovers, permission denial c
   expect(ctx.items).toEqual([]); expect(ctx.itemCount).toBe(0)
 })
 
-test('refresh keeps policy toolbar and selection geometry while disabling writes until the read succeeds', async () => {
-  const create = { api: 'createSnapshotPolicy', listView: true }
+test('refresh keeps create enabled without a colour flash while row writes remain disabled', async () => {
+  const create = { api: 'createSnapshotPolicy', listView: true, popup: true, snapshotStandardDialog: true }
   const remove = { api: 'deleteSnapshotPolicies', groupAction: true, toolbarLabel: 'remove' }
-  ctx.$route.meta.actions = [create, remove]; store.getters.apis.deleteSnapshotPolicies = {}
+  ctx.$route.meta.actions = [create, remove]; store.getters.apis.deleteSnapshotPolicies = {}; store.getters.apis.listVolumes = {}
   for (const key of ['isPolicyList', 'storageActionReady', 'policySelectionAvailable']) Object.defineProperty(ctx, key, { get: () => Autogen.computed[key].call(ctx) })
   await ctx.fetchData(); ctx.selectedRowKeys = [row.id]; ctx.selectedItems = [row]
   const visible = () => Autogen.computed.visibleListActions.call(ctx)
@@ -145,13 +145,44 @@ test('refresh keeps policy toolbar and selection geometry while disabling writes
   const pending = ctx.fetchData({ irefresh: true })
   expect(ctx.items).toBe(rows); expect(ctx.loading).toBe(false); expect(ctx.policySelectionAvailable).toBe(true)
   expect(visible().map(action => action.api)).toEqual(ready)
-  expect(visible().every(action => action.disabled())).toBe(true)
+  expect(visible()[0]).toBe(create); expect(ctx.canOpenPolicyCreate(create, false)).toBe(true)
+  expect(visible()[1].disabled()).toBe(true)
   release(reply()); await pending
   expect(visible()).toEqual([create, remove]); expect(ctx.storageActionReady).toBe(true)
   getAPI.mockRejectedValueOnce({ response: { status: 503 } }); await ctx.fetchData()
   expect(ctx.policySelectionAvailable).toBe(true); expect(visible().every(action => action.disabled())).toBe(true)
   getAPI.mockRejectedValueOnce({ response: { status: 432 } }); await ctx.fetchData()
   expect(visible()).toEqual([]); expect(ctx.items).toEqual([])
+})
+
+test('independent create cannot bypass permission, scope, group, row, or failed-read guards', async () => {
+  const action = { api: 'createSnapshotPolicy', listView: true, popup: true, snapshotStandardDialog: true }
+  store.getters.apis.listVolumes = {}; await ctx.fetchData()
+  expect(ctx.canOpenPolicyCreate(action, false)).toBe(true)
+  ctx.listRequestPending = true; expect(ctx.canOpenPolicyCreate(action, false)).toBe(true)
+  expect(ctx.canOpenPolicyCreate(action, true)).toBe(false)
+  expect(ctx.canOpenPolicyCreate({ ...action, dataView: true }, false)).toBe(false)
+  ctx.listRefreshError = true; expect(ctx.canOpenPolicyCreate(action, false)).toBe(false); ctx.listRefreshError = false
+  const path = ctx.$route.fullPath; ctx.$route.query.keyword = 'other'; ctx.$route.fullPath += '&keyword=other'
+  expect(ctx.canOpenPolicyCreate(action, false)).toBe(false); delete ctx.$route.query.keyword; ctx.$route.fullPath = path
+  for (const api of ['listVolumes', 'listSnapshotPolicies', 'createSnapshotPolicy']) {
+    const old = store.getters.apis[api]; delete store.getters.apis[api]
+    expect(ctx.canOpenPolicyCreate(action, false)).toBe(false); store.getters.apis[api] = old
+  }
+})
+
+test('create can open during a held list refresh without executing a stale row action', async () => {
+  const create = { api: 'createSnapshotPolicy', listView: true, popup: true, snapshotStandardDialog: true }
+  store.getters.apis.listVolumes = {}; store.getters.apis.createSnapshotPolicy.params = []
+  Object.defineProperty(ctx, 'storageActionReady', { get: () => Autogen.computed.storageActionReady.call(ctx) })
+  await ctx.fetchData(); let release
+  getAPI.mockImplementationOnce(() => new Promise(resolve => { release = resolve }))
+  const pending = ctx.fetchData({ irefresh: true }); expect(ctx.storageActionReady).toBe(false)
+  ctx.execAction({ ...create, dataView: true }, false); expect(ctx.showAction).toBe(false)
+  ctx.execAction(create, false)
+  expect(ctx.showAction).toBe(true); expect(ctx.currentAction.api).toBe('createSnapshotPolicy')
+  expect(callAPI).not.toHaveBeenCalled()
+  release(reply()); await pending; expect(ctx.showAction).toBe(true)
 })
 
 test('retaining policy layout cannot expose selection or actions after permissions or security scope change', async () => {

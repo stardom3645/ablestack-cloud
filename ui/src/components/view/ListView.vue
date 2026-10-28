@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup', 'snapshot-list-table': $route.name === 'snapshot' }" @contextmenu="handleGlobalContextMenu">
+  <div class="list-view-table-wrapper" :class="{ 'autoscale-list': $route.name === 'autoscalevmgroup', 'snapshot-list-table': $route.name === 'snapshot', 'snapshot-policy-list-table': $route.name === 'snapshotpolicy' }" @contextmenu="handleGlobalContextMenu">
     <a-table
       size="middle"
       :loading="loading"
@@ -2097,6 +2097,11 @@ export default {
     .icon-monthly:before {
       content: "***";
     }
+
+  .snapshot-policy-list-table {
+    .custom-icon:before { color: currentColor; }
+    :deep(.custom-icon path) { fill: currentColor; }
+  }
 
   .resource-summary {
     display: inline-flex;

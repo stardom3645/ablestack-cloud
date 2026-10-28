@@ -1443,7 +1443,7 @@ export default {
         const showOnGroup = action.groupAction && selectionCount > 0 &&
           ('groupShow' in action ? action.groupShow(this.selectedItems, this.$store.getters) : true)
         return showOnList || showOnGroup
-      }).map(action => this.isPolicyList && !this.storageActionReady ? { ...action, disabled: () => true } : action)
+      }).map(action => this.isPolicyList && !this.storageActionReady && !this.canOpenPolicyCreate(action, false) ? { ...action, disabled: () => true } : action)
     },
     requiresNameConfirmation () {
       return !!this.currentAction?.requireNameConfirmation &&
@@ -2459,8 +2459,15 @@ export default {
         this.actionTrigger = this.$refs?.detailActionsTrigger?.$el || this.actionTrigger
       }
     },
+    canOpenPolicyCreate (action, isGroupAction) {
+      // Creating starts an independent volume read; it does not act on stale list rows.
+      return snapshotPolicyListRoute(this.$route) && !isGroupAction && !action.dataView && action.listView &&
+        action.api === 'createSnapshotPolicy' && action.popup && action.snapshotStandardDialog &&
+        !this.policySearchFailure && !this.listRefreshError && this.listLoadedScope === this.listScope() &&
+        ['listSnapshotPolicies', 'listVolumes', 'createSnapshotPolicy'].every(api => api in (this.$store.getters.apis || {}))
+    },
     execAction (action, isGroupAction) {
-      if ((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route) || policyDetailRoute(this.$route) || snapshotPolicyListRoute(this.$route)) && this.storageActionReady === false) return
+      if ((snapshotListRoute(this.$route) || snapshotDetailRoute(this.$route) || policyDetailRoute(this.$route) || snapshotPolicyListRoute(this.$route)) && this.storageActionReady === false && !this.canOpenPolicyCreate(action, isGroupAction)) return
       if (storageUiRoute(this.$route) && (action.dataView || isGroupAction) && !this.storageActionReady) return
       this.storageActionGeneration++
       this.actionFocusReturn = null
