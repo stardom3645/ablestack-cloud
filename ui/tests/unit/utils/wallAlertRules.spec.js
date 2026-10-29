@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { applyRuleAction, eligibleRules, fetchAllRules, ruleIsPaused, ruleIsSilenced } from '@/utils/wallAlertRules'
+import { applyRuleAction, eligibleRules, fetchActiveSilences, fetchAllRules, ruleIsPaused, ruleIsSilenced } from '@/utils/wallAlertRules'
 
 const response = (rules, count = rules.length) => ({ listwallalertrulesresponse: { wallalertruleresponse: rules, count } })
 
@@ -82,4 +82,51 @@ test('silence uses a rule-specific matcher, duration and deduplicated targets', 
   }])
   await applyRuleAction(request, [{ uid: 'c' }], 'resume')
   expect(request).toHaveBeenLastCalledWith('pauseWallAlertRule', { id: 'c', paused: false })
+})
+
+test('active silences use distinct silence IDs even when they belong to the same rule', async () => {
+  const rows = [
+    { id: 'silence-a', state: 'active', matchers: [{ name: '__alert_rule_uid__', value: 'rule-a', isRegex: false, isEqual: true }] },
+    { id: 'silence-b', state: 'active', matchers: [{ name: '__alert_rule_uid__', value: 'rule-a', isRegex: false, isEqual: true }] },
+    { id: 'silence-old', state: 'expired' },
+    { id: 'silence-later', state: 'pending' }
+  ]
+  const request = jest.fn().mockResolvedValue({ listwallalertsilencesresponse: { count: rows.length, silence: rows } })
+  const targets = await fetchActiveSilences(request)
+  expect(request).toHaveBeenCalledWith('listWallAlertSilences', { state: 'active' })
+  expect(targets.map(target => [target.uid, target.ruleUid])).toEqual([['silence-a', 'rule-a'], ['silence-b', 'rule-a']])
+  expect(eligibleRules(targets, 'unsilence')).toHaveLength(2)
+  request.mockClear()
+  await applyRuleAction(request, targets, 'unsilence')
+  expect(request.mock.calls).toEqual([
+    ['expireWallAlertSilence', { id: 'silence-a' }],
+    ['expireWallAlertSilence', { id: 'silence-b' }]
+  ])
+})
+
+test('empty silences are valid but incomplete or ambiguous lists cannot authorize expiry', async () => {
+  expect(await fetchActiveSilences(jest.fn().mockResolvedValue({ listwallalertsilencesresponse: {} }))).toEqual([])
+  for (const response of [undefined, { count: 2, silence: [{ id: 'a', state: 'active' }] }, { count: 1, silence: [{ state: 'active' }] }, { count: 2, silence: [{ id: 'a', state: 'active' }, { id: 'a', state: 'active' }] }]) {
+    await expect(fetchActiveSilences(jest.fn().mockResolvedValue({ listwallalertsilencesresponse: response }))).rejects.toThrow()
+  }
+})
+
+test('expiry remains sequential and retries only failed silence IDs', async () => {
+  const targets = [{ uid: 's-a', silenceId: 's-a', state: 'active' }, { uid: 's-b', silenceId: 's-b', state: 'active' }]
+  let active = 0
+  let peak = 0
+  let calls = 0
+  const request = jest.fn(async () => {
+    active++
+    peak = Math.max(peak, active)
+    await Promise.resolve()
+    active--
+    if (++calls === 1) throw new Error('temporary failure')
+    return {}
+  })
+  const result = await applyRuleAction(request, targets, 'unsilence')
+  expect(peak).toBe(1)
+  expect(result.succeeded.map(target => target.silenceId)).toEqual(['s-b'])
+  await applyRuleAction(request, result.failed.map(failure => failure.rule), 'unsilence')
+  expect(request.mock.calls.map(call => call[1].id)).toEqual(['s-a', 's-b', 's-a'])
 })

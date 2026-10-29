@@ -45,6 +45,7 @@ export function eligibleRules (rules, action) {
     if (action === 'pause') return !ruleIsPaused(rule)
     if (action === 'resume') return ruleIsPaused(rule)
     if (action === 'silence') return !ruleIsSilenced(rule)
+    if (action === 'unsilence') return !!rule.silenceId && rule.state === 'active'
     return false
   })
 }
@@ -73,8 +74,28 @@ export async function fetchAllRules (request) {
   }
 }
 
+export async function fetchActiveSilences (request) {
+  const json = await request('listWallAlertSilences', { state: 'active' })
+  const response = json?.listwallalertsilencesresponse
+  const count = response && Object.keys(response).length === 0 ? 0 : Number(response?.count)
+  const rows = response?.silence || []
+  if (!response || !Number.isInteger(count) || count < 0 || !Array.isArray(rows) || rows.length !== count) throw new Error('Incomplete silence list')
+  const seen = new Set()
+  const targets = []
+  for (const silence of rows) {
+    const state = String(silence.state || '').toLowerCase()
+    if (!silence.id || seen.has(silence.id) || !['active', 'pending', 'expired'].includes(state)) throw new Error('Invalid silence list')
+    seen.add(silence.id)
+    if (state !== 'active') continue
+    const matcher = (silence.matchers || []).find(m => m.name === '__alert_rule_uid__' && !m.isRegex && m.isEqual !== false)
+    // Expiry targets are keyed by silence ID: one rule can have multiple silences.
+    targets.push({ ...silence, uid: silence.id, silenceId: silence.id, state, ruleUid: silence.ruleUid || matcher?.value, name: silence.ruleTitle || silence.id })
+  }
+  return targets
+}
+
 // Continue after individual failures, preserving failed targets for retry.
-export async function applyRuleAction (request, rules, action, durationMinutes, onProgress = () => {}) {
+export async function applyRuleAction (request, rules, action, timing, onProgress = () => {}) {
   const succeeded = []
   const failed = []
   for (const rule of uniqueRules(rules)) {
@@ -84,11 +105,15 @@ export async function applyRuleAction (request, rules, action, durationMinutes, 
         await request('createWallAlertSilence', {
           'labels[0].key': '__alert_rule_uid__',
           'labels[0].value': uid,
-          durationMinutes,
-          comment: `action:silence:${durationMinutes}m`
+          ...(timing?.endsAt
+            ? { endsAt: timing.endsAt, comment: `action:silence:until:${timing.endsAt}` }
+            : { durationMinutes: timing, comment: `action:silence:${timing}m` })
         })
       } else if (action === 'pause' || action === 'resume') {
         await request('pauseWallAlertRule', { id: uid, paused: action === 'pause' })
+      } else if (action === 'unsilence') {
+        if (!rule.silenceId) throw new Error('Missing silence ID')
+        await request('expireWallAlertSilence', { id: rule.silenceId })
       } else {
         throw new Error('Unsupported rule action')
       }

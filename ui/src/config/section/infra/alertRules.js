@@ -33,6 +33,16 @@ const ruleAction = (kind, api, icon, label) => ({
   groupShow: records => eligibleRules(records, kind).length > 0
 })
 
+const allRulesAction = (kind, api, icon, label) => ({
+  ...ruleAction(kind, api, icon, label),
+  dataView: false,
+  groupAction: false,
+  contextOnly: true,
+  menuGroup: 'ALL_RULES',
+  wallRuleScope: 'all',
+  show: () => true
+})
+
 export default {
   name: 'alertRules',
   title: 'label.alertRules',
@@ -108,6 +118,14 @@ export default {
     ruleAction('pause', 'pauseWallAlertRule', 'pause-circle-outlined', 'label.alert.rule.pause'),
     ruleAction('resume', 'pauseWallAlertRule', 'play-circle-outlined', 'label.action.resume.alert.rule'),
     ruleAction('silence', 'createWallAlertSilence', 'sound-outlined', 'label.action.silence'),
+    allRulesAction('silence', 'createWallAlertSilence', 'sound-outlined', 'label.wall.rules.silence.all'),
+    {
+      ...allRulesAction('unsilence', 'expireWallAlertSilence', 'close-circle-outlined', 'label.wall.rules.unsilence.all'),
+      permission: ['expireWallAlertSilence', 'listWallAlertSilences'],
+      show: (_record, getters) => 'listWallAlertSilences' in getters.apis
+    },
+    allRulesAction('pause', 'pauseWallAlertRule', 'pause-circle-outlined', 'label.wall.rules.pause.all'),
+    allRulesAction('resume', 'pauseWallAlertRule', 'play-circle-outlined', 'label.wall.rules.resume.all'),
     {
       api: 'expireWallAlertSilence',
       permission: ['expireWallAlertSilence'],

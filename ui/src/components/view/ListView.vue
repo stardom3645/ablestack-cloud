@@ -1179,7 +1179,7 @@
     </template>
     <template #footer>
       <span v-if="hasSelected">
-        {{ $route.name === 'alertRules' ? $t('message.wall.rules.selection', { count: selectedRowKeys.length }) : $t('label.items.selected.count', [selectedRowKeys.length]) }}
+        {{ $t('label.items.selected.count', [selectedRowKeys.length]) }}
       </span>
     </template>
     </a-table>
@@ -1401,31 +1401,34 @@ export default {
           if (!(action.api in this.$store.getters.apis)) {
             return null
           }
-          if (!action.groupAction) {
+          if (!action.groupAction && !action.contextOnly) {
             return null
           }
-          const canShow = 'groupShow' in action ? action.groupShow(this.selectionList, this.$store.getters) : true
+          const canShow = action.contextOnly
+            ? ('show' in action ? action.show(this.contextQuickViewRecord, this.$store.getters) : true)
+            : ('groupShow' in action ? action.groupShow(this.selectionList, this.$store.getters) : true)
           if (!canShow) {
             return null
           }
           return { ...action, dataView: true }
         }).filter(Boolean)
       }
-      if (!this.contextQuickViewRecord) {
-        return []
-      }
+      const hasRecord = Object.keys(this.contextQuickViewRecord || {}).length > 0
       return this.actions.map(action => {
         if (!(action.api in this.$store.getters.apis)) {
+          return null
+        }
+        if (!hasRecord && !action.contextOnly) {
           return null
         }
         const canShow = 'show' in action ? action.show(this.contextQuickViewRecord, this.$store.getters) : true
         if (!canShow) {
           return null
         }
-        if (!action.dataView && !action.listView) {
+        if (!action.dataView && !action.listView && !action.contextOnly) {
           return null
         }
-        return { ...action, dataView: action.dataView || action.listView || false }
+        return { ...action, dataView: action.dataView || action.listView || action.contextOnly || false }
       }).filter(Boolean)
     },
     contextMenuTitle () {
@@ -1498,7 +1501,8 @@ export default {
       // Allow context menu even when multiple items selected; fall back to first selected item
       const selectionCount = this.selectedRowKeys.length
       const hasSelection = this.$route.name === 'vmsnapshot' ? selectionCount > 1 : selectionCount > 0
-      if (!rowElement && !hasSelection) {
+      const hasListContextActions = this.actions.some(action => action.contextOnly && action.api in this.$store.getters.apis)
+      if (!rowElement && !hasSelection && !hasListContextActions) {
         this.closeContextQuickView()
         return
       }
@@ -1513,6 +1517,7 @@ export default {
         const rowKey = rowElement.getAttribute('data-row-key')
         record = this.items.find(item => String(this.generateRowKeyValue(item)) === rowKey)
       }
+      if (!record && hasListContextActions) record = {}
       if (!record) {
         this.closeContextQuickView()
         return

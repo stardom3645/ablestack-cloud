@@ -26,9 +26,12 @@
       <div class="banner-list" ref="listRef">
         <a-alert
           v-if="wallState !== 'Ready'"
+          class="wall-availability-alert"
           type="info"
           show-icon
-          :message="wallAvailabilityMessage" />
+          closable
+          :message="wallAvailabilityMessage"
+          @close="dismissWallBanner" />
         <a-alert
           v-if="wallState === 'Ready'"
           class="alert-summary"
@@ -644,7 +647,8 @@
       :centered="true"
       :getContainer="getPopupParent"
       :zIndex="2147483652"
-      width="480px"
+      :width="760"
+      :body-style="{ minHeight: '400px', padding: '28px 32px' }"
       @afterClose="closeSilence"
     >
       <RuleSilenceModal
@@ -665,7 +669,8 @@
       :centered="true"
       :getContainer="getPopupParent"
       :zIndex="2147483652"
-      width="480px"
+      :width="760"
+      :body-style="{ minHeight: '400px', padding: '28px 32px' }"
       @afterClose="closePause"
     >
       <RulePauseModal
@@ -696,7 +701,8 @@ import { message } from 'ant-design-vue'
 import { getAPI as requestAPI } from '@/api'
 import store from '@/store'
 import { hasDiscoveryApi } from '@/utils/optionalDiscovery'
-import { createWallGate } from '@/utils/wallAvailability'
+import { createWallGate, createWallBannerDismissal } from '@/utils/wallAvailability'
+import Cookies from 'js-cookie'
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
 
@@ -726,8 +732,11 @@ export default {
   },
   computed: {
     wallAvailabilityMessage () {
+      if (['ConnectionFailed', 'DnsError', 'TlsError', 'Timeout'].includes(this.wallState)) {
+        return this.$t('message.wall.availability.disconnected')
+      }
       const key = 'message.wall.availability.' + this.wallState
-      const reason = this.$te(key) ? this.$t(key) : this.$t('message.wall.availability.Unavailable')
+      const reason = this.$te(key) ? this.$t(key) : this.$t('message.wall.availability.CheckFailed')
       return reason + ' ' + this.$t('message.wall.availability.impact')
     }
   },
@@ -886,18 +895,28 @@ export default {
     const current = () => !disposed && generation === store.state.user.discoveryGeneration
     const allowed = name => current() && hasDiscoveryApi(store.getters.apis, name)
     const wallState = ref('Unknown')
+    const wallDismissal = createWallBannerDismissal(store.state.user.token || Cookies.get('sessionkey'))
+    const wallBannerDismissed = ref(wallDismissal.dismissed)
+    const dismissWallBanner = () => {
+      if (!current()) return
+      wallBannerDismissed.value = true
+      wallDismissal.dismiss()
+    }
     const wallGate = createWallGate((name) => {
       if (!allowed(name)) return Promise.resolve({})
       return requestAPI(name, {}, { optionalDiscovery: true })
     }, current)
     const getAPI = async (name, params) => {
       if (!allowed(name)) return {}
-      if (/Wall/.test(name) && !await wallGate.check()) throw new Error('Wall unavailable')
+      if (/Wall/.test(name) && !await wallGate.check()) {
+        if (current()) wallState.value = wallGate.state
+        throw new Error('Wall unavailable')
+      }
       let response
       try {
         response = await requestAPI(name, params, { optionalDiscovery: true })
       } catch (e) {
-        if (/Wall/.test(name) && current()) { wallGate.fail(); wallState.value = 'Unavailable' }
+        if (/Wall/.test(name) && current()) { wallGate.fail(); wallState.value = 'Degraded' }
         throw e
       }
       if (!current()) throw new Error('Alert discovery session expired')
@@ -2618,7 +2637,8 @@ export default {
     })
 
     const showBanner = computed(() => {
-      if (wallState.value !== 'Ready') return wallState.value !== 'Unknown'
+      if (wallState.value === 'Disabled') return false
+      if (wallState.value !== 'Ready') return wallState.value !== 'Unknown' && !wallBannerDismissed.value
       const hasList = Array.isArray(visibleAlerts.value) && visibleAlerts.value.length > 0
       return (keepShowing.value || remoteSilencedLoaded.value) && hasList
     })
@@ -2670,8 +2690,10 @@ export default {
       try {
         const ready = await wallGate.check()
         if (!current()) return
-        wallState.value = wallGate.state
-        if (!ready) return
+        if (!ready) {
+          wallState.value = wallGate.state
+          return
+        }
         const params = { includestatus: true, page: 1, pagesize: 200 }
         const resp = await getAPI('listWallAlertRules', params)
         if (!allowed('getWallAlertAvailability')) return
@@ -2687,8 +2709,16 @@ export default {
 
         cleanupLocalSilences()
         pruneClosed()
+        // Publish recovery only after the existing Wall data refresh succeeds.
+        // A healthy probe followed by a failed query must not reset dismissal or flicker.
+        if (current() && wallGate.state === 'Ready') {
+          wallState.value = 'Ready'
+          wallBannerDismissed.value = false
+          wallDismissal.reset()
+        }
       } catch (_) {
-        if (current()) wallState.value = 'Unavailable'
+        // Wall request failures set Degraded in getAPI; unrelated inventory failures
+        // must not be presented as a loss of the entire Wall connection.
       } finally {
         refreshInFlight.value = false
         if (current()) {
@@ -2999,6 +3029,7 @@ export default {
     // ===== 노출 =====
     return {
       wallState,
+      dismissWallBanner,
       drawerVisible,
       drawerListRef,
       listRef,
@@ -3108,6 +3139,25 @@ export default {
 }
 .banner-list:empty {
   padding: 0;
+}
+
+.wall-availability-alert {
+  align-items: flex-start;
+}
+.wall-availability-alert :deep(.ant-alert-content) {
+  min-width: 0;
+}
+.wall-availability-alert :deep(.ant-alert-message) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.wall-availability-alert :deep(.ant-alert-icon),
+.wall-availability-alert :deep(.ant-alert-close-icon) {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.wall-availability-alert :deep(.ant-alert-close-icon) {
+  margin-left: 12px;
 }
 
 /* ===== 요약(상단) 배너 ===== */

@@ -23,16 +23,17 @@
     :mask-closable="false"
     :closable="!running"
     :keyboard="!running"
-    :width="600"
+    :width="kind === 'resume' ? 600 : 760"
+    :body-style="kind === 'resume' ? undefined : { minHeight: '400px', padding: '28px 32px' }"
     centered
     @cancel="close"
   >
-    <a-spin :spinning="fetching">
+    <a-spin :spinning="fetching || running">
       <a-alert
         v-if="loadFailed"
         type="error"
         show-icon
-        :message="$t('message.wall.rules.load.failed')"
+        :message="$t(kind === 'unsilence' ? 'message.wall.silences.load.failed' : 'message.wall.rules.load.failed')"
       >
         <template #action><a-button size="small" @click="loadTargets">{{ $t('label.refresh') }}</a-button></template>
       </a-alert>
@@ -40,13 +41,28 @@
         <a-alert
           :type="isAll ? 'warning' : 'info'"
           show-icon
-          :message="$t(isAll ? 'message.wall.rules.scope.all' : 'message.wall.rules.scope.selected', { count: rules.length, targets: targets.length })"
-          :description="$t('message.wall.rules.effect.' + kind)"
+          :message="$t(kind === 'unsilence' ? 'message.wall.silences.scope.all' : isAll ? 'message.wall.rules.scope.all' : 'message.wall.rules.scope.selected', { count: rules.length, targets: targets.length })"
+          :description="kind === 'unsilence' ? $t('message.confirm.expire.silence.desc') : kind === 'resume' ? $t('message.wall.rules.effect.resume') : undefined"
         />
+        <a-alert
+          v-if="kind === 'pause' || kind === 'silence'"
+          class="rule-impact"
+          type="warning"
+          show-icon
+          :message="$t('label.' + kind + '.infoTitle')"
+        >
+          <template #description>
+            <ul class="bullet">
+              <li v-for="index in (kind === 'pause' ? 3 : 4)" :key="index">
+                {{ $t('message.' + kind + '.info.' + index) }}
+              </li>
+            </ul>
+          </template>
+        </a-alert>
         <p v-if="rules.length > targets.length" class="rule-note">
           {{ $t('message.wall.rules.skipped', { count: rules.length - targets.length }) }}
         </p>
-        <p v-if="!fetching && !targets.length" role="status">{{ $t('message.wall.rules.no.targets') }}</p>
+        <p v-if="!fetching && !targets.length" role="status">{{ $t(kind === 'unsilence' ? 'message.wall.silences.no.targets' : 'message.wall.rules.no.targets') }}</p>
         <ul class="rule-targets">
           <li v-for="rule in targets" :key="ruleUid(rule)">{{ rule.name || ruleUid(rule) }}</li>
         </ul>
@@ -55,11 +71,32 @@
             <a-select v-model:value="duration" :disabled="running || attempted" style="width: 100%">
               <a-select-option v-for="option in durations" :key="option.value" :value="option.value">
                 {{ $t(option.label, [option.amount]) }}
+                <span class="option-sep"> — </span>
+                <span class="option-sub">{{ $t('message.silence.until', { time: endTimeText(option.value) }) }}</span>
               </a-select-option>
+              <a-select-option value="custom">{{ $t('label.silence.end.custom') }}</a-select-option>
             </a-select>
           </a-form-item>
+          <a-form-item
+            v-if="kind === 'silence' && duration === 'custom'"
+            :label="$t('label.end.date.and.time')"
+            :validate-status="timingError ? 'error' : undefined"
+            :help="timingError || undefined"
+          >
+            <a-date-picker
+              v-model:value="customEndsAt"
+              show-time
+              format="YYYY-MM-DD HH:mm:ss"
+              :locale="datePickerLocale"
+              :disabled-date="disabledEndDate"
+              :disabled="running || attempted"
+              :placeholder="$t('message.select.end.date.and.time')"
+              @change="timingError = ''"
+            />
+          </a-form-item>
+          <p v-else-if="kind === 'silence' && timingError" role="alert">{{ timingError }}</p>
           <a-checkbox v-model:checked="acknowledged" :disabled="running || !targets.length">
-            {{ $t('message.wall.rules.confirm') }}
+            {{ $t(kind === 'pause' ? 'label.pause.confirm.ack' : kind === 'silence' ? 'label.silence.confirm.ack' : 'message.wall.rules.confirm') }}
           </a-checkbox>
         </a-form>
         <a-progress v-if="running" :percent="progress" :status="'active'" />
@@ -73,7 +110,7 @@
           <template #description>
             <ul class="rule-failures">
               <li v-for="failure in failures" :key="ruleUid(failure.rule)">
-                {{ failure.rule.name || ruleUid(failure.rule) }}: {{ errorText(failure.error) }}
+                {{ failure.rule.name || ruleUid(failure.rule) }}
               </li>
             </ul>
           </template>
@@ -88,7 +125,7 @@
           :disabled="fetching || loadFailed || !acknowledged || !targets.length"
           @click="submit"
         >
-          {{ $t(attempted ? 'label.wall.rules.retry.failed' : currentAction.label) }}
+          {{ $t(attempted ? (kind === 'unsilence' ? 'label.wall.silences.retry.failed' : 'label.wall.rules.retry.failed') : currentAction.label) }}
         </a-button>
       </div>
     </a-spin>
@@ -96,8 +133,12 @@
 </template>
 
 <script>
+import dayjs from 'dayjs'
+import 'dayjs/locale/ko'
+import koKR from 'ant-design-vue/es/date-picker/locale/ko_KR'
+import enUS from 'ant-design-vue/es/date-picker/locale/en_US'
 import { getAPI, postAPI } from '@/api'
-import { applyRuleAction, eligibleRules, fetchAllRules, ruleUid, uniqueRules } from '@/utils/wallAlertRules'
+import { applyRuleAction, eligibleRules, fetchActiveSilences, fetchAllRules, ruleUid, uniqueRules } from '@/utils/wallAlertRules'
 
 export default {
   name: 'WallAlertRuleActionModal',
@@ -120,6 +161,9 @@ export default {
       completed: 0,
       batchSize: 0,
       duration: 30,
+      customEndsAt: null,
+      silenceEndsAt: null,
+      timingError: '',
       durations: [
         { value: 30, label: 'label.silence.duration.minutes', amount: 30 },
         ...[1, 2, 6, 12, 24].map(n => ({ value: n * 60, label: 'label.silence.duration.hours', amount: n })),
@@ -132,6 +176,7 @@ export default {
   computed: {
     kind () { return this.currentAction.wallRuleAction },
     isAll () { return this.currentAction.wallRuleScope === 'all' },
+    datePickerLocale () { return this.$i18n?.locale === 'ko_KR' ? koKR : enUS },
     targets () {
       return this.attempted ? this.failures.map(failure => failure.rule) : eligibleRules(this.rules, this.kind)
     },
@@ -140,13 +185,25 @@ export default {
   created () { this.loadTargets() },
   methods: {
     ruleUid,
-    errorText (error) {
-      return error?.response?.data?.errorresponse?.errortext || error?.message || this.$t('error.execute.api.failed')
+    disabledEndDate (current) { return current < dayjs().startOf('day') },
+    endTimeText (minutes) {
+      const now = new Date()
+      const end = new Date(this.silenceEndsAt && minutes === this.duration ? this.silenceEndsAt : now.getTime() + minutes * 60000)
+      const sameDay = end.getFullYear() === now.getFullYear() && end.getMonth() === now.getMonth() && end.getDate() === now.getDate()
+      return sameDay
+        ? end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+        : end.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
     },
     async loadTargets () {
       this.fetching = true
       this.loadFailed = false
       try {
+        if (this.kind === 'unsilence') {
+          const [rules, silences] = await Promise.all([fetchAllRules(getAPI), fetchActiveSilences(getAPI)])
+          const names = new Map(rules.map(rule => [ruleUid(rule), rule.name]))
+          this.rules = silences.map(silence => ({ ...silence, name: names.get(silence.ruleUid) || silence.name }))
+          return
+        }
         const rules = this.isAll
           ? await fetchAllRules(getAPI)
           : (this.currentAction.invokedAsGroupAction ? this.selectedItems : [this.resource])
@@ -161,18 +218,31 @@ export default {
     },
     async submit () {
       if (this.running || this.fetching || this.loadFailed || !this.acknowledged || !this.targets.length) return
+      if (this.kind === 'silence') {
+        const end = this.silenceEndsAt
+          ? Date.parse(this.silenceEndsAt)
+          : this.duration === 'custom' ? this.customEndsAt?.valueOf() : Date.now() + this.duration * 60000
+        if (!Number.isFinite(end) || end <= Date.now()) {
+          this.timingError = this.$t('message.silence.end.future')
+          return
+        }
+        // Freeze one end time for the entire batch, including failed-item retries.
+        this.silenceEndsAt = new Date(end).toISOString()
+        this.timingError = ''
+      }
       this.running = true
       const targets = [...this.targets]
       this.completed = 0
       this.batchSize = targets.length
       try {
-        const result = await applyRuleAction(postAPI, targets, this.kind, this.duration, count => { this.completed = count })
+        const timing = this.kind === 'silence' ? { endsAt: this.silenceEndsAt } : undefined
+        const result = await applyRuleAction(postAPI, targets, this.kind, timing, count => { this.completed = count })
         this.successCount += result.succeeded.length
         this.failures = result.failed
         this.attempted = true
         if (result.succeeded.length) this.$emit('refresh-data')
         if (!this.failures.length) {
-          this.$message.success(this.$t('message.wall.rules.success', { count: this.successCount }))
+          this.$message.success(this.$t(this.kind === 'unsilence' ? 'message.wall.silences.success' : 'message.wall.rules.success', { count: this.successCount }))
           this.$emit('close-action')
         }
       } finally {
@@ -187,6 +257,10 @@ export default {
 </script>
 
 <style scoped>
+.rule-impact { margin-top: 12px; }
+.bullet { margin: 0; padding-left: 18px; }
+.bullet li { font-size: 12px; color: var(--ui-text-secondary); }
+.option-sep, .option-sub { opacity: 0.65; }
 .rule-note { margin-top: 12px; color: var(--ui-text-secondary); }
 .rule-targets { max-height: 180px; overflow: auto; margin: 16px 0; padding-left: 22px; }
 .rule-result { margin-top: 16px; }
