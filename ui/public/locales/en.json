@@ -9765,6 +9765,8 @@
   "label.wall.rules.resume.all": "Resume all rules",
   "label.wall.silences.retry.failed": "Retry failed silences",
   "message.wall.silences.scope.all": "End {targets} active silences.",
+  "message.wall.silences.scope.selected": "End {targets} active silences for {count} selected rules.",
+  "label.wall.silences.count": "{count} silences",
   "message.wall.silences.no.targets": "There are no active silences to end.",
   "message.wall.silences.load.failed": "Unable to load silences. Refresh and try again.",
   "message.wall.silences.success": "Ended {count} silences.",

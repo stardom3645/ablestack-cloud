@@ -118,6 +118,13 @@ export default {
     ruleAction('pause', 'pauseWallAlertRule', 'pause-circle-outlined', 'label.alert.rule.pause'),
     ruleAction('resume', 'pauseWallAlertRule', 'play-circle-outlined', 'label.action.resume.alert.rule'),
     ruleAction('silence', 'createWallAlertSilence', 'sound-outlined', 'label.action.silence'),
+    {
+      ...ruleAction('unsilence', 'expireWallAlertSilence', 'close-circle-outlined', 'label.action.expire.silence'),
+      permission: ['expireWallAlertSilence', 'listWallAlertSilences'],
+      dataView: false,
+      show: () => false,
+      groupShow: (records, getters) => 'listWallAlertSilences' in getters.apis && records.some(ruleIsSilenced)
+    },
     allRulesAction('silence', 'createWallAlertSilence', 'sound-outlined', 'label.wall.rules.silence.all'),
     {
       ...allRulesAction('unsilence', 'expireWallAlertSilence', 'close-circle-outlined', 'label.wall.rules.unsilence.all'),

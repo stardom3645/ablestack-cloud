@@ -17,6 +17,7 @@
 
 import { shallowMount, flushPromises } from '@vue/test-utils'
 import dayjs from 'dayjs'
+import eventBus from '@/config/eventBus'
 import { getAPI, postAPI } from '@/api'
 import RuleModal from '@/views/infra/WallAlertRuleActionModal.vue'
 import AutogenView from '@/views/AutogenView.vue'
@@ -45,6 +46,7 @@ const mountModal = props => shallowMount(RuleModal, {
 })
 
 beforeEach(() => { jest.clearAllMocks(); postAPI.mockResolvedValue({}) })
+afterEach(() => jest.restoreAllMocks())
 
 test.each([
   ['pause', '경보 규칙 일시 중지 시 영향', [
@@ -195,12 +197,15 @@ test('all-rules menu action ignores the selected row and skips stopped rules wit
 })
 
 test('partial failure stays open, refreshes completed work and retries only failed targets', async () => {
+  const notify = jest.spyOn(eventBus, 'emit')
   postAPI.mockRejectedValueOnce(new Error('temporary failure')).mockResolvedValue({})
   const wrapper = mountModal({ currentAction: { ...pause, invokedAsGroupAction: true }, selectedItems: rules })
   await flushPromises()
   await wrapper.setData({ acknowledged: true })
   await wrapper.vm.submit()
   expect(wrapper.vm.failures.map(f => f.rule.uid)).toEqual(['a'])
+  expect(notify).toHaveBeenCalledTimes(1)
+  expect(notify).toHaveBeenCalledWith('wall-alert-rules-changed')
   expect(wrapper.emitted('close-action')).toBeUndefined()
   expect(wrapper.emitted('refresh-data')).toHaveLength(1)
   await wrapper.vm.submit()
@@ -213,6 +218,7 @@ test.each([
   new Error('Request failed with status code 431'),
   { response: { data: { errorresponse: { errortext: 'Internal backend exception at WallApiClient.java:123' } } } }
 ])('failed-rule results show rule names without raw request or backend errors', async error => {
+  const notify = jest.spyOn(eventBus, 'emit')
   postAPI.mockRejectedValue(error)
   const wrapper = shallowMount(RuleModal, {
     props: { currentAction: { ...pause, invokedAsGroupAction: true }, selectedItems: rules },
@@ -232,6 +238,7 @@ test.each([
   expect(wrapper.findAll('.rule-failures li').map(item => item.text())).toEqual(['CPU', 'Memory'])
   expect(wrapper.text()).toContain('0개 완료, 2개 실패했습니다.')
   expect(wrapper.text()).not.toMatch(/431|Request failed|Internal backend exception|WallApiClient/)
+  expect(notify).not.toHaveBeenCalled()
   expect(wrapper.vm.failures).toHaveLength(2)
   expect(wrapper.emitted('close-action')).toBeUndefined()
   wrapper.unmount()
@@ -334,6 +341,84 @@ test('unselected row menu separates existing row actions and all-rule actions us
   wrapper.unmount()
 })
 
+test.each([
+  [[{ uid: 'a', isPaused: false, silenced: true }, { uid: 'b', isPaused: false, silenced: true }], ['pause', 'unsilence']],
+  [[{ uid: 'a', isPaused: true, silenced: true }, { uid: 'b', ispaused: 'Stopped', silenced: true }], ['resume', 'unsilence']],
+  [[{ uid: 'a', isPaused: false, silenced: true }, { uid: 'b', isPaused: true, silenced: false }], ['pause', 'resume', 'silence', 'unsilence']]
+])('selection menu exposes the matching forward and reverse actions for %j', (records, expected) => {
+  const getters = { apis: { pauseWallAlertRule: {}, createWallAlertSilence: {}, expireWallAlertSilence: {}, listWallAlertSilences: {} } }
+  const context = { actions: config.actions, selectedRowKeys: records.map(rule => rule.uid), selectionList: records, $store: { getters } }
+  const actions = () => ListView.computed.contextMenuActions.call(context).filter(action => !action.contextOnly)
+  expect(actions().map(action => action.wallRuleAction)).toEqual(expected)
+  delete getters.apis.listWallAlertSilences
+  expect(actions().map(action => action.wallRuleAction)).not.toContain('unsilence')
+})
+
+test.each(['pause', 'resume'])('selected-rule %s only shows and writes eligible selected rules', async kind => {
+  const action = config.actions.find(action => action.wallRuleAction === kind && !action.wallRuleScope)
+  const paused = kind === 'resume'
+  const selectedItems = [
+    { uid: 'eligible-a', isPaused: paused },
+    { uid: 'eligible-b', isPaused: paused },
+    { uid: 'eligible-c', isPaused: paused },
+    { uid: 'ineligible', isPaused: !paused }
+  ]
+  const wrapper = mountModal({ currentAction: { ...action, invokedAsGroupAction: true }, selectedItems, resource: { uid: 'other', isPaused: paused } })
+  await flushPromises()
+  expect(wrapper.vm.targets.map(rule => rule.uid)).toEqual(['eligible-a', 'eligible-b', 'eligible-c'])
+  await wrapper.setData({ acknowledged: true })
+  await wrapper.vm.submit()
+  expect(postAPI.mock.calls).toEqual(['eligible-a', 'eligible-b', 'eligible-c'].map(id => ['pauseWallAlertRule', { id, paused: !paused }]))
+  expect(getAPI).not.toHaveBeenCalled()
+  wrapper.unmount()
+})
+
+test('selected silence expiry snapshots the selection and excludes other rules, shared and regex silences', async () => {
+  const action = config.actions.find(action => action.wallRuleAction === 'unsilence' && !action.wallRuleScope)
+  const silence = (id, uid) => ({ id, state: 'active', matchers: [{ name: '__alert_rule_uid__', value: uid, isRegex: false, isEqual: true }] })
+  const rows = [silence('a-1', 'a'), silence('a-2', 'a'), silence('b-1', 'b'), silence('other-1', 'other'), silence('unapplied-1', 'unapplied'),
+    { id: 'shared', state: 'active', ruleUid: 'a', matchers: [{ name: 'alertname', value: 'CPU' }] },
+    { id: 'regex', state: 'active', ruleUid: 'a', matchers: [{ name: '__alert_rule_uid__', value: 'a|other', isRegex: true }] },
+    { ...silence('expired', 'a'), state: 'expired' }]
+  getAPI.mockResolvedValue({ listwallalertsilencesresponse: { count: rows.length, silence: rows } })
+  const selectedItems = [...rules.map(rule => ({ ...rule, silenced: true })), { uid: 'unapplied', name: 'Not silenced', silenced: false }]
+  const wrapper = mountModal({ currentAction: { ...action, invokedAsGroupAction: true }, selectedItems, resource: { uid: 'other' } })
+  await flushPromises()
+  expect(getAPI.mock.calls).toEqual([['listWallAlertSilences', { state: 'active' }]])
+  expect(wrapper.vm.targets.map(rule => [rule.silenceId, rule.name])).toEqual([['a-1', 'CPU'], ['a-2', 'CPU'], ['b-1', 'Memory']])
+  expect(wrapper.vm.displayTargets.map(target => [target.name, target.count])).toEqual([['CPU', 2], ['Memory', 1]])
+  expect(wrapper.findAll('.rule-targets li').map(item => item.text())).toEqual(['CPU (사일런스 2개)', 'Memory'])
+  await wrapper.setProps({ selectedItems: [{ uid: 'other' }] })
+  expect(postAPI).not.toHaveBeenCalled()
+  postAPI.mockRejectedValueOnce(new Error('temporary failure'))
+  await wrapper.setData({ acknowledged: true })
+  await wrapper.vm.submit()
+  expect(wrapper.findAll('.rule-targets li').map(item => item.text())).toEqual(['CPU'])
+  await wrapper.vm.submit()
+  expect(postAPI.mock.calls.map(call => call[1].id)).toEqual(['a-1', 'a-2', 'b-1', 'a-1'])
+  expect(wrapper.emitted('close-action')).toHaveLength(1)
+  wrapper.unmount()
+})
+
+test('selected silence expiry never writes when loading fails or no exact rule silence matches', async () => {
+  const action = config.actions.find(action => action.wallRuleAction === 'unsilence' && !action.wallRuleScope)
+  for (const failed of [true, false]) {
+    if (failed) getAPI.mockRejectedValue(new Error('offline'))
+    else getAPI.mockResolvedValue({ listwallalertsilencesresponse: { count: 1, silence: [{ id: 'other-silence', state: 'active', matchers: [{ name: '__alert_rule_uid__', value: 'other' }] }] } })
+    const wrapper = mountModal({ currentAction: { ...action, invokedAsGroupAction: true }, selectedItems: rules })
+    await flushPromises()
+    await wrapper.setData({ acknowledged: true })
+    await wrapper.vm.submit()
+    expect(wrapper.vm.loadFailed).toBe(failed)
+    expect(wrapper.vm.targets).toEqual([])
+    expect(wrapper.find('.rule-targets').exists()).toBe(false)
+    expect(wrapper.find('a-form-stub').exists()).toBe(!failed)
+    expect(wrapper.findAll('.rule-actions a-button-stub')).toHaveLength(2)
+    expect(postAPI).not.toHaveBeenCalled()
+    wrapper.unmount()
+  }
+})
+
 test('all-rule resume only targets paused rules and does not change silences', async () => {
   getAPI.mockResolvedValue({ listwallalertrulesresponse: { count: 3, wallalertruleresponse: [rules[0], { uid: 'paused-a', isPaused: true }, { uid: 'paused-b', ispaused: 'Stopped' }] } })
   const action = config.actions.find(action => action.wallRuleAction === 'resume' && action.wallRuleScope === 'all')
@@ -351,7 +436,7 @@ test('all-rule resume only targets paused rules and does not change silences', a
 })
 
 test('all-silence expiry resolves names, confirms every active silence and retries only failed IDs', async () => {
-  const action = config.actions.find(action => action.wallRuleAction === 'unsilence')
+  const action = config.actions.find(action => action.wallRuleAction === 'unsilence' && action.wallRuleScope === 'all')
   const silence = id => ({ id, state: 'active', matchers: [{ name: '__alert_rule_uid__', value: 'a' }] })
   getAPI.mockImplementation(name => Promise.resolve(name === 'listWallAlertRules'
     ? { listwallalertrulesresponse: { count: rules.length, wallalertruleresponse: rules } }
@@ -378,7 +463,7 @@ test('failed silence loading cannot expire anything or fall back to selected rul
   getAPI.mockImplementation(name => name === 'listWallAlertRules'
     ? Promise.resolve({ listwallalertrulesresponse: { count: rules.length, wallalertruleresponse: rules } })
     : Promise.reject(new Error('Wall unavailable')))
-  const wrapper = mountModal({ currentAction: config.actions.find(action => action.wallRuleAction === 'unsilence'), selectedItems: rules })
+  const wrapper = mountModal({ currentAction: config.actions.find(action => action.wallRuleAction === 'unsilence' && action.wallRuleScope === 'all'), selectedItems: rules })
   await flushPromises()
   await wrapper.setData({ acknowledged: true })
   await wrapper.vm.submit()
@@ -388,7 +473,7 @@ test('failed silence loading cannot expire anything or fall back to selected rul
 })
 
 test('global expiry requires both silence-list and expiry permissions', () => {
-  const action = config.actions.find(action => action.wallRuleAction === 'unsilence')
+  const action = config.actions.find(action => action.wallRuleAction === 'unsilence' && action.wallRuleScope === 'all')
   expect(action.show({}, { apis: { expireWallAlertSilence: {} } })).toBe(false)
   expect(action.show({}, { apis: { listWallAlertSilences: {}, expireWallAlertSilence: {} } })).toBe(true)
 })

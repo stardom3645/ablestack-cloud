@@ -21,6 +21,7 @@ import store from '@/store'
 import AutoAlertBanner from '@/components/header/AutoAlertBanner.vue'
 import ko from '@public/locales/ko_KR.json'
 import Cookies from 'js-cookie'
+import eventBus from '@/config/eventBus'
 
 jest.mock('@/api', () => ({ getAPI: jest.fn() }))
 jest.mock('@/store', () => ({ state: { user: { discoveryGeneration: 0 } }, getters: { apis: {}, userInfo: { id: 'user1' } } }))
@@ -261,4 +262,52 @@ test('closing an outage banner does not suppress real alert summaries after reco
   expect(wrapper.vm.showBanner).toBe(true)
   expect(wrapper.find('.wall-availability-alert').exists()).toBe(false)
   expect(wrapper.find('.alert-summary').exists()).toBe(true)
+})
+
+test('rule changes bypass the silence cache immediately and stop notifying an unmounted banner', async () => {
+  let silenced = []
+  store.getters.apis = { getWallAlertAvailability: {}, listWallAlertRules: {}, listWallAlertSilences: {} }
+  getAPI.mockImplementation(name => Promise.resolve(name === 'getWallAlertAvailability' ? statusReply('Ready')
+    : name === 'listWallAlertRules' ? { listwallalertrulesresponse: { wallalertruleresponse: ['a', 'b'].map(uid => ({ uid, name: uid, state: 'ALERTING' })) } }
+      : { listwallalertsilencesresponse: { silence: silenced.map(uid => ({ state: 'active', endsAt: '2050-01-01T00:00:00Z', matchers: [{ name: '__alert_rule_uid__', value: uid }] })) } }))
+  wrapper = mountAvailabilityBanner()
+  await flush()
+  expect(wrapper.vm.visibleAlerts.map(rule => rule.uid)).toEqual(['a', 'b'])
+  silenced = ['a']
+  eventBus.emit('wall-alert-rules-changed')
+  await flush()
+  expect(wrapper.vm.visibleAlerts.map(rule => rule.uid)).toEqual(['b'])
+  silenced = ['a', 'b']
+  eventBus.emit('wall-alert-rules-changed')
+  await flush()
+  expect(wrapper.vm.showBanner).toBe(false)
+  silenced = []
+  eventBus.emit('wall-alert-rules-changed')
+  await flush()
+  expect(wrapper.vm.visibleAlerts.map(rule => rule.uid)).toEqual(['a', 'b'])
+  wrapper.unmount()
+  wrapper = null
+  getAPI.mockClear()
+  eventBus.emit('wall-alert-rules-changed')
+  await flush()
+  expect(getAPI).not.toHaveBeenCalled()
+})
+
+test('rule changes during a pending refresh queue one fresh read instead of dropping the update', async () => {
+  let finish
+  let calls = 0
+  store.getters.apis = { getWallAlertAvailability: {}, listWallAlertRules: {} }
+  getAPI.mockImplementation(name => {
+    if (name === 'getWallAlertAvailability') return Promise.resolve(statusReply('Ready'))
+    if (++calls === 1) return new Promise(resolve => { finish = resolve })
+    return Promise.resolve(emptyRules)
+  })
+  wrapper = mountAvailabilityBanner()
+  await flush()
+  eventBus.emit('wall-alert-rules-changed')
+  eventBus.emit('wall-alert-rules-changed')
+  expect(calls).toBe(1)
+  finish(emptyRules)
+  await flush()
+  expect(calls).toBe(2)
 })

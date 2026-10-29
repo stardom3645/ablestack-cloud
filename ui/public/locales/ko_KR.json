@@ -9730,6 +9730,8 @@
   "label.wall.rules.resume.all": "전체 재개",
   "label.wall.silences.retry.failed": "실패한 사일런스 다시 시도",
   "message.wall.silences.scope.all": "활성 사일런스 {targets}개를 종료합니다.",
+  "message.wall.silences.scope.selected": "선택한 규칙 {count}개에 적용된 활성 사일런스 {targets}개를 종료합니다.",
+  "label.wall.silences.count": "사일런스 {count}개",
   "message.wall.silences.no.targets": "종료할 활성 사일런스가 없습니다.",
   "message.wall.silences.load.failed": "사일런스 목록을 확인하지 못했습니다. 새로고침 후 다시 시도하세요.",
   "message.wall.silences.success": "사일런스 {count}개를 종료했습니다.",

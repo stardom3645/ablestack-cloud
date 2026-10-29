@@ -24,6 +24,7 @@ import com.cloud.user.Account;
 import com.cloud.user.User;
 import org.apache.cloudstack.api.command.admin.wall.alerts.CreateWallAlertSilenceCmd;
 import org.apache.cloudstack.api.response.WallSilenceResponse;
+import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.wallAlerts.client.WallApiClient;
 import org.apache.cloudstack.wallAlerts.client.WallApiClient.SilenceCreateRequest;
@@ -137,6 +138,21 @@ public class WallSilenceEndTimeTest {
         when(mockService.createWallAlertSilence(command)).thenReturn(new WallSilenceResponse());
         command.execute();
         verify(mockService).createWallAlertSilence(command);
+    }
+
+    @Test
+    public void endTimeParameterBindsFromNormalizedHttpRequestKey() throws Exception {
+        // API HTTP keys are lowercased before ParamProcessWorker looks up annotation.name().
+        final String end = OffsetDateTime.now().plusHours(1).toString();
+        final Map<String, String> normalizedRequest = Map.of("endsat", end);
+        final Field field = CreateWallAlertSilenceCmd.class.getDeclaredField("endsAt");
+        final Parameter parameter = field.getAnnotation(Parameter.class);
+        assertEquals("endsat", parameter.name());
+        field.setAccessible(true);
+        field.set(command, normalizedRequest.get(parameter.name()));
+        assertEquals(end, command.getEndsAt());
+        service.createWallAlertSilence(command);
+        assertEquals(OffsetDateTime.parse(end), capturedRequest().getEndsAt());
     }
 
     private void assertRejected() {

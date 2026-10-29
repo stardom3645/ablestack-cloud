@@ -703,6 +703,7 @@ import store from '@/store'
 import { hasDiscoveryApi } from '@/utils/optionalDiscovery'
 import { createWallGate, createWallBannerDismissal } from '@/utils/wallAvailability'
 import Cookies from 'js-cookie'
+import eventBus from '@/config/eventBus'
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
 
@@ -1011,6 +1012,7 @@ export default {
     // ===== 상태 =====
     const rules = ref([])
     const refreshInFlight = ref(false)
+    let wallRefreshPending = false
     const keepShowing = ref(false)
 
     const HIDE_GRACE_MS = 150
@@ -2724,8 +2726,23 @@ export default {
         if (current()) {
           hideTimer = setTimeout(() => { keepShowing.value = false }, HIDE_GRACE_MS)
           measureAndNotifyHeight()
+          if (wallRefreshPending) {
+            wallRefreshPending = false
+            silenceCache.clear()
+            refresh()
+          }
         }
       }
+    }
+
+    const onWallAlertRulesChanged = async () => {
+      if (!allowed('getWallAlertAvailability')) return
+      if (refreshInFlight.value) {
+        wallRefreshPending = true
+        return
+      }
+      silenceCache.clear()
+      await refresh()
     }
 
     // ===== 모달 =====
@@ -2758,7 +2775,7 @@ export default {
         }
 
         closeSilence()
-        await refresh()
+        await onWallAlertRulesChanged()
         message.success(window.$t?.('message.silence.applied') || '사일런스 적용')
       } catch (_) {
         closeSilence()
@@ -2778,7 +2795,7 @@ export default {
       const uid = keyOf(pauseModal.value && pauseModal.value.target)
       if (uid) { onAlertCloseStart({ uid }) }
       closePause()
-      await refresh()
+      await onWallAlertRulesChanged()
       message.success(window.$t?.('message.pause.applied') || '일시정지 적용')
     }
 
@@ -2963,6 +2980,7 @@ export default {
     }
 
     // ===== 라이프사이클 =====
+    eventBus.on('wall-alert-rules-changed', onWallAlertRulesChanged)
     onMounted(async () => {
       try { document.documentElement.style.setProperty('--autoBannerHeight', '0px') } catch (_) {}
       try { document.documentElement.classList.add('banner-measuring') } catch (_) {}
@@ -2995,6 +3013,7 @@ export default {
 
     onBeforeUnmount(() => {
       disposed = true
+      eventBus.off('wall-alert-rules-changed', onWallAlertRulesChanged)
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('focus', onFocus)
       stopPoll()

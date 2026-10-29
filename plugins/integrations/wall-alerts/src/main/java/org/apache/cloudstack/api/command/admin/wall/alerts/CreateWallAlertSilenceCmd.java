@@ -84,7 +84,7 @@ public class CreateWallAlertSilenceCmd extends BaseCmd {
             description = "Optional ISO-8601 start time (e.g., 2025-10-20T01:23:45Z). If absent, now()")
     private String startsAt;
 
-    @Parameter(name = "endsAt", type = CommandType.STRING,
+    @Parameter(name = "endsat", type = CommandType.STRING,
             description = "Optional ISO-8601 end time. Must be in the future and after startsAt; overrides duration.")
     private String endsAt;
 

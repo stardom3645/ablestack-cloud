@@ -24,7 +24,7 @@
     :closable="!running"
     :keyboard="!running"
     :width="kind === 'resume' ? 600 : 760"
-    :body-style="kind === 'resume' ? undefined : { minHeight: '400px', padding: '28px 32px' }"
+    :body-style="kind === 'resume' ? undefined : { minHeight: kind === 'pause' || kind === 'silence' ? '400px' : undefined, padding: '28px 32px' }"
     centered
     @cancel="close"
   >
@@ -41,7 +41,7 @@
         <a-alert
           :type="isAll ? 'warning' : 'info'"
           show-icon
-          :message="$t(kind === 'unsilence' ? 'message.wall.silences.scope.all' : isAll ? 'message.wall.rules.scope.all' : 'message.wall.rules.scope.selected', { count: rules.length, targets: targets.length })"
+          :message="$t(kind === 'unsilence' ? (isAll ? 'message.wall.silences.scope.all' : 'message.wall.silences.scope.selected') : isAll ? 'message.wall.rules.scope.all' : 'message.wall.rules.scope.selected', { count: kind === 'unsilence' ? displayTargets.length : rules.length, targets: targets.length })"
           :description="kind === 'unsilence' ? $t('message.confirm.expire.silence.desc') : kind === 'resume' ? $t('message.wall.rules.effect.resume') : undefined"
         />
         <a-alert
@@ -62,9 +62,11 @@
         <p v-if="rules.length > targets.length" class="rule-note">
           {{ $t('message.wall.rules.skipped', { count: rules.length - targets.length }) }}
         </p>
-        <p v-if="!fetching && !targets.length" role="status">{{ $t(kind === 'unsilence' ? 'message.wall.silences.no.targets' : 'message.wall.rules.no.targets') }}</p>
-        <ul class="rule-targets">
-          <li v-for="rule in targets" :key="ruleUid(rule)">{{ rule.name || ruleUid(rule) }}</li>
+        <p v-if="!fetching && !targets.length" class="rule-note" role="status">{{ $t(kind === 'unsilence' ? 'message.wall.silences.no.targets' : 'message.wall.rules.no.targets') }}</p>
+        <ul v-if="targets.length" class="rule-targets">
+          <li v-for="target in displayTargets" :key="target.key">
+            {{ target.name }}<template v-if="target.count > 1"> ({{ $t('label.wall.silences.count', { count: target.count }) }})</template>
+          </li>
         </ul>
         <a-form layout="vertical">
           <a-form-item v-if="kind === 'silence'" :label="$t('label.silenceperiod.select')">
@@ -138,7 +140,8 @@ import 'dayjs/locale/ko'
 import koKR from 'ant-design-vue/es/date-picker/locale/ko_KR'
 import enUS from 'ant-design-vue/es/date-picker/locale/en_US'
 import { getAPI, postAPI } from '@/api'
-import { applyRuleAction, eligibleRules, fetchActiveSilences, fetchAllRules, ruleUid, uniqueRules } from '@/utils/wallAlertRules'
+import eventBus from '@/config/eventBus'
+import { applyRuleAction, eligibleRules, fetchActiveSilences, fetchAllRules, ruleIsSilenced, ruleUid, uniqueRules } from '@/utils/wallAlertRules'
 
 export default {
   name: 'WallAlertRuleActionModal',
@@ -180,6 +183,16 @@ export default {
     targets () {
       return this.attempted ? this.failures.map(failure => failure.rule) : eligibleRules(this.rules, this.kind)
     },
+    displayTargets () {
+      const groups = new Map()
+      for (const target of this.targets) {
+        const key = this.kind === 'unsilence' && target.ruleUid ? `rule:${target.ruleUid}` : `target:${ruleUid(target)}`
+        if (groups.has(key)) groups.get(key).count++
+        else groups.set(key, { key, name: target.name || ruleUid(target), count: 1 })
+      }
+      // Group the display only; every distinct silence ID remains an execution target.
+      return [...groups.values()]
+    },
     progress () { return this.batchSize ? Math.round(this.completed / this.batchSize * 100) : 0 }
   },
   created () { this.loadTargets() },
@@ -198,15 +211,20 @@ export default {
       this.fetching = true
       this.loadFailed = false
       try {
+        const selectedRules = uniqueRules(this.currentAction.invokedAsGroupAction ? this.selectedItems : [this.resource]).map(rule => ({ ...rule }))
         if (this.kind === 'unsilence') {
-          const [rules, silences] = await Promise.all([fetchAllRules(getAPI), fetchActiveSilences(getAPI)])
+          const [rules, silences] = await Promise.all([this.isAll ? fetchAllRules(getAPI) : Promise.resolve(selectedRules.filter(ruleIsSilenced)), fetchActiveSilences(getAPI)])
           const names = new Map(rules.map(rule => [ruleUid(rule), rule.name]))
-          this.rules = silences.map(silence => ({ ...silence, name: names.get(silence.ruleUid) || silence.name }))
+          // A shared or regex silence may affect unselected rules; only expire
+          // exact rule-UID silences when invoked for a selection.
+          this.rules = silences.filter(silence => this.isAll || (silence.matchers || []).some(matcher =>
+            matcher.name === '__alert_rule_uid__' && !matcher.isRegex && matcher.isEqual !== false && names.has(matcher.value)
+          )).map(silence => ({ ...silence, name: names.get(silence.ruleUid) || silence.name }))
           return
         }
         const rules = this.isAll
           ? await fetchAllRules(getAPI)
-          : (this.currentAction.invokedAsGroupAction ? this.selectedItems : [this.resource])
+          : selectedRules
         // Snapshot the targets so automatic list refreshes cannot change a confirmation.
         this.rules = uniqueRules(rules).map(rule => ({ ...rule }))
       } catch (error) {
@@ -240,7 +258,10 @@ export default {
         this.successCount += result.succeeded.length
         this.failures = result.failed
         this.attempted = true
-        if (result.succeeded.length) this.$emit('refresh-data')
+        if (result.succeeded.length) {
+          eventBus.emit('wall-alert-rules-changed')
+          this.$emit('refresh-data')
+        }
         if (!this.failures.length) {
           this.$message.success(this.$t(this.kind === 'unsilence' ? 'message.wall.silences.success' : 'message.wall.rules.success', { count: this.successCount }))
           this.$emit('close-action')
